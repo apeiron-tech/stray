@@ -424,6 +424,11 @@ allowlisted by `analytics.funnel_surface`; it never affects authentication or te
 
 ## Released CLI compatibility
 
+> **Since the rename:** those releases are the pre-rename `treg` CLI. They send `X-Treg-*` headers and
+> `treg_` keys, which this server no longer reads, so the paragraphs below describe the server as it
+> behaved before the rename. The same applies to `STRAY_RELEASED_CLI_DIR` in
+> `tests/test_released_cli_compat.py`: its released variants are opt-in and are not expected to pass.
+
 The unmodified PyPI CLIs 0.16.0 and 0.19.0 can use existing saved tokens, complete browser login,
 and exchange Default keys with `org use`. Their email flow discards the browser cookie and would
 save a restricted bootstrap token. Their team-create and identity-mode invite flows keep the

@@ -1,7 +1,7 @@
 ---
 page_id: r1
 slug: /rebuild/clay/
-seo_title: "Clay Alternative: Rebuild the Waterfall in 40 Lines | treg.to"           # 58
+seo_title: "Clay Alternative: Rebuild the Waterfall in 40 Lines | stray"           # 58
 meta_description: "Rebuild Clay's enrichment waterfall on six email providers with one token. Per-call prices, a real run receipt, and the honest list of what Clay still does better."  # 158
 h1: "Rebuild Clay: the enrichment waterfall, priced per call"
 seo_terms:

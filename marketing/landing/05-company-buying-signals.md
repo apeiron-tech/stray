@@ -1,7 +1,7 @@
 ---
 page_id: p5
 slug: /use-cases/company-research-for-ai-agents/
-seo_title: "Company Research: Funding, Headcount and Leadership | treg.to"           # 57
+seo_title: "Company Research: Funding, Headcount and Leadership | stray"           # 57
 meta_description: "Let your agent search companies and pull funding, headcount and leadership through one key. Eleven providers, from free to $0.38 a record."  # 145
 h1: "Company Research: Funding, Headcount and Leadership"
 hub_title: "Company data & funding"
@@ -42,7 +42,7 @@ Using stray, find 50 AI infrastructure companies that raised a Series A in the l
 
 ---
 
-## The old way vs. the treg.to way
+## The old way vs. the stray way
 
 | | The old way | With stray |
 |---|---|---|
@@ -126,7 +126,7 @@ COST             $[from your run]
 
 ## Proof from one real run
 
-*Run on treg.to, 17 Aug 2026. Every figure is from the Activity log of that run.*
+*Run on stray, 17 Aug 2026. Every figure is from the Activity log of that run.*
 
 | Field | Value |
 |---|---|
@@ -152,7 +152,7 @@ pre-seed through series C+.
 > $0.00188.
 >
 > This is the catalog's first selection rule in practice: **match the inputs you actually hold**, ahead of
-> price. It is also why treg.to relays your request rather than rewriting it: a system that silently
+> price. It is also why stray relays your request rather than rewriting it: a system that silently
 > "corrected" that URL would have guessed, and guessed inside your research.
 
 **The funding leg, run separately.** LeadMagic's funding endpoint was tried on three companies:
@@ -210,7 +210,7 @@ new leadership. A quiet month costs almost nothing.
 Because the answer to "which company data provider should I buy" is genuinely unknown until you test it
 against your own market: coverage differs far more than price does, and the price differs by 200×. Buying
 one to find out is the expensive way. Testing all eleven for a few cents is not. If you already pay for
-one, connect it and those calls route through your key, unmetered. treg.to is closer to OpenRouter for
+one, connect it and those calls route through your key, unmetered. stray is closer to OpenRouter for
 agent tools than to a data vendor: one base URL, one token, many providers behind it.
 
 **How are credentials handled?**: `S-OBJ-CREDENTIALS`
@@ -221,17 +221,17 @@ the whole team's numbers stay consistent.)*
 
 **Can I use my existing provider key?**: `S-OBJ-OWN-KEY`
 *(Crunchbase is own-key only here: if your team has a licence, connect it and those calls cost nothing on
-treg.to.)*
+stray.)*
 
 **What happens if a provider fails?**: `S-OBJ-FAILURE`
 
 **How much does a call cost?**
 Company search is free with three of the eleven providers and $0.38 a record at the top end. Funding
 history is $0.10 a company; person enrichment from $0.025. The exact price is
-shown before the call, and treg.to adds no markup. New teams start with $1.00 of free credit.
+shown before the call, and stray adds no markup. New teams start with $1.00 of free credit.
 
 **Is there a Crunchbase MCP?**
-This is one. treg.to is a single MCP server that carries Crunchbase alongside ten other company-search
+This is one. stray is a single MCP server that carries Crunchbase alongside ten other company-search
 providers: one token, and the agent compares them by price before it calls.
 
 **Is this a Crunchbase or PitchBook alternative?**

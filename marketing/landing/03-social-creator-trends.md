@@ -1,7 +1,7 @@
 ---
 page_id: p3
 slug: /use-cases/social-trend-research-for-ai-agents/
-seo_title: "Social Data MCP: Reddit, Instagram, TikTok, YouTube | treg.to"            # 53
+seo_title: "Social Data MCP: Reddit, Instagram, TikTok, YouTube | stray"            # 53
 meta_description: "Social data for AI agents via MCP: Reddit posts, Instagram creators, TikTok trends, YouTube transcripts. One connection, pay per call. $1.00 free."  # 147
 h1: "Social Data MCP: Reddit, Instagram, TikTok, YouTube"
 hub_title: "Social & creator trends"
@@ -42,7 +42,7 @@ followers. For the top 3 by engagement, pull their recent videos and comments.
 
 ---
 
-## The old way vs. the treg.to way
+## The old way vs. the stray way
 
 | | The old way | With stray |
 |---|---|---|
@@ -53,7 +53,7 @@ followers. For the top 3 by engagement, pull their recent videos and comments.
 | **The workflow** | Five browser tabs, manual scrolling, screenshots into a doc | One agent run across five platforms, deduplicated into one brief |
 
 **The honest version of this pitch:** the reason this is hard is not price, it is access. Several of these
-platforms do not sell a usable public API at any price to a small team. That is the wall treg.to gets you
+platforms do not sell a usable public API at any price to a small team. That is the wall stray gets you
 over.
 
 ---
@@ -97,7 +97,7 @@ post, so the agent can rank by velocity rather than by how loud a post sounds.
 **It clusters and reports.** Repeated hooks, the questions that keep appearing in comments, and where
 the conversation is thin enough to enter.
 
-> **What treg.to does and does not do here.** It returns real posts with real engagement numbers. The
+> **What stray does and does not do here.** It returns real posts with real engagement numbers. The
 > ranking of "fastest-growing" is your agent's analysis of that data, not a metric a provider hands over.
 > Coverage also differs per platform: check what an endpoint actually returns before you build a
 > reporting workflow on it.
@@ -131,7 +131,7 @@ COST        $[from your run]
 
 ## Proof from one real run
 
-*Run on treg.to, 17 Aug 2026, on the topic "AI agents". Every figure is from the Activity log of that run.*
+*Run on stray, 17 Aug 2026, on the topic "AI agents". Every figure is from the Activity log of that run.*
 
 | Field | Value |
 |---|---|
@@ -196,13 +196,13 @@ LinkedIn's is partner-only, YouTube's is quota-capped, and X's is $200/mo. Getti
 platforms to answer one research question is weeks of work, and some of those doors do not open for a
 small team at all.
 
-There is also a result here we did not expect. treg.to carries **both** X's official API and an
+There is also a result here we did not expect. stray carries **both** X's official API and an
 independent route, and has measured both: the official search endpoint returns a usable answer on
 **62%** of calls, while the independent route has returned one on **100% of 3,311 calls**. Paying $200 a
 month is not buying you the more reliable option. We would not have known that either without measuring
 it, and it is the reason the catalog shows a record rather than a logo.
 
-treg.to is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many
+stray is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many
 providers behind it.
 
 **How are credentials handled?**: `S-OBJ-CREDENTIALS`
@@ -219,19 +219,19 @@ change. The catalog's `last OK` column tells you which ones have answered recent
 
 **How much does a call cost?**
 Most social endpoints are $0.001 a call. Reddit search runs $0.001 to $0.01476 depending on provider. The
-exact price is shown before the call, and treg.to adds no markup. New teams start with $1.00 of free
+exact price is shown before the call, and stray adds no markup. New teams start with $1.00 of free
 credit: around a thousand posts' worth of calls.
 
 **Which agents does it work with?**: `S-OBJ-AGENTS`
 
 **Is there a Reddit MCP?**
-Yes. The treg.to MCP server exposes Reddit search, subreddit posts, comments and trending topics
+Yes. The stray MCP server exposes Reddit search, subreddit posts, comments and trending topics
 through providers like ScrapeCreators and Bright Data. One MCP connection gives your agent access
 to Reddit data without a Reddit API approval.
 
 **Is there an Instagram MCP or TikTok MCP?**
 Yes. Instagram profiles, posts, hashtags and comments; TikTok profiles, videos, hashtags and trends.
-All through the same treg.to MCP connection, no platform approval required.
+All through the same stray MCP connection, no platform approval required.
 
 **What about Twitter MCP?**
 The catalog has both the official X API (requires your own $200/mo key) and independent providers
@@ -243,7 +243,7 @@ data back. You are not running a scraper; you are calling an API that has one.
 
 **Is there a Grok MCP?**
 Grok is an AI model, not a data source. If you are using Grok and want it to call social data tools,
-paste the setup line from `/llms.txt` into Grok and it can use the treg.to catalog.
+paste the setup line from `/llms.txt` into Grok and it can use the stray catalog.
 
 ---
 

@@ -537,7 +537,7 @@ async function post(p,b){const r=await fetch(p,{method:'POST',headers:{'Content-
  if(!r.ok)throw new Error(d.detail||('error '+r.status));return d}
 function done(email){const c=document.getElementById('card');c.innerHTML='';
  const mk=(t,cls,txt)=>{const e=document.createElement(t);if(cls)e.className=cls;if(txt)e.textContent=txt;c.appendChild(e);return e};
- mk('div','logo','\\u259a stray');mk('div','mark','\\u2705');
+ mk('div','logo','\\u259b stray');mk('div','mark','\\u2705');
  mk('h1',null,email?('Logged in as '+email):'Logged in');
  mk('p',null,'Return to your terminal. The CLI is finishing up.');
  // Don't strand the tab: the approve() above set a session cookie, so /app works. Count down to

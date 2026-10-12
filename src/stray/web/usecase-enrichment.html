@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Lead Enrichment Tool: Clay Alternative, Pay Per Result | treg.to</title>
+<title>Lead Enrichment Tool: Clay Alternative, Pay Per Result | stray</title>
 <meta name="description" content="Lead enrichment tool and Clay alternative. Waterfall enrichment: find companies, identify decision-makers, verify work emails. $0.0245/found, misses free. {PROVIDERS} providers, $1.00 free credit."/>
 <link rel="canonical" href="{BASE}/use-cases/lead-enrichment-for-ai-agents"/>
-<meta property="og:title" content="Lead Enrichment Tool: Clay Alternative, Pay Per Result | treg.to"/>
+<meta property="og:title" content="Lead Enrichment Tool: Clay Alternative, Pay Per Result | stray"/>
 <meta property="og:description" content="Lead enrichment tool and Clay alternative. Waterfall enrichment: find companies, identify decision-makers, verify work emails. $0.0245/found, misses free. {PROVIDERS} providers, $1.00 free credit."/>
 <meta property="og:url" content="{BASE}/use-cases/lead-enrichment-for-ai-agents"/>
 <meta property="og:type" content="website"/>
@@ -20,13 +20,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Pixel&family=Inter:wght@400;450;500;600;650;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/usecase.css"/>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"treg.to","item":"{BASE}/"},{"@type":"ListItem","position":2,"name":"Lead Enrichment","item":"{BASE}/use-cases"},{"@type":"ListItem","position":3,"name":"Waterfall Enrichment for AI Agents","item":"{BASE}/use-cases/lead-enrichment-for-ai-agents"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why not just call the providers directly?","acceptedAnswer":{"@type":"Answer","text":"Because this workflow is not one provider. Finding companies, identifying people and verifying email are\nthree different products, and the vendor that is best at one is rarely best at the others: the table\nabove is 200\u00d7 wide for a single job. Holding accounts with all of them to find out is the expensive way\nto learn it. If you already pay for one, connect it and those calls route through your key, unmetered.\ntreg.to is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many\nproviders behind it."}},{"@type":"Question","name":"How are credentials handled?","acceptedAnswer":{"@type":"Answer","text":"The credential is injected on the server. Your agent makes the real upstream request through treg.to's\n/call/ endpoint; treg.to adds the key and relays the provider's answer back verbatim. No provider key\nis ever written to your machine, your repo or your agent's context. Every call is recorded and attributed\nto the token that made it."}},{"@type":"Question","name":"Can I choose a specific provider?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every endpoint has an id, and calling it by id calls that provider. If you want the choice made once\nfor the whole team, stray org pin &lt;capability&gt; --provider &lt;provider&gt; refuses calls to any other provider\nof that capability.\n(Often the right call here. Coverage varies by region and company size far more than it\nvaries by price, so once you find the provider that covers your market, pin it.)"}},{"@type":"Question","name":"Can I use my existing provider key?","acceptedAnswer":{"@type":"Answer","text":"Yes, and it takes precedence. Register the key once and every call to that provider routes through it;\nthose calls are never metered against your treg.to balance. Your key always wins over treg.to's.\n(If your team already pays for Apollo or Hunter, this is the first thing to do. Those calls stop costing\nyou anything on treg.to.)"}},{"@type":"Question","name":"What happens if a provider fails?","acceptedAnswer":{"@type":"Answer","text":"treg.to does not silently reroute you. That is deliberate: only you know which inputs you actually hold,\nso treg.to relays your request rather than rewriting it. Failed calls are not billed. If a call\nsucceeded upstream but the answer was lost coming back, an Idempotency-Key returns the stored result\nwithout paying twice."}},{"@type":"Question","name":"How much does a call cost?","acceptedAnswer":{"@type":"Answer","text":"A found work email is $0.0245 with Hunter and a miss is free. Verification is $0.00625. Company search\nranges from free to $0.38 a record depending on provider. The exact price is shown before the call, and\ntreg.to adds no markup to what the provider charges. New teams start with $1.00 of free credit: enough\nfor roughly 40 verified email lookups before you spend anything."}},{"@type":"Question","name":"Which agents does it work with?","acceptedAnswer":{"@type":"Answer","text":"The installer registers treg.to's MCP server into Claude Code, Cursor and opencode automatically. Any MCP\nclient that supports the authorization spec can connect with OAuth. Anything that can run a shell command,\nCodex included, can use the stray CLI or plain HTTP."}},{"@type":"Question","name":"How does this compare to Clay?","acceptedAnswer":{"@type":"Answer","text":"Clay is a visual table for GTM workflows. treg.to is a catalog of the same data providers Clay calls,\nexposed as tools your agent can use directly. If you already think in prompts rather than spreadsheet\nformulas, you skip the table and get the same waterfall enrichment in one paste. The providers are the\nsame (Apollo, Hunter, Clearbit, etc.); the interface is your agent. Clay is not in the treg.to catalog\nbecause it is a workflow tool, not a data API."}},{"@type":"Question","name":"Is there an Apollo MCP or Hunter MCP?","acceptedAnswer":{"@type":"Answer","text":"Yes. The treg.to MCP server gives your agent access to Apollo, Hunter and the other enrichment providers\nthrough one connection. Install once, and every provider in the catalog answers to it. See /llms.txt\nfor the setup line."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"stray","item":"{BASE}/"},{"@type":"ListItem","position":2,"name":"Lead Enrichment","item":"{BASE}/use-cases"},{"@type":"ListItem","position":3,"name":"Waterfall Enrichment for AI Agents","item":"{BASE}/use-cases/lead-enrichment-for-ai-agents"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why not just call the providers directly?","acceptedAnswer":{"@type":"Answer","text":"Because this workflow is not one provider. Finding companies, identifying people and verifying email are\nthree different products, and the vendor that is best at one is rarely best at the others: the table\nabove is 200\u00d7 wide for a single job. Holding accounts with all of them to find out is the expensive way\nto learn it. If you already pay for one, connect it and those calls route through your key, unmetered.\ntreg.to is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many\nproviders behind it."}},{"@type":"Question","name":"How are credentials handled?","acceptedAnswer":{"@type":"Answer","text":"The credential is injected on the server. Your agent makes the real upstream request through stray's\n/call/ endpoint; stray adds the key and relays the provider's answer back verbatim. No provider key\nis ever written to your machine, your repo or your agent's context. Every call is recorded and attributed\nto the token that made it."}},{"@type":"Question","name":"Can I choose a specific provider?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every endpoint has an id, and calling it by id calls that provider. If you want the choice made once\nfor the whole team, stray org pin &lt;capability&gt; --provider &lt;provider&gt; refuses calls to any other provider\nof that capability.\n(Often the right call here. Coverage varies by region and company size far more than it\nvaries by price, so once you find the provider that covers your market, pin it.)"}},{"@type":"Question","name":"Can I use my existing provider key?","acceptedAnswer":{"@type":"Answer","text":"Yes, and it takes precedence. Register the key once and every call to that provider routes through it;\nthose calls are never metered against your stray balance. Your key always wins over stray's.\n(If your team already pays for Apollo or Hunter, this is the first thing to do. Those calls stop costing\nyou anything on stray.)"}},{"@type":"Question","name":"What happens if a provider fails?","acceptedAnswer":{"@type":"Answer","text":"stray does not silently reroute you. That is deliberate: only you know which inputs you actually hold,\nso stray relays your request rather than rewriting it. Failed calls are not billed. If a call\nsucceeded upstream but the answer was lost coming back, an Idempotency-Key returns the stored result\nwithout paying twice."}},{"@type":"Question","name":"How much does a call cost?","acceptedAnswer":{"@type":"Answer","text":"A found work email is $0.0245 with Hunter and a miss is free. Verification is $0.00625. Company search\nranges from free to $0.38 a record depending on provider. The exact price is shown before the call, and\ntreg.to adds no markup to what the provider charges. New teams start with $1.00 of free credit: enough\nfor roughly 40 verified email lookups before you spend anything."}},{"@type":"Question","name":"Which agents does it work with?","acceptedAnswer":{"@type":"Answer","text":"The installer registers stray's MCP server into Claude Code, Cursor and opencode automatically. Any MCP\nclient that supports the authorization spec can connect with OAuth. Anything that can run a shell command,\nCodex included, can use the stray CLI or plain HTTP."}},{"@type":"Question","name":"How does this compare to Clay?","acceptedAnswer":{"@type":"Answer","text":"Clay is a visual table for GTM workflows. stray is a catalog of the same data providers Clay calls,\nexposed as tools your agent can use directly. If you already think in prompts rather than spreadsheet\nformulas, you skip the table and get the same waterfall enrichment in one paste. The providers are the\nsame (Apollo, Hunter, Clearbit, etc.); the interface is your agent. Clay is not in the stray catalog\nbecause it is a workflow tool, not a data API."}},{"@type":"Question","name":"Is there an Apollo MCP or Hunter MCP?","acceptedAnswer":{"@type":"Answer","text":"Yes. The stray MCP server gives your agent access to Apollo, Hunter and the other enrichment providers\nthrough one connection. Install once, and every provider in the catalog answers to it. See /llms.txt\nfor the setup line."}}]}</script>
 </head>
 <body data-page="p2">
 
 <div class="navwrap"><nav class="nav">
-  <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
+  <a class="brand" href="/"><span class="glyph">&#9627;</span> stray</a>
   <div class="links">
     <a class="hidem" href="/tutorial">docs</a>
     <a class="hidem" href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">repo</a>
@@ -45,7 +45,7 @@ a Series A. For each one find the VP or Head of Marketing, find their work email
 verify it, and pull the latest news so I have an opener.</pre></div>
   <div class="provstrip"><span class="pl">compared on this page</span><span class="ptiles"><span class="ptile"><img src="/logos/akta.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/apollo.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/crunchbase.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/diffbot.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/hunter.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/leadmagic.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/lusha.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/pdl.svg" alt="" loading="lazy" width="22" height="22"></span><span class="ptile"><img src="/logos/thecompaniesapi.svg" alt="" loading="lazy" width="22" height="22"></span></span></div>
 </div></header>
-<section><div class="wrap"><div class="seclab">The economics</div><h2>The old way vs. the treg.to way</h2><div class="tablewrap"><table class="compare">
+<section><div class="wrap"><div class="seclab">The economics</div><h2>The old way vs. the stray way</h2><div class="tablewrap"><table class="compare">
 <thead>
 <tr>
 <th></th>
@@ -110,7 +110,7 @@ at a company, <code>hunter.companies.emails</code> returns the known addresses a
 one named person, <code>hunter.people.email.find</code> costs $0.0245 and <strong>only charges when it finds someone</strong>
 (100% across 582 calls, 1.4 s). Enrichment fills thin profiles: Hunter $0.0245 (356 calls, 0.3 s),
 Apollo $0.026 (263 calls, 0.3 s), LeadMagic $0.025, Coresignal $0.392.</p><p><strong>It verifies before you send: and this is the step that matters most.</strong> Verification is the single
-most-called enrichment endpoint on treg.to: <strong>963 calls at 100% success</strong>. It runs at $0.00625 with
+most-called enrichment endpoint on stray: <strong>963 calls at 100% success</strong>. It runs at $0.00625 with
 LeadMagic or $0.01225 with Hunter. Finding an address is cheap; sending to a dead one costs you a domain
 reputation, which is why the teams already doing this at volume verify more than they search.</p><h3>What comes back</h3><div class="sample"><div class="sbar">what comes back</div><pre>50 companies · 20 to 200 employees · funded in the window · pulled [date]
 
@@ -122,7 +122,7 @@ COMPANY          SIZE   LAST ROUND      CONTACT              TITLE              
 
 SUMMARY   50 companies · 47 contacts identified · 41 emails verified · 6 no match
 COST      $[from your run]   (misses were not charged)</pre></div><p><em>Structure is illustrative. Values come from the providers, relayed unchanged.</em></p><div class="ctas"><button class="candy" data-copy="#prompt" data-ev="lp_copy_prompt" data-page="p2">Copy Prompt</button></div><hr /></div></section>
-<section id="proof"><div class="wrap"><div class="seclab">Evidence</div><h2>Proof from one real run</h2><p><em>Run on treg.to, 26 Aug 2026: the full 50-company workflow, one prompt, one key, before a jev gate was added to it. Every figure is
+<section id="proof"><div class="wrap"><div class="seclab">Evidence</div><h2>Proof from one real run</h2><p><em>Run on stray, 26 Aug 2026: the full 50-company workflow, one prompt, one key, before a jev gate was added to it. Every figure is
 from that run's receipt; the workflow page at
 <a href="/workflows/find-and-verify-a-lead-list">/workflows/find-and-verify-a-lead-list</a> now carries the gated re-run and keeps this one as the before.</em></p><div class="tablewrap"><table class="data">
 <thead>
@@ -143,7 +143,7 @@ from that run's receipt; the workflow page at
 </tbody>
 </table></div><p><strong>Where misses were free, and where they were not.</strong> Hunter and LeadMagic charge only on success,
 so their misses settled at $0.00. Findymail and Tomba list a free miss too, but neither reports the
-charge in its response, so treg.to settled their calls at the list rate, misses included: $0.56 of
+charge in its response, so stray settled their calls at the list rate, misses included: $0.56 of
 the $3.62. The receipt is the real total, not the rate card.</p><blockquote>
 <p><strong>The honest read of this run:</strong> 27 deliverable leads from 50 companies is one market on one day,
 not a benchmark. The hit rate on <em>your</em> market is what the $1.00 free credit is for: run ten rows
@@ -158,30 +158,30 @@ about $12.50: and Hunter's finder does not charge you for the ones it cannot fin
 three different products, and the vendor that is best at one is rarely best at the others: the table
 above is 200× wide for a single job. Holding accounts with all of them to find out is the expensive way
 to learn it. If you already pay for one, connect it and those calls route through your key, unmetered.
-treg.to is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many
-providers behind it.</p></div></details><details data-ev="lp_objection_open" data-q="How are credentials handled?"><summary>How are credentials handled?</summary><div class="body"><p>The credential is injected on the server. Your agent makes the real upstream request through treg.to's
-<code>/call/</code> endpoint; treg.to adds the key and relays the provider's answer back verbatim. No provider key
+stray is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many
+providers behind it.</p></div></details><details data-ev="lp_objection_open" data-q="How are credentials handled?"><summary>How are credentials handled?</summary><div class="body"><p>The credential is injected on the server. Your agent makes the real upstream request through stray's
+<code>/call/</code> endpoint; stray adds the key and relays the provider's answer back verbatim. No provider key
 is ever written to your machine, your repo or your agent's context. Every call is recorded and attributed
 to the token that made it.</p></div></details><details data-ev="lp_objection_open" data-q="Can I choose a specific provider?"><summary>Can I choose a specific provider?</summary><div class="body"><p>Yes. Every endpoint has an id, and calling it by id calls that provider. If you want the choice made once
 for the whole team, <code>stray org pin &lt;capability&gt; --provider &lt;provider&gt;</code> refuses calls to any other provider
 of that capability.
 <em>(Often the right call here. Coverage varies by region and company size far more than it
 varies by price, so once you find the provider that covers your market, pin it.)</em></p></div></details><details data-ev="lp_objection_open" data-q="Can I use my existing provider key?"><summary>Can I use my existing provider key?</summary><div class="body"><p>Yes, and it takes precedence. Register the key once and every call to that provider routes through it;
-those calls are never metered against your treg.to balance. Your key always wins over treg.to's.
+those calls are never metered against your stray balance. Your key always wins over stray's.
 <em>(If your team already pays for Apollo or Hunter, this is the first thing to do. Those calls stop costing
-you anything on treg.to.)</em></p></div></details><details data-ev="lp_objection_open" data-q="What happens if a provider fails?"><summary>What happens if a provider fails?</summary><div class="body"><p>treg.to does not silently reroute you. That is deliberate: only you know which inputs you actually hold,
-so treg.to relays your request rather than rewriting it. Failed calls are not billed. If a call
+you anything on stray.)</em></p></div></details><details data-ev="lp_objection_open" data-q="What happens if a provider fails?"><summary>What happens if a provider fails?</summary><div class="body"><p>stray does not silently reroute you. That is deliberate: only you know which inputs you actually hold,
+so stray relays your request rather than rewriting it. Failed calls are not billed. If a call
 succeeded upstream but the answer was lost coming back, an <code>Idempotency-Key</code> returns the stored result
 without paying twice.</p></div></details><details data-ev="lp_objection_open" data-q="How much does a call cost?"><summary>How much does a call cost?</summary><div class="body"><p>A found work email is $0.0245 with Hunter and a miss is free. Verification is $0.00625. Company search
 ranges from free to $0.38 a record depending on provider. The exact price is shown before the call, and
-treg.to adds no markup to what the provider charges. New teams start with $1.00 of free credit: enough
-for roughly 40 verified email lookups before you spend anything.</p></div></details><details data-ev="lp_objection_open" data-q="Which agents does it work with?"><summary>Which agents does it work with?</summary><div class="body"><p>The installer registers treg.to's MCP server into Claude Code, Cursor and opencode automatically. Any MCP
+stray adds no markup to what the provider charges. New teams start with $1.00 of free credit: enough
+for roughly 40 verified email lookups before you spend anything.</p></div></details><details data-ev="lp_objection_open" data-q="Which agents does it work with?"><summary>Which agents does it work with?</summary><div class="body"><p>The installer registers stray's MCP server into Claude Code, Cursor and opencode automatically. Any MCP
 client that supports the authorization spec can connect with OAuth. Anything that can run a shell command,
-Codex included, can use the <code>stray</code> CLI or plain HTTP.</p></div></details><details data-ev="lp_objection_open" data-q="How does this compare to Clay?"><summary>How does this compare to Clay?</summary><div class="body"><p>Clay is a visual table for GTM workflows. treg.to is a catalog of the same data providers Clay calls,
+Codex included, can use the <code>stray</code> CLI or plain HTTP.</p></div></details><details data-ev="lp_objection_open" data-q="How does this compare to Clay?"><summary>How does this compare to Clay?</summary><div class="body"><p>Clay is a visual table for GTM workflows. stray is a catalog of the same data providers Clay calls,
 exposed as tools your agent can use directly. If you already think in prompts rather than spreadsheet
 formulas, you skip the table and get the same waterfall enrichment in one paste. The providers are the
-same (Apollo, Hunter, Clearbit, etc.); the interface is your agent. Clay is not in the treg.to catalog
-because it is a workflow tool, not a data API.</p></div></details><details data-ev="lp_objection_open" data-q="Is there an Apollo MCP or Hunter MCP?"><summary>Is there an Apollo MCP or Hunter MCP?</summary><div class="body"><p>Yes. The treg.to MCP server gives your agent access to Apollo, Hunter and the other enrichment providers
+same (Apollo, Hunter, Clearbit, etc.); the interface is your agent. Clay is not in the stray catalog
+because it is a workflow tool, not a data API.</p></div></details><details data-ev="lp_objection_open" data-q="Is there an Apollo MCP or Hunter MCP?"><summary>Is there an Apollo MCP or Hunter MCP?</summary><div class="body"><p>Yes. The stray MCP server gives your agent access to Apollo, Hunter and the other enrichment providers
 through one connection. Install once, and every provider in the catalog answers to it. See <code>/llms.txt</code>
 for the setup line.</p>
 <hr /></div></details></div></section>
@@ -189,13 +189,13 @@ for the setup line.</p>
 <section class="final"><div class="wrap">
   <h2>Your next list can be built, enriched and verified in one prompt</h2>
   <div class="ctas"><a class="candy" href="/app?ref=p2" data-ev="lp_cta_primary" data-page="p2">Start Free</a></div>
-  <div class="trust"><p>$1.00 of free credit once per new verified account. No credit card, no provider signup. treg.to is open source
+  <div class="trust"><p>$1.00 of free credit once per new verified account. No credit card, no provider signup. stray is open source
 (AGPL).</p></div>
 </div></section>
 
 <footer>
   <div class="foot-in">
-    <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
+    <a class="brand" href="/"><span class="glyph">&#9627;</span> stray</a>
     <span class="note">100% open source</span>
     <span class="sp"></span>
     <a href="/resources">resources</a><a href="/blog">blog</a><a href="/tutorial">docs</a><a href="/llms.txt">llms.txt</a>

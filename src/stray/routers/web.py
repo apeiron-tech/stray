@@ -216,7 +216,7 @@ def _page(title: str, description: str, path: str, body: str, ld: list[dict],
 <meta property="og:image" content="{base}/media/og.png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
-<meta property="og:image:alt" content="treg.to: one key for the whole tool catalog, priced per call"/>
+<meta property="og:image:alt" content="stray: one key for the whole tool catalog, priced per call"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="{t}"/>
 <meta name="twitter:description" content="{d}"/>
@@ -504,13 +504,13 @@ async def catalog_page(slug: str):
                       if (slug, cap["id"]) in compared else f"{base}/catalog/{slug}#{cap['id']}")}
              for i, cap in enumerate(caps, 1)]},
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+            {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
             {"@type": "ListItem", "position": 2, "name": "Catalog", "item": base + "/catalog"},
             {"@type": "ListItem", "position": 3, "name": label, "item": f"{base}/catalog/{slug}"}]},
     ]
     # "{platform} api pricing" is the non-brand phrasing that reaches the site (GSC), so the shelf
-    # title leads with it; the brand is treg.to and the copy carries no em-dash.
-    return _spa_catalog_page(f"{label} API pricing: {len(eps)} endpoints priced per call | treg.to",
+    # title leads with it; the brand is stray and the copy carries no em-dash.
+    return _spa_catalog_page(f"{label} API pricing: {len(eps)} endpoints priced per call | stray",
                              desc[:300], f"/catalog/{slug}", ld, prerender)
 
 
@@ -559,7 +559,7 @@ async def catalog_comparison_page(slug: str, key: str):
         {"@type": "ListItem", "position": 1, "name": "Catalog", "item": base + "/catalog"},
         {"@type": "ListItem", "position": 2, "name": label, "item": f"{base}/catalog/{slug}"},
         {"@type": "ListItem", "position": 3, "name": does, "item": base + path}]}]
-    return _spa_catalog_page(f"{does}: {len(provs)} APIs compared | treg.to",
+    return _spa_catalog_page(f"{does}: {len(provs)} APIs compared | stray",
                              f"{does}. Compare {', '.join(provs[:4])} and more by price, measured "
                              "success and agents' verdicts; call any of them through one stray key."[:300],
                              path, ld, prerender)
@@ -568,7 +568,7 @@ async def catalog_comparison_page(slug: str, key: str):
 # --------------------------------------------------------------------------- /agents/<agent>
 
 def _hosted() -> bool:
-    """True on the hosted service only. The agent pages describe treg.to's own listings (the
+    """True on the hosted service only. The agent pages describe stray's own listings (the
     ChatGPT Connector, the OAuth connector, the free grant), none of which is true of a self-hosted
     registry, so off these hosts the pages do not exist rather than lie."""
     host = (urlsplit(get_settings().public_url).hostname or "").lower()
@@ -768,10 +768,10 @@ async def agents_hub():
         for slug, spec in agent_pages.AGENTS.items())
     body = (
         '<main class="wrap"><div class="phead">'
-        '<div class="crumbs"><a href="/">treg.to</a> / <a href="/agents">Agents</a></div>'
-        '<h1>The agents that can use treg.to</h1>'
+        '<div class="crumbs"><a href="/">stray</a> / <a href="/agents">Agents</a></div>'
+        '<h1>The agents that can use stray</h1>'
         '<p class="lede">One page per client: the install steps for that agent, then the menu of '
-        f'jobs it can do once connected. Every client gets the same {n} tools through one treg.to '
+        f'jobs it can do once connected. Every client gets the same {n} tools through one stray '
         'key, at the provider&rsquo;s own rate with $0.000 markup.</p>'
         f'</div><section class="cat"><div class="grid">{cards}</div></section>'
         '<section class="cat"><h2>Everything else</h2><div class="cap"><p style="margin:0">The jobs '
@@ -780,11 +780,11 @@ async def agents_hub():
         '<a href="/catalog">/catalog</a>.</p></div></section></main>')
     names = [s["name"] for s in agent_pages.AGENTS.values()]
     ld = [{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+        {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
         {"@type": "ListItem", "position": 2, "name": "Agents", "item": base + "/agents"}]}]
-    return _page("Install treg.to in ChatGPT, Claude, Cursor or Grok",
+    return _page("Install stray in ChatGPT, Claude, Cursor or Grok",
                  f"Install steps for {', '.join(names[:-1])} and {names[-1]}, and the menu of jobs "
-                 "each can do once connected. One treg.to key, no markup.",
+                 "each can do once connected. One stray key, no markup.",
                  "/agents", body, ld)
 
 
@@ -989,7 +989,7 @@ async def agent_page(request: Request, agent: str):
 
     body = (
         '<div class="hero"><div class="wrap">'
-        f'<div class="trust" style="margin:0 0 18px"><a href="/">treg.to</a> / '
+        f'<div class="trust" style="margin:0 0 18px"><a href="/">stray</a> / '
         f'<a href="/agents/{_esc_html(agent)}">{_esc_html(name)}</a></div>'
         f'<div class="kicker">{n} endpoints &middot; {p} platforms &middot; $0.000 markup</div>'
         # The H1 carries the measured term and the promise, never a persona — a crawler was reading
@@ -1018,7 +1018,7 @@ async def agent_page(request: Request, agent: str):
         + '<section id="use-cases"><div class="wrap"><div class="seclab">The menu</div>'
         f'<h2>What {_esc_html(name)} can do now</h2>'
         '<p>By job, not by endpoint. The price is the lowest provider&rsquo;s own rate with $0.000 added by '
-        'treg.to; <b>free</b> means the job runs on an account you already own and is never metered. Where '
+        'stray; <b>free</b> means the job runs on an account you already own and is never metered. Where '
         f'several providers do one job, {_esc_html(name)} sees them side by side and choosing is yours.</p>'
         f'<div class="cards">{"".join(cards)}</div>'
         f'<p style="margin-top:20px"><a href="/catalog">Browse all {n} endpoints &rarr;</a> &middot; '
@@ -1079,14 +1079,14 @@ async def agent_page(request: Request, agent: str):
 </script>""")
 
     ld = [
-        {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "treg.to",
+        {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "stray",
          "applicationCategory": "DeveloperApplication", "operatingSystem": "Web",
          "url": base + "/", "description": desc,
          "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD",
                     "description": "Free to install. Calls are metered per call from a prepaid balance at the "
                                    "provider's own rate with no markup; your first team starts with $1.00 free."}},
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+            {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
             {"@type": "ListItem", "position": 2, "name": "Agents", "item": base + "/agents"},
             {"@type": "ListItem", "position": 3, "name": name, "item": f"{base}/agents/{agent}"}]},
         {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -1140,7 +1140,7 @@ def _uc_providers(cat, eps: list[dict], obs: dict) -> list[dict]:
         # prices this job in pre-bought API units, so its cost_view has no USD, and the price cell
         # read "free, your own account" for the dearest option on the page.
         free = any((e.get("cost") or {}).get("type") == "free" for e in peps)
-        # A $0 trial row is a third fact again: served on treg.to's own free-tier key with a daily
+        # A $0 trial row is a third fact again: served on stray's own free-tier key with a daily
         # allowance per team (catalog.trial_pools), so neither "free, your own account" nor a price
         # is true of it. Carry the allowance so the cell can state it.
         # `default=0`: a row with no cost at all (TikHub's LinkedIn comments v2 carries none)
@@ -1263,9 +1263,9 @@ async def use_case_job_page(request: Request, job: str,
     reliable = sorted([p for p in provs if p["samples"] and p["ok_rate"] is not None],
                       key=lambda p: (-p["ok_rate"], p["p50"] or 9e9, -p["samples"]))
     # No priced row is two different facts: own-account rows are free on the reader's key; trial
-    # rows are free on treg.to's key up to a daily allowance. Say whichever is true.
+    # rows are free on stray's key up to a daily allowance. Say whichever is true.
     trial_max = max((p["trial"] for p in provs), default=0)
-    free_words = (f"free, up to {trial_max} calls a day on treg.to's key" if trial_max
+    free_words = (f"free, up to {trial_max} calls a day on stray's key" if trial_max
                   else "free on your own account")
     n = str(len({p["id"] for p in provs}))
     n_ver = sum(1 for e in eps if e.get("verified"))
@@ -1284,35 +1284,35 @@ async def use_case_job_page(request: Request, job: str,
     def unit_plural(u: str) -> str:
         return {"found": f"{noun}s found", "result": "results"}.get(u, "calls")
 
-    title = spec.get("title", "{sentence}: {n} providers | treg.to").format(
+    title = spec.get("title", "{sentence}: {n} providers | stray").format(
         sentence=spec["sentence"], n=n, agent=agent_name,
         cheapest=money(headline["usd"]) if headline else free_words)
     # The number goes in the title. Search Console shows the pricing phrasing is what reaches this
     # site, and a title that already names the cheapest price is the one fact a vendor's own page
     # cannot carry. Only the compare form has a price to name; a hand-written title that already
     # carries one is left alone.
-    if form == "compare" and headline and "$" not in title and title.endswith(" | treg.to"):
-        head = title[: -len(" | treg.to")]
+    if form == "compare" and headline and "$" not in title and title.endswith(" | stray"):
+        head = title[: -len(" | stray")]
         if head.endswith(" compared"):  # "5 verifiers compared" -> "5 verifiers, from $0.0019"
             head = head[: -len(" compared")]
-        priced = f"{head}, from {money(headline['usd'])} | treg.to"
+        priced = f"{head}, from {money(headline['usd'])} | stray"
         if len(priced) <= _TITLE_MAX:
             title = priced
     lede = spec["lede"].format(n=n, agent=agent_name,
                                cheapest=money(headline["usd"]) if headline else free_words)
     bits_desc = [spec["sentence"] + "."]
     # A single provider is one of three facts, not two: an own-account connection (free), a metered
-    # row on treg.to's key, or a trial pool (no USD, a daily allowance on treg.to's free-tier key,
+    # row on stray's key, or a trial pool (no USD, a daily allowance on stray's free-tier key,
     # then the reader's own key). The trial case fell into `metered_single` and claimed a bill.
     trial_single = form == "short" and not provs[0]["free"] and bool(provs[0]["trial"])
     metered_single = form == "short" and not provs[0]["free"] and not trial_single
     if trial_single:
-        bits_desc.append(f"One provider, free for {provs[0]['trial']} calls a day on treg.to's key, then your own key.")
+        bits_desc.append(f"One provider, free for {provs[0]['trial']} calls a day on stray's key, then your own key.")
     elif metered_single:
-        bits_desc.append(f"One provider, {money(headline['usd'])} per {headline['unit']} on treg.to's key, no signup."
-                         if headline else "One provider, served on treg.to's key.")
+        bits_desc.append(f"One provider, {money(headline['usd'])} per {headline['unit']} on stray's key, no signup."
+                         if headline else "One provider, served on stray's key.")
     elif form == "short":
-        bits_desc.append("Runs on the account you already own, so treg.to never meters it.")
+        bits_desc.append("Runs on the account you already own, so stray never meters it.")
     elif headline:
         bits_desc.append(f"{n} providers compared, cheapest {money(headline['usd'])} per {headline['unit']}.")
     bits_desc.append(f"The prompt that works in {agent_name}, with the price shown before the call.")
@@ -1329,18 +1329,18 @@ async def use_case_job_page(request: Request, job: str,
         # accounts" and "Hunter" are false wherever the reader's own account does the job.
         own_key_free = any(p["free"] for p in provs)
         why_stray = agent_pages.WHY_STRAY_OWN_KEY if own_key_free else agent_pages.WHY_STRAY
-        md += ["", "## Why go through treg.to", ""] + [f"- **{t}** {d}" for t, d in why_stray]
+        md += ["", "## Why go through stray", ""] + [f"- **{t}** {d}" for t, d in why_stray]
         if trial_single:
             e0 = provs[0]["eps"][0]
             md += ["", "## How it works", "",
                    f"One provider does this job: {provs[0]['name']} (`{e0['id']}`), free for {provs[0]['trial']} "
-                   "calls a day per team on treg.to's own free-tier key. Past the allowance the call is refused "
+                   "calls a day per team on stray's own free-tier key. Past the allowance the call is refused "
                    "with a hint to connect your own key, and on your own key it is never metered.",
                    "", f"    {_uc_call(e0)}", ""]
         elif metered_single:
             e0 = provs[0]["cheapest_ep"] or provs[0]["eps"][0]
             md += ["", "## How it works", "",
-                   f"One provider does this job: {provs[0]['name']} (`{e0['id']}`), served on treg.to's own key at "
+                   f"One provider does this job: {provs[0]['name']} (`{e0['id']}`), served on stray's own key at "
                    + (f"{money(provs[0]['usd'])} per {provs[0]['unit']}, " if provs[0]["usd"] else "")
                    + "the provider's own rate with $0.000 markup, metered from your team's balance. "
                    "No account with the provider, and no key of your own, unless you would rather bring one.",
@@ -1349,11 +1349,11 @@ async def use_case_job_page(request: Request, job: str,
             e0 = provs[0]["eps"][0]
             md += ["", "## How it works", "",
                    f"One provider does this job: {provs[0]['name']} (`{e0['id']}`), on the account you already own. "
-                   "You connect it once, treg.to keeps the token server side, and the call is never metered.",
+                   "You connect it once, stray keeps the token server side, and the call is never metered.",
                    "", f"    {_uc_call(e0)}", ""]
         else:
             md += ["", f"## Behind the scenes: what {agent_name} sees before it calls", "",
-                   f"treg.to does not choose for you. It hands {agent_name} this comparison and it picks, "
+                   f"stray does not choose for you. It hands {agent_name} this comparison and it picks, "
                    "or you tell it how.", ""]
             if units:
                 md += [f"### {spec.get('q_cheapest', 'Which is cheapest?')}", ""]
@@ -1367,7 +1367,7 @@ async def use_case_job_page(request: Request, job: str,
                 md += ["", f"### {spec.get('q_reliable', 'Which is the most reliable?')}", ""]
                 md += [f"- {p['name']}: {pct(p['ok_rate'])} over {p['samples']} calls, {ms(p['p50'])} median"
                        for p in reliable[:6]]
-                md += ["", "Measured on treg.to traffic; not a controlled benchmark."]
+                md += ["", "Measured on stray traffic; not a controlled benchmark."]
             md += ["", f"### {spec.get('q_compare', 'How do they compare?')}", ""]
             for plat in (platforms if form == "platforms" else [None]):
                 rows_ = [p for p in provs if plat is None or p["platform_label"] == plat]
@@ -1376,7 +1376,7 @@ async def use_case_job_page(request: Request, job: str,
                 md += ["| Provider | Price | Accepts | Verified |", "|---|---|---|---|"]
                 for p in sorted(rows_, key=lambda p: (p["usd"] is None, p["usd"] or 0)):
                     price = (f"{money(p['usd'])} per {p['unit']}" if p["usd"]
-                             else (f"free, {p['trial']} calls a day on treg.to's key, then your own key" if p["trial"]
+                             else (f"free, {p['trial']} calls a day on stray's key, then your own key" if p["trial"]
                                    else ("own account, free" if p["free"] else "no dollar rate published")))
                     md.append(f"| {p['name']} | {price} | {', '.join(p['inputs'])} | {p['verified'] or 'unverified'} |")
                 md.append("")
@@ -1433,7 +1433,7 @@ async def use_case_job_page(request: Request, job: str,
             return f'{_esc_html(money(p["usd"]))} <span style="color:var(--muted2)">per {p["unit"]}</span>'
         if p["trial"]:
             return (f'<span style="color:var(--green)">free, {p["trial"]} calls a day</span> '
-                    '<span style="color:var(--muted2)">on treg.to\'s key, then your own key</span>')
+                    '<span style="color:var(--muted2)">on stray\'s key, then your own key</span>')
         if p["free"]:
             return '<span style="color:var(--green)">free, your own account</span>'
         return '<span style="color:var(--muted2)">no dollar rate published</span>'
@@ -1460,8 +1460,8 @@ async def use_case_job_page(request: Request, job: str,
         p0, e0 = provs[0], provs[0]["eps"][0]
         sections.append(
             '<section id="how"><div class="wrap"><div class="seclab">How it works</div>'
-            f'<h2>One provider, free for {p0["trial"]} calls a day on treg.to\'s key</h2>'
-            f'<p>{_logo(p0["domain"], p0["name"])}<b>{_esc_html(p0["name"])}</b> answers this job, served on treg.to\'s '
+            f'<h2>One provider, free for {p0["trial"]} calls a day on stray\'s key</h2>'
+            f'<p>{_logo(p0["domain"], p0["name"])}<b>{_esc_html(p0["name"])}</b> answers this job, served on stray\'s '
             f'own free-tier key with an allowance of {p0["trial"]} calls a day per team. Past the allowance the call is '
             'refused with a hint to connect your own key, and on your own key it is never metered.</p>'
             f'<div class="sample"><div class="sbar">the call</div><pre>{_esc_html(_uc_call(e0))}</pre></div>'
@@ -1474,7 +1474,7 @@ async def use_case_job_page(request: Request, job: str,
         rate = f'{_esc_html(money(p0["usd"]))} per {p0["unit"]}, ' if p0["usd"] else ""
         sections.append(
             '<section id="how"><div class="wrap"><div class="seclab">How it works</div>'
-            f'<h2>One provider, served on treg.to\'s key</h2>'
+            f'<h2>One provider, served on stray\'s key</h2>'
             f'<p>{_logo(p0["domain"], p0["name"])}<b>{_esc_html(p0["name"])}</b> answers this job, at {rate}'
             'the provider\'s own rate with $0.000 markup, metered from your team\'s balance. No account with the '
             'provider and no key of your own, unless you would rather bring one.</p>'
@@ -1488,13 +1488,13 @@ async def use_case_job_page(request: Request, job: str,
             '<section id="how"><div class="wrap"><div class="seclab">How it works</div>'
             f'<h2>One provider, on the account you already own</h2>'
             f'<p>{_logo(p0["domain"], p0["name"])}<b>{_esc_html(p0["name"])}</b> answers this job. You connect it once, '
-            'treg.to keeps the token server side, and the call is never metered.</p>'
+            'stray keeps the token server side, and the call is never metered.</p>'
             f'<div class="sample"><div class="sbar">the call</div><pre>{_esc_html(_uc_call(e0))}</pre></div>'
             f'<p style="font-size:12.5px;color:var(--muted)">Every endpoint on this connection is listed on the '
             f'<a href="/catalog/{_esc_html(e0["platform"])}">{_esc_html((cat.platforms.get(e0["platform"]) or {}).get("label") or e0["platform"])} shelf</a>.</p>'
             + '</div></section>')
     else:
-        inner = [f'<p>treg.to does not choose for you. It hands {_esc_html(agent_name)} this comparison, with the '
+        inner = [f'<p>stray does not choose for you. It hands {_esc_html(agent_name)} this comparison, with the '
                  f'price shown before any call, and {_esc_html(agent_name)} picks. Or you <b>tell it how</b>: '
                  '"cheapest", "most reliable", "the one that takes what I have", or a provider by name.</p>']
         if headline:
@@ -1517,7 +1517,7 @@ async def use_case_job_page(request: Request, job: str,
             inner.append(f'<h3 id="reliable">{_esc_html(spec.get("q_reliable", "Which is the most reliable?"))}</h3>'
                          '<div class="tablewrap"><table><thead><tr><th>Provider</th><th>Success</th><th>Median</th>'
                          f'<th>Sample</th></tr></thead><tbody>{rel_rows}</tbody></table></div>'
-                         '<blockquote>Measured on treg.to traffic: real calls, real inputs, and sample sizes differ '
+                         '<blockquote>Measured on stray traffic: real calls, real inputs, and sample sizes differ '
                          'by provider. Live reliability, not a controlled benchmark.</blockquote>')
         inner.append(f'<h3 id="compare">{_esc_html(spec.get("q_compare", "How do they compare?"))}</h3>')
         if form == "platforms":
@@ -1542,16 +1542,16 @@ async def use_case_job_page(request: Request, job: str,
             '<h3>How these numbers are made</h3>'
             '<div class="who">'
             '<div><b>Prices</b>Each provider&rsquo;s own published rate, converted to US dollars for one chargeable '
-            'event of the unit they bill in. treg.to adds $0.000. Where a provider bills in credits, the conversion '
+            'event of the unit they bill in. stray adds $0.000. Where a provider bills in credits, the conversion '
             'uses the rate on their public pricing page'
             + (f', last checked {_esc_html(latest_verified)}.' if latest_verified else '.') + '</div>'
-            '<div><b>Success rate</b>treg.to&rsquo;s own served calls over the last 30 days: 2xx counts as a success, '
+            '<div><b>Success rate</b>stray&rsquo;s own served calls over the last 30 days: 2xx counts as a success, '
             '5xx and timeouts as a failure. A 4xx is excluded, because it usually means the caller sent bad '
             'parameters and one bad query should not make a healthy endpoint look broken.</div>'
             '<div><b>What this is not</b>A controlled benchmark. These are real calls with real inputs, so sample '
             'sizes and the difficulty of what was asked differ by provider. Treat the rates as live reliability, '
             'not a like-for-like test.</div>'
-            '<div><b>Verified</b>The date treg.to last called the endpoint end to end and confirmed the shape of '
+            '<div><b>Verified</b>The date stray last called the endpoint end to end and confirmed the shape of '
             'its response and the price it charged.</div>'
             '</div>')
         sections.append(f'<section id="bts"><div class="wrap"><div class="seclab">Behind the scenes</div>'
@@ -1618,12 +1618,12 @@ async def use_case_job_page(request: Request, job: str,
             f'<div class="s">{run_n} &times; {_esc_html(money(headline["usd"]))} at {_esc_html(headline["name"])}, '
             'metered per call</div></div></div>'
             '<p style="font-size:12.5px;color:var(--muted)">Subscription figures are provider list prices recorded in '
-            'treg.to&rsquo;s own catalog grid; per-call prices are what treg.to charges today, with $0.000 added.</p>'
+            'stray&rsquo;s own catalog grid; per-call prices are what stray charges today, with $0.000 added.</p>'
             '</div></section>')
 
     body = (
         '<div class="hero"><div class="wrap">'
-        f'<div class="trust" style="margin:0 0 18px"><a href="/">treg.to</a> / <a href="/use-cases">Use cases</a> / '
+        f'<div class="trust" style="margin:0 0 18px"><a href="/">stray</a> / <a href="/use-cases">Use cases</a> / '
         f'<a href="/use-cases#{agent_pages.category_slug(cat_label)}">{_esc_html(cat_label)}</a></div>'
         f'<div class="kicker">{n} providers &middot; {hero_price} &middot; $0.000 markup</div>'
         f'<h1>{_esc_html(spec["sentence"])}</h1>'
@@ -1649,8 +1649,8 @@ async def use_case_job_page(request: Request, job: str,
            'style="display:block;width:100%"/></div>' if spec.get("result_image") else "")
         + '</div></section>'
 
-        '<section id="why"><div class="wrap"><div class="seclab">Why treg.to</div>'
-        '<h2>Why go through treg.to</h2>'
+        '<section id="why"><div class="wrap"><div class="seclab">Why stray</div>'
+        '<h2>Why go through stray</h2>'
         f'<div class="cards">{stray_cards}</div></div></section>'
 
         + "".join(sections) + voices_section
@@ -1679,7 +1679,7 @@ async def use_case_job_page(request: Request, job: str,
         + _COPY_JS)
     ld = [
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+            {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
             {"@type": "ListItem", "position": 2, "name": "Use cases", "item": base + "/use-cases"},
             {"@type": "ListItem", "position": 3, "name": cat_label,
              "item": f"{base}/use-cases#{agent_pages.category_slug(cat_label)}"},
@@ -1725,10 +1725,10 @@ async def use_cases_hub():
                      f'<div class="grid">{"".join(v)}</div></section>' for c, v in by_cat.items())
     body = (
         '<main class="wrap"><div class="phead">'
-        '<div class="crumbs"><a href="/">treg.to</a> / <a href="/use-cases">Use cases</a></div>'
+        '<div class="crumbs"><a href="/">stray</a> / <a href="/use-cases">Use cases</a></div>'
         '<h1>What you can have your agent do</h1>'
         '<p class="lede">One page per job: the prompt that works, what the call costs, and every provider '
-        'that does it. All of it through one treg.to key, at the provider&rsquo;s own rate with $0.000 markup.</p>'
+        'that does it. All of it through one stray key, at the provider&rsquo;s own rate with $0.000 markup.</p>'
         '</div>' + blocks
         + '<section class="cat"><h2>Everything else</h2><div class="cap"><p style="margin:0">These are the jobs '
           'written up so far. The full menu is on the agent pages, and the whole catalog is at '
@@ -1736,11 +1736,11 @@ async def use_cases_hub():
           'and the whole sequence, chapter by chapter, is the <a href="/gtm-engineering">GTM engineering playbook</a>.'
           '</p></div></section></main>')
     ld = [{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+        {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
         {"@type": "ListItem", "position": 2, "name": "Use cases", "item": base + "/use-cases"}]}]
-    return _page("What you can have your agent do | treg.to",
+    return _page("What you can have your agent do | stray",
                  "One page per job: the prompt that works in ChatGPT or Claude, what the call costs, and "
-                 "every provider that does it, compared. One treg.to key, no markup.",
+                 "every provider that does it, compared. One stray key, no markup.",
                  "/use-cases", body, ld)
 
 
@@ -1863,7 +1863,7 @@ async def workflow_page(request: Request, slug: str,
 
     title = spec["title"].format(n=n_steps, steps=n_steps)
     lede = spec["lede"].format(n=n_steps, steps=n_steps)
-    desc = _serp_desc(f"{spec['sentence']}. {n_steps} steps through one treg.to key, priced before "
+    desc = _serp_desc(f"{spec['sentence']}. {n_steps} steps through one stray key, priced before "
                       f"each call, with a real run's receipt.")
 
     if as_md:
@@ -1886,7 +1886,7 @@ async def workflow_page(request: Request, slug: str,
         md += [f"- {k}: {v}" for k, v in run["receipt"]]
         md += [""] + list(run["narrative"])
         md += ["", f"Download the CSV of this run: {base}{run['csv']}", ""]
-        md += ["## Why go through treg.to", ""] + [f"- **{t}** {d}" for t, d in agent_pages.WHY_STRAY]
+        md += ["## Why go through stray", ""] + [f"- **{t}** {d}" for t, d in agent_pages.WHY_STRAY]
         md += ["", "## Where it goes wrong", ""]
         for h, p in spec["failure_modes"]:
             md += [f"**{h}** {p}", ""]
@@ -1975,7 +1975,7 @@ async def workflow_page(request: Request, slug: str,
 
     body = (
         '<div class="hero"><div class="wrap">'
-        f'<div class="trust" style="margin:0 0 18px"><a href="/">treg.to</a> / <a href="/workflows">Workflows</a> / '
+        f'<div class="trust" style="margin:0 0 18px"><a href="/">stray</a> / <a href="/workflows">Workflows</a> / '
         f'{_esc_html(spec["sentence"])}</div>'
         f'<div class="kicker">{n_steps} steps &middot; {n_prov} providers &middot; $0.000 markup</div>'
         f'<h1>{_esc_html(spec["sentence"])}</h1>'
@@ -1999,7 +1999,7 @@ async def workflow_page(request: Request, slug: str,
         + '<section id="steps"><div class="wrap"><div class="seclab">The steps</div>'
           f'<h2>What {_esc_html(agent_name)} calls, and what each call costs</h2>'
           '<p>Prices are the provider&rsquo;s own rate, read from the catalog when this page loads, with $0.000 '
-          'added by treg.to. Success rates are treg.to&rsquo;s own served calls over the last 30 days.</p>'
+          'added by stray. Success rates are stray&rsquo;s own served calls over the last 30 days.</p>'
           + steps_table + '</div></section>'
 
         + '<section id="run"><div class="wrap"><div class="seclab">The receipt</div>'
@@ -2009,8 +2009,8 @@ async def workflow_page(request: Request, slug: str,
           f'<p><a class="ghostbtn" href="{_esc_html(run["csv"])}">Download the CSV of this run</a></p>'
           '</div></section>'
 
-        + '<section id="why"><div class="wrap"><div class="seclab">Why treg.to</div>'
-          '<h2>Why go through treg.to</h2>'
+        + '<section id="why"><div class="wrap"><div class="seclab">Why stray</div>'
+          '<h2>Why go through stray</h2>'
           f'<div class="cards">{stray_cards}</div></div></section>'
 
         + '<section id="failures"><div class="wrap"><div class="seclab">The detail</div>'
@@ -2024,7 +2024,7 @@ async def workflow_page(request: Request, slug: str,
         + _COPY_JS)
     ld = [
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+            {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
             {"@type": "ListItem", "position": 2, "name": "Workflows", "item": base + "/workflows"},
             {"@type": "ListItem", "position": 3, "name": spec["sentence"],
              "item": f"{base}/workflows/{wf_slug}"}]},
@@ -2064,22 +2064,22 @@ async def workflows_hub(observations: endpoint_stats.EndpointObservationReader =
                      f'<p>{_esc_html(blurb[:140])}</p><div class="meta">{meta}</div></a>')
     body = (
         '<main class="wrap"><div class="phead">'
-        '<div class="crumbs"><a href="/">treg.to</a> / <a href="/workflows">Workflows</a></div>'
+        '<div class="crumbs"><a href="/">stray</a> / <a href="/workflows">Workflows</a></div>'
         '<h1>Workflows your agent can run from one prompt</h1>'
         '<p class="lede">A use-case page answers one job. A workflow is the sequence a person actually runs: '
         'one prompt, a price per step read live from the catalog, and the receipt and CSV of a real run. '
-        'All of it through one treg.to key, at the provider&rsquo;s own rate with $0.000 markup.</p>'
+        'All of it through one stray key, at the provider&rsquo;s own rate with $0.000 markup.</p>'
         f'</div><section class="cat"><div class="grid">{"".join(cards)}</div></section>'
         '<section class="cat"><h2>Everything else</h2><div class="cap"><p style="margin:0">The single-job '
         'versions are at <a href="/use-cases">/use-cases</a>, and the whole catalog is at '
         '<a href="/catalog">/catalog</a>. How the workflows fit together is the '
         '<a href="/gtm-engineering">GTM engineering playbook</a>.</p></div></section></main>')
     ld = [{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+        {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
         {"@type": "ListItem", "position": 2, "name": "Workflows", "item": base + "/workflows"}]}]
-    return _page("Workflows your agent can run from one prompt | treg.to",
+    return _page("Workflows your agent can run from one prompt | stray",
                  "Multi-step jobs as one prompt: a price per step read live from the catalog, and the "
-                 "receipt and CSV of a real run. One treg.to key, no markup.",
+                 "receipt and CSV of a real run. One stray key, no markup.",
                  "/workflows", body, ld)
 
 
@@ -2577,7 +2577,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
     sample_eps = sorted([e for e in (platform_eps or eps) if e["verified"]], key=lambda e: len(e["id"])) or platform_eps or eps
     sample_id = sample_eps[0]["id"]
     badge = "PLATFORM + BYOK" if mixed else ("YOUR ACCOUNT" if is_oauth else "NO SIGNUP")
-    # The measured line: what treg.to has actually observed calling this provider. It is the one
+    # The measured line: what stray has actually observed calling this provider. It is the one
     # thing a vendor's own pricing page cannot print, and it goes above the fold for that reason.
     obs = await _observed_or_empty(observations, [e["id"] for e in eps])
     o_samples = sum(int(o.get("samples") or 0) for o in obs.values())
@@ -2616,9 +2616,9 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
             "account once and your agent uses it from then on. Calls on your own connection are never metered."
             if is_oauth and mcp_intent else
             f"{_esc_html(blurb)} Connect your own {esc_d} account once and your agent uses it "
-            "from then on, through one treg.to token. Calls on your own connection are never metered."
+            "from then on, through one stray token. Calls on your own connection are never metered."
             if is_oauth else
-            f"{_esc_html(blurb)} {len(eps)} tools for your agent through one treg.to key, priced "
+            f"{_esc_html(blurb)} {len(eps)} tools for your agent through one stray key, priced "
             f"at the provider's own rate{' from ' + _esc_html(cheapest) if cheapest else ''}, with no {esc_d} signup.")
     h1_text = (f"{esc_d} MCP: connect your own account" if is_oauth and mcp_intent
                else f"{esc_d}: connect your own account" if is_oauth
@@ -2638,7 +2638,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
                 "Calls through stray's OAuth app are metered under this server's billing policy.")
     hero = (
         '<div class="hero"><div class="wrap">'
-        '<div class="trust" style="margin:0 0 18px"><a href="/">treg.to</a> / '
+        '<div class="trust" style="margin:0 0 18px"><a href="/">stray</a> / '
         '<a href="/catalog">Catalog</a> / ' + esc_d + "</div>"
         f'<div class="kicker">{kicker}</div>'
         f"<h1>{h1_text}</h1>"
@@ -2676,7 +2676,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
         f'<img src="/logos/{_esc_html(svc)}.svg" alt="" aria-hidden="true" '
         'onerror="this.style.display=\'none\'"/>'
         f'<b>{esc_d}</b><span class="bdg">{badge}</span></div>'
-        f'<div class="sm">{_esc_html(blurb) or esc_d + " through one treg.to token."}</div>'
+        f'<div class="sm">{_esc_html(blurb) or esc_d + " through one stray token."}</div>'
         f'<div class="ct">⚒ {len(eps)} TOOLS'
         + (" · platform + BYOK" if mixed else ("" if is_oauth else " · metered per call")) + "</div></div>"
         "</div>"
@@ -2727,13 +2727,13 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
     alt_names = sorted({e["provider"] for e in cat.endpoints
                         if _pub(e) and e["capability"] in cap_counts and e["provider"] != svc})
     why = (
-        '<section id="why"><div class="wrap"><div class="seclab">Why treg.to</div>'
-        f"<h2>Why call {esc_d} through treg.to</h2>"
+        '<section id="why"><div class="wrap"><div class="seclab">Why stray</div>'
+        f"<h2>Why call {esc_d} through stray</h2>"
         '<div class="cards">'
-        + ("<div class=\"card\"><h4>Your account, held safely</h4><p>Connect once; treg.to keeps the "
+        + ("<div class=\"card\"><h4>Your account, held safely</h4><p>Connect once; stray keeps the "
            "credential server-side and injects it per call. No key on any machine.</p></div>"
            if is_oauth else
-           f"<div class=\"card\"><h4>No {esc_d} signup</h4><p>Eligible tools run on treg.to's key, "
+           f"<div class=\"card\"><h4>No {esc_d} signup</h4><p>Eligible tools run on stray's key, "
            "metered per call from a prepaid balance.</p></div>")
         + '<div class="card"><h4>Price before the call</h4><p>The provider&#x27;s own rate, $0.000 '
         'markup. <a href="/pricing">How billing works</a>.</p></div>'
@@ -2792,7 +2792,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
         '<section id="tools"><div class="wrap"><div class="seclab">The shelf</div>'
         f"<h2>All {len(eps)} {esc_d} tools</h2>{''.join(tool_blocks)}"
         '<p style="font-size:12.5px;color:var(--muted)">Reliability badges come from live traffic '
-        "through treg.to. Live-verified means a successful provider check; it does not verify every request variant.</p></div></section>")
+        "through stray. Live-verified means a successful provider check; it does not verify every request variant.</p></div></section>")
 
     alt_sec = ""
     if alt_names:
@@ -2805,7 +2805,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
             '<section id="alts"><div class="wrap"><div class="seclab">Related</div>'
             "<h2>Same jobs, other providers</h2>"
             f"<p>These providers answer some of the same capabilities as {esc_d}. The platform "
-            "pages show them on one row with rate and coverage; choosing is yours, treg.to does "
+            "pages show them on one row with rate and coverage; choosing is yours, stray does "
             "not route between providers automatically.</p>"
             f'<div class="provstrip"><div class="pl">also on the catalog</div>'
             f'<div class="ptiles">{tiles}</div></div></div></section>')
@@ -2814,17 +2814,17 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
         faq_items = [
             (f"Do I need a {display} account?",
              f"Yes. This is an own-account connection: you sign in to {display} once and your "
-             "agent uses that connection through your treg.to token. Calls on it are never metered."),
+             "agent uses that connection through your stray token. Calls on it are never metered."),
         ]
     else:
         faq_items = [
             (f"Do I need a {display} account?",
-             f"No. Eligible tools run on treg.to's key and the call is metered from your team's "
+             f"No. Eligible tools run on stray's key and the call is metered from your team's "
              f"prepaid balance, priced up front. If your team registers its own {display} key, "
              "that key always wins and those calls are never metered."),
             ("What does a call cost?",
              f"Each tool on this page shows its rate{'; the cheapest is ' + cheapest if cheapest else ''}. "
-             "The rate is the provider's own and treg.to adds no markup; it is billed per call "
+             "The rate is the provider's own and stray adds no markup; it is billed per call "
              f"from a prepaid balance. It is not {display}'s subscription pricing, which is on "
              "their own site. New teams start with $1.00 of free credit."),
         ]
@@ -2844,7 +2844,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
          "Anything that speaks MCP (Claude Code, Claude Desktop, ChatGPT, Codex, Cursor, Grok) "
          "and anything that can make an HTTP request (LangChain, CrewAI, LlamaIndex, plain code)."),
         (f"Is this the official {display} MCP server?",
-         f"No. treg.to serves {display}'s real API through its own metered proxy: the request "
+         f"No. stray serves {display}'s real API through its own metered proxy: the request "
          f"is the provider's own, the credential is injected server-side, and the answer is "
          f"relayed verbatim. The official {display} channels are linked above."),
     ]
@@ -2874,51 +2874,51 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
 
     if is_oauth:
         if mcp_intent:
-            title = f"{display} MCP: connect your own account | treg.to"
+            title = f"{display} MCP: connect your own account | stray"
             desc = (f"{display} MCP server: connect your own account and call {len(eps)} tools "
-                    "through treg.to, one MCP for the whole catalog. Never metered on your connection.")
+                    "through stray, one MCP for the whole catalog. Never metered on your connection.")
         else:
-            title = f"{display}: connect your own account | treg.to"
+            title = f"{display}: connect your own account | stray"
             desc = (f"Use {display} from Claude Code, ChatGPT or any MCP agent: {len(eps)} tools "
-                    "through one treg.to token. Calls on your own connection are never metered.")
+                    "through one stray token. Calls on your own connection are never metered.")
     else:
         # Title matches H1: `{Provider}: {n} tools from {price}`.
         # `cheapest` carries its own billing unit ("$0.00245/result", "$0.0089/call"), so the copy
         # never says "per call" next to it: a per-result or per-success rate is not a per-call one.
-        title = (f"{display}: {len(eps)} tools from {cheapest} | treg.to" if cheapest
-                 else f"{display}: {len(eps)} tools | treg.to")
+        title = (f"{display}: {len(eps)} tools from {cheapest} | stray" if cheapest
+                 else f"{display}: {len(eps)} tools | stray")
         if len(title) > _TITLE_MAX:
             # Both branches must be shorter than the primary; the H1 still starts with `display`.
-            title = (f"{display}: from {cheapest} | treg.to" if cheapest
-                     else f"{display} | treg.to")
+            title = (f"{display}: from {cheapest} | stray" if cheapest
+                     else f"{display} | stray")
         desc = (f"{display} API pricing at the provider's own rate, with no {display} signup: {len(eps)} tools "
-                f"{'from ' + cheapest + ' ' if cheapest else ''}through one treg.to key or MCP server"
+                f"{'from ' + cheapest + ' ' if cheapest else ''}through one stray key or MCP server"
                 f"{', ' + measured if measured else ''}. Use it from Claude Code, ChatGPT or any agent.")
 
     if mixed:
         # Title matches H1: `{Provider}: {n} tools, platform or your own key`.
-        title = f"{display}: {len(eps)} tools, platform or your own key | treg.to"
+        title = f"{display}: {len(eps)} tools, platform or your own key | stray"
         if len(title) > _TITLE_MAX:
-            title = f"{display}: {len(eps)} tools, platform + BYOK | treg.to"
+            title = f"{display}: {len(eps)} tools, platform + BYOK | stray"
         if len(title) > _TITLE_MAX:
-            title = f"{display}: platform + BYOK | treg.to"
+            title = f"{display}: platform + BYOK | stray"
         desc = (f"{display} on stray: {len(platform_eps)} tools with platform or your own key, "
                 f"{byok_only} BYOK only. Compare access, billing units and live verification for every tool.")
     if oauth_metered:
         # Same shape as the H1/title: an MCP-intent provider keeps "MCP" in its description.
         desc = (f"{display} MCP server: connect your own account and call {len(eps)} tools through "
-                "treg.to. Calls through stray's OAuth app are metered under this server's billing policy."
+                "stray. Calls through stray's OAuth app are metered under this server's billing policy."
                 if mcp_intent else
                 f"Use {display} through your OAuth connection. Calls through stray's OAuth app "
                 "are metered under this server's billing policy.")
     ld = [
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+            {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
             {"@type": "ListItem", "position": 2, "name": "Catalog", "item": base + "/catalog"},
             {"@type": "ListItem", "position": 3, "name": display,
              "item": f"{base}/tools/{svc}"}]},
         {"@context": "https://schema.org", "@type": "ItemList",
-         "name": f"{display} tools on treg.to", "numberOfItems": len(groups),
+         "name": f"{display} tools on stray", "numberOfItems": len(groups),
          "itemListElement": [
              {"@type": "ListItem", "position": i, "name": plat_label.get(sl, sl),
               "url": f"{base}/catalog/{sl}"}
@@ -2928,7 +2928,7 @@ async def tools_provider(service: str, db: AsyncSession = Depends(get_session),
              "acceptedAnswer": {"@type": "Answer", "text": a}}
             for q, a in faq_items]},
         {"@context": "https://schema.org", "@type": "HowTo",
-         "name": f"Set up {display} for an AI agent via treg.to",
+         "name": f"Set up {display} for an AI agent via stray",
          # The steps mirror the VISIBLE setup section in order — schema that describes a
          # different flow than the page shows is the mismatch Google treats as a violation.
          "step": [
@@ -2964,8 +2964,8 @@ _PV_CSS = """<style>
 
 @app.get("/pricing", include_in_schema=False)
 async def pricing_page():
-    """The one canonical answer to "what does treg.to charge" - the page every rate table links,
-    so a provider's per-call rate can never be mistaken for treg.to's fees (or for the provider's
+    """The one canonical answer to "what does stray charge" - the page every rate table links,
+    so a provider's per-call rate can never be mistaken for stray's fees (or for the provider's
     own subscription pricing). Everything here restates commitments that are already public:
     no markup is terms §08, and every number renders from the catalog."""
     base = get_settings().public_url.rstrip("/")
@@ -2979,9 +2979,9 @@ async def pricing_page():
         ("Is there a subscription?",
          "No. You top up a prepaid balance and each catalog call is metered against it, priced "
          "before you call. No seats, no monthly minimum. New teams start with $1.00 of free credit."),
-        ("Does treg.to add a markup?",
+        ("Does stray add a markup?",
          "No. A metered call is billed at the provider's own rate; adding no markup is a public "
-         "commitment in the terms. treg.to is not the provider's pricing page either: providers "
+         "commitment in the terms. stray is not the provider's pricing page either: providers "
          "sell their own subscriptions on their own sites, and those are linked, not restated."),
         ("What is never metered?",
          "Anything that is yours: calls on your team's own provider keys (your key always wins), "
@@ -2992,7 +2992,7 @@ async def pricing_page():
          "deliverable lead) often takes multiple calls and filters out misses, so the per-result "
          "cost is higher. The receipts above show both: the total metered and the per-usable-row cost."),
         ("Are own-key calls billed?",
-         "No. Register your team's provider key and treg.to uses it instead of the shared key. "
+         "No. Register your team's provider key and stray uses it instead of the shared key. "
          "Those calls are never metered. The receipts still show the shared-key rate for comparison, "
          "as in the Meta Ad Library example where the team's own Apify key made the Meta calls free."),
         ("What happens when the balance runs out?",
@@ -3018,11 +3018,11 @@ async def pricing_page():
             '<section class="cat"><div class="prose">'
             "<h2>How a call is billed</h2>"
             '<div class="pv-why">'
-            "<div><b>Catalog calls, metered</b>Eligible tools run on treg.to's key and the call is "
+            "<div><b>Catalog calls, metered</b>Eligible tools run on stray's key and the call is "
             "metered from your prepaid balance at the provider's own rate, shown before you call. "
             "No markup; that promise is in the terms.</div>"
             "<div><b>Your own key always wins</b>Register your team's key for a provider and "
-            "treg.to uses it instead. Those calls are never metered.</div>"
+            "stray uses it instead. Those calls are never metered.</div>"
             "<div><b>Your own tools and accounts</b>Tools a teammate registered and your own "
             "connected accounts are yours; calls on them are never metered.</div>"
             "<div><b>Runs dry, fails loud</b>When the balance is empty, metered calls stop with a "
@@ -3037,7 +3037,7 @@ async def pricing_page():
             "row can cost more when multi-step work filters out misses. The receipts below show both.</div>"
             "<div><b>Misses</b>Invalid, empty, or catch-all outcomes. On per-success tools, a miss "
             "settles at $0.00. On per-call tools, every call costs regardless of what comes back.</div>"
-            "<div><b>BYOK (bring your own key)</b>Register your team's provider key and treg.to uses "
+            "<div><b>BYOK (bring your own key)</b>Register your team's provider key and stray uses "
             "it instead. Calls on your own key are never metered. Receipts still show the shared-key "
             "rate for comparison.</div></div>"
             "<h2>Receipts from real runs</h2>"
@@ -3060,7 +3060,7 @@ async def pricing_page():
             '<div class="date">2026-09-14 · <a href="/workflows/mine-competitor-meta-ads-as-creative-pack">workflow</a></div>'
             "<ul><li>20 Meta ads and 17 Google ads pulled for Notion</li>"
             "<li>Meta calls ran on team's own Apify key (not metered)</li>"
-            "<li>Google call metered: $0.015 on treg.to's shared key</li>"
+            "<li>Google call metered: $0.015 on stray's shared key</li>"
             "<li>Shared-key rate for Meta if needed: $0.105 for probe and 20 ads</li></ul>"
             '<div class="total">BYOK in action: own key $0, shared key $0.12</div></div>'
             '<div class="pv-receipt"><h4>Creator discovery: Instagram</h4>'
@@ -3073,7 +3073,7 @@ async def pricing_page():
             "<h2>Example rates, by platform</h2>"
             "<p>Rendered from the live catalog; every tool page carries its own rate.</p>"
             f"<ul>{lis}</ul>"
-            "<p><small>Rates are each provider's own, metered per call through treg.to. A "
+            "<p><small>Rates are each provider's own, metered per call through stray. A "
             "provider's subscription pricing lives on its own site.</small></p>"
             f"{faq}</div></section></main>")
     ld = [
@@ -3085,8 +3085,8 @@ async def pricing_page():
              "acceptedAnswer": {"@type": "Answer", "text": a}}
             for q, a in faq_items]},
     ]
-    return _page("Pricing — pay per call, no markup, first $1.00 free | treg.to",
-                 "How treg.to charges: a prepaid balance metered per call at the provider's own "
+    return _page("Pricing — pay per call, no markup, first $1.00 free | stray",
+                 "How stray charges: a prepaid balance metered per call at the provider's own "
                  "rate with no markup. Your own keys, tools and accounts are never metered.",
                  "/pricing", body, ld)
 
@@ -3187,10 +3187,10 @@ async def docs_page():
 </main>"""
     ld = [{"@context": "https://schema.org", "@type": "TechArticle",
            "headline": "stray API reference",
-           "description": f"How to call {n_endpoints} provider API endpoints through one treg.to token.",
+           "description": f"How to call {n_endpoints} provider API endpoints through one stray token.",
            "url": f"{base}/docs"}]
     return _page("API reference — call any tool through one endpoint | stray",
-                 f"The treg.to HTTP API: proxy a real request to any of {n_endpoints} catalogued provider "
+                 f"The stray HTTP API: proxy a real request to any of {n_endpoints} catalogued provider "
                  "endpoints through /call/, with the credential injected server-side. Plus the "
                  "catalog, org, billing and tool-management routes.",
                  "/docs", body, ld, nav_current="/docs")
@@ -3387,7 +3387,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_session)):
 @app.get("/robots.txt", include_in_schema=False)
 async def robots_txt():
     """Crawler policy. `{BASE}`-templated like llms.txt, so a self-hosted registry advertises its own
-    sitemap rather than treg.to's."""
+    sitemap rather than stray's."""
     f = _WEB_DIR / "robots.txt"
     if not f.exists():
         raise HTTPException(status_code=404, detail="robots.txt not bundled")
@@ -3740,7 +3740,7 @@ async def legal_css():
 
 def _static_page(name: str, request: Request) -> Response:
     """A bundled HTML page with its placeholders filled: `{BASE}` so each page's canonical and
-    og:url name the host actually serving it (a hardcoded treg.to would tell a self-hosted
+    og:url name the host actually serving it (a hardcoded stray would tell a self-hosted
     registry's crawler that the real page lives on someone else's domain), and `{ENDPOINTS}` /
     `{PROVIDERS}` so the catalog's size is read from the catalog, never typed.
 
@@ -3902,7 +3902,7 @@ async def gtm_engineering_page(request: Request):
     page, the workflows as playbooks with their receipts, and the GitHub skills people install
     next to the catalog job that covers their data step. Hand-written like the launch pages, so it
     loads sitetrack.js and its reading is measurable; the facts on it are dated in the copy.
-    Hosted only, like the workflows it links to: its runs and credit describe treg.to itself."""
+    Hosted only, like the workflows it links to: its runs and credit describe stray itself."""
     if not _hosted():
         raise HTTPException(status_code=404, detail="not found")
     return _static_page("gtm-engineering.html", request)
@@ -4014,12 +4014,12 @@ _BLOG_LAUNCHES: list[tuple[str, str, str, str]] = [
      "What Jev is and how to use it: live examples, use cases, code, and GTM automation recipes."),
     ("/ugc", "AI UGC Videos for $0.67 a Clip", "2026-09-15",
      "The five-step workflow: trending hooks, a JSON-prompt character, Seedance 2.5, a cloned voice."),
-    ("/gpt6", "GPT-6 and treg.to", "2026-09-08",
+    ("/gpt6", "GPT-6 and stray", "2026-09-08",
      "Codex demo: one prompt, the market read, and the catalog of tools it called."),
-    ("/fable", "Claude Fable 5.1 + treg.to", "2026-09-02",
+    ("/fable", "Claude Fable 5.1 + stray", "2026-09-02",
      "Run your GTM from the terminal: one prompt, four agents, four results."),
     ("/grokbot", "Grok Bot for Outreach", "2026-09-01",
-     "A scroll animatic of Grok Bot working a lead list through treg.to."),
+     "A scroll animatic of Grok Bot working a lead list through stray."),
     ("/people-search", "People Search Launch", "2026-09-01",
      "Give your agent 1B+ contacts. The destination the launch film points at."),
 ]
@@ -4031,7 +4031,7 @@ _BLOG_POSTS: list[tuple[str, str, str, str]] = [
     ("work-email-finding-bench", "Work Email Finding: a 292 Person Receipt", "2026-09-16",
      "Quality tie across vendors. Cost is the gap: $0.0056 vs $0.0395 per correct."),
     ("people-search-bench", "#1 on People Search Bench", "2026-09-14",
-     "treg.to scores 80.0% on recruiting, 78.2% on B2B prospecting. 119 real tasks, same agent."),
+     "stray scores 80.0% on recruiting, 78.2% on B2B prospecting. 119 real tasks, same agent."),
 ]
 
 
@@ -4044,7 +4044,7 @@ def _blog_posting_ld(slug: str, base: str) -> dict:
             "description": blurb, "datePublished": date, "dateModified": date,
             "mainEntityOfPage": f"{base}/blog/{slug}", "url": f"{base}/blog/{slug}",
             "author": {"@type": "Person", "name": "Jason Zhou", "url": "https://github.com/JayZeeDesign"},
-            "publisher": {"@type": "Organization", "name": "treg.to", "url": base + "/"}}
+            "publisher": {"@type": "Organization", "name": "stray", "url": base + "/"}}
 
 
 @app.get("/blog", include_in_schema=False)
@@ -4075,9 +4075,9 @@ async def blog_index():
 
     body = (
         '<main class="wrap"><div class="phead">'
-        '<div class="crumbs"><a href="/">treg.to</a> / <a href="/blog">Blog</a></div>'
+        '<div class="crumbs"><a href="/">stray</a> / <a href="/blog">Blog</a></div>'
         '<h1>Launches and Notes</h1>'
-        '<p class="lede">Product launches, partner posts and notes from the treg.to team. '
+        '<p class="lede">Product launches, partner posts and notes from the stray team. '
         'Each launch page shows a real run with the catalog and the bill.</p>'
         '</div>'
         + (f'<section class="cat"><h2>Posts</h2><div class="grid">{post_cards}</div></section>'
@@ -4088,18 +4088,18 @@ async def blog_index():
     )
 
     ld = [{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+        {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
         {"@type": "ListItem", "position": 2, "name": "Blog", "item": base + "/blog"}]}]
 
-    return _page("Launches and Notes | treg.to",
-                 "Product launches, partner posts and notes from the treg.to team. "
+    return _page("Launches and Notes | stray",
+                 "Product launches, partner posts and notes from the stray team. "
                  "Each launch page shows a real run with the catalog and the bill.",
                  "/blog", body, ld)
 
 
 @app.get("/blog/people-search-bench", include_in_schema=False)
 async def blog_people_search_bench():
-    """Identity/receipt post: treg.to is #1 on People Search Bench by LessieAI. Links to /grokbot#bench
+    """Identity/receipt post: stray is #1 on People Search Bench by LessieAI. Links to /grokbot#bench
     for the interactive chart. Numbers from the benchmark: 119 real tasks, % answered correctly."""
     if not _hosted():
         raise HTTPException(status_code=404, detail="not found")
@@ -4120,20 +4120,20 @@ async def blog_people_search_bench():
     body = (
         '<main class="wrap" style="max-width:680px">'
         '<div class="phead">'
-        '<div class="crumbs"><a href="/">treg.to</a> / <a href="/blog">Blog</a> / '
+        '<div class="crumbs"><a href="/">stray</a> / <a href="/blog">Blog</a> / '
         '<a href="/blog/people-search-bench">#1 on People Search Bench</a></div>'
         '<h1>#1 on People Search Bench</h1>'
-        '<p class="lede">treg.to scores highest on People Search Bench by LessieAI: '
+        '<p class="lede">stray scores highest on People Search Bench by LessieAI: '
         '119 real tasks, same agent, with and without the plugin.</p>'
         '</div>'
         '<section class="cat">'
         '<p>People Search Bench tests whether an agent can answer real recruiting, B2B prospecting, '
         'deterministic lookup and influencer discovery questions. The benchmark runs the same agent '
-        'with and without the treg.to plugin, measuring % answered correctly across 119 tasks.</p>'
+        'with and without the stray plugin, measuring % answered correctly across 119 tasks.</p>'
         '<table style="width:100%;margin:24px 0;border-collapse:collapse">'
         '<thead><tr style="border-bottom:1px solid var(--border)">'
         '<th style="text-align:left;padding:8px 0">Category</th>'
-        '<th style="text-align:right;padding:8px 0">treg.to score</th>'
+        '<th style="text-align:right;padding:8px 0">stray score</th>'
         '</tr></thead>'
         f'<tbody style="font-size:1.1em">{score_rows}</tbody>'
         '</table>'
@@ -4147,13 +4147,13 @@ async def blog_people_search_bench():
 
     ld = [_blog_posting_ld("people-search-bench", base),
           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+        {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
         {"@type": "ListItem", "position": 2, "name": "Blog", "item": base + "/blog"},
         {"@type": "ListItem", "position": 3, "name": "#1 on People Search Bench",
          "item": base + "/blog/people-search-bench"}]}]
 
-    return _page("#1 on People Search Bench | treg.to",
-                 "treg.to scores 80.0% on recruiting, 78.2% on B2B prospecting on People Search Bench "
+    return _page("#1 on People Search Bench | stray",
+                 "stray scores 80.0% on recruiting, 78.2% on B2B prospecting on People Search Bench "
                  "by LessieAI. 119 real tasks, same agent with and without the plugin.",
                  "/blog/people-search-bench", body, ld)
 
@@ -4169,7 +4169,7 @@ async def blog_work_email_finding_bench():
     body = (
         '<main class="wrap" style="max-width:780px">'
         '<div class="phead">'
-        '<div class="crumbs"><a href="/">treg.to</a> / <a href="/blog">Blog</a> / '
+        '<div class="crumbs"><a href="/">stray</a> / <a href="/blog">Blog</a> / '
         '<a href="/blog/work-email-finding-bench">Work Email Finding</a></div>'
         '<h1>Work Email Finding: a 292 Person Receipt</h1>'
         '<p class="lede">Measured 2026-09-16. Quality is a tie across vendors. Cost is the gap.</p>'
@@ -4187,7 +4187,7 @@ async def blog_work_email_finding_bench():
         '<table style="width:100%;margin:24px 0;border-collapse:collapse;font-size:0.95em">'
         '<thead><tr style="border-bottom:1px solid var(--border)">'
         '<th style="text-align:left;padding:8px 0"></th>'
-        '<th style="text-align:right;padding:8px 12px">treg.to</th>'
+        '<th style="text-align:right;padding:8px 12px">stray</th>'
         '<th style="text-align:right;padding:8px 12px">Clay</th>'
         '<th style="text-align:right;padding:8px 12px">Monid</th>'
         '<th style="text-align:right;padding:8px 12px">Freckle</th>'
@@ -4256,15 +4256,15 @@ async def blog_work_email_finding_bench():
         'Clay dollars are at Clay&#x27;s Launch data-credit list price ($0.05/credit on 2026-09-16).</p>'
         '<h2 style="margin-top:32px;font-size:1.1em">What the numbers say</h2>'
         '<ul style="margin:16px 0;padding-left:24px">'
-        '<li style="margin:8px 0"><strong>Quality is a tie.</strong> treg.to, Clay and Freckle land at '
+        '<li style="margin:8px 0"><strong>Quality is a tie.</strong> stray, Clay and Freckle land at '
         '264, 262 and 263 exact matches; the difference is noise.</li>'
         '<li style="margin:8px 0"><strong>Different-from-published is mostly not invalid.</strong> '
         'Many returned addresses are valid aliases. Exact-match is a floor, not a ceiling.</li>'
         '<li style="margin:8px 0"><strong>Cost is structural.</strong> Credit-based waterfalls run '
-        '7x to 16x treg.to per correct row. Deepline is an outlier because ZeroBounce fires on every '
+        '7x to 16x stray per correct row. Deepline is an outlier because ZeroBounce fires on every '
         'pattern guess.</li>'
         '<li style="margin:8px 0"><strong>Latency only matters for per-call paths.</strong> '
-        'treg.to (0.44s) and Monid (2.0s) are per-call; do not rank batch tools on speed.</li>'
+        'stray (0.44s) and Monid (2.0s) are per-call; do not rank batch tools on speed.</li>'
         '<li style="margin:8px 0"><strong>Aggregator columns are routes, not products.</strong> '
         'Each column represents how that aggregator dispatched the query to its underlying providers.</li>'
         '</ul>'
@@ -4272,7 +4272,7 @@ async def blog_work_email_finding_bench():
         '<p>Choose Clay when you want a visual table, the broader Clay ecosystem for GTM orchestration, '
         'or a seat that already includes enrichment inside a bigger workflow. Spreadsheet-native teams '
         'may prefer the Clay UI over API calls.</p>'
-        '<p>Choose treg.to when you want a metered catalog call with a known provider price and a dated '
+        '<p>Choose stray when you want a metered catalog call with a known provider price and a dated '
         'receipt. See <a href="/pricing">how billing works</a>.</p>'
         '<h2 style="margin-top:32px;font-size:1.1em">Disclosures</h2>'
         '<ul style="margin:16px 0;padding-left:24px;color:var(--muted);font-size:0.9em">'
@@ -4280,8 +4280,8 @@ async def blog_work_email_finding_bench():
         'email, so find rates are inflated vs. a cold list.</li>'
         '<li style="margin:6px 0"><strong>MillionVerifier re-verify:</strong> we re-verified addresses '
         'with MillionVerifier after Kitt ran out of credits. MV served 0 cache hits. Kitt is also in '
-        'the treg.to catalog, so its hits are not independent for the treg.to column.</li>'
-        '<li style="margin:6px 0"><strong>treg.to bug:</strong> 3 rows returned HTTP 502 (route_failed) '
+        'the stray catalog, so its hits are not independent for the stray column.</li>'
+        '<li style="margin:6px 0"><strong>stray bug:</strong> 3 rows returned HTTP 502 (route_failed) '
         'and were scored as misses. $0 charged for those rows.</li>'
         '</ul>'
         '<p style="margin-top:24px">Related: '
@@ -4294,14 +4294,14 @@ async def blog_work_email_finding_bench():
 
     ld = [_blog_posting_ld("work-email-finding-bench", base),
           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "treg.to", "item": base + "/"},
+        {"@type": "ListItem", "position": 1, "name": "stray", "item": base + "/"},
         {"@type": "ListItem", "position": 2, "name": "Blog", "item": base + "/blog"},
         {"@type": "ListItem", "position": 3, "name": "Work Email Finding",
          "item": base + "/blog/work-email-finding-bench"}]}]
 
-    return _page("Work Email Finding: 292 Person Bench | treg.to",
+    return _page("Work Email Finding: 292 Person Bench | stray",
                  "Quality tie across vendors, cost is the gap. Measured 2026-09-16: "
-                 "treg.to $0.0056/correct vs Clay $0.0395/correct on 292 people.",
+                 "stray $0.0056/correct vs Clay $0.0395/correct on 292 people.",
                  "/blog/work-email-finding-bench", body, ld)
 
 
@@ -4349,7 +4349,7 @@ async def well_known_skills_index():
     """Advertise stray's own skill under the agentskills.io well-known convention.
 
     This makes THIS host a first-class skill source: an agent that supports the standard can install
-    stray from treg.to directly, with no directory, no review queue and no third party in the middle
+    stray from stray directly, with no directory, no review queue and no third party in the middle
     — the same skill the plugins ship and `install.sh` drops, reached by whoever asks the domain.
     """
     fm = _skill_frontmatter()
@@ -4366,7 +4366,7 @@ async def well_known_skills_index():
 async def well_known_skill_md(request: Request, db: AsyncSession = Depends(get_session)):
     """The skill itself, at the path `index.json` promises. Deliberately the same `_serve_md` the
     canonical `/skill.md` uses, so `{BASE}` is templated to the serving host here too — a self-hosted
-    registry advertises ITSELF, not treg.to."""
+    registry advertises ITSELF, not stray."""
     from .hub_gate import hub_visible
     return _serve_md("skill.md", (await hub_visible(request, db))[0])
 

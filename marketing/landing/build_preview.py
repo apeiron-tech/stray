@@ -22,7 +22,7 @@ def inline_logos(markup):
     """Embed the provider marks as data: URIs.
 
     The artifact host's CSP blocks every external request, images included — so a src pointing at
-    treg.to renders an empty tile, which is worse than no tile. These are small SVGs, so inlining
+    stray renders an empty tile, which is worse than no tile. These are small SVGs, so inlining
     them costs a few KB and makes the preview self-contained.
     """
     def sub(m):

@@ -1,7 +1,7 @@
 ---
 page_id: r2
 slug: /rebuild/linkedin-intent-signals/
-seo_title: "Gojiberry & Trigify, Rebuilt: LinkedIn Intent From $0.002 a Post | treg.to"   # 66 → trim to "Rebuild Gojiberry: LinkedIn Intent Signals From $0.002 | treg.to"
+seo_title: "Gojiberry & Trigify, Rebuilt: LinkedIn Intent From $0.002 a Post | stray"   # 66 → trim to "Rebuild Gojiberry: LinkedIn Intent Signals From $0.002 | stray"
 meta_description: "Gojiberry, Trigify and Teamfluence sell LinkedIn intent as a subscription with no API. Here is the same loop — competitor-post engagers, profile pull, funding check — as a script with prices."  # 178 → trim
 h1: "Rebuild Gojiberry: LinkedIn intent signals, per post, per profile"
 seo_terms:

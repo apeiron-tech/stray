@@ -91,7 +91,8 @@ async def test_managed_key_migration_backfills_human_and_agent_hashes():
             org_id = await _insert_org_at_revision(session, name="Before upgrade", slug="before-upgrade")
             org = Org(id=org_id, name="Before upgrade", slug="before-upgrade")
             human = User(email="human@example.dev")
-            agent = User(email="worker@agents.stray.local")
+            # the address as it was written when this revision shipped: the migration matches it verbatim
+            agent = User(email="worker@agents.treg.local")
             session.add(human); session.add(agent)
             await session.flush()
             session.add(Membership(user_id=human.id, org_id=org.id, role="owner",
@@ -104,7 +105,7 @@ async def test_managed_key_migration_backfills_human_and_agent_hashes():
         async with db.session_maker() as session:
             rows = (await session.execute(select(ApiKey).order_by(ApiKey.kind))).scalars().all()
         assert [(row.identity_label, row.kind, row.key_hash) for row in rows] == [
-            ("worker@agents.stray.local", "agent", agent_hash),
+            ("worker@agents.treg.local", "agent", agent_hash),
             ("human@example.dev", "default_human", None),
             ("human@example.dev", "legacy_human", human_hash),
         ]

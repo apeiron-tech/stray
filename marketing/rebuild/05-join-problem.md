@@ -1,7 +1,7 @@
 ---
 page_id: r5
 slug: /rebuild/join-problem/
-seo_title: "The Join Problem: Signal + Person in Three Calls | treg.to"       # 55
+seo_title: "The Join Problem: Signal + Person in Three Calls | stray"       # 55
 meta_description: "Cold outreach fails on timing, not wording. The trigger and the person live in different records. Here is the join — funding feed, people search, profile — as three priced calls."  # 176 → trim
 h1: "The join problem: find the trigger and the person in one pass"
 seo_terms:

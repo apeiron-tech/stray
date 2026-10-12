@@ -119,11 +119,11 @@ def build(dest):
     # The artifact host supplies its own charset; this repeats it so the file also renders correctly
     # when opened straight off disk or a bare static server during review.
     doc = f"""<meta charset="utf-8">
-<title>treg.to Use-Case Pages</title>
+<title>stray Use-Case Pages</title>
 <style>{CSS}{REVIEW_CSS}</style>
 
 <div class="rbar"><div class="in">
-  <span class="who">treg.to · use-case pages · review build 17 Aug 2026</span>
+  <span class="who">stray · use-case pages · review build 17 Aug 2026</span>
   <div class="rtabs" role="tablist">{''.join(tabs)}</div>
 </div></div>
 

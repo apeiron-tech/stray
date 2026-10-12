@@ -1,7 +1,7 @@
 ---
 page_id: r4
 slug: /rebuild/gtm-engineering-stack/
-seo_title: "GTM Engineering Stack 2026: Nine Layers, Priced Per Call | treg.to"     # 61
+seo_title: "GTM Engineering Stack 2026: Nine Layers, Priced Per Call | stray"     # 61
 meta_description: "What a GTM engineer actually runs in 2026 — signal, list, enrich, research, write, send, LinkedIn, triage, analytics — with the tools per layer and what each call costs."  # 168 → trim
 h1: "The GTM engineering stack, priced"
 seo_terms:

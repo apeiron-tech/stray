@@ -126,14 +126,14 @@ server-side first-touch attribution across signup, first successful call and top
 | `/robots.txt` | Bundled file, `{BASE}`-templated. Disallows `/app`, `/login`, auth and OAuth flows, `/call/`, `/mcp`, `/admin`, `/docs/api`. Names the sitemap. |
 | `/sitemap.xml` | **Generated**, not bundled — 80 of its URLs come from the catalog. Static pages take `lastmod` from their file's mtime, shelves from the newest mtime under `src/stray/catalog/`. |
 | `/resources` + `/use-cases/<slug>` | The outcome pages and their hub. Their sitemap rows are spread from `_USE_CASES` rather than listed by hand, so routing a new page lists it — see below. |
-| `/blog` + `/blog/people-search-bench` | A thin, hand-kept index of the launch pages (`_BLOG_LAUNCHES`, newest first, dated by the day each route shipped) and short posts (`_BLOG_POSTS`); the bench post repeats the four People Search Bench scores from `/grokbot#bench` and links there. Each post carries `BlogPosting` schema from `_blog_posting_ld` (headline, the `_BLOG_POSTS` date as published and modified, a named `Person` author, treg.to as publisher) beside its breadcrumbs, because a dated, bylined article earns the validation click and the AI citation where a bare page does not. Both are `_page()`-rendered, hosted-only, sitemapped (0.7 / 0.6) and in the route manifest. `/agents/grok-bot` (and `.md`) 301 to `/grokbot`: the launch page is the destination, the agent page was never linked as one, and the sitemap lists only `/grokbot`. |
+| `/blog` + `/blog/people-search-bench` | A thin, hand-kept index of the launch pages (`_BLOG_LAUNCHES`, newest first, dated by the day each route shipped) and short posts (`_BLOG_POSTS`); the bench post repeats the four People Search Bench scores from `/grokbot#bench` and links there. Each post carries `BlogPosting` schema from `_blog_posting_ld` (headline, the `_BLOG_POSTS` date as published and modified, a named `Person` author, stray as publisher) beside its breadcrumbs, because a dated, bylined article earns the validation click and the AI citation where a bare page does not. Both are `_page()`-rendered, hosted-only, sitemapped (0.7 / 0.6) and in the route manifest. `/agents/grok-bot` (and `.md`) 301 to `/grokbot`: the launch page is the destination, the agent page was never linked as one, and the sitemap lists only `/grokbot`. |
 | `/people-search` + `/leads-signals` + `/grokbot` + `/fable` + `/ugc` | The launch-campaign landings, bundled files served by their own routes through `_static_page` (placeholders filled, no-cache, an ETag so revalidation is a 304). All are first-class pages: canonical, OG tags, listed in `_SITEMAP_PAGES` at 0.8 — `/people-search` is "Claude for people search" (the enrichment launch film's destination), `/leads-signals` is "Claude for Monitor Leads Signal" (the buyer-signals launch, built from `/people-search`: the agent runs the check on its own schedule and diffs against its last list; stray itself neither schedules nor diffs), `/grokbot` the "Grok Bot for Outreach" animatic plus the six-bot stray team gallery (ICP Map Coach, Lookalike Scout, Rival Watch Desk, SERP Watch Team, Creator Shortlist Crew, and GTM Expert, each linked directly to its `x.ai/bot/…` page). Its nav, hero and closing CTAs remain the pair **"Setup stray"**, primary — signed in it goes to `/app`, signed out it opens the page's own sign-in modal in place (the `/people-search` pattern; the `href` `/app?ref=grokbot` is only the no-JS fallback) and stashes `stray-ref=grokbot` so the first-run welcome preselects Grok Bot, and **"Install plugin"** → the x.ai plugin page, secondary. `/fable` (file `fable-gtm.html`) is the Claude Fable 5.1 launch: one terminal session that reads the market, plans, spawns four agents and shows one result window at a time. `/ugc` (file `ugc.html`) is the AI UGC workflow article as a page: an arcads-style hero of generated clips, then the five steps told as one pinned Claude Code session on the left that crossfades between steps while the artifacts scroll on the right (trend grid, a five-model character board with real-image showcases, Seedance talking heads, the demo, hook variants and the bill), then pricing against subscription tools and the catalog grid. Its asset paths are **relative** (`media/…`, `logos/…`) so the same file previews from `file://`; that only holds while the routes stay slashless. All are registered in `bootstrap.py`'s route-ownership manifest like every other route. |
 | `/gtm-engineering` + `/gtm-engineering.md` | The GTM engineering playbook: a diagnostic that turns the problems practitioners raise on Reddit and LinkedIn into symptoms (tick one, get the chapters), then 16 chapters in six parts (define, build the list, timing, reach out, inbound, operate) and four appendices, with a sticky table of contents (a collapsible bar on mobile). Each chapter carries a symptom, the play, a prompt to copy, a visual from a recorded run with its bill, the rule, and a plain line on what stray does and does not cover; chapters marked "Method" have no run behind them. Headings are phrased as the questions answer engines are asked (what a GTM engineer is, the tools they need, the cheapest waterfall, signal-based outbound, people search, Clay alternatives, Claude Code skills), and the FAQPage JSON-LD answers the same questions. It reuses the `/people-search` design (the rotating agent in the H1, whose served HTML names Claude Code; the self-playing demo, captioned as an abbreviated replay with illustrative rows; reveal-on-scroll visuals; the big footer). Hand-written (`gtm-engineering.html`, served through `_static_page`) rather than `_page()`-rendered, because only the hand-written pages load `sitetrack.js`. The Markdown twin (`gtm-engineering.md`, served by `_serve_md` with `X-Robots-Tag: noindex`, named by the page's `rel=alternate` and linked from `llms.txt`) is hand-kept; `tests/test_gtm_engineering_page.py` fails if a chapter heading on the page is missing from it, if a link on the page stops resolving, or if the page loses its canonical, tracking or structured data. Both are hosted-only like `/workflows`: 404 off the reference hosts, and the page joins the sitemap inside the `_hosted()` block. Linked from the homepage footer, the `_page()` footer, the launch-page footers and Related blocks, the five use-case landers, `/resources`, the `/blog` launches, the `/use-cases` and `/workflows` hubs and `llms.txt`. In bundled files those links sit inside `<!--hosted-->…<!--/hosted-->`, which `_strip_hosted` (applied by `_static_page` and the `/llms.txt` route) unwraps on the hosted deployment and removes on a self-hosted one, so no served page points at the 404; the page test checks both sides. Value events: `gtm_diag_tick`, `gtm_chapter_view`, `gtm_copy_*` on a clipboard write that succeeded (`gtm_copy_failed` otherwise), `gtm_faq_open`, `gtm_scroll_proof`, `gtm_cta_*`; any fired before `sitetrack.js` has initialised PostHog are flushed once it has. |
 | `/jev` | "How to use Jev" (file `jev.html`; the on-page headline reads "How to use Jev for GTM Automation"); the hero carries a literal "What is Jev?" heading. Sections in order: "Quick Jev 101", ONE arrow-driven deck of eleven slides (three on what jev is, five use-case demos judged live by jev with three community recordings credited and linked, three on how to use it in code) staged like the video slides: a kicker, one big header, the visual full width, description text hidden by CSS scoped to `#deck`; then the GTM recipes, whose tab bar is mirrored in the nav everywhere except while the real bar is on screen; then community posts as cards built from each post's own data (avatars and posters bundled in `media/jev/built/`, no X embed script) in a marquee that becomes a swipeable row on touch and reduced motion; then the FAQ with its JSON-LD. The use-case demo script follows the deck through a `deckslide` event, offset by the three opening slides. The recipes are three agent prompts to copy, plus a build-your-own one, each with the demo it produces underneath. Every prompt opens with a "Before you build" block: the steps are a reference implementation, not a spec, so the agent asks about the reader's own workflow, states the plan and the cost of one run, and waits for a go-ahead. Setup is then two steps: stray through `treg.to/llms.txt` (never the install one-liner), and jev as OPTIONAL. With a Vercel AI Gateway key the agent calls jev's evaluation-model endpoint; without one it judges behind the same `state`/`questions` interface itself and labels those results `judge: agent`, so the build works today and switching to jev is a one-line change. `tests/test_jev.py` pins all of it. The X launch radar recipe is **live**: `/jev/xboost.json` serves the document `stray-worker jev xboost` stores daily under Ephemeral (`jev`/`xboost`), else the bundled snapshot `media/jev/xboost-seed.json` flagged `snapshot: true`; `POST /jev/xboost/judge {url}` runs the same forensics + jev on one visitor-pasted post (5 per IP and 60 fleet-wide per hour via ratestore, 503 until `jev_stray_token` and `ai_gateway_api_key` are set) and prepends it to the document's `manual` list, which survives the daily run. stray is a client of itself in that pipeline (`application/jev_xboost.py` calls `/call/` with the demo team's token), so the receipt is a real bill. The signup-triage and signal-first-leads recipes replay bundled runs in `media/jev/*.json` with every email address replaced; `tests/test_jev.py` pins that. Same nav, footer, capture scripts, sitemap priority and `_BLOG_LAUNCHES` entry as the other landings. |
 | `/catalog` | The dashboard SPA, in public mode — the marketplace's Catalog view on an indexable URL. |
-| `/catalog/<slug>/<key>` | The same SPA, on one capability's comparison (a capability two or more providers serve on that shelf, `Catalog.compared`; `<key>` drops the platform prefix). Title `{capability}: {n} APIs compared \| treg.to`, a no-JS provider list, breadcrumbs. Every one is in the sitemap (`_comparison_paths`, the same rule behind the shelf's comparison cards), and `tests/test_catalog_api.py` asks each for a 200; a capability only one provider serves is a 404. The route's slug converter never matches the catalog's API segments (`_CATALOG_RESERVED`: `call`, `platforms`, `providers`, …), whatever the route order. |
-| `/catalog/<slug>` | The same SPA, on the platform view for one shelf. Title `{Platform} API pricing: {n} endpoints priced per call \| treg.to`: the `{platform} api pricing` phrasing is the non-brand query shape that reaches the site, the brand is treg.to, no em-dash. |
-| `/tools/<service>` | The catalog sliced by **vendor**, fully server-rendered (`_page`, no SPA): one public page per provider. Title matches H1 (metered: `{Provider}: {n} tools from {price}`, mixed: `{Provider}: {n} tools, platform or your own key`, own-account: `{Provider}: connect your own account`); mixed-access heroes show the full inventory with platform/BYOK counts. The page shows logo, category, blurb from the oauth-provider registry, setup/MCP instructions, all tools for inventories of up to 50, otherwise up to 8 tools per platform (with a catalog link for larger sets), why-stray cards, alternatives, and a metered-vs-own-account FAQ. JSON-LD: BreadcrumbList (with `treg.to` not bare `stray`), ItemList, FAQPage, HowTo. Tool counts and prices are live from `catalog_store`, never hardcoded. No em-dashes in page copy. There is no provider index page: /providers earned no searches and the provider links live in /catalog's prerender instead. `/tools/<service>` is safe from shadowing the API (the API's GETs are `/tools` and `/tools/by-name/…`). A signed-out `GET /app/marketplace/<service>` 302s to `/tools/<service>`. `tests/test_provider_pages.py` pins the route shape. |
+| `/catalog/<slug>/<key>` | The same SPA, on one capability's comparison (a capability two or more providers serve on that shelf, `Catalog.compared`; `<key>` drops the platform prefix). Title `{capability}: {n} APIs compared \| stray`, a no-JS provider list, breadcrumbs. Every one is in the sitemap (`_comparison_paths`, the same rule behind the shelf's comparison cards), and `tests/test_catalog_api.py` asks each for a 200; a capability only one provider serves is a 404. The route's slug converter never matches the catalog's API segments (`_CATALOG_RESERVED`: `call`, `platforms`, `providers`, …), whatever the route order. |
+| `/catalog/<slug>` | The same SPA, on the platform view for one shelf. Title `{Platform} API pricing: {n} endpoints priced per call \| stray`: the `{platform} api pricing` phrasing is the non-brand query shape that reaches the site, the brand is stray, no em-dash. |
+| `/tools/<service>` | The catalog sliced by **vendor**, fully server-rendered (`_page`, no SPA): one public page per provider. Title matches H1 (metered: `{Provider}: {n} tools from {price}`, mixed: `{Provider}: {n} tools, platform or your own key`, own-account: `{Provider}: connect your own account`); mixed-access heroes show the full inventory with platform/BYOK counts. The page shows logo, category, blurb from the oauth-provider registry, setup/MCP instructions, all tools for inventories of up to 50, otherwise up to 8 tools per platform (with a catalog link for larger sets), why-stray cards, alternatives, and a metered-vs-own-account FAQ. JSON-LD: BreadcrumbList (rooted at the product name), ItemList, FAQPage, HowTo. Tool counts and prices are live from `catalog_store`, never hardcoded. No em-dashes in page copy. There is no provider index page: /providers earned no searches and the provider links live in /catalog's prerender instead. `/tools/<service>` is safe from shadowing the API (the API's GETs are `/tools` and `/tools/by-name/…`). A signed-out `GET /app/marketplace/<service>` 302s to `/tools/<service>`. `tests/test_provider_pages.py` pins the route shape. |
 | `/docs` | Server-rendered API reference built from `app.openapi()`. |
 | `/docs/api` | FastAPI's Swagger UI, moved here and `Disallow`ed. ReDoc is off. |
 | `/media/og.png` | The 1200×630 social card, served by the pre-existing `/media` mount. |
@@ -286,7 +286,7 @@ happens.
 
 ## Things that will bite you
 
-**`{BASE}`, never a hardcoded `treg.to`.** Every page is also served by self-hosted registries. A
+**`{BASE}`, never a hardcoded `stray`.** Every page is also served by self-hosted registries. A
 hardcoded canonical tells their crawler the real page lives on someone else's domain. `landing()`,
 `_legal_page()` and `tutorial_page()` all read-and-substitute for this reason — they were plain
 `FileResponse`s before. `tests/test_seo.py` asserts no response body leaks a literal `{BASE}`, and
@@ -371,7 +371,7 @@ for "how to <job> in chatgpt", so the job list lives on the agent page as rows, 
 sentence with the counts formatted in, a link. It exists because the discovery pass gave every
 surface an "Agents" nav link with nowhere to point it: the link went to `/agents/claude-code` (one
 client's page standing in for all of them) while the bare `/agents` URL 404ed. The nav now points
-at the hub, the agent pages' breadcrumb carries it as the parent (treg.to / Agents / <name>), and
+at the hub, the agent pages' breadcrumb carries it as the parent (stray / Agents / <name>), and
 the sitemap lists it at 0.8 beside the other two hubs. Hosted-only and adtrack'd like everything
 else off `_page()`; no `.md` mirror, matching `/use-cases` and `/workflows`.
 
@@ -422,7 +422,7 @@ one motion, and promoting them would have committed four URL segments to a disti
 exists in a practitioner's head. The section builder orders rows by group and prints a divider row
 before each; the `.md` mirror sorts by the same order.
 
-**Hosted only.** The copy describes treg.to's own listings — the ChatGPT Connectors entry, the $1.00
+**Hosted only.** The copy describes stray's own listings — the ChatGPT Connectors entry, the $1.00
 grant — none of which is true of a self-hosted registry. `_hosted()` checks `public_url` against
 `PUBLIC_HOST_ALIASES`; elsewhere the route 404s and the sitemap omits the rows, rather than lie.
 
@@ -459,7 +459,7 @@ unknown. Three optional keys on an `AGENTS` entry fix that without forking the r
 `/agents/claude-code` uses them to lead with lead enrichment (the four routed calls, the 23 Sep lead-list receipt, MCP vs CLI vs skill, the work-email
 bench). `/agents/hermes` is new: the `~/.hermes/config.yaml` block from Hermes's documented MCP config
 (`stray mcp install` detects Hermes but only prints manual instructions; it does not write YAML), then a weekly buying-signal check on Hermes's own
-scheduler; treg.to answers the calls and neither schedules nor delivers. An agent without these keys
+scheduler; stray answers the calls and neither schedules nor delivers. An agent without these keys
 renders exactly as before. Tests hold the overlap with the template page under 75%, every
 `stray call <id>` in a guide to an existing endpoint, every guide link to a 200, every category
 reachable from a focused page, and the Hermes block to the same shape as `mcp_install`'s hint.
@@ -468,7 +468,7 @@ reachable from a focused page, and the Hermes block to the same shape as `mcp_in
 
 The spokes. **The reader does one thing, the prompt; everything else is what the agent sees before
 it calls.** Above the fold: the setup line, one prompt with a copy button, four "why this prompt
-works" cards, an optional screenshot. Then "Why go through treg.to" (`WHY_STRAY`, six cards).
+works" cards, an optional screenshot. Then "Why go through stray" (`WHY_STRAY`, six cards).
 
 The page then takes one of **three forms, chosen from the catalog rather than by hand** — this is
 what makes it a template rather than one page's prose:
@@ -586,12 +586,12 @@ prints "no dollar rate published", which is what the pages say about Semrush in 
 found by reading the rendered page, which is the argument for that step in the skill.
 
 **A trial-pool row is a fourth state, and a metered single provider is not an own-account one**
-(2026-08-25). Finnhub, Tiingo and Twelve Data are served at $0 on treg.to's own free-tier keys with
+(2026-08-25). Finnhub, Tiingo and Twelve Data are served at $0 on stray's own free-tier keys with
 a per-team daily allowance (`catalog.trial_pools`); `cost_view` gives them `usd == 0`, so they fell
 through to "free, your own account", and with no priced row on the page the hero and the `{cheapest}`
 placeholder said the same. `_uc_providers` now carries `trial` (calls per team per day) and the
 cell, the `.md` table, the hero and `{cheapest}` state the allowance ("free, 50 calls a day on
-treg.to's key, then your own key"). Separately, the `short` form assumed its one provider was an
+stray's key, then your own key"). Separately, the `short` form assumed its one provider was an
 OAuth connection; the AI-mentions job has one provider, DataForSEO, and it is metered, so the form
 branches on the row's `free` flag: `metered_single` states the rate and the markup, and the meta
 description does not claim "never metered". Both were found the same way as the Semrush one: by
@@ -622,7 +622,7 @@ page into the sitemap, and `_catalog_census` counted the 76 meta-rows on top of 
 delegate to. `_pub()` in `routers.web` is now the one filter every public page reads (hidden kinds
 plus routed), `/tools/stray` 404s (the all-rows-hidden fallback in `tools_provider` no longer
 resurrects routed rows), and the advertised tool count dropped accordingly (2,745 → 2,669). The
-public name is treg.to; a bare "stray" vendor row must never appear on any page —
+public name is stray, and it is not a vendor: a "stray" vendor row must never appear on any page —
 `test_routed_rows_never_surface_a_provider_named_stray` pins it.
 
 **Pages with a free own-account row use a filtered WHY_STRAY** (2026-08-31). `WHY_STRAY` contains
@@ -683,7 +683,7 @@ secondary links `/llms.txt` directly. The copy-paste prompt in each page's workf
 action the page exists to produce.
 
 **JSON-LD: BreadcrumbList and FAQPage.** Every page carries both schemas. The breadcrumb names
-"treg.to" (never bare "stray") as the root. FAQ pairs are extracted from the "Before you sign up"
+"stray" (the product name, lowercase) as the root. FAQ pairs are extracted from the "Before you sign up"
 section during build.
 
 **What the 2026-08-31 review fixed in the build** (each shipped past green tests and was caught by
@@ -696,7 +696,7 @@ JSON-LD acceptedAnswer; it now splits the one-line form first. The kicker was ha
 bound (F-01's convention: a static page states a rounded-down claim that stays true as the catalog
 grows). `sitetrack.js` had been dropped in the rewrite (the attribution test caught it) and is
 restored before `adtrack.js` on all six files. The advertised `.md` alternates are gone — the
-legacy-hub route serves no `.md`, so every one 404ed. The brand anchor reads `treg.to`. And the
+legacy-hub route serves no `.md`, so every one 404ed. The brand anchor reads `stray`. And the
 lead-enrichment "Proof from one real run" block no longer shows the 1-email $0.0245 demo: it
 carries the receipt of the 50-company workflow run (2026-08-26, $3.62, $0.13 per deliverable
 lead) and points at `/workflows/find-and-verify-a-lead-list`, so the hub sells the workflow
@@ -773,7 +773,7 @@ strongest opener first. The run was made with `httpx` against `/call/` directly 
 parallel, a browser-like `User-Agent`, since Tomba and Findymail 403 the Python default); the
 gate and opener went through the team's `typesafe` own tool at `/call/typesafe/v1/systemone`, so
 jev's cost is stated at list price and marked as not metered. Tomba was out of capacity on
-treg.to's key for the whole run, so Hunter served and Kitt took Hunter's misses; that is the
+stray's key for the whole run, so Hunter served and Kitt took Hunter's misses; that is the
 "cheapest provider is out" failure mode with a new name on it. Its `extra_links` now open with
 `/jev`, the one link from a workflow page to the Jev landing.
 
@@ -795,7 +795,7 @@ two mirrors, `README.md`, the CLI) states no count at all. The landing once carr
 that had drifted to 2,630/47 against a catalog of 3,600+/91, and six launch pages later disagreed
 with each other the same way; `test_no_page_types_the_catalog_size` (tests/test_static_pages.py) scans
 the front-door files for a typed catalog size, and `test_no_page_ships_an_unsubstituted_base` fetches
-every sitemap page, use-case page and agent file for an unfilled placeholder. The landing title is `treg.to: OpenRouter for agent tools and data, pay per call`
+every sitemap page, use-case page and agent file for an unfilled placeholder. The landing title is `stray: OpenRouter for agent tools and data, pay per call`
 (58 characters, matching the H1's positioning line) and its description names one MCP server, one
 key and the data categories, with no count to go stale. Note the catalog index
 shows the **whole** catalog, not the sum of its tiles: a tile counts only its browse surface, so the
@@ -829,16 +829,16 @@ workflow is cross-linked the moment it is routed, and nothing is listed by hand.
 
 `/tools/<provider>` titles match their H1s:
 
-- Metered: `{Provider}: {n} tools from {price} | treg.to` (falls back to `{Provider}: from {price} | treg.to`
-  past 65 characters; with no price the primary is `{Provider}: {n} tools | treg.to` and the fallback is
-  `{Provider} | treg.to`, which the H1 still starts with)
-- Mixed (platform + BYOK): `{Provider}: {n} tools, platform or your own key | treg.to` (falls back to
-  `{Provider}: {n} tools, platform + BYOK | treg.to` or `{Provider}: platform + BYOK | treg.to` past 65 characters)
-- Own-account: `{Provider}: connect your own account | treg.to`
+- Metered: `{Provider}: {n} tools from {price} | stray` (falls back to `{Provider}: from {price} | stray`
+  past 65 characters; with no price the primary is `{Provider}: {n} tools | stray` and the fallback is
+  `{Provider} | stray`, which the H1 still starts with)
+- Mixed (platform + BYOK): `{Provider}: {n} tools, platform or your own key | stray` (falls back to
+  `{Provider}: {n} tools, platform + BYOK | stray` or `{Provider}: platform + BYOK | stray` past 65 characters)
+- Own-account: `{Provider}: connect your own account | stray`
 - **MCP-intent own-account providers** (`_MCP_INTENT_PROVIDERS`: google-search-console, google-analytics,
   semrush, snapchat-ads, pinterest-ads, meta-ads, tiktok-ads, facebook) lead with MCP instead:
-  `{Provider} MCP: connect your own account | treg.to` for Title and H1, and the meta description
-  names MCP plus connect-own-account plus treg.to as one MCP for the catalog. The set is the pages
+  `{Provider} MCP: connect your own account | stray` for Title and H1, and the meta description
+  names MCP plus connect-own-account plus stray as one MCP for the catalog. The set is the pages
   where GSC shows `{provider} mcp` or `{provider} connector` impressions with near-zero clicks.
   The MCP-intent titles win over the generic own-account title pattern for these providers.
 

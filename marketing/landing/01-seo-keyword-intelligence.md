@@ -1,7 +1,7 @@
 ---
 page_id: p1
 slug: /use-cases/seo-data-for-ai-agents/
-seo_title: "SEO Data: Google Results, Keywords and Backlinks | treg.to"        # 54 chars
+seo_title: "SEO Data: Google Results, Keywords and Backlinks | stray"        # 54 chars
 meta_description: "Give your agent live Google results, keyword volume and backlink data through one key. Pay per call, not per seat. $1.00 free to start."  # 137
 h1: "SEO Data: Google Results, Keywords and Backlinks"
 hub_title: "SEO & search results"
@@ -43,7 +43,7 @@ top 10 organic results for the highest-volume one. Show me who ranks and why.
 
 ---
 
-## The old way vs. the treg.to way
+## The old way vs. the stray way
 
 | | The old way | With stray |
 |---|---|---|
@@ -70,7 +70,7 @@ show which competitors currently rank.
 ### What happens when you run it
 
 **The agent searches by the job, not the vendor.** `catalog_search "keyword search volume"` returns the
-endpoints that do it, each with a price and whether treg.to can serve it without a key of yours.
+endpoints that do it, each with a price and whether stray can serve it without a key of yours.
 
 **It compares, then picks.** Five providers answer this one capability, and the spread is not small:
 
@@ -82,7 +82,7 @@ endpoints that do it, each with a price and whether treg.to can serve it without
 | **Google Ads** | free with a connected account | not yet measured |: | your own OAuth |
 | **Semrush** | 10 API units per row | not yet measured |: | own key only |
 
-Those numbers are what treg.to has actually observed across real calls, sample size included: a 100%
+Those numbers are what stray has actually observed across real calls, sample size included: a 100%
 over 8 calls is weaker evidence than a 99% over 121, and the catalog shows you both so you can tell.
 
 **It calls, then joins the results.** Volume and difficulty for the list, live Google results for the
@@ -128,7 +128,7 @@ COST             $[from your run]
 ### The one teams actually run most
 
 Keyword research is a job you do once. Watching results is a job you do every week, and it is what the
-agents on treg.to overwhelmingly spend their calls on: the organic, maps and news result endpoints
+agents on stray overwhelmingly spend their calls on: the organic, maps and news result endpoints
 together serve more traffic than every other SEO tool in the catalog combined.
 
 ```text
@@ -147,7 +147,7 @@ nothing, which is the part a subscription can never do.
 
 ## Proof from one real run
 
-*Run on treg.to, 17 Aug 2026. Every figure below is from the Activity log of that run.*
+*Run on stray, 17 Aug 2026. Every figure below is from the Activity log of that run.*
 
 | Field | Value |
 |---|---|
@@ -224,7 +224,7 @@ pay per run, so a paused project costs nothing while it is paused.
 For one provider you already pay for, do: connect that key and those calls route through it, unmetered.
 The arithmetic changes at the second provider. This workflow touches keyword data, live results and
 backlinks; buying that separately is three accounts, three contracts and three API shapes to learn, for
-research you might run twice a month. treg.to is closer to OpenRouter for agent tools than to a data
+research you might run twice a month. stray is closer to OpenRouter for agent tools than to a data
 vendor: one base URL, one token, many providers behind it.
 
 **How are credentials handled?**: `S-OBJ-CREDENTIALS`
@@ -240,11 +240,11 @@ volumes to a client for a year, pin Semrush and keep the series consistent.)*
 **How much does a call cost?**
 Fractions of a cent for most SEO endpoints: Serpstat keyword volume at $0.0005 per keyword, DataForSEO
 organic results at $0.002 per call, Moz URL metrics at $0.006667, at the time of writing. The exact price
-is shown before the call, and treg.to adds no markup to what the provider charges. New teams start with
+is shown before the call, and stray adds no markup to what the provider charges. New teams start with
 $1.00 of free credit.
 
 **Is there a DataForSEO MCP or a Serpstat MCP?**
-This is one. treg.to is a single MCP server that carries DataForSEO, Serpstat, SE Ranking, SerpApi and
+This is one. stray is a single MCP server that carries DataForSEO, Serpstat, SE Ranking, SerpApi and
 Majestic behind one token: add it once and the agent calls whichever fits the job.
 
 **Is this a Semrush or Ahrefs alternative?**

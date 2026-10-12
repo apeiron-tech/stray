@@ -18,19 +18,19 @@ $1.00 of free credit once per new verified account. No provider signup, no credi
 2,600+ tools across 40+ providers, all answering one token. `F-01`
 
 ## `S-COMPARISON-TABLE`
-The five rows of *the old way vs. the treg.to way*. Row 1 and row 5 are rewritten per page with that
+The five rows of *the old way vs. the stray way*. Row 1 and row 5 are rewritten per page with that
 vertical's providers and job; rows 2–4 are fixed.
 
-| | The old way | With treg.to |
+| | The old way | With stray |
 |---|---|---|
 | **What you pay for** | *(per page: the specific subscriptions)* | One prepaid balance. Per call, in fractions of a cent |
-| **Keys** | One account, one login and one API key per provider, spread across machines and `.env` files | One treg.to token. Every tool in the catalog answers to it |
-| **Picking a provider** | You guess, or you use the one you already pay for | `catalog get` lists every provider for that job with price, the success rate treg.to has measured, median speed and when it last answered |
+| **Keys** | One account, one login and one API key per provider, spread across machines and `.env` files | One stray token. Every tool in the catalog answers to it |
+| **Picking a provider** | You guess, or you use the one you already pay for | `catalog get` lists every provider for that job with price, the success rate stray has measured, median speed and when it last answered |
 | **Commitment** | Annual plans and seat minimums to answer one question | No subscription. Stop calling and you stop paying |
 | **The workflow** | *(per page: the specific manual stitching)* | One agent run, one report, one bill |
 
 ## `S-PROOF-TABLE`
-Every page carries this table. **Fields must be filled from a real treg.to run and are not publishable
+Every page carries this table. **Fields must be filled from a real stray run and are not publishable
 with estimates in them.**
 
 | Field | Value |
@@ -44,8 +44,8 @@ with estimates in them.**
 | Data freshness | `[ TO BE POPULATED — the date the provider's data reflects ]` |
 
 ## `S-OBJ-CREDENTIALS` How are credentials handled?
-The credential is injected on the server. Your agent makes the real upstream request through treg.to's
-`/call/` endpoint; treg.to adds the key and relays the provider's answer back verbatim. No provider key
+The credential is injected on the server. Your agent makes the real upstream request through stray's
+`/call/` endpoint; stray adds the key and relays the provider's answer back verbatim. No provider key
 is ever written to your machine, your repo or your agent's context. Every call is recorded and attributed
 to the token that made it. `F-04`
 
@@ -56,16 +56,16 @@ of that capability. `F-13`
 
 ## `S-OBJ-OWN-KEY` Can I use my existing provider key?
 Yes, and it takes precedence. Register the key once and every call to that provider routes through it;
-those calls are never metered against your treg.to balance. Your key always wins over treg.to's. `F-05`
+those calls are never metered against your stray balance. Your key always wins over stray's. `F-05`
 
 ## `S-OBJ-FAILURE` What happens if a provider fails?
-treg.to does not silently reroute you. That is deliberate: only you know which inputs you actually hold,
-so treg.to relays your request rather than rewriting it. Failed calls are not billed. If a call
+stray does not silently reroute you. That is deliberate: only you know which inputs you actually hold,
+so stray relays your request rather than rewriting it. Failed calls are not billed. If a call
 succeeded upstream but the answer was lost coming back, an `Idempotency-Key` returns the stored result
 without paying twice. `F-06` `F-07`
 
 ## `S-OBJ-AGENTS` Which agents does it work with?
-The installer registers treg.to's MCP server into Claude Code, Cursor and opencode automatically. Any MCP
+The installer registers stray's MCP server into Claude Code, Cursor and opencode automatically. Any MCP
 client that supports the authorization spec can connect with OAuth. Anything that can run a shell command,
 Codex included, can use the `stray` CLI or plain HTTP. `F-09`
 
@@ -73,12 +73,12 @@ Codex included, can use the `stray` CLI or plain HTTP. `F-09`
 *(Per page: the vertical's own version of the arithmetic. The fixed part below closes it.)*
 
 You can, and if you already pay for a provider you should: connect that key and those calls route
-through it, unmetered. What treg.to removes is the rest: an account, a contract and a key for every
+through it, unmetered. What stray removes is the rest: an account, a contract and a key for every
 provider you might need once, plus learning each one's API shape. It is closer to OpenRouter for agent
 tools than to a data vendor: one base URL, one token, many providers behind it. `F-05`
 
 ## `S-FINAL-CTA-TRUST`
-$1.00 of free credit once per new verified account. No credit card, no provider signup. treg.to is open source
+$1.00 of free credit once per new verified account. No credit card, no provider signup. stray is open source
 (AGPL). `F-02` `F-08` `F-10`
 
 ## `S-INSTALL`
@@ -91,8 +91,9 @@ Paste that into your agent, or run `curl -fsSL https://treg.to/install.sh | sh`.
 
 ## Wording rules for anyone editing these pages
 
-- **`treg.to`, never bare `stray`,** in every title, meta description, heading and link anchor. Inside body
-  copy, `treg.to` on first mention and wherever it could be read as the immunology term.
+- **`stray`**, lowercase, in every title, meta description, heading and link anchor. Inside body
+  copy, say what it is on first mention ("stray, the tool catalog for your agent") and wherever it could
+  be read as the English word.
 - One concept, one word: **a tool** (what an agent calls) · **the catalog** (the public half) · **your own
   tools** (the team's keys and skills). Never *vault*, *marketplace*, or *the registry*.
 - "OpenRouter for agent tools": **at most once per page**, and only as a supporting explanation.

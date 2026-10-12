@@ -26,7 +26,7 @@ Set up once, in Claude Code, Codex or Cursor: `set up stray - {BASE}/llms.txt`
 
 A GTM engineer builds the machine that finds, qualifies and reaches buyers. In 2026 more of it runs from an agent.
 The stack: an agent (Claude Code, Codex, Cursor, Hermes); a data layer (company and people search, enrichment, email
-finding and verification, hiring, funding, news, social; treg.to is one, one key, priced per call, your own keys
+finding and verification, hiring, funding, news, social; stray is one, one key, priced per call, your own keys
 first); skills (the method); a sending tool; a CRM.
 
 ## Write your ICP as fields a provider can filter on
@@ -84,7 +84,7 @@ Rule: search for the buyer's function; a "decision makers" list is a map of the 
 
 ## The cheapest way to run waterfall email enrichment from an AI agent
 
-Bench, 16 Sep 2026, 292 people: cost per correct work email $0.0056 treg.to, $0.0257 Monid, $0.0395 Clay, $0.0427
+Bench, 16 Sep 2026, 292 people: cost per correct work email $0.0056 stray, $0.0257 Monid, $0.0395 Clay, $0.0427
 Freckle, $0.0924 Deepline; exact match 90.4%, 79.8%, 89.7%, 90.1%, 86.6%. A routed finder tries providers cheapest
 first and does not bill misses on per-success providers. Method: {BASE}/blog/work-email-finding-bench
 

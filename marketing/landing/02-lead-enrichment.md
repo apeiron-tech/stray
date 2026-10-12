@@ -1,7 +1,7 @@
 ---
 page_id: p2
 slug: /use-cases/lead-enrichment-for-ai-agents/
-seo_title: "Waterfall Enrichment: Find and Verify Work Emails | treg.to"      # 53
+seo_title: "Waterfall Enrichment: Find and Verify Work Emails | stray"      # 53
 meta_description: "Waterfall enrichment for AI agents: find companies, identify decision-makers and verify work emails through one key. Replace Clay workflows. $1.00 free."  # 149
 h1: "Waterfall Enrichment: Find and Verify Work Emails"
 hub_title: "Lead enrichment"
@@ -43,7 +43,7 @@ work email, verify it, and pull the latest news so I have an opener.
 
 ---
 
-## The old way vs. the treg.to way
+## The old way vs. the stray way
 
 | | The old way | With stray |
 |---|---|---|
@@ -95,7 +95,7 @@ one named person, `hunter.people.email.find` costs $0.0245 and **only charges wh
 Apollo $0.026 (263 calls, 0.3 s), LeadMagic $0.025, Coresignal $0.392.
 
 **It verifies before you send: and this is the step that matters most.** Verification is the single
-most-called enrichment endpoint on treg.to: **963 calls at 100% success**. It runs at $0.00625 with
+most-called enrichment endpoint on stray: **963 calls at 100% success**. It runs at $0.00625 with
 LeadMagic or $0.01225 with Hunter. Finding an address is cheap; sending to a dead one costs you a domain
 reputation, which is why the teams already doing this at volume verify more than they search.
 
@@ -122,7 +122,7 @@ COST      $[from your run]   (misses were not charged)
 
 ## Proof from one real run
 
-*Run on treg.to, 26 Aug 2026: the full 50-company workflow, one prompt, one key. Every figure is
+*Run on stray, 26 Aug 2026: the full 50-company workflow, one prompt, one key. Every figure is
 from that run's receipt, published with its CSV at
 [/workflows/find-and-verify-a-lead-list](/workflows/find-and-verify-a-lead-list).*
 
@@ -139,7 +139,7 @@ from that run's receipt, published with its CSV at
 
 **Where misses were free, and where they were not.** Hunter and LeadMagic charge only on success,
 so their misses settled at $0.00. Findymail and Tomba list a free miss too, but neither reports the
-charge in its response, so treg.to settled their calls at the list rate, misses included: $0.56 of
+charge in its response, so stray settled their calls at the list rate, misses included: $0.56 of
 the $3.62. The receipt is the real total, not the rate card.
 
 > **The honest read of this run:** 27 deliverable leads from 50 companies is one market on one day,
@@ -181,7 +181,7 @@ Because this workflow is not one provider. Finding companies, identifying people
 three different products, and the vendor that is best at one is rarely best at the others: the table
 above is 200× wide for a single job. Holding accounts with all of them to find out is the expensive way
 to learn it. If you already pay for one, connect it and those calls route through your key, unmetered.
-treg.to is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many
+stray is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token, many
 providers behind it.
 
 **How are credentials handled?**: `S-OBJ-CREDENTIALS`
@@ -192,27 +192,27 @@ varies by price, so once you find the provider that covers your market, pin it.)
 
 **Can I use my existing provider key?**: `S-OBJ-OWN-KEY`
 *(If your team already pays for Apollo or Hunter, this is the first thing to do. Those calls stop costing
-you anything on treg.to.)*
+you anything on stray.)*
 
 **What happens if a provider fails?**: `S-OBJ-FAILURE`
 
 **How much does a call cost?**
 A found work email is $0.0245 with Hunter and a miss is free. Verification is $0.00625. Company search
 ranges from free to $0.38 a record depending on provider. The exact price is shown before the call, and
-treg.to adds no markup to what the provider charges. New teams start with $1.00 of free credit: enough
+stray adds no markup to what the provider charges. New teams start with $1.00 of free credit: enough
 for roughly 40 verified email lookups before you spend anything.
 
 **Which agents does it work with?**: `S-OBJ-AGENTS`
 
 **How does this compare to Clay?**
-Clay is a visual table for GTM workflows. treg.to is a catalog of the same data providers Clay calls,
+Clay is a visual table for GTM workflows. stray is a catalog of the same data providers Clay calls,
 exposed as tools your agent can use directly. If you already think in prompts rather than spreadsheet
 formulas, you skip the table and get the same waterfall enrichment in one paste. The providers are the
-same (Apollo, Hunter, Clearbit, etc.); the interface is your agent. Clay is not in the treg.to catalog
+same (Apollo, Hunter, Clearbit, etc.); the interface is your agent. Clay is not in the stray catalog
 because it is a workflow tool, not a data API.
 
 **Is there an Apollo MCP or Hunter MCP?**
-Yes. The treg.to MCP server gives your agent access to Apollo, Hunter and the other enrichment providers
+Yes. The stray MCP server gives your agent access to Apollo, Hunter and the other enrichment providers
 through one connection. Install once, and every provider in the catalog answers to it. See `/llms.txt`
 for the setup line.
 

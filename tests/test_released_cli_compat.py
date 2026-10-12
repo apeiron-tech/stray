@@ -30,7 +30,7 @@ async def test_released_cli_flows(clients, tmp_path, monkeypatch, capsys, versio
         root = os.environ.get('STRAY_RELEASED_CLI_DIR')
         if not root:
             pytest.skip('set STRAY_RELEASED_CLI_DIR to verified released wheels')
-        package = Path(root) / version / 'stray'
+        package = Path(root) / version / 'treg'   # the released wheels predate the rename
         hashes = {
             '0.16.0': 'db4e241b01a81d57ea1d4d17947736f2589aff61ac6a4b1e28bc8524c03f4df1',
             '0.19.0': '825aa562e75582667c2d555d836db5a3d7a8ce3371af62b0eed6f96aa41edb26',

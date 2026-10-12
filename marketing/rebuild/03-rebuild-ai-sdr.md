@@ -1,7 +1,7 @@
 ---
 page_id: r3
 slug: /rebuild/ai-sdr/
-seo_title: "Build Your Own AI SDR: Open Source, Priced Per Lead | treg.to"     # 58
+seo_title: "Build Your Own AI SDR: Open Source, Priced Per Lead | stray"     # 58
 meta_description: "An AI SDR is a loop: signal, list, enrich, research, draft, send, triage. Here is the open-source version with stray as the data layer — every call priced, sending left to your sequencer."  # 176 → trim
 h1: "Build your own AI SDR: the open-source loop, with prices"
 seo_terms:

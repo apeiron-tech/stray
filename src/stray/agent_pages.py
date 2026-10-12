@@ -10,7 +10,7 @@ Two rules the tests enforce:
   - every capability id named in USE_CASES must exist in the catalog — a job the catalog cannot do
     must not be advertised ("do not document what is not built"), and a renamed capability must
     fail the build rather than silently drop a row;
-  - the install copy describes the HOSTED treg.to (the ChatGPT Connectors listing, the $1.00 grant),
+  - the install copy describes the HOSTED stray (the ChatGPT Connectors listing, the $1.00 grant),
     so `api.py` serves these pages only on the reference hosts (`PUBLIC_HOST_ALIASES`).
 """
 
@@ -103,7 +103,7 @@ CATEGORY_BLURBS: dict[str, str] = {
 CATEGORY_PROMPTS: dict[str, str] = {
     "Data enrichment": "Using stray, find the work email of the VP of Marketing at stripe.com and tell me what the call cost.",
     "Buying signals": "Using stray, which of these 30 companies raised money or started hiring salespeople in the last 90 days?",
-    "Search & rankings": "Using stray, which queries is treg.to ranking 8 to 15 for in Search Console, and who outranks us?",
+    "Search & rankings": "Using stray, which queries is stray ranking 8 to 15 for in Search Console, and who outranks us?",
     "Analytics & campaigns": "Using stray, compare last week's Google Ads and Meta Ads spend and conversions against the week before.",
     "Advertising intelligence": "Using stray, show me every ad Notion is running on Meta right now.",
     "Social listening": "Using stray, find 20 TikTok creators posting about home espresso with 50k to 500k followers.",
@@ -319,10 +319,10 @@ DECISION_STEPS: dict[str, dict] = {
     },
 }
 
-# Why go through treg.to at all: (lead, one short line). Same on every use-case page, except for
+# Why go through stray at all: (lead, one short line). Same on every use-case page, except for
 # free own-key jobs where the metering/multi-account cards are misleading.
 WHY_STRAY: tuple[tuple[str, str], ...] = (
-    ("One key, not 9 accounts", "treg.to holds the provider keys. Neither you nor the agent sees them."),
+    ("One key, not 9 accounts", "stray holds the provider keys. Neither you nor the agent sees them."),
     ("Price before the call", "The provider's own rate, $0.000 markup, from a prepaid balance."),
     ("No subscription, no seats", "Charged per call. $1.00 free per new team, no card to start."),
     ("Your own keys are free", "Already pay Hunter? Register it and those calls are never metered."),
@@ -370,16 +370,16 @@ AGENTS: dict[str, dict] = {
     "chatgpt": {
         "name": "ChatGPT",
         "h1_noun": "Connector",
-        "title": "ChatGPT Connector: call {n} APIs without keys | treg.to",
+        "title": "ChatGPT Connector: call {n} APIs without keys | stray",
         "description": (
-            "treg.to is a ChatGPT Connector that lets ChatGPT call {n} APIs across {p} platforms: "
+            "stray is a ChatGPT Connector that lets ChatGPT call {n} APIs across {p} platforms: "
             "find work emails, LinkedIn profiles, creators, keyword volumes, backlinks, competitor "
             "ads. Priced per call at the provider's own rate, with no markup and no provider signup."),
         # The one quotable sentence an answer engine should lift. Server-rendered first, under the H1.
         "definition": (
-            "treg.to is a ChatGPT Connector (and MCP server) that gives ChatGPT {n} ready-to-call "
+            "stray is a ChatGPT Connector (and MCP server) that gives ChatGPT {n} ready-to-call "
             "APIs across {p} platforms: SEO data, LinkedIn and people enrichment, Reddit, YouTube, "
-            "ads and e-commerce. Calls run on treg.to's own keys and are metered from a prepaid "
+            "ads and e-commerce. Calls run on stray's own keys and are metered from a prepaid "
             "balance at the provider's rate with $0.000 markup. Your first team starts with $1.00 "
             "free, and there are no provider accounts to open."),
         # Steps shown as numbered HTML list items. The setup line is the universal install.
@@ -393,22 +393,22 @@ AGENTS: dict[str, dict] = {
         # No install screenshot: the setup-line flow has none yet, and a page ships without the
         # slot rather than with a broken image (the old Plugins-directory PNG shows a dead UI).
         "faq": [
-            ("Is treg.to free to use in ChatGPT?",
+            ("Is stray free to use in ChatGPT?",
              "Installing is free and your first team starts with $1.00 of calls. After that, each call "
              "is metered from the team's prepaid balance at the provider's own rate, with no markup "
              "and no subscription. Calls on your team's own keys are free."),
             ("Do I need API keys from the providers?",
-             "No. treg.to makes the upstream request on its own key and relays the answer. If your "
+             "No. stray makes the upstream request on its own key and relays the answer. If your "
              "team already has a key for a provider, you can register it and those calls are never "
              "metered."),
             ("What does a call cost?",
              "It depends on the job and the provider: from well under a cent for a keyword lookup "
-             "to a few cents for a verified work email. treg.to adds $0.000 on top of the provider's "
+             "to a few cents for a verified work email. stray adds $0.000 on top of the provider's "
              "rate. Every row on this page shows the lowest price for that job, and ChatGPT tells "
              "you the price before it spends it."),
-            ("Does treg.to pick the provider for me?",
+            ("Does stray pick the provider for me?",
              "No. Where several providers do the same job they are shown side by side with prices "
-             "and measured reliability, and ChatGPT (or you) chooses. treg.to does not route or "
+             "and measured reliability, and ChatGPT (or you) chooses. stray does not route or "
              "fail over between them automatically."),
         ],
     },
@@ -433,11 +433,11 @@ USE_CASE_PAGES: dict[str, dict] = {
         # H1 and title carry the words people type ("email finder", "linkedin email finder", "api");
         # the buyer's-words label stays on the menu.
         "sentence": "LinkedIn email finder and email finder API: work email from a name or URL",
-        "title": "LinkedIn Email Finder API: {n} providers | treg.to",
+        "title": "LinkedIn Email Finder API: {n} providers | stray",
         "lede": (
             "LinkedIn email finder: give your agent a name and company domain, or a LinkedIn URL, "
             "and get back a verified work address. {n} providers do this job. Pay per result, not "
-            "per seat. Every row below is callable through one treg.to key, at the provider's rate."),
+            "per seat. Every row below is callable through one stray key, at the provider's rate."),
         # What to type, per client. One URL, tabs on the page.
         # One prompt, the same in every client. Copy button on the page.
         "prompt": "Using stray, find the work email of the VP of Marketing at stripe.com. Show me "
@@ -448,7 +448,7 @@ USE_CASE_PAGES: dict[str, dict] = {
             ("Give it what you have",
              "Name plus company domain works everywhere. A LinkedIn URL works with 3 of the 9."),
             ("Ask for the price first",
-             "treg.to returns the cost before the call, so ChatGPT can say what it will spend."),
+             "stray returns the cost before the call, so ChatGPT can say what it will spend."),
             ("Name your preference, the agent picks",
              "“cheapest” · “most reliable” · “only bill me when you find one” · “takes a LinkedIn URL”."),
             ("Say what to do on a miss",
@@ -470,12 +470,12 @@ USE_CASE_PAGES: dict[str, dict] = {
              "low coverage means most of the list never even gets contacted. high bounces hurt deliverability.",
              "r/GrowthHacking", "https://www.reddit.com/r/GrowthHacking/comments/1rle23d/which_email_finder_actually_scales/",
              "This page does not reprint anyone's accuracy claim. It shows the price, what the "
-             "provider bills for a miss, and the success rate treg.to measured on live calls."),
+             "provider bills for a miss, and the success rate stray measured on live calls."),
             ("Nobody trusts one provider, so everyone builds a waterfall",
              "Most agencies use one email finder, get 45-50% coverage, and immediately lose half their list before even emailing.",
              "@itsalexvacca on X", "https://x.com/i/status/1976301889634566420",
              "All nine are callable through one key, so a miss costs one more call to try the next "
-             "one. Tell the agent the order you want; treg.to compares, it does not fail over on "
+             "one. Tell the agent the order you want; stray compares, it does not fail over on "
              "its own."),
             ("The lead is a LinkedIn URL and nothing else",
              "I tried GetProspect and Apollo.io to extract the email address but most of them were wrong.",
@@ -516,20 +516,20 @@ USE_CASE_PAGES: dict[str, dict] = {
         "faq": [
             ("How much does it cost to find a work email?",
              "Between a fraction of a cent and a few cents per found address, depending on the "
-             "provider. The lowest live price is shown at the top of this page, and treg.to adds "
+             "provider. The lowest live price is shown at the top of this page, and stray adds "
              "no markup. Most providers here charge only on success, so a miss costs nothing."),
             ("Do I need a Hunter or Apollo account?",
-             "No. treg.to calls the provider on its own key and bills your team's prepaid balance per "
+             "No. stray calls the provider on its own key and bills your team's prepaid balance per "
              "call. If you already have a key for one of them, register it and those calls are "
              "never metered."),
             ("Which provider should I use?",
              "It depends on what you have. Name plus domain: start with the cheapest verified "
-             "per-success provider. A LinkedIn URL: use one that accepts it directly. treg.to shows "
+             "per-success provider. A LinkedIn URL: use one that accepts it directly. stray shows "
              "them side by side but does not choose or fail over for you."),
             ("Is the data legal to use?",
              "These providers return business contact data under their own terms; you are "
              "responsible for how you use it, including consent and anti-spam law in your "
-             "jurisdiction. treg.to relays the provider's answer and stores no copy."),
+             "jurisdiction. stray relays the provider's answer and stores no copy."),
         ],
         "related": ("Verify an email before you send", "Enrich a person from an email or LinkedIn URL",
                     "Find people by role, company or location", "A company's email format"),
@@ -539,15 +539,15 @@ USE_CASE_PAGES: dict[str, dict] = {
 USE_CASE_PAGES["search-console-queries"] = {
     "label": "Search Console: clicks, impressions and top queries",
     "sentence": "Google Search Console API: clicks, impressions and top queries, read by your agent",
-    "title": "Search Console API for {agent}: queries and clicks | treg.to",
+    "title": "Search Console API for {agent}: queries and clicks | stray",
     "lede": (
         "Connect the Search Console property you already own and your agent can read the same "
         "numbers the UI shows: every query, its clicks, impressions, CTR and average position, for "
-        "any date range. It runs on your own Google account, so treg.to never meters it."),
-    "prompt": "Using stray, show me the queries treg.to ranked 8 to 20 for in the last 28 days with "
+        "any date range. It runs on your own Google account, so stray never meters it."),
+    "prompt": "Using stray, show me the queries stray ranked 8 to 20 for in the last 28 days with "
               "more than 50 impressions, sorted by impressions, and tell me which ones have the worst CTR.",
     "prompt_why": [
-        ("Connect once", "One OAuth click for the property you own. treg.to holds the token, not you."),
+        ("Connect once", "One OAuth click for the property you own. stray holds the token, not you."),
         ("Ask in plain words", "Date ranges, filters and sorting are the agent's job, not yours."),
         ("End the window 3 days back", "Search Console lags 2 to 3 days; yesterday is preliminary data."),
         ("It costs nothing", "Your own account, so the call is never metered."),
@@ -569,15 +569,15 @@ USE_CASE_PAGES["search-console-queries"] = {
     ],
     "faq": [
         ("Does this cost anything?",
-         "No. Search Console runs on your own Google account, so treg.to relays the call and meters "
-         "nothing. Only calls on treg.to's own provider keys are billed."),
+         "No. Search Console runs on your own Google account, so stray relays the call and meters "
+         "nothing. Only calls on stray's own provider keys are billed."),
         ("What do I have to connect?",
          "The Google account that already has access to the property, once, through an OAuth "
-         "screen. treg.to stores the token server side; your agent never sees it."),
+         "screen. stray stores the token server side; your agent never sees it."),
         ("Can my agent see other people's sites?",
          "No. The API returns only the properties your connected account can access."),
         ("Which agents can do this?",
-         "Any client that can reach treg.to: ChatGPT, Claude, Claude Code, Cursor and the rest of "
+         "Any client that can reach stray: ChatGPT, Claude, Claude Code, Cursor and the rest of "
          "the supported list."),
     ],
     "related": ("Is this page indexed, and why not", "Google Analytics: traffic and behaviour reports",
@@ -587,7 +587,7 @@ USE_CASE_PAGES["search-console-queries"] = {
 USE_CASE_PAGES["find-creators-by-keyword"] = {
     "label": "Find creators by keyword",
     "sentence": "Find creators by keyword on Instagram, TikTok, YouTube and X",
-    "title": "Creator search API: 4 platforms compared | treg.to",
+    "title": "Creator search API: 4 platforms compared | stray",
     "lede": (
         "Search each platform's own user index by keyword and get back profiles with follower "
         "counts, bios and links, so your agent can shortlist creators instead of you scrolling. "
@@ -626,7 +626,7 @@ USE_CASE_PAGES["find-creators-by-keyword"] = {
          "people enrichment endpoints can resolve a work address from a name and company."),
         ("Which platform should I search?",
          "The one your audience uses. The comparison below shows who serves each platform and what "
-         "a search costs there; treg.to does not pick a platform for you."),
+         "a search costs there; stray does not pick a platform for you."),
         ("Is this the official API?",
          "For most of these platforms it is a data provider reading the public index, not the "
          "platform's own API. Each row names the provider and links its documentation."),
@@ -637,40 +637,40 @@ USE_CASE_PAGES["find-creators-by-keyword"] = {
 AGENTS["claude"] = {
     "name": "Claude",
     "h1_noun": "MCP server",
-    "title": "Claude MCP server: {n} APIs without keys | treg.to",
+    "title": "Claude MCP server: {n} APIs without keys | stray",
     "description": (
-        "treg.to gives Claude {n} ready-to-call APIs across {p} platforms: work emails, LinkedIn profiles, creators, keyword volumes, backlinks, competitor ads. Priced per call at the provider's own rate with no markup and no provider signup."),
+        "stray gives Claude {n} ready-to-call APIs across {p} platforms: work emails, LinkedIn profiles, creators, keyword volumes, backlinks, competitor ads. Priced per call at the provider's own rate with no markup and no provider signup."),
     "definition": (
-        "treg.to is an MCP server for Claude that gives it {n} ready-to-call APIs across {p} "
+        "stray is an MCP server for Claude that gives it {n} ready-to-call APIs across {p} "
         "platforms: SEO data, LinkedIn and people enrichment, Reddit, YouTube, ads and e-commerce. "
-        "Calls run on treg.to's own keys and are metered from a prepaid balance at the provider's "
+        "Calls run on stray's own keys and are metered from a prepaid balance at the provider's "
         "rate with $0.000 markup. Your first team starts with $1.00 free, and there are no provider "
         "accounts to open."),
     "install_steps": [
         "In Claude, send this in the chat: <code>set up stray &mdash; https://treg.to/llms.txt</code>",
         "It reads that page and sets itself up. If it asks for a key, give it your team token from "
-        "the treg.to dashboard (header <code>X-Stray-Token</code>).",
+        "the stray dashboard (header <code>X-Stray-Token</code>).",
         "Your first team starts with $1.00 of free calls. No card, no subscription, no seats.",
         "Ask for what you want done. Claude searches the catalog, tells you the price, and calls the "
         "endpoint. You never hold a provider key.",
     ],
     "install_image": None,
         "faq": [
-            ("Is treg.to free to use in Claude?",
+            ("Is stray free to use in Claude?",
              "Installing is free and your first team starts with $1.00 of calls. After that each call "
              "is metered from the team's prepaid balance at the provider's own rate, with no markup, "
              "no subscription and no seats. Calls on your team's own keys are free."),
             ("Do I need API keys from the providers?",
-             "No. treg.to makes the upstream request on its own key and relays the answer, so Claude "
+             "No. stray makes the upstream request on its own key and relays the answer, so Claude "
              "never holds a provider credential. If your team already pays for a provider, register "
              "that key and those calls are never metered."),
             ("What does a call cost?",
              "It depends on the job and the provider: from well under a cent for a keyword lookup to "
-             "a few cents for a verified work email. treg.to adds $0.000 on top of the provider's "
+             "a few cents for a verified work email. stray adds $0.000 on top of the provider's "
              "rate, and Claude tells you the price before it spends it."),
-            ("Does treg.to pick the provider for me?",
+            ("Does stray pick the provider for me?",
              "No. Where several providers do one job they are shown side by side with prices and "
-             "measured reliability, and Claude picks, or you tell it how. treg.to does not route or "
+             "measured reliability, and Claude picks, or you tell it how. stray does not route or "
              "fail over between providers automatically."),
         ],
 }
@@ -684,19 +684,19 @@ AGENTS["claude-code"] = {
     "name": "Claude Code",
     "h1_noun": "MCP server",
     "h1": "Lead enrichment in Claude Code: people, emails and companies from {n} APIs",
-    "title": "Claude Code MCP: lead enrichment, {n} APIs | treg.to",
+    "title": "Claude Code MCP: lead enrichment, {n} APIs | stray",
     "description": (
-        "Find people, find and verify work emails, and enrich companies from Claude Code: treg.to is "
+        "Find people, find and verify work emails, and enrich companies from Claude Code: stray is "
         "an MCP server and CLI with {n} APIs across {p} platforms, one key, priced per call at the "
         "provider's own rate with no markup."),
     "definition": (
-        "treg.to is an MCP server and CLI for Claude Code that gives it {n} ready-to-call APIs across "
+        "stray is an MCP server and CLI for Claude Code that gives it {n} ready-to-call APIs across "
         "{p} platforms, built for lead enrichment: search people by company and title, find a work "
-        "email, verify it, enrich the company. Calls run on treg.to's "
+        "email, verify it, enrich the company. Calls run on stray's "
         "keys at the provider's rate with $0.000 markup, and your own keys are never metered."),
     "install_steps": [
         "In Claude Code, send this in the chat: <code>set up stray &mdash; https://treg.to/llms.txt</code>",
-        "It reads that page and registers treg.to as an MCP server for you. Prefer to do it "
+        "It reads that page and registers stray as an MCP server for you. Prefer to do it "
         "yourself? <code>curl -fsSL https://treg.to/install.sh | sh</code> then "
         "<code>stray login</code> and <code>stray mcp install</code>.",
         "Your first team starts with $1.00 of free calls. No card, no subscription, no seats.",
@@ -712,7 +712,7 @@ AGENTS["claude-code"] = {
          "html": (
              "<p>Lead enrichment is one motion: who works there, what is their email, is it real, "
              "and what is the company. Each step is a routed tool: "
-             "treg.to runs the providers for that job, your own keys first, then the cheapest per hit, "
+             "stray runs the providers for that job, your own keys first, then the cheapest per hit, "
              "and the answer names the provider that served it. Claude Code can call them over MCP or "
              "run them from its shell:</p>"
              "<pre><code># 1. who: people at a company, by the function you sell to\n"
@@ -761,19 +761,19 @@ AGENTS["claude-code"] = {
         {"id": "cost", "seclab": "What it costs",
          "h2": "Cost per correct work email, against the tools you would otherwise use",
          "html": (
-             "<p>On the same 292 people (16 Sep 2026), cost per correct work email: treg.to "
+             "<p>On the same 292 people (16 Sep 2026), cost per correct work email: stray "
              "$0.0056, Monid $0.0257, Clay $0.0395, Freckle $0.0427, Deepline $0.0924. Exact match: "
              "90.4%, 79.8%, 89.7%, 90.1% and 86.6%. Each column is an aggregator, not one provider. "
              "The method and every row are in the "
              "<a href=\"/blog/work-email-finding-bench\">work email finding bench</a>.</p>")},
     ],
     "faq": [
-        ("Is treg.to free to use in Claude Code?",
+        ("Is stray free to use in Claude Code?",
          "Installing is free and your first team starts with $1.00 of calls. After that each call "
          "is metered from the team's prepaid balance at the provider's own rate, with no markup, "
          "no subscription and no seats. Calls on your team's own keys are free."),
         ("Do I need API keys from the providers?",
-         "No. treg.to makes the upstream request on its own key and relays the answer, so Claude Code "
+         "No. stray makes the upstream request on its own key and relays the answer, so Claude Code "
          "never holds a provider credential. If your team already pays for a provider, register "
          "that key and those calls are never metered."),
         ("Can Claude Code run a waterfall for work emails?",
@@ -786,7 +786,7 @@ AGENTS["claude-code"] = {
          "every address, and treat catch-all and unknown as their own list rather than as valid."),
         ("What does a call cost?",
          "It depends on the job and the provider: from well under a cent for a keyword lookup to "
-         "a few cents for a verified work email. treg.to adds $0.000 on top of the provider's "
+         "a few cents for a verified work email. stray adds $0.000 on top of the provider's "
          "rate, and Claude Code tells you the price before it spends it."),
     ],
 }
@@ -795,24 +795,24 @@ AGENTS["claude-code"] = {
 # no YAML writer, so `stray mcp install` detects Hermes and prints the block rather than writing it
 # (mcp_install.MANUAL_AGENTS); the page shows the same block. What Hermes adds that the other
 # clients do not is its own scheduler and messaging gateway, so its page leads with a recurring
-# check delivered to chat. treg.to answers the calls; the schedule and the delivery are Hermes's.
+# check delivered to chat. stray answers the calls; the schedule and the delivery are Hermes's.
 AGENTS["hermes"] = {
     "name": "Hermes Agent",
     "h1_noun": "MCP server",
     "h1": "Hermes Agent MCP server: {n} APIs for scheduled research",
-    "title": "Hermes Agent MCP server: {n} APIs, no keys | treg.to",
+    "title": "Hermes Agent MCP server: {n} APIs, no keys | stray",
     "description": (
-        "Add treg.to to Hermes Agent's config.yaml and it can call {n} APIs across {p} platforms: "
+        "Add stray to Hermes Agent's config.yaml and it can call {n} APIs across {p} platforms: "
         "people and company enrichment, hiring and funding signals, SEO, social. Run checks on "
         "Hermes's schedule, delivered to Telegram or Slack, priced per call with no markup."),
     "definition": (
-        "treg.to is an MCP server for Hermes Agent that gives it {n} ready-to-call APIs across {p} "
+        "stray is an MCP server for Hermes Agent that gives it {n} ready-to-call APIs across {p} "
         "platforms: people and company enrichment, hiring and funding signals, SEO data, social and "
-        "ads. Add one block to ~/.hermes/config.yaml; calls run on treg.to's keys at the provider's "
+        "ads. Add one block to ~/.hermes/config.yaml; calls run on stray's keys at the provider's "
         "rate with $0.000 markup, and your own keys are never metered."),
     "install_steps": [
-        "Get your team token from the treg.to dashboard, or run <code>stray login</code>.",
-        "Add treg.to under <code>mcp_servers</code> in <code>~/.hermes/config.yaml</code> (the block "
+        "Get your team token from the stray dashboard, or run <code>stray login</code>.",
+        "Add stray under <code>mcp_servers</code> in <code>~/.hermes/config.yaml</code> (the block "
         "is below). <code>stray mcp install</code> detects Hermes and prints manual configuration "
         "instructions rather than writing the file.",
         "In Hermes, run <code>/reload-mcp</code>. The tools appear as "
@@ -842,7 +842,7 @@ AGENTS["hermes"] = {
          "h2": "A weekly buying-signal check, delivered to your chat",
          "html": (
              "<p>Hermes has its own scheduler and sends results to Telegram, Slack, Discord and other "
-             "chats through its gateway, once the gateway is running and a chat is connected. treg.to "
+             "chats through its gateway, once the gateway is running and a chat is connected. stray "
              "does not schedule anything: it answers the calls each run makes. A scheduled job runs "
              "in a fresh session, so give it absolute paths and a file to remember what it already "
              "sent:</p>"
@@ -864,27 +864,27 @@ AGENTS["hermes"] = {
              "the company's people by the function you sell to, find a work email with "
              "<code>stray.people.email.find</code>, and verify it with "
              "<code>stray.people.email.verify</code> before anything is sent. The seen-signals "
-             "file is the job's memory between runs; treg.to keeps no list for you.</p>"
+             "file is the job's memory between runs; stray keeps no list for you.</p>"
              "<p>The receipts for each step are on "
              "<a href=\"/workflows/find-and-verify-a-lead-list\">find and verify a lead list</a>.</p>")},
     ],
     "faq": [
-        ("Is treg.to free to use in Hermes Agent?",
+        ("Is stray free to use in Hermes Agent?",
          "Adding it is free and your first team starts with $1.00 of calls. After that each call is "
          "metered from the team's prepaid balance at the provider's own rate, with no markup, no "
          "subscription and no seats. Calls on your team's own keys are free."),
         ("Do I need API keys from the providers?",
-         "No. treg.to makes the upstream request on its own key and relays the answer, so Hermes "
-         "only holds your treg.to team token. If your team already pays for a provider, register "
+         "No. stray makes the upstream request on its own key and relays the answer, so Hermes "
+         "only holds your stray team token. If your team already pays for a provider, register "
          "that key and those calls are never metered."),
-        ("Does treg.to run the schedule?",
-         "No. Hermes's own scheduler runs the job and its gateway delivers the result. treg.to "
+        ("Does stray run the schedule?",
+         "No. Hermes's own scheduler runs the job and its gateway delivers the result. stray "
          "answers each call the run makes and charges for those calls only."),
-        ("Can I use a treg.to skill in Hermes instead of MCP?",
-         "Hermes reads skills in the open SKILL.md format, and treg.to's skill is served at "
+        ("Can I use a stray skill in Hermes instead of MCP?",
+         "Hermes reads skills in the open SKILL.md format, and stray's skill is served at "
          "treg.to/skill.md. The MCP block above follows Hermes's documented MCP configuration; "
          "it gives Hermes the catalog search, and catalog_get shows the price before a call."),
-        ("Does treg.to pick the provider for me?",
+        ("Does stray pick the provider for me?",
          "Only when you call a routed tool such as stray.people.email.find, which tries its providers "
          "your own keys first, then cheapest per hit. Everywhere else the providers for a job are "
          "shown side by side with prices and measured reliability, and Hermes, or you, chooses."),
@@ -894,39 +894,39 @@ AGENTS["hermes"] = {
 AGENTS["cursor"] = {
     "name": "Cursor",
     "h1_noun": "MCP server",
-    "title": "Cursor MCP server: {n} APIs, no keys | treg.to",
+    "title": "Cursor MCP server: {n} APIs, no keys | stray",
     "description": (
-        "treg.to gives Cursor {n} ready-to-call APIs across {p} platforms: work emails, LinkedIn profiles, creators, keyword volumes, backlinks, competitor ads. Priced per call at the provider's own rate with no markup and no provider signup."),
+        "stray gives Cursor {n} ready-to-call APIs across {p} platforms: work emails, LinkedIn profiles, creators, keyword volumes, backlinks, competitor ads. Priced per call at the provider's own rate with no markup and no provider signup."),
     "definition": (
-        "treg.to is an MCP server for Cursor that gives its agent {n} ready-to-call APIs across {p} "
+        "stray is an MCP server for Cursor that gives its agent {n} ready-to-call APIs across {p} "
         "platforms: SEO data, LinkedIn and people enrichment, Reddit, YouTube, ads and e-commerce. "
-        "Calls run on treg.to's own keys at the provider's rate with $0.000 markup, from a prepaid "
+        "Calls run on stray's own keys at the provider's rate with $0.000 markup, from a prepaid "
         "balance that starts with $1.00 free."),
     "install_steps": [
         "In Cursor's agent chat, send: <code>set up stray &mdash; https://treg.to/llms.txt</code>",
         "It reads that page and sets itself up. If it asks for a key, give it your team token from "
-        "the treg.to dashboard (header <code>X-Stray-Token</code>).",
+        "the stray dashboard (header <code>X-Stray-Token</code>).",
         "Your first team starts with $1.00 of free calls. No card, no subscription, no seats.",
         "Ask for what you want done. Cursor searches the catalog, tells you the price, and calls the "
         "endpoint. You never hold a provider key.",
     ],
     "install_image": None,
         "faq": [
-            ("Is treg.to free to use in Cursor?",
+            ("Is stray free to use in Cursor?",
              "Installing is free and your first team starts with $1.00 of calls. After that each call "
              "is metered from the team's prepaid balance at the provider's own rate, with no markup, "
              "no subscription and no seats. Calls on your team's own keys are free."),
             ("Do I need API keys from the providers?",
-             "No. treg.to makes the upstream request on its own key and relays the answer, so Cursor "
+             "No. stray makes the upstream request on its own key and relays the answer, so Cursor "
              "never holds a provider credential. If your team already pays for a provider, register "
              "that key and those calls are never metered."),
             ("What does a call cost?",
              "It depends on the job and the provider: from well under a cent for a keyword lookup to "
-             "a few cents for a verified work email. treg.to adds $0.000 on top of the provider's "
+             "a few cents for a verified work email. stray adds $0.000 on top of the provider's "
              "rate, and Cursor tells you the price before it spends it."),
-            ("Does treg.to pick the provider for me?",
+            ("Does stray pick the provider for me?",
              "No. Where several providers do one job they are shown side by side with prices and "
-             "measured reliability, and Cursor picks, or you tell it how. treg.to does not route or "
+             "measured reliability, and Cursor picks, or you tell it how. stray does not route or "
              "fail over between providers automatically."),
         ],
 }
@@ -934,11 +934,11 @@ AGENTS["cursor"] = {
 USE_CASE_PAGES["verify-an-email"] = {
     "label": "Verify an email before you send",
     "sentence": "Email verification API: is this address deliverable, before you send",
-    "title": "Email verification API: {n} verifiers compared | treg.to",
+    "title": "Email verification API: {n} verifiers compared | stray",
     "lede": (
         "Hand your agent an address and get back a verdict: deliverable, undeliverable, or the "
         "third bucket every verifier has and each one names differently. {n} providers do this "
-        "through one treg.to key, and what separates them is not accuracy claims. It is what they "
+        "through one stray key, and what separates them is not accuracy claims. It is what they "
         "charge for an answer of “unknown”, which on a real B2B list is about a fifth of it."),
     "prompt": "Using stray, verify these 40 addresses before I send. Show me the price first, then "
               "give me three lists: safe to send, do not send, and unknown with the reason.",
@@ -979,7 +979,7 @@ USE_CASE_PAGES["verify-an-email"] = {
          "zerobounce wants $65 per 10k emails. neverbounce wants $80. hunter wants $100. i built the same thing in n8n for $0.",
          "r/n8n, 214 points", "https://www.reddit.com/r/n8n/comments/1ra50to/zerobounce_wants_65_per_10k_emails_neverbounce/",
          "Fair complaint, and the reason we publish per-check prices side by side rather than per "
-         "10k tiers. Through treg.to the same checks run from a fraction of a cent, and you can "
+         "10k tiers. Through stray the same checks run from a fraction of a cent, and you can "
          "compare what each one charges for an inconclusive answer."),
         ("Catch-all domains are a fifth of the list and nobody knows what to do with them",
          "Catch-all domains are about 20% of any B2B list. Most operators throw them away because the bounce risk is real",
@@ -1014,11 +1014,11 @@ USE_CASE_PAGES["verify-an-email"] = {
          "A domain whose server accepts mail for every address without saying whether the mailbox "
          "exists. No verifier can resolve it. Expect roughly a fifth of a B2B list to land there."),
         ("How much does verification cost here?",
-         "A fraction of a cent per check at the provider's own rate, with $0.000 added by treg.to. "
+         "A fraction of a cent per check at the provider's own rate, with $0.000 added by stray. "
          "The prices and how each provider bills an inconclusive result are in the comparison below."),
         ("Can I run several verifiers over the same list?",
          "Yes, they are all callable through one key, and heavy senders do exactly that because "
-         "verifiers disagree on the ambiguous rows. Your agent chains them; treg.to compares the "
+         "verifiers disagree on the ambiguous rows. Your agent chains them; stray compares the "
          "options but does not route or fail over on its own."),
     ],
     "related": ("Find professional emails", "Enrich a person from an email or LinkedIn URL",
@@ -1028,10 +1028,10 @@ USE_CASE_PAGES["verify-an-email"] = {
 USE_CASE_PAGES["enrich-a-person"] = {
     "label": "Enrich a person from an email or LinkedIn URL",
     "sentence": "Person enrichment API: a full profile from an email or LinkedIn URL",
-    "title": "Person enrichment API: {n} providers compared | treg.to",
+    "title": "Person enrichment API: {n} providers compared | stray",
     "lede": (
         "Give your agent an email address or a LinkedIn URL and get back the person: current title, "
-        "employer, seniority, location, work history. {n} providers do this through one treg.to "
+        "employer, seniority, location, work history. {n} providers do this through one stray "
         "key, and they are not close on price. The same match costs {cheapest} at one and about "
         "eighty times that at another, so what you are really choosing is how much a miss costs you."),
     "prompt": "Using stray, enrich these 20 LinkedIn URLs into a table: name, current title, company, "
@@ -1116,7 +1116,7 @@ USE_CASE_PAGES["enrich-a-person"] = {
 USE_CASE_PAGES["people-search"] = {
     "label": "Find people by role, company or location",
     "sentence": "AI people search and LinkedIn email finder: contacts by title or company",
-    "title": "AI People Search and LinkedIn Email Finder | treg.to",
+    "title": "AI People Search and LinkedIn Email Finder | stray",
     "lede": (
         "AI people search: find contacts by job title, seniority, company or location. LinkedIn email "
         "finder included. {n} providers through one key. Pay per row, not per seat."),
@@ -1170,7 +1170,7 @@ USE_CASE_PAGES["people-search"] = {
          "r/openclaw, 72 points", "https://www.reddit.com/r/openclaw/comments/1sft22e/kept_getting_my_accounts_banned_trying_to_get/",
          "The providers here run their own infrastructure, so your accounts are not in the loop. "
          "That is an operational answer, not a legal one: check each provider's terms for your use, "
-         "because treg.to relays their answer and makes nothing lawful that was not."),
+         "because stray relays their answer and makes nothing lawful that was not."),
         ("Coverage outside the US and outside tech is a guess",
          "I've heard of ZoomInfo, Apollo, LeadSquared, IndiaMART but no idea about quality for Indian market specifically.",
          "r/b2bmarketing", "https://www.reddit.com/r/b2bmarketing/comments/1r08jcy/need_recommendations_for_b2b_contact_data/",
@@ -1205,10 +1205,10 @@ USE_CASE_PAGES["people-search"] = {
 USE_CASE_PAGES["enrich-a-company"] = {
     "label": "Enrich a company from its domain",
     "sentence": "Company enrichment API: domain to firmographics, providers compared on price and fill",
-    "title": "Company Enrichment API: {n} Providers Compared | treg.to",
+    "title": "Company Enrichment API: {n} Providers Compared | stray",
     "lede": (
         "Turn a domain into firmographics: industry, headcount, location, founding year, tech stack, "
-        "funding. {n} providers do this job through one treg.to key, from {cheapest} a call, with no "
+        "funding. {n} providers do this job through one stray key, from {cheapest} a call, with no "
         "seat fee and no annual contract. Your agent compares them on price and measured fill rate, "
         "picks one, and you pay only for the calls it makes."),
     "prompt": "Using stray, enrich these 30 domains into a table: company name, industry, headcount, "
@@ -1309,7 +1309,7 @@ USE_CASE_PAGES["enrich-a-company"] = {
     "related": ("Build a company list by industry, size or tech", "Hiring, headcount and news signals",
                 "Find people by role, company or location", "A company's funding rounds"),
     "extra_links": (
-        ("Pricing", "/pricing", "How treg.to pricing works"),
+        ("Pricing", "/pricing", "How stray pricing works"),
         ("Verified lead list workflow", "/workflows/find-and-verify-a-lead-list", "Build a list with the receipt from a real run"),
         ("People search", "/people-search", "Find and enrich people by role, company or location"),
     ),
@@ -1319,10 +1319,10 @@ USE_CASE_PAGES["enrich-a-company"] = {
 USE_CASE_PAGES["youtube-transcript-api"] = {
     "label": "Get a video's transcript",
     "sentence": "YouTube transcript API: a video's captions as plain text",
-    "title": "YouTube transcript API: {n} providers compared | treg.to",
+    "title": "YouTube transcript API: {n} providers compared | stray",
     "lede": (
         "Give your agent a YouTube URL and get the spoken words back as text, ready to summarise, "
-        "search or quote. {n} providers do this through one treg.to key, from {cheapest} a video. "
+        "search or quote. {n} providers do this through one stray key, from {cheapest} a video. "
         "The official YouTube Data API cannot do it for a video you do not own, which is the whole "
         "reason this job has a price at all."),
     "prompt": "Using stray, get the transcript of https://www.youtube.com/watch?v=dQw4w9WgXcQ in "
@@ -1330,7 +1330,7 @@ USE_CASE_PAGES["youtube-transcript-api"] = {
     "prompt_why": [
         ("Give it the URL", "Both providers take a watch or Shorts URL. No video id lookup first."),
         ("Name the language", "Ask for a language you know the video carries, or you get an empty result."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what it will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what it will spend."),
         ("Say what to do with it", "Transcript plus instruction in one turn beats fetching then pasting."),
     ],
     "result_noun": "transcript",
@@ -1345,7 +1345,7 @@ USE_CASE_PAGES["youtube-transcript-api"] = {
          "r/SaaS, 5 points", "https://www.reddit.com/r/SaaS/comments/1fgjjd1/looking_for_a_saas_tool_to_fetch_youtube_video/",
          "This is the single most repeated failure in the research, and it is structural: the "
          "unofficial route reads from your address, and datacentre ranges get blocked. A call "
-         "through treg.to leaves the provider's infrastructure instead. What no table can tell you "
+         "through stray leaves the provider's infrastructure instead. What no table can tell you "
          "is whether a given provider's pool is clear today at your volume, which is why the "
          "observed success rates on this page are measured rather than promised."),
         ("Nobody can promise it still works next month",
@@ -1397,7 +1397,7 @@ USE_CASE_PAGES["youtube-transcript-api"] = {
     ],
     "faq": [
         ("How much does a YouTube transcript cost?",
-         "A fraction of a cent per video at the provider's own rate, with $0.000 added by treg.to. "
+         "A fraction of a cent per video at the provider's own rate, with $0.000 added by stray. "
          "The live prices are in the comparison above, and one provider bills only on success while "
          "the other bills the attempt."),
         ("Why not use youtube-transcript-api myself?",
@@ -1421,10 +1421,10 @@ USE_CASE_PAGES["youtube-transcript-api"] = {
 USE_CASE_PAGES["video-details-views-and-stats"] = {
     "label": "Video details, views and stats",
     "sentence": "YouTube video statistics: views, likes and metadata by video id",
-    "title": "YouTube video statistics API: {n} providers | treg.to",
+    "title": "YouTube video statistics API: {n} providers | stray",
     "lede": (
         "Views, likes, comment count, duration, title, description, tags and publish date, for any "
-        "public video. {n} providers do this through one treg.to key, and one of them is Google's "
+        "public video. {n} providers do this through one stray key, and one of them is Google's "
         "own API on the account you already have, which is free but rationed."),
     "prompt": "Using stray, get the view count, like count and publish date for these 30 YouTube "
               "video ids and put them in a table sorted by views. Show me the price first.",
@@ -1447,7 +1447,7 @@ USE_CASE_PAGES["video-details-views-and-stats"] = {
          "The daily budget resets at midnight Pacific, so a bug in the morning costs the rest of the "
          "day. Reading a video costs 1 unit of 10,000 and batches 50 ids into that one unit, so most "
          "people who hit the wall were spending it on search. The paid rows have no daily ceiling; "
-         "treg.to shows you both and you pick, it does not switch over on its own."),
+         "stray shows you both and you pick, it does not switch over on its own."),
         ("You cannot tell whether you ran out or something else broke",
          "The strange thing is, my daily usage counter (which I'm tracking in the script) shows that I'm nowhere near the daily quota limit.",
          "r/pythontips, 2 points", "https://www.reddit.com/r/pythontips/comments/1epf9dk/youtube_api_quota_issue_despite_not_reaching_the/",
@@ -1458,7 +1458,7 @@ USE_CASE_PAGES["video-details-views-and-stats"] = {
          "Apparently that IP address is for AWS.",
          "r/MailChimp, 6 points", "https://www.reddit.com/r/MailChimp/comments/1g9ft0z/youtube_api_error/",
          "The error underneath that thread is API_KEY_IP_ADDRESS_BLOCKED, and it is the same story as "
-         "the transcript job: it worked until it was deployed. A call through treg.to leaves the "
+         "the transcript job: it worked until it was deployed. A call through stray leaves the "
          "provider's infrastructure, not your host's. Whether your own host is blocked is a property "
          "of your host, and no comparison table has that column."),
         ("The counts themselves are not stable at fine granularity",
@@ -1498,14 +1498,14 @@ USE_CASE_PAGES["video-details-views-and-stats"] = {
     ],
     "faq": [
         ("Is the YouTube Data API free?",
-         "Yes, on your own Google account, and treg.to never meters a call on your own key. What it "
+         "Yes, on your own Google account, and stray never meters a call on your own key. What it "
          "is not is unlimited: 10,000 quota units a day by default, which this method spends 1 at a "
          "time. The paid providers exist for when that runs out."),
         ("Can I get watch time or retention?",
          "No. Those are YouTube Analytics numbers and only the channel's owner can read them, "
          "through a connected account. Everything on this page is the public record of the video."),
         ("Do I need a Google account for this?",
-         "Only for the free row. The other providers are called on treg.to's keys and billed per "
+         "Only for the free row. The other providers are called on stray's keys and billed per "
          "call from your prepaid balance, so you can read a video's stats with no Google project at all."),
         ("How current are the view counts?",
          "They are what the platform is publishing at the moment of the call. YouTube itself updates "
@@ -1519,10 +1519,10 @@ USE_CASE_PAGES["video-details-views-and-stats"] = {
 USE_CASE_PAGES["youtube-channel-stats"] = {
     "label": "A channel's profile and lifetime stats",
     "sentence": "YouTube channel stats API: subscribers, total views and profile",
-    "title": "YouTube channel stats API: {n} providers | treg.to",
+    "title": "YouTube channel stats API: {n} providers | stray",
     "lede": (
         "Subscriber count, lifetime views, video count, description, country and links, for any "
-        "public channel. {n} providers do this through one treg.to key, including Google's own API "
+        "public channel. {n} providers do this through one stray key, including Google's own API "
         "on your account, which resolves an @handle without you having to find the UC id first."),
     "prompt": "Using stray, get the subscriber count, total views and video count for @MrBeast and "
               "@mkbhd, and tell me which has more views per video. Show me the price first.",
@@ -1573,7 +1573,7 @@ USE_CASE_PAGES["youtube-channel-stats"] = {
          "That is four jobs chained: the profile, the uploads list, per video stats, then comments. "
          "Asking Google for part=contentDetails hands you the uploads playlist id, which is the "
          "cheap way into the catalogue without spending a search. Your agent runs the chain; "
-         "treg.to prices each step."),
+         "stray prices each step."),
     ],
     "q_cheapest": "Which YouTube channel stats API is cheapest?",
     "q_reliable": "Which one is the most reliable?",
@@ -1605,8 +1605,8 @@ USE_CASE_PAGES["youtube-channel-stats"] = {
          "Search for it first, then read the profile. Channel search is a separate job on this menu "
          "and returns the ids these endpoints take."),
         ("Is Google's API really free here?",
-         "Yes. It runs on the Google account you connect, so treg.to relays the call and meters "
-         "nothing. Only calls on treg.to's own provider keys are billed."),
+         "Yes. It runs on the Google account you connect, so stray relays the call and meters "
+         "nothing. Only calls on stray's own provider keys are billed."),
         ("Can I read another channel's analytics?",
          "No, and no provider can. Watch time, traffic sources and audience data are visible only to "
          "the channel's owner through a connected account. Everything here is public."),
@@ -1618,11 +1618,11 @@ USE_CASE_PAGES["youtube-channel-stats"] = {
 USE_CASE_PAGES["search-videos-and-channels-by-keyword"] = {
     "label": "Search videos and channels by keyword",
     "sentence": "YouTube search API: find videos and channels by keyword",
-    "title": "YouTube search API: {n} providers compared | treg.to",
+    "title": "YouTube search API: {n} providers compared | stray",
     "lede": (
         "Run a YouTube search from your agent and get the results as data: titles, video ids, "
         "channels, publish dates and thumbnails, with the filters the site itself offers. {n} "
-        "providers do this through one treg.to key. Google's own API is free on your account and "
+        "providers do this through one stray key. Google's own API is free on your account and "
         "the single most quota-expensive call it has, which is why the others are here."),
     "prompt": "Using stray, search YouTube for videos about home espresso uploaded in the last month, "
               "sorted by view count. Show me the price first, then give me the top 20 with links.",
@@ -1716,10 +1716,10 @@ USE_CASE_PAGES["search-videos-and-channels-by-keyword"] = {
 USE_CASE_PAGES["youtube-video-comments"] = {
     "label": "A video's comments",
     "sentence": "YouTube comment scraper: every comment on a video, as data",
-    "title": "YouTube comment scraper API: {n} providers | treg.to",
+    "title": "YouTube comment scraper API: {n} providers | stray",
     "lede": (
         "Pull a video's comments with authors, like counts, timestamps and replies, so your agent "
-        "can read the audience instead of you scrolling. {n} providers do this through one treg.to "
+        "can read the audience instead of you scrolling. {n} providers do this through one stray "
         "key, and Google's own API is free on the account you already have."),
     "prompt": "Using stray, get the comments on https://www.youtube.com/watch?v=dQw4w9WgXcQ sorted by "
               "relevance. Show me the price first, then group them into the five things people complain about.",
@@ -1765,7 +1765,7 @@ USE_CASE_PAGES["youtube-video-comments"] = {
          "I want to archive everything from the videos, to the likes, view and comments on it, lives and the same for it",
          "r/DataHoarder, 20 points", "https://www.reddit.com/r/DataHoarder/comments/1s426uf/need_help_with_youtube_channel_archivescraping/",
          "That is several jobs chained, not one call: list the channel's videos, then pull comments "
-         "per video, then paginate each. Your agent can run that loop and treg.to prices every "
+         "per video, then paginate each. Your agent can run that loop and stray prices every "
          "step, but it does not run the loop for you, and on a large channel the bill is the sum of "
          "the parts."),
     ],
@@ -1803,7 +1803,7 @@ USE_CASE_PAGES["youtube-video-comments"] = {
          "what you do with the data, including the privacy law that applies to you."),
         ("Can I get comments from a whole channel?",
          "Not in one call. List the channel's videos first, then fetch comments per video. Your "
-         "agent can chain that; treg.to prices each step but does not run the loop for you."),
+         "agent can chain that; stray prices each step but does not run the loop for you."),
     ],
     "related": ("Get a video's transcript", "Video details, views and stats",
                 "Mine the comments", "A channel's profile and lifetime stats"),
@@ -1813,10 +1813,10 @@ USE_CASE_PAGES["youtube-video-comments"] = {
 USE_CASE_PAGES["google-results-for-a-keyword"] = {
     "label": "Google results for a keyword",
     "sentence": "SERP API: Google organic results for a keyword",
-    "title": "SERP API: {n} providers compared, from {cheapest} | treg.to",
+    "title": "SERP API: {n} providers compared, from {cheapest} | stray",
     "lede": (
         "Send a keyword, get Google's organic results back as data: the ranking URLs in order, with "
-        "their titles and snippets. {n} providers do this through one treg.to key, from {cheapest} a "
+        "their titles and snippets. {n} providers do this through one stray key, from {cheapest} a "
         "call, billed from a prepaid balance instead of a monthly plan. What you are really choosing "
         "between is the billing unit, how deep each one goes, and how much of the page beyond ten "
         "blue links it can see."),
@@ -1827,7 +1827,7 @@ USE_CASE_PAGES["google-results-for-a-keyword"] = {
         ("Give it the keyword, not a URL", "These take a query the way a person types it. Keep multi-word phrases together."),
         ("Say where and in what language", "A result set is location specific. Leave it out and you get whichever default the provider picked."),
         ("Say how deep to go", "Depth is the cost dial on every row here: ten results is one unit of work, a hundred is ten."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what it will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what it will spend."),
     ],
     "result_noun": "result",
     "result_image": None,
@@ -1864,7 +1864,7 @@ USE_CASE_PAGES["google-results-for-a-keyword"] = {
         ("The free tier runs out before the project starts",
          "APIs like SerpAPI have pretty limited free tiers, so I'm looking into alternative ways to handle search without running into those limits.",
          "r/Playwright, 2 points", "https://www.reddit.com/r/Playwright/comments/1u8h42h/google_search_using_playwright/",
-         "A new treg.to team starts with a dollar of prepaid balance and no card, which at these "
+         "A new stray team starts with a dollar of prepaid balance and no card, which at these "
          "rates is hundreds of searches rather than a fortnight of a trial. What that does not buy "
          "you is a decision: the same dollar spread across three of these providers on your own "
          "queries is a better answer than any table, and it is the experiment this page would "
@@ -1875,7 +1875,7 @@ USE_CASE_PAGES["google-results-for-a-keyword"] = {
          "This page is one of those threads, so the only decent thing it can do is show its working. "
          "Every price above is read from the provider's own rate card or documentation on the date "
          "in the row, where a provider publishes no dollar price the row says so rather than "
-         "guessing, and any reliability figure comes from live treg.to traffic rather than a "
+         "guessing, and any reliability figure comes from live stray traffic rather than a "
          "benchmark we designed. What no comparison can tell you is which of these companies still "
          "exists in eighteen months. Nobody selling you a table knows that either."),
     ],
@@ -1909,7 +1909,7 @@ USE_CASE_PAGES["google-results-for-a-keyword"] = {
     ],
     "faq": [
         ("How much does one Google search cost?",
-         "The provider's own rate with $0.000 added by treg.to, taken from a prepaid balance rather "
+         "The provider's own rate with $0.000 added by stray, taken from a prepaid balance rather "
          "than a subscription. The live figure per provider is in the comparison above, and the "
          "units differ: one row bills the request, one bills each returned row, one bills only the "
          "searches that succeed."),
@@ -1936,10 +1936,10 @@ USE_CASE_PAGES["google-results-for-a-keyword"] = {
 USE_CASE_PAGES["your-own-campaign-performance"] = {
     "label": "Your own campaign performance",
     "sentence": "Google Ads API and Meta Ads API: your own campaign numbers",
-    "title": "Google Ads API and Meta Ads API, free | treg.to",
+    "title": "Google Ads API and Meta Ads API, free | stray",
     "lede": (
         "Spend, impressions, clicks and conversions for the campaigns you are already running, read "
-        "by {agent} off your own connected accounts. Both platforms are free through treg.to: you "
+        "by {agent} off your own connected accounts. Both platforms are free through stray: you "
         "connect once, the token stays server side, and nothing here is metered. The research behind "
         "this page says the wall was never the endpoint. It was getting a credential in front of it."),
     "prompt": "Using stray, pull last month's spend, impressions, clicks and conversions for every "
@@ -1963,7 +1963,7 @@ USE_CASE_PAGES["your-own-campaign-performance"] = {
         ("The wall is the credential, not the endpoint",
          "A test developer token can only access whitelisted accounts. Move to standard access before you rely on it.",
          "r/PPC, 50 points", "https://www.reddit.com/r/PPC/comments/1ubluzq/i_got_tired_of_logging_into_google_ads_every/",
-         "This was the largest theme in the research and it is the one thing treg.to genuinely "
+         "This was the largest theme in the research and it is the one thing stray genuinely "
          "changes the shape of: the credential is injected server side, so it never reaches your "
          "agent, your prompt or your repository. Be clear about what that does not do. It does not "
          "grant you access you do not have, and a token that only sees whitelisted accounts still "
@@ -1994,7 +1994,7 @@ USE_CASE_PAGES["your-own-campaign-performance"] = {
         ("The numbers move under you, and that is not going to stop",
          "Meta deprecated Reach in the Facebook Graph API and it is breaking dashboards everywhere.",
          "r/GoogleDataStudio, 6 points", "https://www.reddit.com/r/GoogleDataStudio/comments/1uv8e3n/meta_deprecated_reach_in_the_facebook_graph_api/",
-         "Honest answer: this is the opposite of a fix. treg.to never models an upstream API, it "
+         "Honest answer: this is the opposite of a fix. stray never models an upstream API, it "
          "relays the response as it came, so a deprecated field reaches you as a deprecated field "
          "rather than as a mapping layer quietly returning something stale. You find out faster and "
          "you find out truthfully. What no page can tell you is what Meta deprecates next."),
@@ -2026,11 +2026,11 @@ USE_CASE_PAGES["your-own-campaign-performance"] = {
     ],
     "faq": [
         ("Does this cost anything?",
-         "No. Both rows run on accounts you already own, so treg.to relays the call and meters "
+         "No. Both rows run on accounts you already own, so stray relays the call and meters "
          "nothing, and the price shown before the call is zero. The provider's rate is the "
          "provider's rate with $0.000 added, and here the provider's rate is nothing."),
         ("Do I still need API access from Google and Meta?",
-         "Yes. treg.to holds the credential server side so it never reaches your agent, and it does "
+         "Yes. stray holds the credential server side so it never reaches your agent, and it does "
          "not stand between you and each platform's own access rules. A test developer token still "
          "sees only the accounts it was whitelisted for, and a Meta permission you were not granted "
          "is still not granted when the call arrives through here."),
@@ -2053,15 +2053,15 @@ USE_CASE_PAGES["your-own-campaign-performance"] = {
 USE_CASE_PAGES["amazon-product-detail-by-asin"] = {
     "label": "Amazon product detail by ASIN",
     "sentence": "Pull any Amazon product by ASIN",
-    "title": "Amazon Product by ASIN: from {cheapest} | treg.to",
+    "title": "Amazon Product by ASIN: from {cheapest} | stray",
     "lede": (
         "Get the price, title, images, specs and reviews for any ASIN. {n} providers through one "
-        "treg.to key, from {cheapest} per lookup. No Amazon affiliate account required."),
+        "stray key, from {cheapest} per lookup. No Amazon affiliate account required."),
     "prompt": "Using stray, get the Amazon product detail for ASIN B08N5WRWNW on amazon.com. Show me "
               "the price first, then give me the title, current price, rating and review count.",
     "prompt_why": [
         ("Give it the ASIN and the marketplace", "One ASIN is a different listing and a different price on each Amazon domain. Name the one you mean."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what it will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what it will spend."),
         ("Name the fields you want back", "A product payload is large. Saying which fields matter keeps the answer short and the context small."),
         ("Say what to do on a miss", "Dead and region locked ASINs are normal in any list. Tell it to skip and report rather than retry."),
     ],
@@ -2146,7 +2146,7 @@ USE_CASE_PAGES["amazon-product-detail-by-asin"] = {
     "faq": [
         ("How much does one product lookup cost?",
          "A fraction of a cent to about a cent and a half depending on the row, at the provider's "
-         "own rate with $0.000 added by treg.to. The live figures are in the comparison above, and "
+         "own rate with $0.000 added by stray. The live figures are in the comparison above, and "
          "all three bill only when the lookup works."),
         ("Why not use Amazon's own API?",
          "Because neither of Amazon's APIs is a general read any product API. The Product "
@@ -2161,7 +2161,7 @@ USE_CASE_PAGES["amazon-product-detail-by-asin"] = {
          "amount of paying for data changes that."),
         ("Can I look up thousands of ASINs?",
          "Yes, and the cost is linear because it is one call per ASIN with no batch endpoint. Your "
-         "agent runs the list; treg.to prices each call and shows the running total, and since all "
+         "agent runs the list; stray prices each call and shows the running total, and since all "
          "three rows bill only on success, the dead entries in a scraped list do not cost you "
          "anything."),
     ],
@@ -2173,10 +2173,10 @@ USE_CASE_PAGES["amazon-product-detail-by-asin"] = {
 USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
     "label": "Find local businesses by keyword and location",
     "sentence": "Yelp API and Tripadvisor API: local businesses by keyword",
-    "title": "Yelp API and Tripadvisor API, from {cheapest} | treg.to",
+    "title": "Yelp API and Tripadvisor API, from {cheapest} | stray",
     "lede": (
         "Ask for a kind of business and a place, and get the listings back as data: names, ratings, "
-        "review counts, addresses and categories. Two sources through one treg.to key, from "
+        "review counts, addresses and categories. Two sources through one stray key, from "
         "{cheapest} a call, with no Yelp or Tripadvisor developer programme to be admitted to "
         "first. They are different listings rather than two copies of one, so the comparison below "
         "groups them rather than ranking them against each other."),
@@ -2187,7 +2187,7 @@ USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
         ("Give the thing and the place separately", "Both sources take a description and a location as two fields. One blob of text resolves badly."),
         ("Name the city and the state", "The commonest empty result on this job is a location string neither source recognises."),
         ("Say which source you want", "Yelp and Tripadvisor hold different businesses. Ask for both and you get both, side by side."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what it will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what it will spend."),
     ],
     "result_noun": "business",
     "result_image": None,
@@ -2205,7 +2205,7 @@ USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
          "This shape recurred six times in the research and it is the one theme this page can "
          "honestly own. The key is fine and the request is fine; what is wrong is where the call "
          "came from, usually a browser preflight or a key that ended up inside a front end bundle. "
-         "A call through treg.to leaves a server with the credential injected there, so that class "
+         "A call through stray leaves a server with the credential injected there, so that class "
          "of failure stops existing. It will not rescue you from a parameter the source rejects."),
         ("A thousand results is the ceiling, and no proxy raises it",
          "don't expect to pull more than 1,000 results as the Yelp Fusion API has a hard limitation in that regard",
@@ -2234,7 +2234,7 @@ USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
          "The issue I’m running into is that most tools (Google Maps, etc.) only give me the public front-desk phone number.",
          "r/ClaudeCowork, 8 points", "https://www.reddit.com/r/ClaudeCowork/comments/1uxezdz/what_are_you_using_to_scrape_local_business/",
          "The loudest theme in the whole research, so it deserves a straight answer rather than a "
-         "deflection. If Google Maps is the source you want, this page is not it: treg.to has no "
+         "deflection. If Google Maps is the source you want, this page is not it: stray has no "
          "Places keyword search on the menu today, and the Google rows it does have for local are "
          "for a Business Profile you already own. On the second half, no listings source anywhere "
          "carries the owner's address, because the listing does not have one. Getting past the "
@@ -2272,7 +2272,7 @@ USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
     ],
     "faq": [
         ("How much does one local business search cost?",
-         "The provider's own rate with $0.000 added by treg.to, from a prepaid balance rather than a "
+         "The provider's own rate with $0.000 added by stray, from a prepaid balance rather than a "
          "plan. The two sources are priced differently and are billed in different units, so the "
          "comparison above gives each one separately rather than a single headline number."),
         ("Is this the Yelp Fusion API?",
@@ -2281,7 +2281,7 @@ USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
          "what the results page shows rather than the Fusion field set, and that Yelp's terms still "
          "govern what you may do with the listings."),
         ("Can I search Google Maps or Google Business Profile this way?",
-         "Not from this page. treg.to has no Google Places keyword search in the catalog today, and "
+         "Not from this page. stray has no Google Places keyword search in the catalog today, and "
          "the Google rows it does carry for local businesses read a Business Profile you already "
          "own, on your own connected account. If Maps is the source you need, this job cannot serve "
          "it and saying so is more useful than a near miss."),
@@ -2299,10 +2299,10 @@ USE_CASE_PAGES["find-local-businesses-by-keyword-and-location"] = {
 USE_CASE_PAGES["keywords-a-domain-ranks-for"] = {
     "label": "Keywords a domain ranks for",
     "sentence": "Rank tracking API: the keywords a domain ranks for",
-    "title": "Rank tracking API: {n} providers from {cheapest} | treg.to",
+    "title": "Rank tracking API: {n} providers from {cheapest} | stray",
     "lede": (
         "Ask for a domain and get the keywords it already ranks for in Google, with the position it "
-        "holds and the volume behind each one. {n} providers do this through one treg.to key, from "
+        "holds and the volume behind each one. {n} providers do this through one stray key, from "
         "{cheapest} a call, billed per call from a prepaid balance rather than an annual seat. It "
         "works on any domain, which is exactly the question your own Search Console cannot answer."),
     "prompt": "Using stray, get the top 200 keywords stripe.com ranks for in Google in the United "
@@ -2312,7 +2312,7 @@ USE_CASE_PAGES["keywords-a-domain-ranks-for"] = {
         ("Name the domain and the market", "A domain ranks differently in each country's index. Say which one, or you get the provider's default."),
         ("Say how many keywords you want", "Row count is the cost dial on most of these rows. A limit you chose beats a default you did not."),
         ("Ask for position and volume together", "Both arrive in the same row. Asking for them separately is two calls for one answer."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what it will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what it will spend."),
     ],
     "result_noun": "keyword",
     "result_image": None,
@@ -2400,12 +2400,12 @@ USE_CASE_PAGES["keywords-a-domain-ranks-for"] = {
          "Not in the sense of a tracker you configure and leave running. These return the keywords a "
          "domain ranks for right now, from each vendor's index, in one call. Nothing here schedules "
          "itself, keeps a history for you or alerts you to a drop; if you want positions over time "
-         "you run the call on your own schedule and store the results. treg.to has no scheduled rank "
+         "you run the call on your own schedule and store the results. stray has no scheduled rank "
          "tracker on the menu, and saying so is more useful than a near miss."),
         ("How much does one domain pull cost?",
          "A cent or two per request on the rows that bill the request, and a fraction of a cent per "
          "keyword on the rows that bill the row, at the provider's own rate with $0.000 added by "
-         "treg.to. The comparison above prints both, and which is cheaper depends entirely on how "
+         "stray. The comparison above prints both, and which is cheaper depends entirely on how "
          "many keywords you ask for."),
         ("Why do the providers disagree about the same domain?",
          "Because each one is answering from its own index, built by its own crawl on its own "
@@ -2425,15 +2425,15 @@ USE_CASE_PAGES["keywords-a-domain-ranks-for"] = {
 USE_CASE_PAGES["how-ai-answers-mention-your-brand"] = {
     "label": "How AI answers mention your brand",
     "sentence": "AI visibility tracking: how ChatGPT and Perplexity answers mention your brand, run by your agent",
-    "title": "AI visibility tracking API, from {cheapest} a check | treg.to",
+    "title": "AI visibility tracking API, from {cheapest} a check | stray",
     "lede": (
         "Every AI visibility tool sells the same loop: run a set of prompts through ChatGPT and "
         "Perplexity, note who gets named, repeat next week. Your agent can run that loop itself. "
-        "One provider serves it through treg.to, as live answers to a prompt and as aggregated "
+        "One provider serves it through stray, as live answers to a prompt and as aggregated "
         "mention metrics for a keyword or domain, priced per call from {cheapest}, with no "
         "subscription and no dashboard to pay for."),
     "prompt": "Using stray, run these 12 buyer prompts through ChatGPT and Perplexity, US, web search "
-              "on, and tell me for each one whether treg.to or any of Composio, Pipedream or Zapier "
+              "on, and tell me for each one whether stray or any of Composio, Pipedream or Zapier "
               "is named, and in what position. Show me the total price before you start.",
     "prompt_why": [
         ("Fix the prompt set first", "The check is only comparable week to week if the prompts do not move."),
@@ -2484,7 +2484,7 @@ USE_CASE_PAGES["how-ai-answers-mention-your-brand"] = {
          "and the catalog's verified examples use ChatGPT and Google. Gemini and Claude are not "
          "on this shelf today."),
         ("Do I need a DataForSEO account?",
-         "No. treg.to serves this on its own key at the provider's rate with $0.000 markup, "
+         "No. stray serves this on its own key at the provider's rate with $0.000 markup, "
          "metered from your team's balance. If you already have an account, register the key "
          "and those calls are never metered."),
     ],
@@ -2528,12 +2528,12 @@ USE_CASE_PAGES["how-ai-answers-mention-your-brand"] = {
 USE_CASE_PAGES["your-google-business-profile-reviews-and-reply-to-them"] = {
     "label": "Your Google Business Profile reviews, and reply to them",
     "sentence": "Google Business Profile API: your Google reviews, read and replied to by your agent",
-    "title": "Google Business Profile API: read and reply to reviews | treg.to",
+    "title": "Google Business Profile API: read and reply to reviews | stray",
     "lede": (
         "Connect the Google Business Profile you already manage and your agent can read every "
         "review on every location, and reply as the business. This is the Google My Business API "
-        "as it is now called, on your own account, so treg.to never meters it; and the API access "
-        "request that stops most people at zero quota is one treg.to has already made."),
+        "as it is now called, on your own account, so stray never meters it; and the API access "
+        "request that stops most people at zero quota is one stray has already made."),
     "prompt": "Using stray, list every review on our Austin location from the last 30 days with three "
               "stars or fewer, draft a reply to each in our voice, and post them only after I approve.",
     "prompt_why": [
@@ -2555,7 +2555,7 @@ USE_CASE_PAGES["your-google-business-profile-reviews-and-reply-to-them"] = {
         "The gate on this API is not the OAuth scope, it is the access request. Google starts every "
         "Cloud project at zero requests a day on the Business Profile API until it approves the "
         "project, and that is the wall in most of the forum posts. The request belongs to the "
-        "project making the call, and that project is treg.to's: you consent, you do not apply.",
+        "project making the call, and that project is stray's: you consent, you do not apply.",
         "Reviews still live on the older v4 surface while the rest of the profile moved to the v1 "
         "services, so the review calls take an account id and a location id rather than a resource "
         "name. Your agent lists accounts first, then locations, then reviews; a batch endpoint "
@@ -2567,10 +2567,10 @@ USE_CASE_PAGES["your-google-business-profile-reviews-and-reply-to-them"] = {
     ],
     "faq": [
         ("Does this cost anything?",
-         "No. The Business Profile API runs on your own Google account, so treg.to relays the call "
-         "and meters nothing. Only calls on treg.to's own provider keys are billed."),
+         "No. The Business Profile API runs on your own Google account, so stray relays the call "
+         "and meters nothing. Only calls on stray's own provider keys are billed."),
         ("Do I need to apply for Google Business Profile API access?",
-         "No. Google grants that access to the Cloud project making the calls, and treg.to holds "
+         "No. Google grants that access to the Cloud project making the calls, and stray holds "
          "the approved app. You need to be an owner or manager of the listing, and to consent once."),
         ("Can my agent read a competitor's reviews this way?",
          "No. The API returns only the listings your connected account manages. Reading any "
@@ -2588,7 +2588,7 @@ USE_CASE_PAGES["your-google-business-profile-reviews-and-reply-to-them"] = {
          "GBP API access rejected even though I followed their \"client account\" rule?",
          "r/GoogleMyBusiness", "https://www.reddit.com/r/GoogleMyBusiness/comments/1sx6686/gbp_api_access_rejected_even_though_i_followed/",
          "The request is judged per Cloud project, and it is opaque: several posters waited weeks "
-         "with no reply at all. That is the part treg.to takes off the table. You are consenting "
+         "with no reply at all. That is the part stray takes off the table. You are consenting "
          "to an app that already has access, not applying for your own."),
         ("Approved, and the quota is still zero",
          "I'm currently stuck with the Google Business Profile API where the quota is set to 0 and the API is basically unusable.",
@@ -2616,10 +2616,10 @@ USE_CASE_PAGES["your-google-business-profile-reviews-and-reply-to-them"] = {
 USE_CASE_PAGES["business-reviews"] = {
     "label": "A business's reviews",
     "sentence": "Review scraper API: a business's reviews from Tripadvisor, Trustpilot and Yelp, as data",
-    "title": "Tripadvisor, Trustpilot and Yelp reviews API | treg.to",
+    "title": "Tripadvisor, Trustpilot and Yelp reviews API | stray",
     "lede": (
         "Give your agent a business's page and get its reviews back as rows: rating, text, date "
-        "and reviewer, ready to sort, count or read. Three review sites answer through one treg.to "
+        "and reviewer, ready to sort, count or read. Three review sites answer through one stray "
         "key, from {cheapest}, without a Tripadvisor API key, a Yelp Fusion application or a "
         "browser of your own. They are not alternatives to each other; the site is the choice."),
     "prompt": "Using stray, pull the last 200 Tripadvisor reviews for this hotel URL, show me the "
@@ -2658,7 +2658,7 @@ USE_CASE_PAGES["business-reviews"] = {
     "faq": [
         ("Do I need a Yelp Fusion or Tripadvisor API key?",
          "No. Neither provider here uses the sites' official APIs. They read the public listing "
-         "page and return the reviews as records, billed to your treg.to balance at the provider's "
+         "page and return the reviews as records, billed to your stray balance at the provider's "
          "rate with $0.000 markup."),
         ("Which site should I use?",
          "The one the business is reviewed on. Tripadvisor for hotels, restaurants and attractions, "
@@ -2709,12 +2709,12 @@ USE_CASE_PAGES["business-reviews"] = {
 USE_CASE_PAGES["google-analytics-traffic-and-behaviour-reports"] = {
     "label": "Google Analytics: traffic and behaviour reports",
     "sentence": "Google Analytics MCP or API: GA4 traffic and behaviour reports, read by your agent",
-    "title": "Google Analytics API for {agent}: any GA4 report | treg.to",
+    "title": "Google Analytics API for {agent}: any GA4 report | stray",
     "lede": (
         "Connect the GA4 property you already own and your agent can run any report the Data API "
         "can: sessions, users, conversions and events by channel, page, country, device or date, "
         "with filters and ordering, in plain words. It is the Google Analytics API without the "
-        "Cloud project, and it runs on your own Google account, so treg.to never meters it."),
+        "Cloud project, and it runs on your own Google account, so stray never meters it."),
     "prompt": "Using stray, show me sessions and key events by default channel group for the last "
               "28 days ending 3 days ago, next to the 28 days before, and flag any channel that is "
               "down by more than a fifth.",
@@ -2736,7 +2736,7 @@ USE_CASE_PAGES["google-analytics-traffic-and-behaviour-reports"] = {
     "notes": [
         "The official path to an agent on GA4 is Google's own Analytics MCP server, and its setup "
         "is a Cloud project, a service account with the API enabled, and admin-level access on "
-        "the property. Here the app is treg.to's, the consent is one screen, and read access on "
+        "the property. Here the app is stray's, the consent is one screen, and read access on "
         "the property is enough, which is what makes it usable by a consultant who does not own "
         "the account.",
         "Totals move with the dimensions you ask for, and that is GA4, not the relay. A metric "
@@ -2753,11 +2753,11 @@ USE_CASE_PAGES["google-analytics-traffic-and-behaviour-reports"] = {
     ],
     "faq": [
         ("Does this cost anything?",
-         "No. Google Analytics runs on your own Google account, so treg.to relays the call and "
-         "meters nothing. Only calls on treg.to's own provider keys are billed."),
+         "No. Google Analytics runs on your own Google account, so stray relays the call and "
+         "meters nothing. Only calls on stray's own provider keys are billed."),
         ("Do I need a Cloud project or a service account?",
-         "No. treg.to holds the Google app; you consent once with the account that can see the "
-         "property, and treg.to keeps the token server side. Your agent never sees it."),
+         "No. stray holds the Google app; you consent once with the account that can see the "
+         "property, and stray keeps the token server side. Your agent never sees it."),
         ("Which reports can it run?",
          "Anything runReport accepts: any combination of dimensions and metrics, date ranges, "
          "filters, ordering and paging. Realtime visitors are a separate call, on the "
@@ -2776,7 +2776,7 @@ USE_CASE_PAGES["google-analytics-traffic-and-behaviour-reports"] = {
          "What AI agent tools can I use to connect to the Google Analytics API and retrieve data through a chat-based conversational interface",
          "r/GoogleAnalytics, 17 points", "https://www.reddit.com/r/GoogleAnalytics/comments/1vpw1m9/what_ai_agent_tools_can_i_use_to_connect_to_the/",
          "Any of them, once the agent can reach a connected property. That is what the setup line "
-         "on this page does: the agent gets the report call and the token stays with treg.to."),
+         "on this page does: the agent gets the report call and the token stays with stray."),
         ("Writing the API call by hand fails, even with help",
          "I asked 6 LLMs for code samples and I got 6 different answers that all failed to do the API call.",
          "r/dataengineering", "https://www.reddit.com/r/dataengineering/comments/1im3fpx/does_anyone_know_how_to_export_the_audience/",
@@ -2803,11 +2803,11 @@ USE_CASE_PAGES["google-analytics-traffic-and-behaviour-reports"] = {
 USE_CASE_PAGES["current-quote-for-a-ticker"] = {
     "label": "Current quote for a ticker",
     "sentence": "Stock price API: the current quote for a ticker from four providers, free to start",
-    "title": "Stock price API: {n} providers, free to try | treg.to",
+    "title": "Stock price API: {n} providers, free to try | stray",
     "lede": (
         "Ask for a ticker and get the quote back as data: price, day change, open, high, low and "
-        "previous close. {n} providers answer through one treg.to key. Three of them are served "
-        "on treg.to's own free-tier keys, {cheapest}, then on your own key; the fourth is your own "
+        "previous close. {n} providers answer through one stray key. Three of them are served "
+        "on stray's own free-tier keys, {cheapest}, then on your own key; the fourth is your own "
         "plan only. Each one says whether its quote is real time or delayed, and the page says it "
         "too, because that word is where stock APIs go wrong."),
     "prompt": "Using stray, get the current price, day change and previous close for AAPL, MSFT and "
@@ -2817,7 +2817,7 @@ USE_CASE_PAGES["current-quote-for-a-ticker"] = {
         ("Ask whether it is delayed", "One of these is 15 to 20 minutes behind by design. The agent should say which before it quotes."),
         ("One ticker is one call", "The free allowance is counted in calls per team per day, so a watchlist of fifty is a day's allowance."),
         ("Try on the allowance, build on your key", "The daily pool is for finding out which feed you want. A bot needs a key of its own."),
-        ("Compare, then pick", "treg.to shows the four side by side and does not choose for you. Say which one you want, or say why."),
+        ("Compare, then pick", "stray shows the four side by side and does not choose for you. Say which one you want, or say why."),
     ],
     "result_noun": "quote",
     "result_image": None,
@@ -2832,7 +2832,7 @@ USE_CASE_PAGES["current-quote-for-a-ticker"] = {
         "are not an API at all, and break without notice."),
     "notes": [
         "The free allowance is real and it is small on purpose. Finnhub is served at fifty calls "
-        "per team per day on treg.to's key, Tiingo and Twelve Data at twenty each; past that the "
+        "per team per day on stray's key, Tiingo and Twelve Data at twenty each; past that the "
         "call is refused with a hint to connect your own key, and with your own key the calls "
         "are never metered. It is enough to try each feed on the tickers you care about. It is "
         "not a data plan for a trading bot, and this page will not pretend it is.",
@@ -2842,14 +2842,14 @@ USE_CASE_PAGES["current-quote-for-a-ticker"] = {
         "the 52-week range, and has a one-number price call for the cheapest possible check. "
         "EODHD's live quote is 15 to 20 minutes delayed, and since EODHD publishes no per-call "
         "rate it is served on your own EODHD plan only.",
-        "Providers disagree, occasionally by a lot, and treg.to does not referee. A quote is one "
+        "Providers disagree, occasionally by a lot, and stray does not referee. A quote is one "
         "provider's number at one moment; a second provider on the same ticker is the cheap "
         "sanity check, and the agent can run both. Symbol formats differ too: EODHD wants an "
         "exchange suffix, AAPL.US, where the others take the bare US ticker.",
     ],
     "faq": [
         ("Is it really free?",
-         "Three of the four are, up to a daily allowance per team, on treg.to's own free-tier "
+         "Three of the four are, up to a daily allowance per team, on stray's own free-tier "
          "keys: fifty calls on Finnhub, twenty each on Tiingo and Twelve Data. After that, "
          "connect your own key and the calls are never metered."),
         ("Is the quote real time?",
@@ -2858,9 +2858,9 @@ USE_CASE_PAGES["current-quote-for-a-ticker"] = {
          "provider before it quotes."),
         ("Can I run a trading bot on this?",
          "Not on the allowance. A bot polling every minute exhausts fifty calls before the open. "
-         "Register your own key with the provider you settle on and treg.to stops counting."),
+         "Register your own key with the provider you settle on and stray stops counting."),
         ("What about tickers outside the US?",
-         "Coverage is each provider's, not treg.to's. Finnhub's quote is documented for US "
+         "Coverage is each provider's, not stray's. Finnhub's quote is documented for US "
          "tickers; EODHD and Twelve Data take exchange-suffixed symbols. Check the ticker you "
          "need on the allowance before you build on it."),
     ],
@@ -2902,15 +2902,15 @@ USE_CASE_PAGES["current-quote-for-a-ticker"] = {
 AGENTS["grok-bot"] = {
     "name": "Grok Bot",
     "h1_noun": "MCP server",
-    "title": "Grok MCP server: {n} tools without keys | treg.to",
+    "title": "Grok MCP server: {n} tools without keys | stray",
     "description": (
-        "treg.to is an MCP server that gives Grok Bot {n} tools across {p} platforms: find work "
+        "stray is an MCP server that gives Grok Bot {n} tools across {p} platforms: find work "
         "emails, LinkedIn profiles, creators, keyword volumes, backlinks, competitor ads. Priced "
         "per call at the provider's own rate, with no markup and no provider signup."),
     "definition": (
-        "treg.to is an MCP server for Grok Bot that gives it {n} ready-to-call tools across {p} "
+        "stray is an MCP server for Grok Bot that gives it {n} ready-to-call tools across {p} "
         "platforms: SEO data, LinkedIn and people enrichment, Reddit, YouTube, ads and e-commerce. "
-        "Calls run on treg.to's own keys and are metered from a prepaid balance at the provider's "
+        "Calls run on stray's own keys and are metered from a prepaid balance at the provider's "
         "rate with $0.000 markup. Your first team starts with $1.00 free, and there are no provider "
         "accounts to open."),
     # {n} is interpolated from the catalog count at render time.
@@ -2924,7 +2924,7 @@ AGENTS["grok-bot"] = {
     "faq": [
         ("Can Grok Bot do lead generation with this?",
          "Yes, and it is the sequence most people ask for first. A research bot or a sales bot in "
-         "Grok Bot can browse, but browsing is not data. With treg.to it can build a company "
+         "Grok Bot can browse, but browsing is not data. With stray it can build a company "
          "list by industry, size or funding, find the decision maker at each one, find and verify a "
          "work email, and pull a recent news event for the opener. The whole sequence is on the "
          "workflows page above with the receipt from a real run. Each step is priced before the bot "
@@ -2941,21 +2941,21 @@ AGENTS["grok-bot"] = {
          "index rather than LinkedIn's own feed, and a post's reactions come back a page at a time. "
          "There is no raw page-to-markdown scraper; website reading is a named-field extraction by "
          "domain. The catalog says what each tool covers on the page rather than pretending."),
-        ("Is treg.to free to use in Grok Bot?",
+        ("Is stray free to use in Grok Bot?",
          "Adding it is free and your first team starts with $1.00 of calls. After that, each call is "
          "metered from the team's prepaid balance at the provider's own rate, with no markup and no "
          "subscription. Calls on your team's own keys are free."),
         ("Do I need API keys from the providers?",
-         "No. treg.to makes the upstream request on its own key and relays the answer, so Grok never "
+         "No. stray makes the upstream request on its own key and relays the answer, so Grok never "
          "holds a provider credential. If your team already pays for a provider, register that key "
          "and those calls are never metered."),
         ("Is this an MCP server?",
-         "Yes. treg.to is an MCP server that Grok Bot connects to as a remote MCP connector. It is "
+         "Yes. stray is an MCP server that Grok Bot connects to as a remote MCP connector. It is "
          "the same MCP server that Claude, ChatGPT, Cursor and the rest connect to, answering the "
          "same token and the same catalog."),
-        ("Does treg.to pick the provider for me?",
+        ("Does stray pick the provider for me?",
          "No. Where several providers do the same job they are shown side by side with prices and "
-         "measured reliability, and Grok (or you) chooses. treg.to does not route or fail over "
+         "measured reliability, and Grok (or you) chooses. stray does not route or fail over "
          "between them automatically."),
     ],
 }
@@ -2963,16 +2963,16 @@ AGENTS["grok-bot"] = {
 USE_CASE_PAGES["tiktok-shop-products-and-reviews"] = {
     "label": "TikTok Shop products and reviews",
     "sentence": "Search TikTok Shop products and reviews",
-    "title": "TikTok Shop Search: from {cheapest} | treg.to",
+    "title": "TikTok Shop Search: from {cheapest} | stray",
     "lede": (
-        "Search products by keyword, pull reviews by product. {n} providers through one treg.to "
+        "Search products by keyword, pull reviews by product. {n} providers through one stray "
         "key, from {cheapest} per call. No TikTok seller account needed."),
     "prompt": "Using stray, search TikTok Shop US for \"matcha whisk\", show me the price per call "
               "first, then give me the top 20 products by sales with seller, price and rating, and "
               "pull the last 50 reviews on the best seller.",
     "prompt_why": [
         ("Name the region", "Every provider takes a region code and US is the one they all list as reliable. Say which market you mean."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what a 20-page pull will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what a 20-page pull will spend."),
         ("Go id to id", "Search returns product ids; the reviews call takes one. Two calls, no browser, no login."),
         ("Bring the analysis", "The rows carry sales counts, prices and review text. Ranking and reading them is the agent's job."),
     ],
@@ -2999,9 +2999,9 @@ USE_CASE_PAGES["tiktok-shop-products-and-reviews"] = {
         "other regions may come back thin or inconsistent, and TikHub takes a region code on "
         "every call. Ask for the market you sell in and read the count that comes back.",
         "This is the public storefront, so it moves. TikTok changes the page and fights scrapers, "
-        "and the providers here have had public outages when it did. treg.to shows each provider's "
+        "and the providers here have had public outages when it did. stray shows each provider's "
         "measured success rate on live traffic where there is enough of it, and the agent picks; "
-        "treg.to does not fail over between them on its own.",
+        "stray does not fail over between them on its own.",
     ],
     "faq": [
         ("Do I need a TikTok Shop seller account or Partner API access?",
@@ -3010,14 +3010,14 @@ USE_CASE_PAGES["tiktok-shop-products-and-reviews"] = {
          "this way is anything seller-side: orders, inventory, your own shop's analytics."),
         ("How much does a TikTok Shop search cost?",
          "A fraction of a cent per call at the cheapest provider, and the live rate is at the top "
-         "of this page. treg.to bills the provider's own rate with $0.000 markup from your team's "
+         "of this page. stray bills the provider's own rate with $0.000 markup from your team's "
          "prepaid balance, and JustOneAPI bills only when the call succeeds."),
         ("Can I get a product's reviews?",
          "Yes, by product id or product URL, paged. Two of the three providers do reviews, and "
          "one lets you filter by star rating. Reviews TikTok has removed from the page are gone "
          "from here too."),
         ("Which provider should my agent use?",
-         "Ask for the price first and let it pick, or name one. treg.to shows the providers side "
+         "Ask for the price first and let it pick, or name one. stray shows the providers side "
          "by side with the rate and the measured success rate; it compares, it does not route or "
          "fail over for you."),
     ],
@@ -3059,11 +3059,11 @@ USE_CASE_PAGES["tiktok-shop-products-and-reviews"] = {
 USE_CASE_PAGES["ads-a-competitor-is-running-now"] = {
     "label": "Ads a competitor is running now",
     "sentence": "Meta Ad Library API, Google Ads Transparency Center and LinkedIn ads: what a competitor is running right now",
-    "title": "Meta Ad Library API and Google Ads Transparency data | treg.to",
+    "title": "Meta Ad Library API and Google Ads Transparency data | stray",
     "lede": (
         "Give your agent a competitor's Page, advertiser or company and get their live ads back "
         "as rows: creative text, link titles, start dates, platforms and the snapshot URL. Meta, "
-        "Google and LinkedIn answer through one treg.to key, from {cheapest} at the "
+        "Google and LinkedIn answer through one stray key, from {cheapest} at the "
         "provider's own rate with no markup, or free on the Meta Ad Library token you set up "
         "yourself. The three libraries are not alternatives to each other; the network is the "
         "choice."),
@@ -3074,7 +3074,7 @@ USE_CASE_PAGES["ads-a-competitor-is-running-now"] = {
         ("Give the Page id, not the name", "Many Pages share a brand name. A Page id or URL returns one advertiser; a name returns false positives."),
         ("Say the country", "The Meta library asks which country the ad reached, and US-only can miss half of a global brand's actives. Say ALL when you mean all."),
         ("Read longevity, not spend", "Meta publishes spend only for political ads. How long a creative has run is the signal everyone uses instead."),
-        ("Ask for the price first", "treg.to returns the cost before the call, so the agent can say what a full library pull will spend."),
+        ("Ask for the price first", "stray returns the cost before the call, so the agent can say what a full library pull will spend."),
     ],
     "result_noun": "ad",
     "result_image": None,
@@ -3093,7 +3093,7 @@ USE_CASE_PAGES["ads-a-competitor-is-running-now"] = {
     "notes": [
         "The official Meta route is free and it is yours to set up: a one-time government-ID "
         "verification at Facebook, then a Meta app and an access token, which you register with "
-        "treg.to as your own key. The forum wait for verification runs from days to never. The "
+        "stray as your own key. The forum wait for verification runs from days to never. The "
         "two scraper providers on the Meta row need none of that and bill per call or per ad, "
         "which is why most people start there and register a token later, if ever.",
         "Spend is not on the page for ordinary ads. Meta publishes spend and impression ranges "
@@ -3121,7 +3121,7 @@ USE_CASE_PAGES["ads-a-competitor-is-running-now"] = {
          "a keyword is not something the Center offers."),
         ("Which provider should my agent use?",
          "The network decides the shelf; on Meta, the cheapest verified row or your own token. "
-         "treg.to shows the rows side by side with the rate and measured success; it compares, "
+         "stray shows the rows side by side with the rate and measured success; it compares, "
          "it does not route or fail over for you."),
     ],
     "voices_intro": (
@@ -3161,11 +3161,11 @@ USE_CASE_PAGES["ads-a-competitor-is-running-now"] = {
 USE_CASE_PAGES["read-and-post-in-your-slack-channels"] = {
     "label": "Read and post in your Slack channels",
     "sentence": "Slack bot API: your agent reads your channels and posts in them, on your own workspace",
-    "title": "Slack MCP and bot API for {agent}: read and post | treg.to",
+    "title": "Slack MCP and bot API for {agent}: read and post | stray",
     "lede": (
         "Install one bot in the Slack workspace you already run and your agent can read a "
         "channel's recent messages and post replies into it, as the bot, with no token in the "
-        "agent's hands. It is your own workspace, so treg.to never meters it; and the scopes, the "
+        "agent's hands. It is your own workspace, so stray never meters it; and the scopes, the "
         "manifest and the bot-versus-user-token question are settled before you start, which is "
         "where most of the forum threads stall."),
     "prompt": "Using stray, read the last two days of #support, summarise the open questions with "
@@ -3188,8 +3188,8 @@ USE_CASE_PAGES["read-and-post-in-your-slack-channels"] = {
     "notes": [
         "Reading history on a new, unlisted app is rationed. Apps created after May 2025 that "
         "are not listed in the Slack Marketplace get one history request a minute and fifteen "
-        "messages a call, and the bot you install from treg.to's manifest is one of those apps. "
-        "Nothing here lifts that; treg.to relays the call and the 429 as they are. A daily "
+        "messages a call, and the bot you install from stray's manifest is one of those apps. "
+        "Nothing here lifts that; stray relays the call and the 429 as they are. A daily "
         "digest of a busy channel is fine; a backfill of a year is not this tool.",
         "Membership is the read permission. The bot reads only channels it has been invited to, "
         "and direct messages need their own scopes, which the manifest does not request. Posting "
@@ -3203,8 +3203,8 @@ USE_CASE_PAGES["read-and-post-in-your-slack-channels"] = {
     ],
     "faq": [
         ("Does this cost anything?",
-         "No. Slack runs on your own workspace, so treg.to relays the call and meters nothing. "
-         "Only calls on treg.to's own provider keys are billed."),
+         "No. Slack runs on your own workspace, so stray relays the call and meters nothing. "
+         "Only calls on stray's own provider keys are billed."),
         ("Does my agent post as me or as a bot?",
          "As the bot, always. The connection holds a bot token, which is what makes it "
          "auditable: every message it writes carries the bot's name, and it cannot read your "
@@ -3212,9 +3212,9 @@ USE_CASE_PAGES["read-and-post-in-your-slack-channels"] = {
         ("Why is reading history slow?",
          "Slack rate-tiers history reads on unlisted apps: one request a minute, fifteen messages "
          "each. That is Slack's rule for every app created outside the Marketplace since 2025, "
-         "and treg.to does not get around it. Ask for windows and let the agent page."),
+         "and stray does not get around it. Ask for windows and let the agent page."),
         ("What if my workspace restricts app installs?",
-         "Then an admin has to approve the install, the same as any app. treg.to gives you the "
+         "Then an admin has to approve the install, the same as any app. stray gives you the "
          "manifest to submit; it cannot approve it for you."),
     ],
     "voices_intro": (
@@ -3243,7 +3243,7 @@ USE_CASE_PAGES["read-and-post-in-your-slack-channels"] = {
         ("Pasting bot tokens into code is where the audit trail goes",
          "pasting bot tokens into your code... less great when you need to know exactly what your agent can touch",
          "@Mai_Builds on X", "https://x.com/i/status/2091946621504311753",
-         "The token sits with treg.to, the agent holds one team token that works for every tool, "
+         "The token sits with stray, the agent holds one team token that works for every tool, "
          "and what it can touch is the manifest's scope list, which is fixed and readable. Revoke "
          "the bot and the agent's access is gone with it."),
     ],
@@ -3255,18 +3255,18 @@ USE_CASE_PAGES["read-and-post-in-your-slack-channels"] = {
 USE_CASE_PAGES["is-this-page-indexed-and-why-not"] = {
     "label": "Is this page indexed, and why not",
     "sentence": "Google index checker: is this page indexed, and why not, from the URL Inspection API",
-    "title": "Google index checker: URL Inspection API for {agent} | treg.to",
+    "title": "Google index checker: URL Inspection API for {agent} | stray",
     "lede": (
         "Connect the Search Console property you already own and your agent can ask Google, per "
         "URL, the question the UI answers one click at a time: is it indexed, when was it last "
         "crawled, which canonical did Google choose, and if it is not indexed, which bucket it "
-        "sits in. It runs on your own Google account, so treg.to never meters it, and it is the "
+        "sits in. It runs on your own Google account, so stray never meters it, and it is the "
         "same URL Inspection data the Search Console panel shows, without the clicking."),
     "prompt": "Using stray, take every URL in our sitemap, inspect each one in Search Console, and "
               "give me a table of the ones that are not indexed with the coverage state, last "
               "crawl date and the canonical Google picked.",
     "prompt_why": [
-        ("Connect once", "One OAuth click for the property you own. treg.to holds the token, not you."),
+        ("Connect once", "One OAuth click for the property you own. stray holds the token, not you."),
         ("Give it the property string", "The URL must sit under the property you name, sc-domain or URL-prefix. A mismatch is a permission error, not a result."),
         ("Mind the quota", "Google allows 2,000 inspections per property per day, and nothing lifts it. A 5,000-page site is three days."),
         ("It costs nothing", "Your own account, so the call is never metered."),
@@ -3282,7 +3282,7 @@ USE_CASE_PAGES["is-this-page-indexed-and-why-not"] = {
         "Google to index anything, and it is not the Indexing API, which is a different endpoint "
         "restricted to job postings and live-broadcast pages."),
     "notes": [
-        "The quota is Google's and it is hard: 2,000 inspections per property per day. treg.to "
+        "The quota is Google's and it is hard: 2,000 inspections per property per day. stray "
         "does not pool, rotate or route around it, and the forum's tales of getting past it "
         "involve multiple properties or policy violations. Inspect the pages that matter, keep "
         "the verdicts, and diff them week to week; that is where the tool earns its place.",
@@ -3297,8 +3297,8 @@ USE_CASE_PAGES["is-this-page-indexed-and-why-not"] = {
     ],
     "faq": [
         ("Does this cost anything?",
-         "No. Search Console runs on your own Google account, so treg.to relays the call and meters "
-         "nothing. Only calls on treg.to's own provider keys are billed."),
+         "No. Search Console runs on your own Google account, so stray relays the call and meters "
+         "nothing. Only calls on stray's own provider keys are billed."),
         ("Can it make Google index my page?",
          "No. The URL Inspection API reads Google's verdict; it does not submit anything. It "
          "tells you which bucket a page is in and why, which is the part you can act on."),
@@ -3336,7 +3336,7 @@ USE_CASE_PAGES["is-this-page-indexed-and-why-not"] = {
         ("The 2,000 a day quota is the whole constraint",
          "The big limitation of the insufferable URL inspection API is the 2,000 daily quota.",
          "@iannuttall on X", "https://x.com/i/status/1734591329953276340",
-         "It is, and it is per property, set by Google. treg.to relays the call as it is, so the "
+         "It is, and it is per property, set by Google. stray relays the call as it is, so the "
          "quota is yours to spend well: inspect the pages that changed, not the whole site every "
          "morning."),
     ],
@@ -3347,7 +3347,7 @@ USE_CASE_PAGES["is-this-page-indexed-and-why-not"] = {
 USE_CASE_PAGES["news-for-a-ticker"] = {
     "label": "News for a ticker",
     "sentence": "Stock news API: the headlines on a ticker over a date range, as rows your agent can read",
-    "title": "Stock news API for {agent}: headlines by ticker | treg.to",
+    "title": "Stock news API for {agent}: headlines by ticker | stray",
     "lede": (
         "Give your agent a ticker and a date range and get the news on that company back as "
         "rows: headline, source, summary, time and the link. Finnhub answers it, {cheapest}, so "
@@ -3373,7 +3373,7 @@ USE_CASE_PAGES["news-for-a-ticker"] = {
         "the news is good; providers that sell sentiment scores layer that on top, and this "
         "endpoint does not."),
     "notes": [
-        "The free allowance is a trial, not a plan. treg.to serves Finnhub's company news on its "
+        "The free allowance is a trial, not a plan. stray serves Finnhub's company news on its "
         "own free-tier key at 50 calls a day per team; past that the call is refused with a hint "
         "to connect your own key, and on your own key nothing is metered. Finnhub's free tier "
         "carries its own rate limit and, per Finnhub's own docs, this endpoint covers North "
@@ -3390,9 +3390,9 @@ USE_CASE_PAGES["news-for-a-ticker"] = {
     ],
     "faq": [
         ("Is the stock news API free?",
-         "50 calls a day per team on treg.to's own Finnhub key, free, which is enough to try it "
+         "50 calls a day per team on stray's own Finnhub key, free, which is enough to try it "
          "and to run a daily brief on a handful of tickers. Beyond that, register your own "
-         "Finnhub key and the calls are never metered by treg.to."),
+         "Finnhub key and the calls are never metered by stray."),
         ("Does it include sentiment?",
          "No. The rows are headline, source, summary, time and URL. Sentiment is the agent's "
          "reading, or a separate provider's product; this endpoint returns the news, not a "
@@ -3445,12 +3445,12 @@ USE_CASE_PAGES["news-for-a-ticker"] = {
 USE_CASE_PAGES["live-crypto-prices-and-history"] = {
     "label": "Live crypto prices and history",
     "sentence": "CoinGecko API and Tiingo through one key: a crypto price API for live prices and history, per call",
-    "title": "CoinGecko API for {agent}: crypto prices and history | treg.to",
+    "title": "CoinGecko API for {agent}: crypto prices and history | stray",
     "lede": (
         "Give your agent a coin and get its price back as data: the current price in any quote "
         "currency for a whole watchlist in one call, or the price, market cap and volume series "
         "over a day, a month or the coin's whole life. CoinGecko and Tiingo answer through one "
-        "treg.to key, from {cheapest} at the provider's own rate with no markup, and there is no "
+        "stray key, from {cheapest} at the provider's own rate with no markup, and there is no "
         "CoinGecko key to paste into a spreadsheet, a dashboard or a device. What comes back is "
         "an aggregate price, not an order book, and it is polled, not streamed."),
     "prompt": "Using stray, get the current price and 24h change for bitcoin, ethereum and solana in "
@@ -3460,7 +3460,7 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
         ("Use CoinGecko coin ids", "The call takes ids like bitcoin and ethereum, not tickers. BTC is not a coin id, and several tokens share a symbol."),
         ("Ask for the whole watchlist at once", "Current price takes a comma-separated list of coins and currencies. One call for fifty coins costs the same as one call for one."),
         ("Say the window", "History takes 1, 7, 30, 365 or max days, and the granularity follows the window: five-minute points under a day, hourly under 90 days, daily beyond."),
-        ("Ask for the price first", "treg.to returns the rate before the call, so the agent can say what a daily refresh of a hundred coins will spend."),
+        ("Ask for the price first", "stray returns the rate before the call, so the agent can say what a daily refresh of a hundred coins will spend."),
     ],
     "result_noun": "price",
     "result_image": None,
@@ -3481,7 +3481,7 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
         "The rate is per request, not per coin. CoinGecko bills one credit for a successful "
         "call whatever the endpoint, and the current-price call takes a list of coin ids and a "
         "list of quote currencies, so the forum's \"it only returns 28 of my 131 coins\" is a "
-        "pagination problem on a different endpoint, not a ceiling here. On treg.to's own key "
+        "pagination problem on a different endpoint, not a ceiling here. On stray's own key "
         "that credit is metered from your team's balance at the provider's rate; on your own "
         "CoinGecko key nothing is metered and the plan's limits are between you and CoinGecko.",
         "History depth is CoinGecko's, and the page will not stretch it. The series call "
@@ -3489,17 +3489,17 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
         "window, and the snapshot call returns one coin's price, market cap and volume on a "
         "date. Neither is a total-market-cap history and neither is a top-N-by-day table; an "
         "agent builds that by looping coins, one metered call each. Tiingo's bars are the "
-        "exchange-style alternative, served free on treg.to's key at 20 calls a day per team, "
+        "exchange-style alternative, served free on stray's key at 20 calls a day per team, "
         "then on your own Tiingo key.",
         "The price is an aggregate and it passes through unchanged. CoinGecko's market cap and "
         "supply figures are its own, and the research has real examples of both being wrong "
-        "for small tokens; treg.to relays the answer verbatim and adds no consensus, no spread "
+        "for small tokens; stray relays the answer verbatim and adds no consensus, no spread "
         "and no second opinion. If a number matters, pull the Tiingo bar for the same pair and "
-        "let the agent compare, which is a comparison you make, not one treg.to makes for you. "
+        "let the agent compare, which is a comparison you make, not one stray makes for you. "
         "Nothing here is a websocket, an order book or an exchange connection.",
     ],
     "faq": [
-        ("Is the CoinGecko API free through treg.to?",
+        ("Is the CoinGecko API free through stray?",
          "Not free, cheap: one CoinGecko credit per successful call, metered from your team's "
          "prepaid balance at CoinGecko's own rate with $0.000 added. Each new team gets $1.00 to "
          "start, which is a lot of price calls. Register your own CoinGecko key and the calls "
@@ -3515,7 +3515,7 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
          "minutes is the fit; a bot that needs a tick feed is not."),
         ("Which provider should my agent use?",
          "CoinGecko for coin ids, quote currencies and the aggregate market view; Tiingo for "
-         "OHLCV bars on a pair. treg.to shows both with the rate and the measured success side "
+         "OHLCV bars on a pair. stray shows both with the rate and the measured success side "
          "by side; it compares, it does not route or fail over for you."),
     ],
     "voices_intro": (
@@ -3528,13 +3528,13 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
          "There I ran into a problem with Rate limit from the Coingecko api itself.",
          "r/coingecko", "https://www.reddit.com/r/coingecko/comments/1cibixi/google_sheet_not_working_rate_limits/",
          "That poster was calling from Google Sheets, where every request leaves a shared "
-         "Google IP. Through treg.to the call is one metered request on a paid key, a whole "
+         "Google IP. Through stray the call is one metered request on a paid key, a whole "
          "watchlist per call, and the sheet, the dashboard or the device holds no key at all."),
         ("Twelve months is where the free history stops",
          "CoinGecko only goes back 12 months, but I was hoping to go back further",
          "r/CryptoCurrency", "https://www.reddit.com/r/CryptoCurrency/comments/1kq99z1/historic_market_cap_data/",
          "Per coin, the series call with days set to max returns the daily history CoinGecko "
-         "holds, on the paid key treg.to serves it from. That poster wanted total market cap "
+         "holds, on the paid key stray serves it from. That poster wanted total market cap "
          "history, which is not this endpoint, and the page will not pretend it is."),
         ("Free is for testing; what happens at scale is the question",
          "Free APIs are fine for testing but I want something that scales.",
@@ -3546,7 +3546,7 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
          "CoinGecko API shows wrongs market capital data for 700M !",
          "r/SmoothLovePotion", "https://www.reddit.com/r/SmoothLovePotion/comments/sq6odb/coingecko_api_shows_wrongs_market_capital_data/",
          "No comparison table can answer that. The price is the provider's aggregate and "
-         "treg.to relays it as is. The cheap check is to pull the same pair as a Tiingo bar "
+         "stray relays it as is. The cheap check is to pull the same pair as a Tiingo bar "
          "and let the agent flag the gap, which it can do in the same prompt."),
         ("The agent wrote the rate limiter",
          "until I had ChatGPT incorporate rate-limiting given the 500 rate limit/min",
@@ -3563,7 +3563,7 @@ USE_CASE_PAGES["live-crypto-prices-and-history"] = {
 USE_CASE_PAGES["employee-reviews-of-a-company"] = {
     "label": "Employee reviews of a company",
     "sentence": "Glassdoor API and Glassdoor scraper, through one key: a company's employee reviews as rows your agent can read",
-    "title": "Glassdoor API for {agent}: employee reviews as data | treg.to",
+    "title": "Glassdoor API for {agent}: employee reviews as data | stray",
     "lede": (
         "Give your agent a company and get its employee reviews back as rows: rating, title, "
         "pros, cons, date and whether the reviewer still works there. Glassdoor closed its "
@@ -3579,7 +3579,7 @@ USE_CASE_PAGES["employee-reviews-of-a-company"] = {
         ("Give the website, or the Glassdoor URL", "Akta keys on the company's website; Bright Data on the Glassdoor page URL. Say which one you have and the agent picks the row that takes it."),
         ("Ask for a count you can afford", "Akta bills per 50 reviews returned and defaults to 10. A hundred reviews is a few cents; every review a big employer has is not."),
         ("Split current from former", "Each row carries the reviewer's status. The two groups tell different stories, and a mean over both hides both."),
-        ("Ask for the price first", "treg.to returns the rate before the call, so the agent can say what a list of fifty companies will spend."),
+        ("Ask for the price first", "stray returns the rate before the call, so the agent can say what a list of fifty companies will spend."),
     ],
     "result_noun": "review",
     "result_image": None,
@@ -3602,7 +3602,7 @@ USE_CASE_PAGES["employee-reviews-of-a-company"] = {
         "Data wants the Glassdoor page URL itself, and finding that URL from a company name is "
         "the step the forum's scrapers kept failing at. If you have websites, start at Akta; "
         "if you have Glassdoor URLs, either row works.",
-        "Neither endpoint has been called live through treg.to yet, and the page says so "
+        "Neither endpoint has been called live through stray yet, and the page says so "
         "rather than hiding it. Akta's rate is documented as 1.5 credits per 50 reviews, Bright "
         "Data's as $1.50 per 1,000 records on a pay-per-success basis, and both are the "
         "provider's own rate with $0.000 added. Bright Data's scraper answers within a minute "
@@ -3621,7 +3621,7 @@ USE_CASE_PAGES["employee-reviews-of-a-company"] = {
          "who asked for access on the forums were turned away. The providers here read the "
          "public review pages for you and return rows; you never fetch glassdoor.com yourself."),
         ("Do I need a Glassdoor account?",
-         "No. Both calls run on treg.to's own key and return review text without a login, so "
+         "No. Both calls run on stray's own key and return review text without a login, so "
          "the sign-up wall that asks you to review your own employer first does not apply to "
          "the agent. Register your own Akta or Bright Data key and the calls are never metered."),
         ("Can it tell me which reviews are fake?",
@@ -3630,7 +3630,7 @@ USE_CASE_PAGES["employee-reviews-of-a-company"] = {
          "five-star reviews in one week as a question, not an answer."),
         ("Which provider should my agent use?",
          "The one whose input you hold: website for Akta, Glassdoor URL for Bright Data. "
-         "treg.to shows both with the rate side by side; it compares, it does not route or "
+         "stray shows both with the rate side by side; it compares, it does not route or "
          "fail over for you."),
     ],
     "voices_intro": (
@@ -3655,7 +3655,7 @@ USE_CASE_PAGES["employee-reviews-of-a-company"] = {
          "is it possible to scrape Glassdoor reviews (completely free). I don’t want to waste my time if I can’t.",
          "r/webscraping", "https://www.reddit.com/r/webscraping/comments/13ef7yh/glassdoor_reviews/",
          "The honest answer from the same thread is that plain requests get a bot page. "
-         "Through treg.to it is not free, it is a fraction of a cent per review at the "
+         "Through stray it is not free, it is a fraction of a cent per review at the "
          "provider's rate, and the first dollar is on the house for a new team."),
         ("Nobody knows how many of the reviews are real",
          "there is not much transparency about how many reviews on the website are made by nefarious actors (e.g. bots).",
@@ -3678,11 +3678,11 @@ USE_CASE_PAGES["employee-reviews-of-a-company"] = {
 USE_CASE_PAGES["keywords-a-domain-bids-on"] = {
     "label": "Keywords a domain bids on",
     "sentence": "Competitor PPC keywords: the Google Ads keywords a domain bids on, with CPC, from SpyFu or Semrush",
-    "title": "Competitor PPC keywords API: what a domain bids on | treg.to",
+    "title": "Competitor PPC keywords API: what a domain bids on | stray",
     "lede": (
         "Give your agent a competitor's domain and get the Google Ads keywords it bids on "
         "back as rows: keyword, search volume, cost per click, estimated monthly spend and who "
-        "else bids on it. SpyFu and Semrush answer through one treg.to key, from {cheapest} "
+        "else bids on it. SpyFu and Semrush answer through one stray key, from {cheapest} "
         "at the provider's own rate with no markup, priced per row rather than per seat. Both "
         "are estimates built from a crawl of the ads they saw, not Google's own numbers, and "
         "the page says so before the comparison does."),
@@ -3693,7 +3693,7 @@ USE_CASE_PAGES["keywords-a-domain-bids-on"] = {
         ("Give a domain, and a country", "The call takes the advertiser's domain and a country code. A brand that advertises in five markets has five different keyword lists."),
         ("Cap the rows", "SpyFu's page size defaults to 5 and goes to 10,000, and every row is billed. Two hundred rows is a strategy; ten thousand is a bill."),
         ("Strip their brand", "Every advertiser bids on its own name. Ask the agent to drop those rows before it ranks the rest, or the top of the list is noise."),
-        ("Ask for the price first", "treg.to returns the rate before the call, so the agent can say what a full pull across ten competitors will spend."),
+        ("Ask for the price first", "stray returns the rate before the call, so the agent can say what a full pull across ten competitors will spend."),
     ],
     "result_noun": "keyword",
     "result_image": None,
@@ -3714,12 +3714,12 @@ USE_CASE_PAGES["keywords-a-domain-bids-on"] = {
         "domain is a fraction of a cent and a ten-thousand-row dump is $20, so the page size "
         "is the cost dial. Rows carry the keyword, search volume, ranking difficulty, monthly "
         "clicks, broad and exact CPC, estimated monthly cost and the count of competing "
-        "advertisers, and the endpoint has answered every call treg.to has measured so far.",
+        "advertisers, and the endpoint has answered every call stray has measured so far.",
         "Semrush prices in API units bought up front, 20 per line on the current view and "
         "100 per line for a past date, and publishes no dollar rate for a unit, so the page "
         "prints no price for it. Its rows add the position and the live ad copy, which SpyFu "
         "does not carry. Send a display limit: the default is 10,000 lines, and an agent that "
-        "loops without one spends real units. It has not been called live through treg.to "
+        "loops without one spends real units. It has not been called live through stray "
         "yet.",
         "Both are crawl estimates, and the research is full of the consequences: a local "
         "advertiser missing entirely, a tool showing one bidder on a keyword that had "
@@ -3733,16 +3733,16 @@ USE_CASE_PAGES["keywords-a-domain-bids-on"] = {
          "Semrush estimate it from the ads their crawls observed, which is why the monthly cost "
          "column is an estimate and a competitor's max bid is not on the page at all."),
         ("Do I need a SpyFu or Semrush subscription?",
-         "Not for SpyFu: treg.to serves it on its own key, metered per row from your team's "
+         "Not for SpyFu: stray serves it on its own key, metered per row from your team's "
          "balance at SpyFu's rate with $0.000 added. Semrush's API units come with a Semrush "
-         "plan, so that row runs on your own Semrush key, never metered by treg.to."),
+         "plan, so that row runs on your own Semrush key, never metered by stray."),
         ("Can I see a competitor's budget or impression share?",
          "No. The rows carry an estimated monthly spend per keyword, built from volume, CPC and "
          "observed position. Impression share, bids and search terms Google does not disclose "
          "are not in any third-party tool, and this page will not imply they are."),
         ("Which provider should my agent use?",
          "SpyFu for a priced, verified per-row pull; Semrush when you hold a plan and want the "
-         "ad copy. treg.to shows both side by side with the rate and the measured success; it "
+         "ad copy. stray shows both side by side with the rate and the measured success; it "
          "compares, it does not route or fail over for you."),
     ],
     "voices_intro": (
@@ -3766,7 +3766,7 @@ USE_CASE_PAGES["keywords-a-domain-bids-on"] = {
         ("Do you have to buy both tools?",
          "Given Spyfu is only $9/month, do you think there is a case to be made to just purchase both?",
          "r/PPC, 35 points", "https://www.reddit.com/r/PPC/comments/wmvyd4/spyfu_vs_semrush_for_ppc/",
-         "Through treg.to nobody buys either seat. SpyFu is metered per row on treg.to's key; "
+         "Through stray nobody buys either seat. SpyFu is metered per row on stray's key; "
          "Semrush runs on a plan you already hold. Calling both for one domain costs rows, "
          "not subscriptions."),
         ("The two tools do not agree with each other",
@@ -3790,12 +3790,12 @@ USE_CASE_PAGES["keywords-a-domain-bids-on"] = {
 USE_CASE_PAGES["backlink-profile-of-a-domain"] = {
     "label": "Backlink profile of a domain",
     "sentence": "Backlink API: the backlink profile of a domain from Moz, DataForSEO, Serpstat, SE Ranking, Majestic or Semrush, per call",
-    "title": "Backlink API: backlink profile of a domain, {n} providers | treg.to",
+    "title": "Backlink API: backlink profile of a domain, {n} providers | stray",
     "lede": (
         "Give your agent a domain and get its backlink profile back as one row: total "
         "backlinks, referring domains, follow and nofollow split, the vendor's authority score "
         "and, from some providers, the spam and anchor breakdowns. {n} providers answer through "
-        "one treg.to key, from {cheapest}, each at its own rate with no markup and none of them "
+        "one stray key, from {cheapest}, each at its own rate with no markup and none of them "
         "behind a monthly plan or a credit reset. Ahrefs is not among them. Every index is that "
         "vendor's own crawl, so the counts differ by design, and the page shows them side by "
         "side rather than picking one."),
@@ -3807,7 +3807,7 @@ USE_CASE_PAGES["backlink-profile-of-a-domain"] = {
         ("Give bare domains", "Most rows want the domain without scheme or www, and a page URL where you mean a page. Say which, or the agent guesses."),
         ("One call per domain", "Each provider prices the summary per target, and the dearest per-call row is ten times the cheapest. Four domains is four calls."),
         ("Name the score you mean", "Moz DA, Majestic Trust Flow, Semrush Authority Score: each belongs to its vendor and compares only to itself. Ask for one and stick to it."),
-        ("Ask for the price first", "treg.to returns the rate before the call, so the agent can say what a thousand expired domains will spend before it starts."),
+        ("Ask for the price first", "stray returns the rate before the call, so the agent can say what a thousand expired domains will spend before it starts."),
     ],
     "result_noun": "domain",
     "result_image": None,
@@ -3836,7 +3836,7 @@ USE_CASE_PAGES["backlink-profile-of-a-domain"] = {
         "the same command as its URL metrics call, so ask for one and read both sets of "
         "columns rather than paying twice. Semrush charges 40 API units flat for the overview "
         "and publishes no dollar rate for a unit, so the page prints no price and it runs on "
-        "your own Semrush plan. Neither has been called live through treg.to yet; the other "
+        "your own Semrush plan. Neither has been called live through stray yet; the other "
         "four have, and the measured success rates on this page come from that traffic.",
         "The columns are not the same shape. Moz's call is its URL metrics with distributions "
         "on, which adds histograms by domain authority, spam score and root domains; SE "
@@ -3861,7 +3861,7 @@ USE_CASE_PAGES["backlink-profile-of-a-domain"] = {
          "score is comparable only to itself, and no provider's number should be read as "
          "another's."),
         ("Which provider should my agent use?",
-         "The one whose columns match the question and whose rate fits the volume. treg.to "
+         "The one whose columns match the question and whose rate fits the volume. stray "
          "shows all six side by side with the rate and the measured success; it compares, it "
          "does not route or fail over for you."),
     ],
@@ -3910,11 +3910,11 @@ USE_CASE_PAGES["backlink-profile-of-a-domain"] = {
 USE_CASE_PAGES["search-posts-by-keyword"] = {
     "label": "Search posts by keyword",
     "sentence": "Reddit search API and X search API: posts by keyword on Reddit, X, LinkedIn and TikTok, per call",
-    "title": "Reddit and X search API: posts by keyword, per call | treg.to",
+    "title": "Reddit and X search API: posts by keyword, per call | stray",
     "lede": (
         "Give your agent a keyword and get the posts back as rows: title, text, author, "
         "score, date and the link, from Reddit, X, LinkedIn or TikTok, each through the same "
-        "treg.to key, from {cheapest} at the provider's own rate with no markup. No Reddit "
+        "stray key, from {cheapest} at the provider's own rate with no markup. No Reddit "
         "developer app to apply for, no X Basic tier to subscribe to, and no account of yours "
         "on the line. The networks are not alternatives to each other; the platform is the "
         "choice, and the rows are relayed as the provider returns them."),
@@ -3924,7 +3924,7 @@ USE_CASE_PAGES["search-posts-by-keyword"] = {
     "prompt_why": [
         ("Name the platforms", "Each network is its own shelf with its own providers. Reddit and X is two calls; all four is four."),
         ("Put a window on it", "X's official recent search covers the last seven days and the archive call the rest. Say which week you mean."),
-        ("Ask for the price per platform", "The rates differ by an order of magnitude between rows. treg.to prints each before the call, so the agent can say what a daily watch will spend."),
+        ("Ask for the price per platform", "The rates differ by an order of magnitude between rows. stray prints each before the call, so the agent can say what a daily watch will spend."),
         ("Keep the link", "The rows carry the permalink. A complaint is only useful if a human can open it."),
     ],
     "result_noun": "post",
@@ -3946,14 +3946,14 @@ USE_CASE_PAGES["search-posts-by-keyword"] = {
     "notes": [
         "Reddit is three third-party providers, none of them Reddit. ScrapeCreators bills one "
         "credit a call, TikHub a tenth of a cent per successful call, JustOneAPI per "
-        "success in yuan; all run on treg.to's own key with no developer app. What they "
+        "success in yuan; all run on stray's own key with no developer app. What they "
         "search is Reddit's own search, so relevance is Reddit's, and the rows are posts: "
         "comment trees, votes and anything that writes to Reddit still need an approved app "
         "of your own.",
         "X is the one platform with an official row. X's recent search runs on your own X "
-        "developer account at X's own per-post rate, never metered by treg.to; the archive "
+        "developer account at X's own per-post rate, never metered by stray; the archive "
         "call covers history at the same rate. The two scraper rows are cheaper and, on the "
-        "traffic treg.to has measured, answer more often, and they use no account of yours. "
+        "traffic stray has measured, answer more often, and they use no account of yours. "
         "They are also scraping, and the provider carries that risk, not the page; the "
         "reliability section shows what the live traffic looks like rather than promising.",
         "LinkedIn and TikTok are narrower shelves. LinkedIn post search is one provider "
@@ -3964,22 +3964,22 @@ USE_CASE_PAGES["search-posts-by-keyword"] = {
     ],
     "faq": [
         ("Do I need a Reddit API key?",
-         "No. The three Reddit rows are third-party providers on treg.to's own key, billed per "
+         "No. The three Reddit rows are third-party providers on stray's own key, billed per "
          "call from your team's balance at the provider's rate with $0.000 added. If you hold "
          "an approved Reddit app, that is for posting and comment trees; searching posts "
          "does not need it here."),
         ("How much does the X search cost?",
          "Two ways. The official recent search bills at X's own per-post rate on your own X "
-         "developer account, and treg.to meters none of it. The scraper rows bill per "
-         "successful call on treg.to's key, at a rate the page prints beside each. Neither "
+         "developer account, and stray meters none of it. The scraper rows bill per "
+         "successful call on stray's key, at a rate the page prints beside each. Neither "
          "needs an X Basic subscription."),
         ("Can I monitor a keyword continuously?",
-         "The agent can, by calling on a schedule you give it. treg.to has no alerting, no "
+         "The agent can, by calling on a schedule you give it. stray has no alerting, no "
          "scheduler and no sentiment layer; it returns the posts and the price. A daily watch "
          "on two platforms is two calls a day."),
         ("Which provider should my agent use?",
-         "The platform decides the shelf. Within it, treg.to shows each row's rate and "
-         "measured success side by side, and the agent picks, or you tell it; treg.to does "
+         "The platform decides the shelf. Within it, stray shows each row's rate and "
+         "measured success side by side, and the agent picks, or you tell it; stray does "
          "not route or fail over between them."),
     ],
     "voices_intro": (
@@ -4027,11 +4027,11 @@ USE_CASE_PAGES["search-posts-by-keyword"] = {
 USE_CASE_PAGES["app-store-search"] = {
     "label": "App store search",
     "sentence": "App store API: search the Apple App Store and Google Play by keyword, per call",
-    "title": "App store API: search the App Store and Google Play | treg.to",
+    "title": "App store API: search the App Store and Google Play | stray",
     "lede": (
         "Give your agent a keyword and get the store listing rows back: app name, developer, "
         "rating, review count, price and the store link, from the Apple App Store and from "
-        "Google Play, both through one treg.to key from {cheapest} a search at the provider's "
+        "Google Play, both through one stray key from {cheapest} a search at the provider's "
         "own rate with $0.000 added. No Apple developer account, no Play console, no proxy "
         "pool and no scraper of your own to keep alive when a store changes its markup. The "
         "two stores are separate shelves here, not two views of one dataset, so ask for both "
@@ -4044,7 +4044,7 @@ USE_CASE_PAGES["app-store-search"] = {
         ("Name both stores", "Apple and Google Play are separate calls with separate app ids and separate rankings. One store is one search; both is two."),
         ("Say which country", "Store results are per storefront. The US list and the UK list are different lists, and the agent will pick for you if you do not."),
         ("Ask for the columns", "The rows carry the developer, the rating, the review count, the price and the link. Name the ones you want or the whole listing comes back."),
-        ("Ask for the price first", "treg.to prints the rate before the call, so a hundred keywords across two stores has a number on it before anything runs."),
+        ("Ask for the price first", "stray prints the rate before the call, so a hundred keywords across two stores has a number on it before anything runs."),
     ],
     "result_noun": "app",
     "result_image": None,
@@ -4070,7 +4070,7 @@ USE_CASE_PAGES["app-store-search"] = {
         "The two engines take different parameters, and the Play row does two jobs. Apple's "
         "engine wants a search term; Google Play's wants a query, and the same row answers "
         "the store charts as well as a keyword search depending on what you send. Read the "
-        "docs linked on each row before an agent loops, because treg.to relays the store's "
+        "docs linked on each row before an agent loops, because stray relays the store's "
         "own response verbatim and models neither store's API.",
         "What is not here is the part most people are really after. This is search, not rank "
         "tracking: nothing stores yesterday's position, and there is no keyword popularity "
@@ -4082,7 +4082,7 @@ USE_CASE_PAGES["app-store-search"] = {
     ],
     "faq": [
         ("Do I need an Apple or Google developer account?",
-         "No. Both rows run on treg.to's own key and bill per successful search from your "
+         "No. Both rows run on stray's own key and bill per successful search from your "
          "team's balance at SerpApi's rate with no markup. A developer account is for "
          "publishing apps and reading your own; this reads the public store."),
         ("Is this App Store Connect or the Play Developer API?",
@@ -4091,7 +4091,7 @@ USE_CASE_PAGES["app-store-search"] = {
          "sees any app but none of the private numbers behind it."),
         ("Can I track where my app ranks for a keyword over time?",
          "Your agent can, by running the search on a schedule you set and keeping the "
-         "results. treg.to has no scheduler, no history and no ASO rank tracker. The honest "
+         "results. stray has no scheduler, no history and no ASO rank tracker. The honest "
          "limit is depth: the stores expose only so many results, and a rank below that is a "
          "guess wherever you read it."),
         ("Can I get reviews, downloads or keyword volume?",
@@ -4112,7 +4112,7 @@ USE_CASE_PAGES["app-store-search"] = {
          "r/androiddev, 11 points", "https://www.reddit.com/r/androiddev/comments/1va99d9/psa_google_play_only_exposes_30_search_results/",
          "That is the honest ceiling and this page will not pretend past it. The rows return "
          "the store's own results in the store's own order, as deep as the store exposes "
-         "them, and treg.to publishes no rank number of its own."),
+         "them, and stray publishes no rank number of its own."),
         ("Apple's free endpoint stops answering without notice",
          "As of this morning (April 16), all my requests to the /search endpoint are returning HTTP 404 Not Found.",
          "r/iOSProgramming, 11 points", "https://www.reddit.com/r/iOSProgramming/comments/1sn3k1m/itunes_search_api_returning_404_for_search/",
@@ -4147,10 +4147,10 @@ USE_CASE_PAGES["app-store-search"] = {
 USE_CASE_PAGES["transcripts-of-x-and-facebook-video-posts"] = {
     "label": "Transcripts of X and Facebook video posts",
     "sentence": "Facebook video transcript and X video transcript: the words in a video post, from its URL",
-    "title": "Facebook and X video transcript by URL, per call | treg.to",
+    "title": "Facebook and X video transcript by URL, per call | stray",
     "lede": (
         "Paste your agent the URL of a Facebook video post or an X video post and get the "
-        "spoken words back as text, through one treg.to key from {cheapest} a call at the "
+        "spoken words back as text, through one stray key from {cheapest} a call at the "
         "provider's own rate with $0.000 added. No download step, no ffmpeg, no Whisper run "
         "of your own and no developer account on either network. The price is per call, not "
         "per minute of video, so a fifty minute livestream and a twenty second clip cost the "
@@ -4184,7 +4184,7 @@ USE_CASE_PAGES["transcripts-of-x-and-facebook-video-posts"] = {
         "balance at ScrapeCreators' own rate with $0.000 added. Per call means per call: an "
         "empty answer is billed the same as a full transcript, so budget the rate times the "
         "number of posts, not the number of transcripts you keep.",
-        "Neither row has been called live through treg.to yet, and the catalog says so. Both "
+        "Neither row has been called live through stray yet, and the catalog says so. Both "
         "carry a documented price and a documented shape from the provider's docs, neither "
         "has a verified date, and the Facebook row's stored test request does not even name a "
         "URL. Treat them as documented rather than proven, run one post before an agent runs "
@@ -4199,7 +4199,7 @@ USE_CASE_PAGES["transcripts-of-x-and-facebook-video-posts"] = {
     ],
     "faq": [
         ("Do I need an X or Facebook developer account?",
-         "No. Both rows run on treg.to's own key and bill per call from your team's balance at "
+         "No. Both rows run on stray's own key and bill per call from your team's balance at "
          "the provider's rate with no markup. Nothing uses an account of yours, so nothing "
          "puts one at risk."),
         ("Does it work on any post?",
@@ -4262,11 +4262,11 @@ USE_CASE_PAGES["transcripts-of-x-and-facebook-video-posts"] = {
 USE_CASE_PAGES["get-a-linkedin-profile"] = {
     "label": "Get a LinkedIn profile",
     "sentence": "LinkedIn API and LinkedIn scraper: a person's profile by URL, headline, experience and education",
-    "title": "LinkedIn API: fetch a profile by URL, {n} providers | treg.to",
+    "title": "LinkedIn API: fetch a profile by URL, {n} providers | stray",
     "lede": (
         "Give your agent a LinkedIn profile URL and get the profile back as data: name, "
         "headline, location, current role, past roles and education. {n} providers answer "
-        "through one treg.to key, the cheapest of them a tenth of a cent a profile, each "
+        "through one stray key, the cheapest of them a tenth of a cent a profile, each "
         "at its own rate with no markup and none behind a monthly seat. No session cookie of yours, no browser "
         "extension, no Sales Navigator subscription and no account of yours making the "
         "request. LinkedIn's own row is here too and it is honest about what it is: it "
@@ -4278,7 +4278,7 @@ USE_CASE_PAGES["get-a-linkedin-profile"] = {
     "prompt_why": [
         ("Give the profile URL", "Most rows take the public profile URL or its slug. A name and a company is a different job, and a different page."),
         ("Say which fields you need", "A full profile is a large object. Naming the columns keeps the table readable and keeps the agent from spending its context on someone's volunteering history."),
-        ("Ask for the price first", "The rates here differ by more than an order of magnitude per profile. treg.to prints the rate before the call, so 40 profiles has a number on it before anything runs."),
+        ("Ask for the price first", "The rates here differ by more than an order of magnitude per profile. stray prints the rate before the call, so 40 profiles has a number on it before anything runs."),
         ("Ask for the misses by name", "Every provider misses some profiles. A list of the URLs that came back empty is worth more than a table that quietly has 34 rows instead of 40."),
     ],
     "result_noun": "profile",
@@ -4310,13 +4310,13 @@ USE_CASE_PAGES["get-a-linkedin-profile"] = {
         "made inside one unit and never across them. ScrapeCreators, Bright Data, TikHub and "
         "JustOneAPI have been called live and carry a verified date in the catalog; the Fiber "
         "row and the LinkedIn OAuth row are documented from the provider's own docs and have "
-        "not been verified through treg.to.",
+        "not been verified through stray.",
         "What nobody can promise is coverage, and this page will not. Each provider reads "
         "LinkedIn its own way, so a profile one returns in full is one another returns "
         "thin, and the fields most often missing are exactly the ones people want: the dated "
         "experience list. The cheap experiment is the honest answer: run the same twenty URLs "
         "through three rows for a few cents and count who filled the columns you need. "
-        "treg.to shows the rows side by side and the agent picks; it does not route between "
+        "stray shows the rows side by side and the agent picks; it does not route between "
         "them and it does not fail over.",
     ],
     "faq": [
@@ -4338,9 +4338,9 @@ USE_CASE_PAGES["get-a-linkedin-profile"] = {
          "are each provider's own. Company pages, job changes and people search are separate "
          "jobs on separate rows."),
         ("Which provider should my agent use?",
-         "The one whose fields survive your list at a rate that fits the volume. treg.to puts "
+         "The one whose fields survive your list at a rate that fits the volume. stray puts "
          "the rate, the billing unit and the measured success rate beside each other and the "
-         "agent chooses, or you tell it which to use. treg.to compares; it does not pick for "
+         "agent chooses, or you tell it which to use. stray compares; it does not pick for "
          "you."),
     ],
     "voices_intro": (
@@ -4391,11 +4391,11 @@ USE_CASE_PAGES["get-a-linkedin-profile"] = {
 USE_CASE_PAGES["find-phone-numbers"] = {
     "label": "Find phone numbers",
     "sentence": "Phone number lookup API: a prospect's mobile from a LinkedIn URL or work email",
-    "title": "Phone number lookup API: a mobile from a LinkedIn URL | treg.to",
+    "title": "Phone number lookup API: a mobile from a LinkedIn URL | stray",
     "lede": (
         "Give your agent a LinkedIn profile URL, a work email or a name and company, and get "
         "a direct mobile number back where one exists. {n} providers answer through one "
-        "treg.to key, from {cheapest}, each at its own rate with no markup and none of them "
+        "stray key, from {cheapest}, each at its own rate with no markup and none of them "
         "behind a seat or an annual contract. This runs one way only: person to number. It is "
         "not a reverse lookup, it will not tell you who owns a number you already have, and "
         "no provider here finds a number for everyone you ask about."),
@@ -4406,7 +4406,7 @@ USE_CASE_PAGES["find-phone-numbers"] = {
     "prompt_why": [
         ("Give the identifier, not the name alone", "Most rows resolve from a LinkedIn URL or a work email. A bare name and company is the weakest input and the one that misses most."),
         ("Ask for the misses explicitly", "A list of 25 that returns 11 numbers is the normal outcome. The 14 that missed are the information; a table that silently has 11 rows is not."),
-        ("Ask for the price per found number", "The rates here span more than five times per number. treg.to prints each before the call, so 25 people has a worst case before anything runs."),
+        ("Ask for the price per found number", "The rates here span more than five times per number. stray prints each before the call, so 25 people has a worst case before anything runs."),
         ("Never let the agent infer a number", "A model asked for a phone number will happily produce a plausible one. Say out loud that an empty answer stays empty."),
     ],
     "result_noun": "number",
@@ -4431,7 +4431,7 @@ USE_CASE_PAGES["find-phone-numbers"] = {
         "none. All of it is the provider's own rate with $0.000 added, from a prepaid balance "
         "with no minimum.",
         "Read the miss rule carefully, because it is where the money goes. The rate cards say "
-        "a miss is free, and one row on this page proves it through treg.to: LeadMagic "
+        "a miss is free, and one row on this page proves it through stray: LeadMagic "
         "reports its own charge back on every call, so a miss settles at zero. The others do "
         "not report a charge, so the call settles at the catalog rate whether or not a number "
         "came back. Until that changes, budget the printed rate times every attempt, not "
@@ -4441,8 +4441,8 @@ USE_CASE_PAGES["find-phone-numbers"] = {
         "provider strong on US technology can be thin on European professional services, and "
         "that a number being current is not the same as somebody answering it. The cheap "
         "experiment is the only real answer: run the same twenty rows through three providers "
-        "for a couple of dollars and count. treg.to shows the rates side by side; the agent "
-        "picks, and treg.to never routes or fails over between them.",
+        "for a couple of dollars and count. stray shows the rates side by side; the agent "
+        "picks, and stray never routes or fails over between them.",
     ],
     "faq": [
         ("Can I find out who owns a phone number I already have?",
@@ -4455,7 +4455,7 @@ USE_CASE_PAGES["find-phone-numbers"] = {
          "resolve, expect it to be worse outside the US, and measure it on your own rows: "
          "twenty people through three providers costs a couple of dollars."),
         ("Do I pay for a miss?",
-         "By the providers' rate cards, no. Through treg.to today, only LeadMagic settles a "
+         "By the providers' rate cards, no. Through stray today, only LeadMagic settles a "
          "miss at zero, because it is the one row that reports its own charge back on the "
          "call. On the others the call settles at the catalog rate, so budget per attempt."),
         ("Is a found number safe to call?",
@@ -4515,11 +4515,11 @@ USE_CASE_PAGES["find-phone-numbers"] = {
 USE_CASE_PAGES["keyword-volume-cpc-and-competition"] = {
     "label": "Keyword volume, CPC and competition",
     "sentence": "Keyword research API: Google search volume, CPC and competition for a list of keywords",
-    "title": "Keyword research API: Google search volume and CPC | treg.to",
+    "title": "Keyword research API: Google search volume and CPC | stray",
     "lede": (
         "Hand your agent a list of keywords and get a figure back for each one: average "
         "monthly searches, the competition level and the top of page bid range. {n} providers "
-        "answer through one treg.to key: a twentieth of a cent per keyword on the cheapest "
+        "answer through one stray key: a twentieth of a cent per keyword on the cheapest "
         "row, a flat rate per request on another, each at the provider's own rate with no markup. Google's own row is free on your connected "
         "Google Ads account and never metered, and it answers with a number per keyword rather "
         "than the bucket the Keyword Planner screen shows you. It is the row the research "
@@ -4531,7 +4531,7 @@ USE_CASE_PAGES["keyword-volume-cpc-and-competition"] = {
     "prompt_why": [
         ("Batch, do not loop", "One row charges a flat rate per request for up to a thousand keywords. Sending them one at a time on that row multiplies the bill by a thousand for the same answer."),
         ("Name the country and language", "Volume is per market. A keyword measured across everywhere is a number that describes nowhere, and every row here wants the market stated."),
-        ("Ask for the price per provider first", "The rows meter in three different ways: per request, per keyword returned, and free on your own account. treg.to prints each before the call."),
+        ("Ask for the price per provider first", "The rows meter in three different ways: per request, per keyword returned, and free on your own account. stray prints each before the call."),
         ("Keep the empty rows visible", "Google returns nothing for some ordinary words, and a provider that drops them quietly leaves you reading a shorter list than you sent."),
     ],
     "result_noun": "keyword",
@@ -4551,7 +4551,7 @@ USE_CASE_PAGES["keyword-volume-cpc-and-competition"] = {
         "a response an agent can put in a table."),
     "notes": [
         "The Google Ads row is free, and it is the real thing. It runs on your team's "
-        "connected Google Ads account, is never metered by treg.to, counts only against the "
+        "connected Google Ads account, is never metered by stray, counts only against the "
         "developer token's own daily operation limit, and it returns a figure per keyword "
         "rather than the range the Keyword Planner screen shows. The figure is Google's own "
         "rounded number and not a raw count. The cost of this row is not money, it is access: "
@@ -4571,8 +4571,8 @@ USE_CASE_PAGES["keyword-volume-cpc-and-competition"] = {
         "list at all. The bid range is an estimate of an auction rather than the auction: "
         "practitioners regularly report paying many times the figure, or a fraction of it. "
         "Use these fields to rank keywords against each other and take your real cost from "
-        "your own campaign data. treg.to puts the rows side by side; the agent picks, and "
-        "treg.to never routes or fails over between them.",
+        "your own campaign data. stray puts the rows side by side; the agent picks, and "
+        "stray never routes or fails over between them.",
     ],
     "faq": [
         ("Is this the same data as Google Keyword Planner?",
@@ -4582,7 +4582,7 @@ USE_CASE_PAGES["keyword-volume-cpc-and-competition"] = {
          "differ from Google's and from each other."),
         ("Do I need a Google Ads account?",
          "Only for the free row, which runs on your own connection and is never metered. The "
-         "paid rows need nothing of yours: they run on treg.to's key and bill from your "
+         "paid rows need nothing of yours: they run on stray's key and bill from your "
          "team's prepaid balance at the provider's rate with $0.000 added, so a list of "
          "keywords does not require a developer token or an ad campaign."),
         ("Why do the volume numbers differ between providers?",
@@ -4594,7 +4594,7 @@ USE_CASE_PAGES["keyword-volume-cpc-and-competition"] = {
          "It depends entirely on which row and how you batch. A flat per request row covering "
          "up to a thousand keywords is ten calls; a per keyword row is ten thousand "
          "chargeable results however you send them; the Google Ads row is free and bounded by "
-         "a daily operation limit instead. treg.to prints each rate before the call so the "
+         "a daily operation limit instead. stray prints each rate before the call so the "
          "agent can say the number first."),
     ],
     "voices_intro": (
@@ -4650,11 +4650,11 @@ WORKFLOWS: dict[str, dict] = {}
 
 WORKFLOWS["find-and-verify-a-lead-list"] = {
     "sentence": "AI lead generation: a Jev-qualified, verified lead list from one prompt",
-    "title": "AI lead generation: Jev-qualified lead list in {n} calls | treg.to",
+    "title": "AI lead generation: Jev-qualified lead list in {n} calls | stray",
     "lede": (
         "Give your agent one prompt and get back a lead list with a named person, a verified work "
         "email and a scored reason to write, for every company that fits. {steps} steps through one "
-        "treg.to key: jev judges each company on the free list fields before the paid steps run, "
+        "stray key: jev judges each company on the free list fields before the paid steps run, "
         "and scores the opener at the end. The price is printed before the agent spends it, and "
         "the numbers on this page come from running it, not from a rate card."),
     "prompt": (
@@ -4694,7 +4694,7 @@ WORKFLOWS["find-and-verify-a-lead-list"] = {
         ("Find the work email", "people.email.find",
          "their work email, cheapest provider that only bills on a hit",
          "tomba.people.email.find",
-         "Tomba is the cheapest per-success finder in the catalog and was out of capacity on treg.to's key for this run, so Hunter served, and Kitt ran on Hunter's misses. A miss is free at all three."),
+         "Tomba is the cheapest per-success finder in the catalog and was out of capacity on stray's key for this run, so Hunter served, and Kitt ran on Hunter's misses. A miss is free at all three."),
         ("Verify it", "people.email.verify",
          "drop anything not deliverable, keep the unknowns separate",
          "leadmagic.people.email.verify",
@@ -4727,7 +4727,7 @@ WORKFLOWS["find-and-verify-a-lead-list"] = {
         "cost_usd": 2.33,
         "csv": "/workflows/find-and-verify-a-lead-list.csv",
         "narrative": [
-            "Every number above is what treg.to's ledger settled on 2026-09-23 for this run, not a "
+            "Every number above is what stray's ledger settled on 2026-09-23 for this run, not a "
             "rate-card estimate. The gate is the change from the first run of this workflow on "
             "2026-08-26, which spent $3.62 on the same filter with no gate and delivered 27 leads, "
             "$0.13 each. This run spent $2.33 and delivered 20, $0.12 each, with 21 of the 48 "
@@ -4748,7 +4748,7 @@ WORKFLOWS["find-and-verify-a-lead-list"] = {
             "Where the money went after the gate: $0.53 to Findymail for 27 calls, of which 7 were "
             "misses settled at the list rate because Findymail does not report the charge in its "
             "response, and $0.35 to LeadMagic's role finder for the 7 it then found. Tomba, the "
-            "cheapest per-hit email finder, answered all 27 calls with a capacity error on treg.to's "
+            "cheapest per-hit email finder, answered all 27 calls with a capacity error on stray's "
             "own key at no charge, so Hunter served at $0.44 for 18 hits and 9 free misses, and Kitt "
             "found 3 of those 9 for $0.015. Verification was $0.13, with the one unknown free. News "
             "was the dearest step again at $0.84, PredictLeads at $0.04 a call. jev's own bill for "
@@ -4770,9 +4770,9 @@ WORKFLOWS["find-and-verify-a-lead-list"] = {
         ("A row with no domain",
          "Two of the 50 Apollo rows carried no primary domain. Every later step keys on the domain, so those rows stop at step one. Keep them in the CSV with the reason rather than dropping them silently."),
         ("The cheapest provider is out",
-         "Tomba answered all 27 email calls with a capacity error on treg.to's own key, at no charge, and the run went to Hunter at almost three times the price per hit. On the first run it was Akta, for news. A provider outage shows up as a price change, so ask the agent for the price before each step, not once at the start."),
+         "Tomba answered all 27 email calls with a capacity error on stray's own key, at no charge, and the run went to Hunter at almost three times the price per hit. On the first run it was Akta, for news. A provider outage shows up as a price change, so ask the agent for the price before each step, not once at the start."),
         ("A miss that is billed anyway",
-         "Findymail lists a free miss but does not report the charge in its response, so treg.to settled all 27 calls at the list rate, 7 misses included. Hunter, Kitt and LeadMagic report it, and their misses settled at $0.00. Prefer the finders that report the charge when the miss rate will be high."),
+         "Findymail lists a free miss but does not report the charge in its response, so stray settled all 27 calls at the list rate, 7 misses included. Hunter, Kitt and LeadMagic report it, and their misses settled at $0.00. Prefer the finders that report the charge when the miss rate will be high."),
         ("Catch-all domains",
          "A verifier cannot resolve an address on a domain that accepts everything. Expect a fifth of a B2B list to land in that bucket. SMTP checks confirm that the domain accepts mail, not that a specific inbox exists, so decide once, per campaign, whether to send to it, and send in small batches. This run's verifier returned no catch-all flag at all, so the column is empty."),
         ("Verification is a separate step, not a side effect of finding",
@@ -4780,34 +4780,34 @@ WORKFLOWS["find-and-verify-a-lead-list"] = {
     ],
     "faq": [
         ("How much does the whole workflow cost?",
-         "The receipt on this page prints the real total for a 50-company run, next to the first run of the same filter without the gate. Per-call rates are the provider's own with $0.000 added by treg.to. A miss on a per-success step is free at the provider's rate card; the receipt shows where that held and where it did not."),
+         "The receipt on this page prints the real total for a 50-company run, next to the first run of the same filter without the gate. Per-call rates are the provider's own with $0.000 added by stray. A miss on a per-success step is free at the provider's rate card; the receipt shows where that held and where it did not."),
         ("What does jev decide, and what does it cost?",
          "Two things. Before the paid steps it reads each company's list fields and returns the probability that it fits your ICP; the agent keeps the rows at or above the threshold you name. After the news step it picks which event to lead with and scores how usable it is as a first line. jev is priced on input tokens only, and the two steps together cost a fraction of a cent for the whole run. You need a jev key of your own, or the agent can make the same judgements itself behind the same interface, slower and dearer, until you have one."),
-        ("Does treg.to pick the providers?",
-         "No. treg.to shows the agent every provider for each step with its price and measured success rate; the agent picks, or you tell it which one. There is no automatic failover. jev is the same kind of choice: it is the agent's judge, not treg.to's router."),
+        ("Does stray pick the providers?",
+         "No. stray shows the agent every provider for each step with its price and measured success rate; the agent picks, or you tell it which one. There is no automatic failover. jev is the same kind of choice: it is the agent's judge, not stray's router."),
         ("What comes back at the end?",
          "A CSV with company, domain, person, title, email, which provider found it, the verifier's verdict, the catch-all flag, the event to lead with, jev's opener score and jev's fit probability, strongest opener first. The one from the run on this page is linked above with the person, title and email columns removed, because these are real people and a title at a named company is enough to identify one; the row-level outcomes are what the numbers on this page come from. Your own run returns every column."),
     ],
     "related": ("Find professional emails", "Verify an email before you send",
                 "Find people by role, company or location", "Enrich a person from an email or LinkedIn URL"),
     "extra_links": (
-        ("Jev for GTM automation", "/jev", "Three recipes where treg.to builds the state and jev decides"),
+        ("Jev for GTM automation", "/jev", "Three recipes where stray builds the state and jev decides"),
         ("Run with your agent", "/people-search", "The people search launch page"),
         ("Waterfall enrichment", "/use-cases/lead-enrichment-for-ai-agents", "Find, enrich and verify in one agent run"),
         ("Company enrichment", "/use-cases/enrich-a-company", "Turn a domain into firmographics"),
-        ("Pricing", "/pricing", "How treg.to pricing works"),
+        ("Pricing", "/pricing", "How stray pricing works"),
     ),
 }
 
 
 WORKFLOWS["screen-instagram-creators-before-outreach"] = {
     "sentence": "Instagram profile scraper: screen a creator list before outreach",
-    "title": "Instagram Profile Scraper: Screen Creators | treg.to",
+    "title": "Instagram Profile Scraper: Screen Creators | stray",
     "lede": (
         "Give your agent a list of Instagram handles and get back a CSV with today's followers, "
         "category, private flag, a 12-post engagement sample, and a keep or skip verdict, with any "
         "public business email verified before you write to it. {steps} steps, each a metered call "
-        "through one treg.to key, with the price printed before the agent spends it."),
+        "through one stray key, with the price printed before the agent spends it."),
     "prompt": (
         "Using stray, screen these 20 Instagram creators for partnership fit: [list of handles]. For "
         "each one pull the profile (followers, category, is_private, business_email) and the last "
@@ -4896,11 +4896,11 @@ WORKFLOWS["screen-instagram-creators-before-outreach"] = {
 
 WORKFLOWS["discover-creators-in-a-niche"] = {
     "sentence": "Influencer finder: discover creators by niche, followers and engagement",
-    "title": "Influencer Finder: Find Creators by Niche | treg.to",
+    "title": "Influencer Finder: Find Creators by Niche | stray",
     "lede": (
         "Give your agent a niche, a country and a follower range, and get back a list of "
         "Instagram, TikTok or YouTube creators with engagement rates, then a fresh profile and a "
-        "post sample on each one. {steps} steps through one treg.to key, with the price printed "
+        "post sample on each one. {steps} steps through one stray key, with the price printed "
         "before each."),
     "prompt": (
         "Using stray, find 25 Instagram fitness creators in the US with 50k to 500k followers and "
@@ -4992,11 +4992,11 @@ WORKFLOWS["discover-creators-in-a-niche"] = {
 
 WORKFLOWS["keyword-demand-to-ad-budget"] = {
     "sentence": "Keyword volume checker: expand a seed, price the demand, read the seasonality",
-    "title": "Keyword Volume Checker: Demand to Ad Budget | treg.to",
+    "title": "Keyword Volume Checker: Demand to Ad Budget | stray",
     "lede": (
         "Give your agent a seed keyword and get back the related terms, their monthly volume, CPC, "
         "competition and a 12-month trend, plus a spend split by volume share. {steps} steps "
-        "through one treg.to key, with the price printed before each."),
+        "through one stray key, with the price printed before each."),
     "prompt": (
         "Using stray, expand 'protein powder' into 50 related keywords, then get Google search "
         "volume, CPC and competition for all of them in one batch, and the 12-month trend for the "
@@ -5068,13 +5068,13 @@ WORKFLOWS["keyword-demand-to-ad-budget"] = {
         ("What does a 50-keyword run cost?",
          "This run: $0.11 total. $0.018 for ideas, $0.09 for the volume batch, $0.0012 for the trend. The volume call is a flat fee per request, so the list length barely moves the bill."),
         ("Can I use my own Google Ads account?",
-         "Yes. Connect it and the ideas and volume calls route through the Keyword Planner API on your own quota, which treg.to never meters."),
+         "Yes. Connect it and the ideas and volume calls route through the Keyword Planner API on your own quota, which stray never meters."),
         ("Why is per-request billing cheaper?",
-         "Agents that call a per-keyword endpoint 50 times pay 50 fees. The batch route here covers up to 1,000 keywords in one request for one fee. That is why treg.to shows the billing unit before each call."),
+         "Agents that call a per-keyword endpoint 50 times pay 50 fees. The batch route here covers up to 1,000 keywords in one request for one fee. That is why stray shows the billing unit before each call."),
         ("How current is the trend data?",
          "The trend series is weekly for the past twelve months and reflects past demand, not a forecast."),
         ("Do I need a Google Ads account for this workflow?",
-         "Only if you route through your own Keyword Planner connection. The paid volume rows run on treg.to's keys and do not need your developer token."),
+         "Only if you route through your own Keyword Planner connection. The paid volume rows run on stray's keys and do not need your developer token."),
         ("Why does Semrush or Ahrefs show a different number?",
          "Every vendor models demand differently. Rank keywords against each other inside one source, then validate winners in Search Console and in your own campaigns."),
     ],
@@ -5089,11 +5089,11 @@ WORKFLOWS["keyword-demand-to-ad-budget"] = {
 
 WORKFLOWS["mine-competitor-meta-ads-as-creative-pack"] = {
     "sentence": "Facebook Ads Library API: pull a competitor's live ads and what they bid on in Google",
-    "title": "Facebook Ads Library API: Competitor Creative | treg.to",
+    "title": "Facebook Ads Library API: Competitor Creative | stray",
     "lede": (
         "Give your agent a competitor's Facebook page and get back their live Meta ads with the "
         "format, call to action and opening line of each, plus the same advertiser's ads in the "
-        "Google Ads Transparency Center. {steps} steps through one treg.to key, with the price "
+        "Google Ads Transparency Center. {steps} steps through one stray key, with the price "
         "printed before each."),
     "prompt": (
         "Using stray, count the active Meta ads for Notion (facebook.com/notionhq), then pull the 20 "
@@ -5157,7 +5157,7 @@ WORKFLOWS["mine-competitor-meta-ads-as-creative-pack"] = {
         ("Google domain mismatch",
          "The Google side keys on the advertiser's verified domain. A marketing subdomain returns nothing; use the root domain."),
         ("Count-before-pull billing",
-         "The count probe bills as one result; the full pull bills per ad. Notion's 113 active ads would cost $0.565 uncapped. The run capped at 20 ads ($0.105 on treg.to's shared key)."),
+         "The count probe bills as one result; the full pull bills per ad. Notion's 113 active ads would cost $0.565 uncapped. The run capped at 20 ads ($0.105 on stray's shared key)."),
         ("Creative fields shift",
          "Both routes read the public library pages. Field availability tracks whatever Meta and Google currently render. 5 of this run's 6 DCO ads returned template placeholders, not final copy."),
         ("Creative media URLs expire",
@@ -5169,7 +5169,7 @@ WORKFLOWS["mine-competitor-meta-ads-as-creative-pack"] = {
     ],
     "faq": [
         ("What does a competitor pull cost?",
-         "It depends on how many ads they run. Notion had 113 active ads; pulling all of them would cost $0.565 on treg.to's shared key. This run capped at 20 ($0.105)."),
+         "It depends on how many ads they run. Notion had 113 active ads; pulling all of them would cost $0.565 on stray's shared key. This run capped at 20 ($0.105)."),
         ("Is this Meta's official API?",
          "No. It reads the public Ad Library. Meta's own ads_archive route is free but needs identity verification and returns less."),
         ("Why did 5 ads return template placeholders?",
@@ -5190,11 +5190,11 @@ WORKFLOWS["mine-competitor-meta-ads-as-creative-pack"] = {
 
 WORKFLOWS["category-content-intel-tiktok-xiaohongshu"] = {
     "sentence": "Category content intel: what TikTok and Xiaohongshu are saying about a product category",
-    "title": "Category content intel: TikTok and Xiaohongshu | treg.to",
+    "title": "Category content intel: TikTok and Xiaohongshu | stray",
     "lede": (
         "Give your agent a category keyword and get back the top posts on TikTok and Xiaohongshu "
         "(RedNote) with engagement, plus the follower counts of the creators behind the TikTok "
-        "hits. {steps} steps through one treg.to key. Low frequency, high decision value."),
+        "hits. {steps} steps through one stray key. Low frequency, high decision value."),
     "prompt": (
         "Using stray, search TikTok for 'protein powder' sorted by likes and Xiaohongshu for "
         "'蛋白粉' sorted by popularity. Show me the price first. Return a CSV with platform, likes, "
@@ -5283,11 +5283,11 @@ WORKFLOWS["category-content-intel-tiktok-xiaohongshu"] = {
 USE_CASE_PAGES["company-email-format"] = {
     "label": "A company's email format",
     "sentence": "Company email format finder: the pattern a domain uses, so a name becomes an address",
-    "title": "Company email format finder API, by domain | treg.to",
+    "title": "Company email format finder API, by domain | stray",
     "lede": (
         "Give your agent a company domain and get back the address pattern the company uses, "
         "such as first.last or f.last, with how confident the provider is in it. Two providers "
-        "answer through one treg.to key at their own rate with $0.000 added: The Companies API "
+        "answer through one stray key at their own rate with $0.000 added: The Companies API "
         "bills only when a pattern comes back, Tomba bills the call and makes a repeat of the "
         "same domain free for the rest of the month. A pattern is a rule, not a mailbox: it "
         "tells you how to write an address, and the verify page tells you whether that "
@@ -5330,8 +5330,8 @@ USE_CASE_PAGES["company-email-format"] = {
         "yields a confident looking pattern that may be wrong for the fourth person. Read the "
         "confidence or count the provider returns, and treat anything built on a handful of "
         "samples as a hypothesis to verify, not a fact to send to.",
-        "Tomba's row has been called live through treg.to and carries a verified date; The "
-        "Companies API row is documented but not yet verified through treg.to, so run one "
+        "Tomba's row has been called live through stray and carries a verified date; The "
+        "Companies API row is documented but not yet verified through stray, so run one "
         "domain before an agent runs a thousand. The 1,300 a month who search for an email "
         "format checker are mostly asking whether an address is valid, which is a different "
         "call: that is the verify page, and the two calls are meant to run one after the other.",
@@ -5398,11 +5398,11 @@ USE_CASE_PAGES["company-email-format"] = {
 USE_CASE_PAGES["mine-the-comments"] = {
     "label": "Mine the comments",
     "sentence": "Social listening API: export the comments on Instagram, YouTube, Reddit and LinkedIn posts as data",
-    "title": "Instagram comment export and social listening API | treg.to",
+    "title": "Instagram comment export and social listening API | stray",
     "lede": (
         "Give your agent a post URL on Instagram, a video on YouTube, a thread on Reddit or a "
         "post on LinkedIn and get the comments back as rows: author, text, likes, time, "
-        "replies. {n} providers across the four platforms answer through one treg.to key, "
+        "replies. {n} providers across the four platforms answer through one stray key, "
         "each at its own rate with $0.000 added, from a fraction of a cent per call, and on "
         "YouTube the official API is free on the Google account you already have. This is the "
         "raw material of social listening, not the dashboard: the rows come back and your "
@@ -5446,7 +5446,7 @@ USE_CASE_PAGES["mine-the-comments"] = {
         "per call, which on a post with a thousand comments means paginating and paying per "
         "page; Bright Data is per record delivered, so a thousand comments is a thousand "
         "records; TikHub and JustOneAPI are per successful call. The row labelled stray is the "
-        "routed endpoint: the explicit opt in where you ask treg.to to choose among the "
+        "routed endpoint: the explicit opt in where you ask stray to choose among the "
         "providers for that platform, your own keys first, and it names the provider that "
         "served and bills that provider's rate. Every other row is a direct call and the "
         "choice is yours.",
@@ -5454,7 +5454,7 @@ USE_CASE_PAGES["mine-the-comments"] = {
         "the OSINT forums keep asking; comments on a private account; and any promise about "
         "your own LinkedIn or Instagram login, because none of these rows use one. A "
         "scraped LinkedIn post is public data fetched by the provider, and LinkedIn's terms "
-        "are LinkedIn's. Several rows on the page have not been called live through treg.to "
+        "are LinkedIn's. Several rows on the page have not been called live through stray "
         "yet and say unverified in the table: Bright Data on all three platforms, "
         "ScrapeCreators on Reddit, TikHub on LinkedIn. Run one post before an agent runs a "
         "thousand.",
@@ -5475,7 +5475,7 @@ USE_CASE_PAGES["mine-the-comments"] = {
         ("Will my account get banned?",
          "Nothing here uses your account except the two official rows, which use it the way "
          "the platform intends. The paid rows run on the provider's own infrastructure and "
-         "return public data; treg.to holds the provider keys and you never log in anywhere."),
+         "return public data; stray holds the provider keys and you never log in anywhere."),
     ],
     "voices_intro": (
         "Of the ~210 Reddit and X posts read in August 2026 about seventy were on the job, and "
@@ -5523,11 +5523,11 @@ USE_CASE_PAGES["mine-the-comments"] = {
 USE_CASE_PAGES["build-a-company-list-by-industry-size-or-tech"] = {
     "label": "Build a company list by industry, size or tech",
     "sentence": "Companies by industry: build a company list by industry, size, location or tech stack through one key",
-    "title": "Company list by industry, size or tech: {n} APIs | treg.to",
+    "title": "Company list by industry, size or tech: {n} APIs | stray",
     "lede": (
         "Describe the companies you want, by industry, headcount, country, revenue, funding or "
         "the technology they run, and get a list back as rows with a domain on each. {n} "
-        "providers answer through one treg.to key, from Apollo and Crunchbase to the smaller "
+        "providers answer through one stray key, from Apollo and Crunchbase to the smaller "
         "databases nobody has heard of, each at its own rate with $0.000 added and most of "
         "them priced per company returned, so the size of the page is the price. Three rows "
         "are free, and a free row that returns ids is not the same as a free row that returns "
@@ -5575,15 +5575,15 @@ USE_CASE_PAGES["build-a-company-list-by-industry-size-or-tech"] = {
         "search. The Companies API has a `simplified=true` switch that makes the whole call "
         "free at the price of fewer fields, which is the cheapest honest way to count a "
         "market before paying for rows. The row labelled stray is the routed endpoint: the "
-        "explicit opt in where you ask treg.to to choose among these providers, your own "
+        "explicit opt in where you ask stray to choose among these providers, your own "
         "keys first, and it names the one that served and bills that provider's rate.",
         "Nobody on this page publishes a number for how stale their data is, and the one "
         "practitioner test in the research measured the drift at about a fifth of records "
         "having changed title or employer while the email still resolved. Treat every "
         "headcount and industry field as a claim from the month it was indexed. The rows "
-        "that were called live through treg.to carry a verified date in the table; Apollo, "
+        "that were called live through stray carry a verified date in the table; Apollo, "
         "Coresignal, Crunchbase, Fiber AI, Findymail and The Companies API are documented "
-        "but not yet verified through treg.to, so run one page before an agent "
+        "but not yet verified through stray, so run one page before an agent "
         "runs a thousand.",
     ],
     "faq": [
@@ -5602,7 +5602,7 @@ USE_CASE_PAGES["build-a-company-list-by-industry-size-or-tech"] = {
          "returns ids for nothing, and several providers have a count call on its own page. "
          "A count first is the cheapest way to check that your filters mean what you think."),
         ("Is this the Apollo API or the Crunchbase API?",
-         "Both are rows on this page, called through one treg.to key at their own rates. "
+         "Both are rows on this page, called through one stray key at their own rates. "
          "Crunchbase is covered by its licence rather than priced per call, so the table "
          "prints no dollar figure for it, and Apollo bills per page rather than per company."),
     ],
@@ -5630,7 +5630,7 @@ USE_CASE_PAGES["build-a-company-list-by-industry-size-or-tech"] = {
          "I got tired of vendor pages claiming '95%+ accuracy' with no definition of what accuracy means",
          "r/Coldemailing", "https://www.reddit.com/r/Coldemailing/comments/1vezuay/verified_4_b2b_data_vendors_against_the_same_icp/",
          "So there is no accuracy column here. The table carries the rate, the billing unit, "
-         "the fields each row accepts and whether it has been called live through treg.to. "
+         "the fields each row accepts and whether it has been called live through stray. "
          "Accuracy on your market is something you measure, not something a vendor states."),
         ("Which of these is a database and which is a scraper",
          "Tried searching online but getting overwhelmed with options and not sure which ones are legit vs just data scrapers",
@@ -5641,7 +5641,7 @@ USE_CASE_PAGES["build-a-company-list-by-industry-size-or-tech"] = {
         ("Crunchbase without the scraping workaround",
          "Turns out Crunchbase has a bunch of restrictions, so I tried a couple methods to scrape leads efficiently",
          "r/weezly", "https://www.reddit.com/r/weezly/comments/1n38bo0/how_i_scraped_thousands_of_crunchbase_leads_free/",
-         "Crunchbase's own search API is a row on this page, called through treg.to on a "
+         "Crunchbase's own search API is a row on this page, called through stray on a "
          "licence rather than per call. It is not the cheapest route to a list, and a "
          "different row will be for most filters, but it is the legitimate one."),
     ],
@@ -5653,11 +5653,11 @@ USE_CASE_PAGES["build-a-company-list-by-industry-size-or-tech"] = {
 USE_CASE_PAGES["job-postings-across-companies"] = {
     "label": "Job postings across companies",
     "sentence": "LinkedIn jobs API and job scraper: job postings across companies as rows your agent can read",
-    "title": "Jobs API: LinkedIn job postings and company openings | treg.to",
+    "title": "Jobs API: LinkedIn job postings and company openings | stray",
     "lede": (
         "Search job postings by title, keyword, company or location and get them back as "
         "rows, for hiring signals, market research or a job board of your own. {n} providers "
-        "answer through one treg.to key on two shelves: LinkedIn job search from a tenth of a "
+        "answer through one stray key on two shelves: LinkedIn job search from a tenth of a "
         "cent per posting, and company level openings from the firmographic databases, each "
         "at its own rate with $0.000 added. Two things this page will not pretend: there is "
         "no Indeed row in the catalog, so the 720 people a month searching for an Indeed API "
@@ -5696,7 +5696,7 @@ USE_CASE_PAGES["job-postings-across-companies"] = {
         "two and a half cents, and PredictLeads four cents a call for a company's openings "
         "and a credit per record for a filtered search. All of it is the provider's own rate "
         "with $0.000 added. The row labelled stray is the routed endpoint: the explicit opt "
-        "in where you ask treg.to to choose among the company rows, your own keys first, and "
+        "in where you ask stray to choose among the company rows, your own keys first, and "
         "it names the provider that served and bills that provider's rate.",
         "The cap is the budget. The Apify row is charged per dataset item it produces, so a "
         "search that matches four thousand postings costs four dollars unless maxItems says "
@@ -5707,7 +5707,7 @@ USE_CASE_PAGES["job-postings-across-companies"] = {
         "whether a posting is still live or was ever real, nothing crawls a company's own "
         "careers page, and there is no Indeed, Glassdoor or Naukri row. The date posted is "
         "the platform's date, which the research says is the field people trust least. "
-        "TikHub's LinkedIn job search has not been called live through treg.to yet and is "
+        "TikHub's LinkedIn job search has not been called live through stray yet and is "
         "marked unverified in the table; run one search before an agent runs a hundred.",
     ],
     "faq": [
@@ -5773,23 +5773,23 @@ USE_CASE_PAGES["job-postings-across-companies"] = {
 USE_CASE_PAGES["daily-price-history"] = {
     "label": "Daily price history",
     "sentence": "Historical stock data API: daily OHLCV price history by ticker, free to try, then your own Polygon, EODHD or Marketstack key",
-    "title": "Historical stock data API: EOD prices, free to try | treg.to",
+    "title": "Historical stock data API: EOD prices, free to try | stray",
     "lede": (
         "Give your agent a ticker and a date range and get the daily open, high, low, close "
         "and volume back as rows, adjusted where the provider adjusts. {n} providers answer "
-        "through one treg.to key. Tiingo and Twelve Data are free for twenty calls a day per "
-        "team on treg.to's own key, enough to backfill a watchlist; past that, and for "
+        "through one stray key. Tiingo and Twelve Data are free for twenty calls a day per "
+        "team on stray's own key, enough to backfill a watchlist; past that, and for "
         "Polygon, EODHD and Marketstack, you connect your own subscription key and the calls "
         "are never metered. Two things this page will not pretend: there is no Yahoo Finance "
         "row and no Alpha Vantage row, because neither is in the catalog, and nothing here "
         "is unlimited and free."),
     "prompt": "Using stray, get the daily price history for AAPL, MSFT and NVDA from January "
-              "2020 to today, show me which providers are free on treg.to's key and how many "
+              "2020 to today, show me which providers are free on stray's key and how many "
               "calls I have left today, use one of those, then give me a table of ticker, "
               "date, adjusted close and volume as CSV, and say if any day is missing.",
     "prompt_why": [
         ("Give the ticker and the range", "Every row takes a symbol and a start and end date. Thirty years is one call on most of them, so the range is free to widen."),
-        ("Ask which rows are free today", "Two providers are served on treg.to's own key with a daily allowance per team. The agent can see the allowance before it spends one."),
+        ("Ask which rows are free today", "Two providers are served on stray's own key with a daily allowance per team. The agent can see the allowance before it spends one."),
         ("Say adjusted or unadjusted", "Splits and dividends change the series. Tiingo returns both; the others differ. Say which you want before the agent picks."),
         ("Ask for the missing days", "A gap in a daily series is silent unless the agent counts. Ask for it and a holiday looks different from a hole."),
     ],
@@ -5809,13 +5809,13 @@ USE_CASE_PAGES["daily-price-history"] = {
         "here are documented APIs with a published allowance or a subscription behind them, "
         "which is the trade: nothing breaks on a Tuesday, and nothing is unlimited."),
     "notes": [
-        "Two rows cost nothing to start, on treg.to's own key. Tiingo and Twelve Data are "
-        "served from treg.to's free tier keys with an allowance of twenty calls a day per "
+        "Two rows cost nothing to start, on stray's own key. Tiingo and Twelve Data are "
+        "served from stray's free tier keys with an allowance of twenty calls a day per "
         "team; a call is one ticker over any range, so twenty calls is twenty tickers of full "
         "history a day, and past the allowance the call is refused with a hint to connect your "
-        "own key. Polygon and EODHD serve on your own subscription key only, and treg.to "
+        "own key. Polygon and EODHD serve on your own subscription key only, and stray "
         "publishes no rate for them, so the table prints none: your plan's limits apply and "
-        "treg.to meters nothing. Marketstack's row prints a per call figure derived from its "
+        "stray meters nothing. Marketstack's row prints a per call figure derived from its "
         "plan's monthly request cap, which is the catalog's way of saying one request against "
         "the cap whatever it returns, not a metered price.",
         "Adjusted and unadjusted are different series and the rows treat them differently. "
@@ -5832,11 +5832,11 @@ USE_CASE_PAGES["daily-price-history"] = {
         "this page serves intraday history except Polygon's bars and Twelve Data's series, "
         "and the crypto history page covers coins. The five provider rows were verified on "
         "2026-08-15; the row labelled stray is the routed endpoint, the explicit opt in where "
-        "you ask treg.to to choose among them, your own keys first, and it is unverified.",
+        "you ask stray to choose among them, your own keys first, and it is unverified.",
     ],
     "faq": [
         ("Is there a free historical stock data API here?",
-         "Free to try: Tiingo and Twelve Data at twenty calls a day per team on treg.to's own "
+         "Free to try: Tiingo and Twelve Data at twenty calls a day per team on stray's own "
          "key, no card and no account with either provider. Past the allowance you connect "
          "your own key, which on both providers has a free tier of its own. Nothing here is "
          "unlimited and free, and this page will not say otherwise."),
@@ -5851,7 +5851,7 @@ USE_CASE_PAGES["daily-price-history"] = {
          "check one known split date before trusting a backtest."),
         ("Can I use my own Polygon subscription?",
          "Yes, and it is the only way Polygon serves here: connect the key once and every "
-         "call runs on your plan, never metered by treg.to. The same is true of EODHD and "
+         "call runs on your plan, never metered by stray. The same is true of EODHD and "
          "Marketstack, and of Tiingo and Twelve Data once the daily allowance is used."),
     ],
     "voices_intro": (
@@ -5863,7 +5863,7 @@ USE_CASE_PAGES["daily-price-history"] = {
         ("The free endpoint everyone used",
          "yfinance is so unreliable; any other free apis?",
          "r/algotrading, 118 points", "https://www.reddit.com/r/algotrading/comments/1kdw27f/yfinance_is_so_unreliable_any_other_free_apis/",
-         "The honest answer is free to try rather than free: twenty calls a day on treg.to's "
+         "The honest answer is free to try rather than free: twenty calls a day on stray's "
          "key across two documented providers, then your own key. What that buys is an "
          "endpoint with a published contract, which is the thing yfinance never had."),
         ("Public facts, private prices",

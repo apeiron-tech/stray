@@ -117,7 +117,8 @@ heading · prices and dates come from the catalog · no empty section · the quo
 ## House rules
 
 - **No em-dashes** in page copy. A test fails on them. The setup line is the one exception.
-- `treg.to`, never bare `stray`, in titles, H1s and anchors.
+- The product is written `stray`, lowercase, in titles, H1s and anchors. In body copy, say what it is
+  on first mention ("stray, the tool catalog for your agent"): `stray` alone is also an English word.
 - Never claim treg.to chooses or fails over between providers. It compares; the agent picks, or the
   reader tells it how.
 - Observed reliability stats may be published per vendor (Jason, 2026-08-21) with the "live traffic,

@@ -1,7 +1,7 @@
 ---
 page_id: p4
 slug: /use-cases/competitor-ad-research-for-ai-agents/
-seo_title: "Ad Library API: Meta, Google, TikTok, LinkedIn Ads | treg.to"        # 52
+seo_title: "Ad Library API: Meta, Google, TikTok, LinkedIn Ads | stray"        # 52
 meta_description: "Ad library API for AI agents: pull competitors' live ads from Meta, Google, TikTok and LinkedIn through one key. Calls from $0.00188. $1.00 free."  # 145
 h1: "Ad Library API: Meta, Google, TikTok, LinkedIn Ads"
 hub_title: "Competitor ads"
@@ -42,7 +42,7 @@ offer, hook and format. Then check what they are bidding on in Google Ads.
 
 ---
 
-## The old way vs. the treg.to way
+## The old way vs. the stray way
 
 | | The old way | With stray |
 |---|---|---|
@@ -86,7 +86,7 @@ not close to each other:
 | | tikhub | $0.004 | not yet measured |: |
 
 The blank cells are honest: those endpoints are catalogued and priced but have not been called often
-enough for treg.to to have measured them. The catalog shows you that rather than a rounded number with no
+enough for stray to have measured them. The catalog shows you that rather than a rounded number with no
 sample behind it.
 
 **It pulls the creative, not just the count.** Ad copy, headlines, calls to action, format, the landing
@@ -133,7 +133,7 @@ COST   $[from your run]
 
 ## Proof from one real run
 
-*Run on treg.to, 17 Aug 2026, against the SEO-software category. Every figure is from the Activity log.*
+*Run on stray, 17 Aug 2026, against the SEO-software category. Every figure is from the Activity log.*
 
 | Field | Value |
 |---|---|
@@ -155,13 +155,13 @@ advertiser split across three registered entities**: "Semrush INC" (~20,000 ads)
 and "Semrush Inc." (~500). Search one name and you see a third of the real activity.
 
 **Two calls in this run failed and cost nothing.** One sent the wrong parameter name and was rejected by
-the provider (HTTP 400, `$0.00`). One omitted a required parameter and was refused by treg.to *before it
+the provider (HTTP 400, `$0.00`). One omitted a required parameter and was refused by stray *before it
 reached the provider at all*. Neither was billed.
 
 **TikTok took two providers to get right, and that is the point.** The first TikTok ad-library endpoint
 tried returned a 405 and was not billed. The second: ScrapeCreators at $0.00188, with a measured 100%
 over 16 calls: returned Semrush's running TikTok ads with video URLs, first and last shown dates and
-estimated audience bands. That is the objection section playing out live: treg.to does not fail over for
+estimated audience bands. That is the objection section playing out live: stray does not fail over for
 you, it shows you the alternatives and their measured records, and you switch.
 
 > **The honest read of this run:** all four libraries returned data, but they do not return the *same*
@@ -205,7 +205,7 @@ signal that someone changed strategy. A quiet week costs nothing.
 Meta's Ad Library API requires identity verification and returns only what you ask for in a fields
 parameter; the other three platforms have no comparable official developer access. So "directly" in
 practice means one verified Meta app plus three manual browser workflows: for research that happens in
-bursts. treg.to is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token,
+bursts. stray is closer to OpenRouter for agent tools than to a data vendor: one base URL, one token,
 many providers behind it.
 
 **How are credentials handled?**: `S-OBJ-CREDENTIALS`
@@ -223,11 +223,11 @@ calls will not touch your balance.)*
 **How much does a call cost?**
 A Meta ad library search is $0.00188 with ScrapeCreators, or $0.005 per ad returned with Apify. Google Ads
 Transparency ranges from $0.0006 to $0.015 depending on provider. The exact price is shown before the
-call, and treg.to adds no markup. New teams start with $1.00 of free credit: enough for several hundred
+call, and stray adds no markup. New teams start with $1.00 of free credit: enough for several hundred
 library searches.
 
 **Is there a Meta Ad Library MCP?**
-This is one. treg.to is a single MCP server carrying the Meta ad library, Google Ads Transparency and
+This is one. stray is a single MCP server carrying the Meta ad library, Google Ads Transparency and
 the TikTok and LinkedIn ad endpoints together: one line to add, one token.
 
 **Is this an ad-spy tool alternative?**
@@ -238,11 +238,11 @@ swipe-file interface those tools sell is your agent's report now.
 
 **Is there a Meta Ad Library API?**
 The Meta Ad Library is a public website, not an API. The catalog has providers (ScrapeCreators,
-DataForSEO, Bright Data) that return structured data from it. Your agent calls a treg.to endpoint
+DataForSEO, Bright Data) that return structured data from it. Your agent calls a stray endpoint
 and gets the ads back as JSON.
 
 **Is there a Facebook Ads Library MCP?**
-Yes. The treg.to MCP server exposes Meta/Facebook ad library search through multiple providers.
+Yes. The stray MCP server exposes Meta/Facebook ad library search through multiple providers.
 One MCP connection gives your agent access to competitor ad research across Meta, Google, TikTok
 and LinkedIn.
 

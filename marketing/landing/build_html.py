@@ -450,12 +450,12 @@ def generate_jsonld(slug, h1, category):
     """Generate JSON-LD for BreadcrumbList and FAQPage."""
     global FAQ_PAIRS
     ld = []
-    # BreadcrumbList - note: breadcrumb uses "treg.to" not bare "stray"
+    # BreadcrumbList - note: the breadcrumb root is the product name, lowercase, as in every title
     ld.append({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "treg.to", "item": "{BASE}/"},
+            {"@type": "ListItem", "position": 1, "name": "stray", "item": "{BASE}/"},
             {"@type": "ListItem", "position": 2, "name": category, "item": "{BASE}/use-cases"},
             {"@type": "ListItem", "position": 3, "name": h1, "item": "{BASE}/use-cases/" + slug},
         ]
@@ -524,7 +524,7 @@ TEMPLATE = """<!doctype html>
 <body data-page="{page_id}">
 
 <div class="navwrap"><nav class="nav">
-  <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
+  <a class="brand" href="/"><span class="glyph">&#9627;</span> stray</a>
   <div class="links">
     <a class="hidem" href="/tutorial">docs</a>
     <a class="hidem" href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">repo</a>
@@ -536,7 +536,7 @@ TEMPLATE = """<!doctype html>
 
 <footer>
   <div class="foot-in">
-    <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
+    <a class="brand" href="/"><span class="glyph">&#9627;</span> stray</a>
     <span class="note">100% open source</span>
     <span class="sp"></span>
     <a href="/resources">resources</a><a href="/tutorial">docs</a><a href="/llms.txt">llms.txt</a>
@@ -704,8 +704,8 @@ HUB = """<!doctype html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Resources: what your agent can do with treg.to</title>
-<meta name="description" content="Worked workflows for treg.to: SEO and search results, lead enrichment, social research, competitor ads and company data. Each one is a prompt you can copy and run."/>
+<title>Resources: what your agent can do with stray</title>
+<meta name="description" content="Worked workflows for stray: SEO and search results, lead enrichment, social research, competitor ads and company data. Each one is a prompt you can copy and run."/>
 <link rel="canonical" href="{BASE}/resources"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -716,7 +716,7 @@ HUB = """<!doctype html>
 <body data-page="hub">
 
 <div class="navwrap"><nav class="nav">
-  <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
+  <a class="brand" href="/"><span class="glyph">&#9627;</span> stray</a>
   <div class="links">
     <a class="hidem" href="/tutorial">docs</a>
     <a class="hidem" href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">repo</a>
@@ -726,7 +726,7 @@ HUB = """<!doctype html>
 
 <header class="hero"><div class="wrap">
   <div class="kicker">{ENDPOINTS} tools &middot; {PROVIDERS} providers &middot; one key</div>
-  <h1>What your agent can do with treg.to</h1>
+  <h1>What your agent can do with stray</h1>
   <div class="lede"><p>Each of these is a job an agent can finish, a prompt you can copy, and what the
   run actually cost when we made it. Pick the one that matches your work.</p></div>
 </div></header>
@@ -751,7 +751,7 @@ HUB = """<!doctype html>
 
 <footer>
   <div class="foot-in">
-    <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
+    <a class="brand" href="/"><span class="glyph">&#9627;</span> stray</a>
     <span class="note">100% open source</span>
     <span class="sp"></span>
     <a href="/resources">resources</a><a href="/tutorial">docs</a><a href="/llms.txt">llms.txt</a>

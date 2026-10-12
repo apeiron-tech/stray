@@ -36,7 +36,7 @@ export default { ...controller, components: { ...controller.components, ...dialo
     <a href="#maincontent" class="skip">Skip to content</a>
     <!-- A public catalog visitor is reading a WEBSITE, not operating an app: the workspace chrome
          (org switcher, global tool search, member nav) is furniture for a job they have not started.
-         They get the marketing site's nav instead, so /catalog reads as part of treg.to rather than
+         They get the marketing site's nav instead, so /catalog reads as part of stray rather than
          as a dashboard someone forgot to lock. -->
     <LandingNavigation v-if="view==='find'" />
     <PublicNavigation v-else-if="publicCatalog" />
