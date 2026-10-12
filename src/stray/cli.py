@@ -3228,7 +3228,7 @@ _PROXY_PKG = "cryptography>=43"
 def _proxy_install_hint() -> tuple[str, list[str]]:
     """How to add the certificate library to **this** copy of stray: `(human label, argv)`.
 
-    `pip install "stray[proxy]"` is the right answer for exactly one of the four ways people
+    `pip install "stray-tools[proxy]"` is the right answer for exactly one of the four ways people
     install stray, and the installer's own way is not it: a uv-tool or Homebrew venv is not on the
     ambient `pip`'s path, so that advice silently does nothing and the user is left with a working
     install and a broken feature.
@@ -3267,13 +3267,13 @@ def ensure_proxy_dependency(assume_yes: bool = False) -> None:
     if not argv:
         sys.exit("stray: the local proxy needs the `cryptography` package, and this environment has no "
                  "installer (no pip, no uv, no pipx) to add it with. Install it however you manage "
-                 "this Python, or reinstall stray with:  pip install \"stray[proxy]\"")
+                 "this Python, or reinstall stray with:  pip install \"stray-tools[proxy]\"")
     printable = " ".join(shlex.quote(a) for a in argv)
     print(f"\n{_A}▛ stray{_R} {_M}— the local proxy needs one more piece: the certificate library that "
           f"generates{_R}", file=sys.stderr)
     print(f"  {_M}this machine's certificate authority. It is not in the base install because it is{_R}",
           file=sys.stderr)
-    print(f"  {_M}compiled, and `pip install stray` is meant to stay light.{_R}\n", file=sys.stderr)
+    print(f"  {_M}compiled, and `pip install stray-tools` is meant to stay light.{_R}\n", file=sys.stderr)
     if not assume_yes and not sys.stdin.isatty():
         sys.exit(f"stray: install it for this {label} install with:\n  {printable}")
     if not assume_yes:
@@ -3949,15 +3949,17 @@ def cmd_skill_bootstrap(args, cfg) -> None:
         dest.mkdir(parents=True, exist_ok=True)
         (dest / "SKILL.md").write_text(recipe)
         print(f"  ✓ stray → {dest / 'SKILL.md'}"); n += 1
-        # the skill used to install as "stray"; a leftover copy would load as a duplicate
-        # skill and confuse agents, so retire it — but only if it's exactly ours (just a SKILL.md).
-        legacy = b / "stray"
-        try:
-            if legacy.is_dir() and [q.name for q in legacy.iterdir()] == ["SKILL.md"]:
-                (legacy / "SKILL.md").unlink(); legacy.rmdir()
-                print(f"    (removed the old stray skill folder — renamed to stray)")
-        except OSError:
-            pass
+        # the skill used to install as "treg", and before that "tools-registry"; a leftover copy would
+        # load as a duplicate skill and confuse agents, so retire it — but only if it's exactly ours
+        # (just a SKILL.md).
+        for old_name in ("treg", "tools-registry"):
+            legacy = b / old_name
+            try:
+                if legacy.is_dir() and [q.name for q in legacy.iterdir()] == ["SKILL.md"]:
+                    (legacy / "SKILL.md").unlink(); legacy.rmdir()
+                    print(f"    (removed the old {old_name} skill folder — renamed to stray)")
+            except OSError:
+                pass
     # The other public skills this registry advertises (make-ugc, lead-signals, …): the same well-known
     # index `npx skills add` reads, so that one list decides what ships. Best-effort: the stray skill is
     # already in place, so a miss here never fails the install.
@@ -4264,7 +4266,7 @@ def cli_version() -> str:
     """The installed stray version (from package metadata; falls back for an editable/source run)."""
     try:
         from importlib.metadata import version
-        return version("stray")
+        return version("stray-tools")
     except Exception:
         return "0.0.1"
 

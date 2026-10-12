@@ -14,8 +14,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **treg is now stray.** The product, the CLI and every surface that carries the name moved
   together, with a new mark: three squares in formation and a fourth that has strayed to the corner
   (`▛`, replacing `▚`).
-  - Python package `treg` is `stray`; the distribution is `stray`; the commands are `stray` and
-    `stray-worker`; `python -m stray` runs the server.
+  - The Python package `treg` is `stray`, and the commands are `stray` and `stray-worker`;
+    `python -m stray` runs the server. The PyPI distribution is `stray-tools` (`stray` on PyPI is an
+    unrelated project), so install it with `pip install stray-tools` / `stray-tools[server]`.
   - Wire names follow: `X-Treg-*` headers are `X-Stray-*`, `TREG_*` environment variables are
     `STRAY_*`, session and tracking cookies are `stray_*`, API keys start `stray_`, and catalog
     tool ids that began `treg.` begin `stray.`.

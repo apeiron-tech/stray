@@ -19,14 +19,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 # Install from PyPI (fast, public, no git clone). The base package is the light CLI; the FastAPI/DB
-# server stack is the `stray[server]` extra, which people who self-host install separately.
+# server stack is the `stray-tools[server]` extra, which people who self-host install separately.
 #
 # `[proxy]` is included here on purpose. It adds only `cryptography`, which is what `stray <command>`
 # needs to generate this machine's certificate authority — and it ships as a prebuilt wheel, so there
 # is no compiler and no meaningful wait. Without it the headline feature (`stray claude`) stops on its
-# first run asking to be installed, which is a bad first minute. `pip install stray` stays
+# first run asking to be installed, which is a bad first minute. `pip install stray-tools` stays
 # light for anyone who wants only the plain CLI.
-SRC="stray[proxy]"
+SRC="stray-tools[proxy]"
 
 # The supported interpreter range — keep in sync with `requires-python` in pyproject.toml.
 # Passed explicitly because uv otherwise resolves against its DEFAULT interpreter (its own managed

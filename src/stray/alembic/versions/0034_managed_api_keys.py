@@ -95,8 +95,8 @@ def upgrade() -> None:
           FROM membership AS m
           JOIN "user" AS u ON u.id = m.user_id
          WHERE u.demo = false
-           AND u.email NOT LIKE '%@agents.stray.local'
-           AND u.email NOT LIKE '%@public-demo.stray.local'
+           AND u.email NOT LIKE '%@agents.treg.local'
+           AND u.email NOT LIKE '%@public-demo.treg.local'
            AND NOT EXISTS (
                SELECT 1 FROM apikey AS k
                 WHERE k.membership_id = m.id AND k.kind = 'default_human'
@@ -108,8 +108,8 @@ def upgrade() -> None:
             (org_id, membership_id, identity_label, kind, name, safe_prefix, key_hash, state,
              created_by, created_at)
         SELECT m.org_id, m.id, u.email,
-               CASE WHEN u.email LIKE '%@agents.stray.local' THEN 'agent' ELSE 'legacy_human' END,
-               CASE WHEN u.email LIKE '%@agents.stray.local' THEN 'Agent key' ELSE 'Legacy key' END,
+               CASE WHEN u.email LIKE '%@agents.treg.local' THEN 'agent' ELSE 'legacy_human' END,
+               CASE WHEN u.email LIKE '%@agents.treg.local' THEN 'Agent key' ELSE 'Legacy key' END,
                NULL, m.token_hash, 'active',
                CASE WHEN m.created_by <> '' THEN m.created_by ELSE u.email END,
                m.created_at

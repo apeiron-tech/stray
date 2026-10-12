@@ -100,7 +100,7 @@ async def _upgrade_schema() -> None:
 
     raise RuntimeError(
         "This database predates Alembic adoption. Install the adoption release - `pip install "
-        "'stray[server]==0.14.*'` - run `python -m stray upgrade` there to adopt and "
+        "'tools-registry[server]==0.14.*'` - run `python -m treg upgrade` there to adopt and "
         "stamp it, then upgrade onward. Nothing was changed."
     )
 

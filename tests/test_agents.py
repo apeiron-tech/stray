@@ -86,3 +86,31 @@ def test_skill_bootstrap_installs_every_advertised_skill(monkeypatch, tmp_path, 
     installed = sorted(p.parent.name for p in (tmp_path / "skills").glob("*/SKILL.md"))
     assert installed == ["lead-signals", "stray"]
     assert not (tmp_path / "evil").exists()
+
+
+def test_skill_bootstrap_retires_the_folders_the_skill_used_to_install_as(monkeypatch, tmp_path):
+    """The skill was `tools-registry`, then `treg`. A leftover copy would load beside `stray` as a
+    duplicate, so a folder holding only our SKILL.md is removed; one with anything else in it is not."""
+    from types import SimpleNamespace
+
+    from stray import cli
+
+    skills = tmp_path / "skills"
+    for old in ("treg", "tools-registry"):
+        (skills / old).mkdir(parents=True)
+        (skills / old / "SKILL.md").write_text("old")
+    (skills / "treg" / "notes.md").write_text("somebody's own file")   # not exactly ours: keep it
+    pages = {"/skill.md": "---\nname: stray\n---\n", "/.well-known/skills/index.json": {"skills": []}}
+
+    def fake_get(url, **_):
+        body = pages.get(url.removeprefix("https://reg.example"), "")
+        return SimpleNamespace(status_code=200 if body else 404, text=body if isinstance(body, str) else "",
+                               json=lambda: body, raise_for_status=lambda: None)
+
+    monkeypatch.setattr(cli.httpx, "get", fake_get)
+    monkeypatch.setattr(ag, "resolve_targets", lambda **_: [skills])
+    monkeypatch.delenv("STRAY_TOKEN", raising=False)
+    cli.cmd_skill_bootstrap(SimpleNamespace(project=False, all_agents=False), {"base_url": "https://reg.example"})
+    assert (skills / "stray" / "SKILL.md").is_file()
+    assert not (skills / "tools-registry").exists()
+    assert (skills / "treg" / "notes.md").exists()

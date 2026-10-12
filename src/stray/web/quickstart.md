@@ -1,4 +1,4 @@
-# stray (stray) - quick start
+# stray - quick start
 
 Share your team's **keys and skills**, without sharing your keys. One vault holds every secret, one
 registry holds every skill. Your Claude Code, your teammates, and your agents call through a token you

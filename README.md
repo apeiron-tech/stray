@@ -345,8 +345,8 @@ uv run python -m stray keygen   # print a fresh Fernet key for STRAY_SECRET_KEY
 ```
 
 > **Installing to run a server (not from source):** the base package is the **CLI only**. To run a
-> registry, install the server extra — `pip install "stray[server]"` — which adds FastAPI, the
-> database drivers, and encryption. `pip install stray` alone gives just the `stray` command for
+> registry, install the server extra — `pip install "stray-tools[server]"` — which adds FastAPI, the
+> database drivers, and encryption. `pip install stray-tools` alone gives just the `stray` command for
 > talking to an existing registry.
 
 The official hosted service is available at `treg.to`. Its production topology and live settings are

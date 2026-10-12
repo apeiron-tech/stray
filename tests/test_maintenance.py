@@ -351,8 +351,8 @@ def test_upgrade_refuses_an_unstamped_pre_adoption_database(tmp_path):
     result = _upgrade(env)
 
     assert result.returncode != 0
-    assert "stray[server]==0.14.*" in result.stderr
-    assert "python -m stray upgrade" in result.stderr
+    assert "tools-registry[server]==0.14.*" in result.stderr
+    assert "python -m treg upgrade" in result.stderr
     assert "Nothing was changed" in result.stderr
     assert _alembic_version(database) is None
 

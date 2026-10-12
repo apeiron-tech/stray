@@ -127,7 +127,7 @@ def build_id() -> str:
         if value:
             return value[:40]
     try:
-        return "v" + _metadata.version("stray")
+        return "v" + _metadata.version("stray-tools")
     except _metadata.PackageNotFoundError:
         return "unknown"
 

@@ -84,7 +84,7 @@ _BUNDLE_NAME = "ca-bundle.pem"
 
 class ProxyDependencyError(RuntimeError):
     """`cryptography` is missing. It is a compiled package, so it stays OUT of the base install —
-    `pip install stray` must remain the light CLI (httpx + questionary). The local proxy asks
+    `pip install stray-tools` must remain the light CLI (httpx + questionary). The local proxy asks
     for it explicitly via the `[proxy]` extra."""
 
 
@@ -99,7 +99,7 @@ def _require_cryptography():
         raise ProxyDependencyError(
             "the local proxy needs the certificate library, which is not part of the light CLI.\n"
             "  Run this from a terminal and stray offers to install it the right way for your install,\n"
-            '  or add it by hand:  pip install "stray[proxy]"'
+            '  or add it by hand:  pip install "stray-tools[proxy]"'
         ) from exc
     return x509, hashes, serialization, ec, NameOID
 

@@ -45,7 +45,7 @@ personal wallet.
 `python -m stray upgrade` runs the explicit release phase. `maintenance._upgrade_schema()` runs
 `alembic upgrade head` for an empty or stamped database. A non-empty unstamped database is refused
 without writes: adoption ended with 0.14.x, so the operator must install
-`stray[server]==0.14.*`, run `python -m stray upgrade` there once, then continue onward. A
+`stray-tools[server]==0.14.*`, run `python -m stray upgrade` there once, then continue onward. A
 database stamped at a revision this build does not know is also refused because explicit upgrade may
 not cross the rollback floor. The ordered, idempotent release-task registry runs only after schema
 success and never provisions a local user.
@@ -293,7 +293,7 @@ older version than `[tool.uv] required-version` accepts; set `UV_VERSION` on the
 version that satisfies it. Upgrading a dependency is a `uv lock --upgrade-package <name>` (or
 `uv lock --upgrade`) commit that CI tests before it can reach a build.
 
-Installing the published wheel (`pip install "stray[server]"`) is a different path: a wheel
+Installing the published wheel (`pip install "stray-tools[server]"`) is a different path: a wheel
 carries no lock, so that operator pins versions in their own requirements file.
 
 The published source archive is built by Hatchling from the checkout. The Hatch target exclusions in

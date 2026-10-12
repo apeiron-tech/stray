@@ -25,7 +25,7 @@ if [ ! -x "$VENV/bin/stray" ]; then
   say "installing stray (server + CLI) into $VENV"
   "$PY" -m venv "$VENV" >/dev/null
   "$VENV/bin/pip" install --quiet --upgrade pip >/dev/null
-  "$VENV/bin/pip" install --quiet "stray[server]" >/dev/null
+  "$VENV/bin/pip" install --quiet "stray-tools[server]" >/dev/null
 else
   say "stray already installed — reusing $VENV"
 fi

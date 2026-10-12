@@ -102,8 +102,8 @@ diff the MR.
 
 1. **`curl … | sh` in the skill.** The package contains no install script, but the skill *tells the
    agent to run one*. ClawHub's LLM review flagged the same line (`SQP-2`, see
-   `docs/CLAUDE-PLUGIN.md`). If a reviewer objects, the fallback is `pip install stray` /
-   `uv tool install stray` — the CLI is on PyPI — and a one-line swap in `MINIMAX_BOOTSTRAP`.
+   `docs/CLAUDE-PLUGIN.md`). If a reviewer objects, the fallback is `pip install stray-tools` /
+   `uv tool install stray-tools` — the CLI is on PyPI — and a one-line swap in `MINIMAX_BOOTSTRAP`.
 2. **Cloud target.** On MiniMax Agent the skill only works if the sandbox has a shell with network
    egress and can open a browser for `stray login` (device-code login is what to point them at if
    not). If cloud fails their verification, resubmit desktop-only — that is a catalog-metadata change,

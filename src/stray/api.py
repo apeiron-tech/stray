@@ -172,7 +172,7 @@ def _stray_version() -> str:
     try:
         from importlib.metadata import version
 
-        return version("stray")
+        return version("stray-tools")
     except Exception:  # noqa: BLE001 — an editable/source run has no installed metadata
         return "dev"
 

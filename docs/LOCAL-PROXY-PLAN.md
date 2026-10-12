@@ -51,7 +51,7 @@ is no second policy engine to write — the reason oneCLI needed 24k lines of Ru
 
 ## Hard constraint: the CLI must stay light
 
-`pip install stray` is the **CLI only** (`httpx` + `questionary`). Certificate generation needs
+`pip install stray-tools` is the **CLI only** (`httpx` + `questionary`). Certificate generation needs
 `cryptography`, which is a compiled dependency and lives in the `[server]` extra today. It must not
 enter the base install.
 
@@ -185,7 +185,7 @@ per-agent proxy tokens (one per session is enough) · request/response inspectio
    for a decade is a long time for something that can impersonate any site.
 3. **Default port — 18791**, next to the dev server's 18790.
 4. **`[proxy]` extra — yes**, `cryptography` alone. Folding it into base was rejected: it is compiled,
-   and `pip install stray` must stay the light CLI.
+   and `pip install stray-tools` must stay the light CLI.
 
 ## Build log
 

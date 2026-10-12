@@ -272,7 +272,7 @@ async def verify_db() -> None:
     if revision is None:
         raise RuntimeError(
             "Database schema is not initialized or was not adopted - run `python -m stray upgrade`. "
-            "For a pre-adoption database, first install `stray[server]==0.14.*` and run "
+            "For a pre-adoption database, first install `tools-registry[server]==0.14.*` and run "
             "the command there."
         )
 

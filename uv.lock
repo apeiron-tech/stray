@@ -1113,7 +1113,7 @@ wheels = [
 ]
 
 [[package]]
-name = "stray"
+name = "stray-tools"
 version = "0.22.0"
 source = { editable = "." }
 dependencies = [
@@ -1150,7 +1150,7 @@ dev = [
     { name = "import-linter" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "stray", extra = ["server"] },
+    { name = "stray-tools", extra = ["server"] },
 ]
 test = [
     { name = "playwright" },
@@ -1186,7 +1186,7 @@ dev = [
     { name = "import-linter", specifier = ">=2.13" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
-    { name = "stray", extras = ["server"] },
+    { name = "stray-tools", extras = ["server"] },
 ]
 test = [{ name = "playwright", specifier = ">=1.62.0" }]
 

@@ -31,7 +31,7 @@ def _need_server() -> None:
     try:
         import sqlalchemy  # noqa: F401
     except ImportError:  # pragma: no cover — a base install has no DB stack
-        print("stray-worker needs the server extra: pip install 'stray[server]'", file=sys.stderr)
+        print("stray-worker needs the server extra: pip install 'stray-tools[server]'", file=sys.stderr)
         raise SystemExit(2)
 
 

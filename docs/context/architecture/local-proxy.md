@@ -207,7 +207,7 @@ that log's last line when the child fails to appear rather than telling the user
 
 ## Packaging
 Certificate generation needs `cryptography`, which is compiled, so it sits in a **`[proxy]` extra** and
-not the base install — `pip install stray` must stay the light CLI (`httpx` + `questionary`).
+not the base install — `pip install stray-tools` must stay the light CLI (`httpx` + `questionary`).
 `_require_cryptography` raises `ProxyDependencyError` with the exact install line. `[server]` already
 includes it, so a self-hoster gets it free.
 

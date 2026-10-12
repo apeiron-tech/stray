@@ -25,7 +25,7 @@ from .infra.upstream.injectors import _token_from_json  # light: pure JSON/token
 
 # The DB/crypto/oauth deps are used at runtime ONLY in `render_grant` (the server-side grant path — the
 # CLI client never calls it). Keeping them out of the module's top-level imports lets the CLI install
-# without the heavy `stray[server]` stack. They are imported lazily inside render_grant; here
+# without the heavy `stray-tools[server]` stack. They are imported lazily inside render_grant; here
 # they're TYPE_CHECKING-only for the annotations (safe under `from __future__ import annotations`).
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -216,7 +216,7 @@ async def render_grant(tool: Tool, profile: dict, db: AsyncSession, http) -> dic
     The CLIENT decides HOW to hand each item to the CLI (an env var, a flag, or a private socket); the
     server only resolves + renders the value. Raises LookupError (a referenced secret is missing) or lets
     an oauth refresh error propagate — the endpoint maps both to the same statuses the /call path uses."""
-    from sqlmodel import select  # lazy: server-only deps (part of the stray[server] extra)
+    from sqlmodel import select  # lazy: server-only deps (part of the stray-tools[server] extra)
     from . import crypto, oauth
     from .models import Secret
     inject = profile.get("inject") or []

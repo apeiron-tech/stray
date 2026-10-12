@@ -32,7 +32,7 @@ def _send(key: str, host: str, config_path: Path, properties: dict) -> None:
         from posthog import Posthog
 
         identifier = _installation_id(config_path)
-        properties = {**properties, "cli_version": version("stray"),
+        properties = {**properties, "cli_version": version("stray-tools"),
                       "os": platform.system(), "$process_person_profile": False}
         # Synchronous SDK mode avoids its unbounded atexit flush. Our daemon gets a
         # short exit budget; slow/offline ingestion may drop the event.

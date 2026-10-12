@@ -3323,7 +3323,7 @@ def _spa_with_og(kind: str, name: str):
         f'<meta name="twitter:card" content="summary"/>'
     )
     # Match WHATEVER title the page carries, not one exact string. It was pinned to
-    # `<title>stray</title>`, the page says `<title>stray</title>`, so the replacement
+    # `<title>tools-registry</title>`, the page said `<title>treg</title>`, so the replacement
     # silently did nothing and every shared link unfurled blank — a rename in the dashboard must
     # not be able to switch this off without a word.
     html, hits = re.subn(r"<title>.*?</title>", lambda _m: meta, _dashboard_document(index),

@@ -141,8 +141,8 @@ files a skill folder is — `SKILL.md` (agent recipe: call the stray proxy, key 
 ## CLI installer
 `GET /install.sh` (`install_sh`) serves `src/stray/web/install.sh`, `{BASE}`-templated like `llms.txt`
 (so it targets whatever host is live — a dev box or the real domain). The script now installs from
-**PyPI** (`SRC="stray"`, the light CLI package; the FastAPI/DB server stack is the separate
-`stray[server]` extra for self-hosters) via `uv tool install --force` → `pipx install --force` →
+**PyPI** (`SRC="stray-tools"`, the light CLI package; the FastAPI/DB server stack is the separate
+`stray-tools[server]` extra for self-hosters) via `uv tool install --force` → `pipx install --force` →
 `pip3 install --user --upgrade`, then runs `stray config --base-url {BASE}`. The uv/pipx paths pin the
 supported interpreter range (`PYREQ`, kept in sync with `requires-python` in `pyproject.toml`): without
 it uv resolves against its *default* interpreter — its own managed Python first — and a machine whose

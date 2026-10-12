@@ -342,13 +342,13 @@ def test_cmd_shell_start_explains_a_missing_certificate_library(monkeypatch):
     from stray import localproxy as lpx
 
     def _boom(renew=False):
-        raise lpx.ProxyDependencyError('install it with: pip install "stray[proxy]"')
+        raise lpx.ProxyDependencyError('install it with: pip install "stray-tools[proxy]"')
 
     monkeypatch.setattr(lpx, "ensure_ca", _boom)
     args = argparse.Namespace(proxy=True, proxy_port=None, renew_ca=False)
     with pytest.raises(SystemExit) as exc:
         cli._start_local_proxy(args, {"base_url": "https://x", "token": "t"}, [])
-    assert "stray[proxy]" in str(exc.value)
+    assert "stray-tools[proxy]" in str(exc.value)
 
 
 def test_a_busy_port_is_a_readable_error(monkeypatch):
@@ -549,7 +549,7 @@ def test_with_runs_the_program_for_real_and_passes_args_and_exit_code(monkeypatc
 
 # ---- the certificate library: offered, not just described ----------------------------------
 def test_the_install_hint_matches_how_stray_was_installed(monkeypatch):
-    """`pip install "stray[proxy]"` is right for exactly ONE of the four ways people install
+    """`pip install "stray-tools[proxy]"` is right for exactly ONE of the four ways people install
     stray — and the installer's own way is not it. A uv-tool or Homebrew venv is not on the ambient
     pip's path, so that advice silently does nothing."""
     monkeypatch.setattr(cli.importlib.util, "find_spec", lambda n: object() if n == "pip" else None)
@@ -566,14 +566,14 @@ def test_a_pip_less_environment_uses_uv_instead(monkeypatch):
     'No module named pip'. Probing beats guessing from the path."""
     monkeypatch.setattr(cli.importlib.util, "find_spec", lambda n: None)
     monkeypatch.setattr(cli.shutil, "which", lambda n: "/usr/bin/uv" if n == "uv" else None)
-    monkeypatch.setattr(cli.sys, "prefix", "/Users/x/.local/share/uv/tools/stray")
+    monkeypatch.setattr(cli.sys, "prefix", "/Users/x/.local/share/uv/tools/stray-tools")
     label, argv = cli._proxy_install_hint()
     assert label == "uv tool"
     assert argv[:2] == ["uv", "pip"] and cli.sys.executable in argv
 
 
 def test_pipx_is_injected_not_pip_installed(monkeypatch):
-    monkeypatch.setattr(cli.sys, "prefix", "/Users/x/.local/pipx/venvs/stray")
+    monkeypatch.setattr(cli.sys, "prefix", "/Users/x/.local/pipx/venvs/stray-tools")
     monkeypatch.setattr(cli.shutil, "which", lambda n: f"/usr/bin/{n}" if n == "pipx" else None)
     label, argv = cli._proxy_install_hint()
     assert label == "pipx" and argv[:2] == ["pipx", "inject"]

@@ -54,14 +54,14 @@ if command -v codex >/dev/null 2>&1; then
 fi
 
 # ---- the binary -------------------------------------------------------------
-# Try each installer that could own it; the package is named stray on
+# Try each installer that could own it; the package is named stray-tools on
 # PyPI but stray in Homebrew. Loop because more than one can be present at once.
 removed_binary=""
-if command -v uv >/dev/null 2>&1 && uv tool list 2>/dev/null | grep -q '^stray '; then
-  uv tool uninstall stray >/dev/null 2>&1 && removed_binary="$removed_binary uv-tool"
+if command -v uv >/dev/null 2>&1 && uv tool list 2>/dev/null | grep -q '^stray-tools '; then
+  uv tool uninstall stray-tools >/dev/null 2>&1 && removed_binary="$removed_binary uv-tool"
 fi
-if command -v pipx >/dev/null 2>&1 && pipx list 2>/dev/null | grep -q 'stray'; then
-  pipx uninstall stray >/dev/null 2>&1 && removed_binary="$removed_binary pipx"
+if command -v pipx >/dev/null 2>&1 && pipx list 2>/dev/null | grep -q 'stray-tools'; then
+  pipx uninstall stray-tools >/dev/null 2>&1 && removed_binary="$removed_binary pipx"
 fi
 if command -v brew >/dev/null 2>&1 && brew list stray >/dev/null 2>&1; then
   brew uninstall stray >/dev/null 2>&1 && removed_binary="$removed_binary brew"
@@ -69,7 +69,7 @@ fi
 if command -v stray >/dev/null 2>&1; then
   # Still resolvable → a plain `pip install` (or stray copy). Ask pip, then fall
   # back to deleting the executable pointed at, which is at worst a dangling shim.
-  pip uninstall -y stray >/dev/null 2>&1 || pip3 uninstall -y stray >/dev/null 2>&1
+  pip uninstall -y stray-tools >/dev/null 2>&1 || pip3 uninstall -y stray-tools >/dev/null 2>&1
   command -v stray >/dev/null 2>&1 && rm -f "$(command -v stray)"
   command -v stray >/dev/null 2>&1 || removed_binary="$removed_binary pip/stray"
 fi
