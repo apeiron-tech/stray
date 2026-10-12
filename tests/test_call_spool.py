@@ -13,10 +13,10 @@ import json
 
 import pytest
 
-from treg.application.call import settle
-from treg.application.call.settle import _spool_response
-from treg.application.call.types import GatewayFailed, UpstreamResponse
-from treg.config import get_settings
+from stray.application.call import settle
+from stray.application.call.settle import _spool_response
+from stray.application.call.types import GatewayFailed, UpstreamResponse
+from stray.config import get_settings
 
 MB = 1024 * 1024
 IMAGE = b"A" * (3 * MB)  # base64 is quote- and escape-free, like a real inlineData payload
@@ -213,7 +213,7 @@ async def test_evidence_keeps_a_success_leaf_without_its_siblings():
 
 
 def test_spool_evidence_paths_come_from_usage_and_the_success_rule():
-    from treg.application.call.resolve import _spool_evidence_paths
+    from stray.application.call.resolve import _spool_evidence_paths
     usage = {"settle": "usage", "usage": {"unit": "usd", "terms": [
         {"path": "usageMetadata.promptTokenCount", "rate": 1}]}}
     assert _spool_evidence_paths({"spooled_response": True}, usage) == ("usageMetadata",)

@@ -7,9 +7,9 @@ from pathlib import Path
 
 from scripts import search_agent_bench as sb
 from tests.test_catalog_find import _fake_v2
-from treg.config import get_settings
-from treg.domain.catalog import store
-from treg.infra import judge as judge_infra
+from stray.config import get_settings
+from stray.domain.catalog import store
+from stray.infra import judge as judge_infra
 
 JOB = "people.email.find"
 

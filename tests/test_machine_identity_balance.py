@@ -1,6 +1,6 @@
 """A machine identity has to be able to read the wallet it is spending.
 
-Reported by Jason: `treg balance` died with "no active org" for an agent token. Two causes stacked —
+Reported by Jason: `stray balance` died with "no active org" for an agent token. Two causes stacked —
 the CLI could not resolve the org id, and the route was admin-only — so fixing one alone leaves the
 symptom. Both are pinned here.
 """
@@ -23,7 +23,7 @@ async def test_a_machine_identity_can_learn_its_own_org(clients: AsyncClient):
     an agent could otherwise mint an org it owns. But it still has to reach /orgs/{id}/… routes, so
     /auth/me tells it the one org its token could ever mean."""
     token, org_id = await _agent_token(clients)
-    h = {"X-Treg-Token": token}
+    h = {"X-Stray-Token": token}
 
     assert (await clients.get("/orgs", headers=h)).status_code == 403      # still refused, on purpose
     me = await clients.get("/auth/me", headers=h)
@@ -32,11 +32,11 @@ async def test_a_machine_identity_can_learn_its_own_org(clients: AsyncClient):
 
 
 async def test_a_machine_identity_reads_the_wallet_but_not_the_purchase_history(clients: AsyncClient):
-    """Every agent is told to run `treg balance` after a call, and a 402 already hands the caller
+    """Every agent is told to run `stray balance` after a call, and a 402 already hands the caller
     `balance_micro` - refusing the same number here while shipping it in an error was incoherent.
     The wallet is everyone's; what was bought, when, and what is left of each block is not."""
     token, org_id = await _agent_token(clients)
-    r = await clients.get(f"/orgs/{org_id}/balance", headers={"X-Treg-Token": token})
+    r = await clients.get(f"/orgs/{org_id}/balance", headers={"X-Stray-Token": token})
     assert r.status_code == 200, r.text
     assert "balance_micro" in r.json()
     assert r.json()["blocks"] == [] and r.json()["entries"]["items"] == []
@@ -48,7 +48,7 @@ async def test_a_missing_org_is_indistinguishable_from_one_you_cannot_see(client
     ids for an attacker."""
     _, org_id = await _agent_token(clients)
     r = await clients.post("/users", json={"email": "stranger2@elsewhere.dev"})
-    other = {"X-Treg-Token": r.json()["token"]}
+    other = {"X-Stray-Token": r.json()["token"]}
     missing = await clients.get("/orgs/999999/balance", headers=other)
     existing = await clients.get(f"/orgs/{org_id}/balance", headers=other)
     assert missing.status_code == existing.status_code == 403
@@ -60,7 +60,7 @@ def test_an_invalid_token_is_named_as_such_not_as_a_missing_org(monkeypatch, cap
     """`_active_org_id` returns None both when the token is bad and when there is genuinely no org.
     21 commands turned that into a bare "no active org", sending the reader to fix org config when
     the real problem was authentication."""
-    from treg import cli
+    from stray import cli
 
     class _Resp:
         status_code = 401
@@ -71,7 +71,7 @@ def test_an_invalid_token_is_named_as_such_not_as_a_missing_org(monkeypatch, cap
 
     with pytest.raises(SystemExit) as exc:
         cli._active_org_id({"base_url": "http://x", "token": "bad"}, _C())
-    assert "invalid/expired" in str(exc.value) and "treg login" in str(exc.value)
+    assert "invalid/expired" in str(exc.value) and "stray login" in str(exc.value)
 
 
 def test_the_public_catalog_still_renders_when_signed_out(monkeypatch):
@@ -79,7 +79,7 @@ def test_the_public_catalog_still_renders_when_signed_out(monkeypatch):
     get the page. The auth exit is a SystemExit, which `except Exception` does NOT catch — a
     try/except at the call site would not have saved this, which is why the caller passes
     strict=False instead."""
-    from treg import cli
+    from stray import cli
 
     class _Resp:
         status_code = 401

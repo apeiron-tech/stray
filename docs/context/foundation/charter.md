@@ -1,8 +1,8 @@
 ---
-title: Tools Registry — charter (what it is, why, the proxy model)
+title: Stray — charter (what it is, why, the proxy model)
 status: foundational
 sources:
-  - external:meetings/2026-06-30-jason-tools-registry.md
+  - external:meetings/2026-06-30-jason-stray.md
   - README.md
 related:
   - architecture/proxy-model.md
@@ -10,7 +10,7 @@ related:
   - interface/api.md
 ---
 
-# Tools Registry — charter
+# Stray — charter
 
 ## What changed (2026-08) — the catalog became the front door
 
@@ -19,7 +19,7 @@ handing the credential around. That shipped, and it still works exactly as writt
 "share what we already have", and the product now leads with a different question: **"get what you
 don't have."**
 
-treg carries a curated catalog of endpoints from many providers (SEO, backlinks, social, enrichment,
+stray carries a curated catalog of endpoints from many providers (SEO, backlinks, social, enrichment,
 ads, scraping) and serves eligible ones **on its own key**, metered per call from a prepaid balance.
 The pitch is *"OpenRouter, but for agent tools instead of models"* and *"ask for the task, not the
 tool"* — because the tools an agent needs sit behind subscriptions nobody buys for one run.
@@ -29,9 +29,9 @@ What this means for anyone reading this fragment:
 | | |
 |---|---|
 | The two halves | **the catalog** (public, metered) and **your own tools** (yours, never metered) |
-| Which wins | your own credential always beats treg's, automatically |
+| Which wins | your own credential always beats stray's, automatically |
 | The words we use | `tool` · `the catalog` · `your own tools`. **Not** "vault", "marketplace", or "registry" for either half — `registry` now means only the server/deployment |
-| Not built | automatic routing or failover **between providers** of one capability. `treg catalog search` compares them; **choosing is the caller's**. What treg *may* do (when a deployment turns it on, [capacity](../ops/capacity.md)): if its **own** account for a provider is out, serve the **same endpoint** through a relay — same request, same response shape, the relay's real price, disclosed via `X-Treg-Served-Via`; a team can opt out. **First-party routed endpoints** (`treg.<capability>`, generated from verified adapters) are the explicit opt-in where the caller asks treg to choose among providers; each always names the child that served and returns its raw body ([catalog](../architecture/catalog.md) § Routing) |
+| Not built | automatic routing or failover **between providers** of one capability. `stray catalog search` compares them; **choosing is the caller's**. What stray *may* do (when a deployment turns it on, [capacity](../ops/capacity.md)): if its **own** account for a provider is out, serve the **same endpoint** through a relay — same request, same response shape, the relay's real price, disclosed via `X-Stray-Served-Via`; a team can opt out. **First-party routed endpoints** (`stray.<capability>`, generated from verified adapters) are the explicit opt-in where the caller asks stray to choose among providers; each always names the child that served and returns its raw body ([catalog](../architecture/catalog.md) § Routing) |
 
 Money and metering: [money](../architecture/money.md). The endpoint data and its pricing rules:
 [catalog](../architecture/catalog.md).
@@ -42,7 +42,7 @@ Money and metering: [money](../architecture/money.md). The endpoint data and its
 >
 > **⚠ Read the next section first.** The product's centre of gravity moved in August 2026. Everything
 > below this line is still true and still shipped — but it is no longer the whole product, and it is
-> not how treg is presented to anyone.
+> not how stray is presented to anyone.
 
 A remote **registry that turns the team's skills into shareable, callable tools.** Any team member's
 **agent** (Claude Code / Codex / Gemini) — or a human via CLI/API — can call a tool **without owning its
@@ -66,7 +66,7 @@ A **skill + its auth**. Auth shapes to support (from the real `superdesign-agi/.
 **OAuth** connect flows — not just API keys. MCP is **optional, later**.
 
 ## Shape (MVP)
-- **API + CLI + one registry skill.** The single `tools-registry` skill is how consumers *call* tools and
+- **API + CLI + one registry skill.** The single `stray` skill is how consumers *call* tools and
   how creators/admins *create / push / list / update / delete* them (full **CRUD**, via both API and CLI).
 - **Onboarding flow:** an agent reads an install doc → installs the CLI → user auths → the agent
   identifies the local skills + env/secrets, **uploads/registers** them → returns an endpoint + a

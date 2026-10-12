@@ -15,14 +15,14 @@ from sqlmodel import select
 
 from conftest import make_upstream
 
-from treg import crypto
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
-from treg.models import Membership, Org, User
+from stray import crypto
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
+from stray.models import Membership, Org, User
 
 
 def _h(t: str) -> dict:
-    return {"X-Treg-Token": t}
+    return {"X-Stray-Token": t}
 
 
 async def _mint(email: str, org_id: int, role: str) -> tuple[str, int]:

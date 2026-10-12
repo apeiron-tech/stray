@@ -7,7 +7,7 @@ link for a comment, points, comment count and the first 500 characters of text.
 
 The host is the maker's own tool, registered once with no key:
 
-    treg tool add hn --base-url https://hn.algolia.com
+    stray tool add hn --base-url https://hn.algolia.com
 
 A caller never needs the tool; the run makes the request as the maker. No provider fee; $0.002 per
 call.

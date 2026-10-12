@@ -3,7 +3,7 @@
 A Claude Code mod that remembers the preferences you state in your prompts, without forking an agent.
 
 After each answered prompt, the mod splits it into sentences (up to 6) and asks
-[Jev](https://treg.to/jev), a decision model reached through treg, one yes/no question per sentence in
+[Jev](https://treg.to/jev), a decision model reached through stray, one yes/no question per sentence in
 a single request: does this sentence state a lasting preference, rule or fact about how you want work
 done in this project, rather than a one-off task? Any sentence scoring 0.8 or higher is saved,
 verbatim (trimmed to 300 characters, no duplicates), to `.claude/jev-memory.md` in the project. A toast
@@ -35,8 +35,8 @@ The step-by-step install, and a prompt to build the same mod from scratch, are i
 
 - Claude Code with mods (2.1.287 or later). The panel draws in the terminal; Claude Code Desktop's
   bundled CLI may be older.
-- The `treg` CLI, signed in (`curl -fsSL https://treg.to/install.sh | sh`, then `treg login`). The mod
-  looks for it at `$HOME/.local/bin/treg`; set the `tregPath` option if `command -v treg` says
+- The `stray` CLI, signed in (`curl -fsSL https://treg.to/install.sh | sh`, then `stray login`). The mod
+  looks for it at `$HOME/.local/bin/stray`; set the `strayPath` option if `command -v stray` says
   otherwise.
 
 ## Try it for one session
@@ -46,18 +46,18 @@ The step-by-step install, and a prompt to build the same mod from scratch, are i
 To install it for good, add this folder's parent as a local marketplace:
 
     claude plugin marketplace add ./examples/claude-code-mods
-    claude plugin install jev-memory@treg-mods
+    claude plugin install jev-memory@stray-mods
 
 ## Options
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `tregPath` | empty (`$HOME/.local/bin/treg`) | Where the `treg` CLI lives |
+| `strayPath` | empty (`$HOME/.local/bin/stray`) | Where the `stray` CLI lives |
 | `takeOverMemory` | `false` | Drop Claude Code's built-in memory instructions so only the mod saves preferences. It applies to every project the mod is installed for |
 | `playSound` | `true` | Play the coin sound when a preference is saved |
 
-Set one with `claude plugin configure jev-memory@treg-mods`, or at install time with
-`--config tregPath=/path/to/treg`.
+Set one with `claude plugin configure jev-memory@stray-mods`, or at install time with
+`--config strayPath=/path/to/stray`.
 
 ## Cost
 
@@ -71,7 +71,7 @@ Listing and forgetting are free.
   turn. A failed call is skipped and counted in red on the panel.
 - Only prompts you type are judged (not notifications, scheduled prompts, peers or other plugins'),
   and only turns that ended with an answer.
-- Each typed prompt (up to 4,000 characters, 6 sentences) leaves your machine: treg sends it to
+- Each typed prompt (up to 4,000 characters, 6 sentences) leaves your machine: stray sends it to
   OpenRouter and Jev's provider. Don't paste secrets into prompts with the mod on.
 - Sentences are sent to Jev as quoted evidence with `& < >` escaped. The 0.8 threshold, counting and
   deduplication are in code, not in the model.

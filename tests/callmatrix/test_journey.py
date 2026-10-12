@@ -9,9 +9,9 @@ import time
 
 from httpx import AsyncClient
 
-from treg import audit
-from treg.config import get_settings
-from treg.domain.money import with_margin
+from stray import audit
+from stray.config import get_settings
+from stray.domain.money import with_margin
 
 from test_marketplace_call import EP, EP_DFS, EP_MICRO
 
@@ -22,7 +22,7 @@ _WEBHOOK_SECRET = "whsec_callmatrix_journey"
 
 
 def _auth(token: str) -> dict[str, str]:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 def _stripe_signature(payload: bytes) -> str:
@@ -47,7 +47,7 @@ async def test_j1_signup_to_topup_and_recovery(
         delivered_codes[address] = code
         return True
 
-    monkeypatch.setattr("treg.email.send_otp", capture_otp)
+    monkeypatch.setattr("stray.email.send_otp", capture_otp)
     start = await matrix_clients.post("/auth/email/start", json={"email": email})
     assert start.status_code == 200, start.text
     code = start.json().get("dev_code") or delivered_codes[email]
@@ -94,14 +94,14 @@ async def test_j1_signup_to_topup_and_recovery(
     assert own_call.status_code == 200 and own_call.json() == {"own": "ok"}
     assert fake_provider.hits[-1].headers["authorization"] == "Bearer JOURNEY-SECRET"
 
-    # A catalog call uses treg's key and settles its reserved estimate.
+    # A catalog call uses stray's key and settles its reserved estimate.
     before_platform = balance.json()["balance_micro"]
     platform_call = await matrix_clients.get(
         f"/call/{EP}?aweme_id=journey", headers=owner_headers,
     )
     assert platform_call.status_code == 200, platform_call.text
     charged = with_margin(EP_MICRO)
-    assert platform_call.headers["X-Treg-Cost-Micro"] == str(charged)
+    assert platform_call.headers["X-Stray-Cost-Micro"] == str(charged)
     assert fake_provider.hits[-1].headers["authorization"].startswith("Bearer PLATFORM-")
     after_platform = await matrix_clients.get(f"/orgs/{org_id}/balance", headers=owner_headers)
     assert after_platform.json()["balance_micro"] == before_platform - charged
@@ -155,7 +155,7 @@ async def test_j1_signup_to_topup_and_recovery(
     assert detail["error"] == "insufficient_balance"
     assert detail["balance_micro"] == 0
     # The margined figure, which is what `ledger.reserve` needs and therefore what the 402 quotes.
-    # `EP_MICRO` passes only while TREG_PLATFORM_MARGIN is 0.
+    # `EP_MICRO` passes only while STRAY_PLATFORM_MARGIN is 0.
     assert detail["estimated_cost_micro"] == charged
     assert detail["topup_url"] == "/app#billing"
 
@@ -171,7 +171,7 @@ async def test_j1_signup_to_topup_and_recovery(
         "status": "succeeded",
         "payment_method": "pm_journey",
         "metadata": {
-            "treg_org_id": str(org_id), "treg_kind": "topup", "treg_auto": "0",
+            "stray_org_id": str(org_id), "stray_kind": "topup", "stray_auto": "0",
         },
     }}}
     payload = json.dumps(event, separators=(",", ":")).encode()
@@ -203,5 +203,5 @@ async def test_j1_signup_to_topup_and_recovery(
     assert recovered_balance.json()["balance_micro"] == 5_000_000 - charged
 
     assert viewer_call.status_code == 403, viewer_call.text
-    assert viewer_call.headers.get("X-Treg-Error") == "1"
+    assert viewer_call.headers.get("X-Stray-Error") == "1"
     assert viewer_reached_provider is False

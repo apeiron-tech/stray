@@ -1,5 +1,5 @@
 """The tool hub, phase 1: the manifest validator, the table, the publish route, and where a hub
-id sits on the call road (behind an own tool and a catalog id, and behind TREG_HUB_ENABLED).
+id sits on the call road (behind an own tool and a catalog id, and behind STRAY_HUB_ENABLED).
 
 Nothing runs yet. A published tool is stored `unchecked`; the call road answers 501 for it when
 the flag is on and 404 (exactly as today) when the flag is off.
@@ -13,14 +13,14 @@ import pytest
 from httpx import AsyncClient
 from conftest import funded_user
 
-from treg.config import get_settings
-from treg.domain.hub import ManifestError, price_label, validate, validate_check
-from treg.domain.catalog import store as catalog_store
+from stray.config import get_settings
+from stray.domain.hub import ManifestError, price_label, validate, validate_check
+from stray.domain.catalog import store as catalog_store
 from tests.test_marketplace_call import platform_on  # noqa: F401 — tier 4 on, so catalog steps resolve
 
 EP = "tikhub.tiktok.video.comments"      # a real catalog id
 
-from treg.application.call import service as call_service
+from stray.application.call import service as call_service
 
 
 def _fake_relay(status: int, body: bytes):
@@ -217,7 +217,7 @@ def test_check_file_is_validated_against_the_manifest():
 def hub_on(monkeypatch):
     """Through the ENVIRONMENT, like platform_on: that fixture clears the settings cache, and a
     value patched onto the old settings object would vanish with it."""
-    monkeypatch.setenv("TREG_HUB_ENABLED", "1")
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "1")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -238,12 +238,12 @@ async def test_hub_routes_do_not_exist_with_the_flag_off(clients: AsyncClient):
 async def test_meta_says_whether_the_hub_routes_exist(clients: AsyncClient, monkeypatch):
     """The dashboard reads this to skip hub requests that could only answer 404."""
     assert (await clients.get("/meta")).json()["hub"] is False
-    monkeypatch.setenv("TREG_HUB_ENABLED", "1")
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "1")
     get_settings.cache_clear()
     try:
         assert (await clients.get("/meta")).json()["hub"] is True
     finally:
-        monkeypatch.delenv("TREG_HUB_ENABLED")
+        monkeypatch.delenv("STRAY_HUB_ENABLED")
         get_settings.cache_clear()
 
 
@@ -292,8 +292,8 @@ async def test_script_road_needs_the_script_body(clients: AsyncClient, hub_on):
 
 async def test_viewer_cannot_publish(clients: AsyncClient, hub_on, monkeypatch):
     from sqlalchemy import select, update
-    from treg.infra.db import session_maker
-    from treg.models import Membership
+    from stray.infra.db import session_maker
+    from stray.models import Membership
     async with session_maker() as s:
         await s.execute(update(Membership).values(role="viewer"))
         await s.commit()
@@ -310,8 +310,8 @@ async def _publish_live(clients: AsyncClient, name="leads-db") -> str:
         "manifest": _steps_manifest(name=name), "check": CHECK, "readme": "x"})
     tool_id = r.json()["tool_id"]
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     async with session_maker() as s:                # the check run is phase 4; flip by hand here
         await s.execute(update(HubTool).where(HubTool.tool_id == tool_id).values(status="live"))
         await s.commit()
@@ -324,15 +324,15 @@ async def test_a_script_tool_runs_in_the_sandbox(clients: AsyncClient, hub_on):
         "manifest": _script_manifest(), "script": "export default async function run(ctx) { return {rows: [ctx.inputs.search], count: ctx.inputs.limit}; }",
         "check": {"inputs": {}, "fields": ["rows"]}, "readme": "x"})).json()["tool_id"]
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     async with session_maker() as s:
         await s.execute(update(HubTool).where(HubTool.tool_id == tool_id).values(status="live"))
         await s.commit()
     r = await clients.post(f"/call/{tool_id}", json={"search": "figma", "limit": 500})   # limit clamps to max 100
     assert r.status_code == 200, r.text
     assert r.json()["output"] == {"rows": ["figma"], "count": 100}
-    assert r.headers["X-Treg-Steps"] == "0" and r.headers["X-Treg-Cost-Micro"] == "0"
+    assert r.headers["X-Stray-Steps"] == "0" and r.headers["X-Stray-Cost-Micro"] == "0"
 
 
 async def test_a_steps_tool_refuses_a_missing_required_input_by_name(clients: AsyncClient, hub_on):
@@ -340,7 +340,7 @@ async def test_a_steps_tool_refuses_a_missing_required_input_by_name(clients: As
     r = await clients.post(f"/call/{tool_id}", json={})          # `domain` has no default
     assert r.status_code == 422, r.text
     assert r.json()["detail"] == {"error": "hub_input_invalid", "field": "domain", "rule": "required (it has no default)"}
-    assert r.headers.get("x-treg-error") == "1"
+    assert r.headers.get("x-stray-error") == "1"
 
 
 async def test_unchecked_version_is_not_on_the_call_road(clients: AsyncClient, hub_on):
@@ -352,7 +352,7 @@ async def test_unchecked_version_is_not_on_the_call_road(clients: AsyncClient, h
 
 async def test_flag_off_the_call_road_is_exactly_as_today(clients: AsyncClient, hub_on, monkeypatch):
     tool_id = await _publish_live(clients)
-    monkeypatch.setenv("TREG_HUB_ENABLED", "0")
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "0")
     get_settings.cache_clear()
     assert (await clients.get(f"/call/{tool_id}")).status_code == 404
 
@@ -367,8 +367,8 @@ async def test_an_own_tool_named_like_a_hub_id_wins(clients: AsyncClient, hub_on
 
 async def test_a_catalog_id_is_never_a_hub_tool(clients: AsyncClient, hub_on):
     # Even if a row carried a catalog id, the catalog branch runs first and the hub is never asked.
-    from treg.application import hub as hub_app
-    from treg.infra.db import session_maker
+    from stray.application import hub as hub_app
+    from stray.infra.db import session_maker
     assert hub_app.is_hub_id_shape(EP)
     async with session_maker() as s:
         assert await hub_app.tool_for(s, EP) is None
@@ -380,8 +380,8 @@ async def test_a_catalog_id_is_never_a_hub_tool(clients: AsyncClient, hub_on):
 # ---------------------------------------------------------------------------------------------
 # The reference language and the graph (phase 2), pure
 
-from treg.domain.hub import graph as hub_graph
-from treg.domain.hub import refs
+from stray.domain.hub import graph as hub_graph
+from stray.domain.hub import refs
 
 
 def test_refs_parse_every_form_and_nothing_else():
@@ -533,8 +533,8 @@ async def test_an_old_version_stops_serving_thirty_days_after_a_newer_one(client
     await clients.put(f"/hub/tools/{tool_id}", json={"manifest": m, "check": CHECK, "readme": "v2"})
     from datetime import timedelta
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     from sqlalchemy import select as _select
     async with session_maker() as s:                 # v2 landed 31 days ago
         v2 = (await s.execute(_select(HubTool).where(HubTool.tool_id == tool_id, HubTool.version == 2))).scalars().one()
@@ -560,7 +560,7 @@ async def test_a_dry_run_from_a_folder_runs_but_stores_nothing(clients: AsyncCli
 
 async def test_the_fifth_concurrent_run_is_refused_with_a_retry_time(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     import asyncio
-    from treg.application.hub import limits
+    from stray.application.hub import limits
     tool_id = await _publish_live(clients)
     gate = asyncio.Event()
 
@@ -600,7 +600,7 @@ async def test_catalog_get_answers_for_a_hub_id_and_hides_what_the_maker_hides(c
     # cost.usd is what a run has cost (the check: $0.001 of steps + the $0.02 price), never the price alone
     assert e["cost"]["usd"] == 0.021 and e["price_line"].startswith("seller $0.02") and e["price_samples"] >= 1
     assert e["inputs"]["domain"]["example"] == "figma.com" and e["output"] == {"leads": "$people.data"}
-    assert e["call_template"]["cli"].startswith(f"treg call {tool_id} --data")
+    assert e["call_template"]["cli"].startswith(f"stray call {tool_id} --data")
     assert e["page"].endswith(f"/hub/{tool_id}") and e["readme"] == "About it."
     text = r.text
     # the maker's own server is disclosed by host (a caller's inputs reach it); the tool names are not
@@ -617,7 +617,7 @@ async def test_catalog_get_answers_for_a_hub_id_and_hides_what_the_maker_hides(c
 
 async def test_catalog_get_on_a_hub_id_with_the_flag_off_is_a_plain_404(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     tool_id = await _publish_live(clients)
-    monkeypatch.setenv("TREG_HUB_ENABLED", "0")
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "0")
     get_settings.cache_clear()
     r = await clients.get(f"/catalog/endpoints/{tool_id}")
     assert r.status_code == 404 and "hub" not in r.text
@@ -625,13 +625,13 @@ async def test_catalog_get_on_a_hub_id_with_the_flag_off_is_a_plain_404(clients:
 
 async def test_the_agent_files_mention_the_hub_only_when_it_is_on(clients: AsyncClient, monkeypatch):
     for on in ("1", "0"):
-        monkeypatch.setenv("TREG_HUB_ENABLED", on)
+        monkeypatch.setenv("STRAY_HUB_ENABLED", on)
         get_settings.cache_clear()
         llms = (await clients.get("/llms.txt")).text
         skill = (await clients.get("/skill.md")).text
         for body in (llms, skill):
             assert "<!--hub-->" not in body and "<!--/hub-->" not in body     # markers never leak
-            assert ("treg hub init" in body) is (on == "1")
+            assert ("stray hub init" in body) is (on == "1")
             assert ("hub_create" in body) is (on == "1")
         if on == "1":
             assert "never paste a credential" in llms.lower() or "never paste a credential" in skill.lower()
@@ -661,7 +661,7 @@ async def test_the_public_page_shows_the_contract_and_hides_the_makers_side(clie
     assert r.status_code == 200, r.text
     html = r.text
     assert "leads-db" in html and "seller $0.01 + provider fees" in html and "$10.00 per 1,000 runs" in html
-    assert f"treg call {tool_id} --data" in html and f"/call/{tool_id}" in html
+    assert f"stray call {tool_id} --data" in html and f"/call/{tool_id}" in html
     assert "<b>returns</b>" in html and "<code>code</code>" in html and "<li>one</li>" in html   # the readme, rendered
     assert "<script>alert(1)</script>" not in html and "&lt;script&gt;" in html                  # and escaped
     assert '<meta name="robots" content="noindex"/>' in html
@@ -690,7 +690,7 @@ async def test_the_public_page_is_404_when_off_failed_or_unknown(clients: AsyncC
     m = _steps_manifest(name="broken", steps=[{"name": "people", "call": EP, "input": {"aweme_id": "x"}}], output={"leads": "$people.data"})
     broken = (await clients.post("/hub/tools", json={"manifest": m, "check": CHECK, "readme": "x"})).json()["tool_id"]
     assert (await clients.get(f"/hub/{broken}")).status_code == 404
-    monkeypatch.setenv("TREG_HUB_ENABLED", "0"); get_settings.cache_clear()
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "0"); get_settings.cache_clear()
     assert (await clients.get(f"/hub/{tool_id}")).status_code == 404
 
 
@@ -734,7 +734,7 @@ async def test_price_edit_applies_to_later_runs_without_a_version_bump(clients: 
     assert bad.status_code == 422 and bad.json()["detail"]["field"] == "price_usd"
     # a stranger pays the new price
     token = (await funded_user(clients, "buyer@example.com"))["token"]
-    run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers={"X-Treg-Token": token})
+    run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers={"X-Stray-Token": token})
     assert run.status_code == 200 and run.json()["usage"]["price_micro"] == 50_000
 
 
@@ -757,10 +757,10 @@ async def test_health_is_failing_after_three_failed_runs_and_clears_on_a_pass(cl
 
 
 async def test_the_scheduled_check_runs_as_the_maker_and_records_its_verdict(clients: AsyncClient, hub_on, platform_on, monkeypatch):
-    from treg.application.hub.health import CHECK_EMAIL, check_as_maker
-    from treg.api import app
-    from treg.infra.db import session_maker
-    from treg.models import HubRun, HubTool
+    from stray.application.hub.health import CHECK_EMAIL, check_as_maker
+    from stray.api import app
+    from stray.infra.db import session_maker
+    from stray.models import HubRun, HubTool
     from sqlalchemy import select
     pub = await _live_tool_with_readme(clients, monkeypatch)
     tool_id = pub["tool_id"]
@@ -789,12 +789,12 @@ async def test_the_scheduled_check_runs_as_the_maker_and_records_its_verdict(cli
 
 async def test_the_worker_hub_check_walks_every_live_tool(clients: AsyncClient, hub_on, platform_on, monkeypatch, capsys):
     import argparse
-    from treg import worker
-    from treg.config import get_settings
+    from stray import worker
+    from stray.config import get_settings
     pub = await _live_tool_with_readme(clients, monkeypatch)
     # _hub_check runs the worker's startup guard verify_db(), which refuses a non-SQLite database
-    # with no TREG_SECRET_KEY. A real worker always has the key; give it one here.
-    monkeypatch.setenv("TREG_SECRET_KEY", "HCmUPIPieol_HNAh92Q6qgmJp85kHPMms_QUwRJMNMc=")
+    # with no STRAY_SECRET_KEY. A real worker always has the key; give it one here.
+    monkeypatch.setenv("STRAY_SECRET_KEY", "HCmUPIPieol_HNAh92Q6qgmJp85kHPMms_QUwRJMNMc=")
     get_settings.cache_clear()
     # `--only` this tool: the check walks EVERY live tool in the database, and on a shared
     # database (Postgres, serial) earlier test files leave their own live tools behind, so the
@@ -813,7 +813,7 @@ async def test_a_run_is_readable_by_its_caller_and_its_maker_with_different_view
     pub = await _live_tool_with_readme(clients, monkeypatch, price=0.01)
     tool_id = pub["tool_id"]
     token = (await funded_user(clients, "reader@example.com"))["token"]
-    h = {"X-Treg-Token": token}
+    h = {"X-Stray-Token": token}
     run = await clients.post(f"/call/{tool_id}", json={"domain": "figma.com"}, headers=h)
     run_id = run.json()["run_id"]
     # the caller: output, what they paid, the trace; never the script's log
@@ -826,7 +826,7 @@ async def test_a_run_is_readable_by_its_caller_and_its_maker_with_different_view
     assert theirs["you_are"] == "maker" and "output" not in theirs and "caller_email" not in theirs and "log" in theirs
     # a third team: 404
     other = (await funded_user(clients, "third@example.com"))["token"]
-    assert (await clients.get(f"/hub/runs/{run_id}", headers={"X-Treg-Token": other})).status_code == 404
+    assert (await clients.get(f"/hub/runs/{run_id}", headers={"X-Stray-Token": other})).status_code == 404
     # a failed run: the caller's error carries the step and status, not the upstream body; the maker gets it whole
     monkeypatch.setattr(call_service, "relay", _fake_relay(500, b'{"vendor": "secret error body"}'))
     bad = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=h)
@@ -844,7 +844,7 @@ async def test_the_makers_list_carries_health_and_thirty_day_numbers(clients: As
     pub = await _live_tool_with_readme(clients, monkeypatch, price=0.02)
     token = (await funded_user(clients, "buyer2@example.com"))["token"]
     for _ in range(2):
-        assert (await clients.post(f"/call/{pub['tool_id']}", json={"domain": "x"}, headers={"X-Treg-Token": token})).status_code == 200
+        assert (await clients.post(f"/call/{pub['tool_id']}", json={"domain": "x"}, headers={"X-Stray-Token": token})).status_code == 200
     mine = (await clients.get("/hub/tools/mine")).json()
     assert mine[0]["health"] == "ok" and mine[0]["runs_30d"] == 2 and mine[0]["earned_30d_micro"] == 40_000
 
@@ -892,7 +892,7 @@ async def _publish_script_priced(clients, monkeypatch, max_price_usd, script, *,
 async def test_a_script_charges_per_result(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, PER_ITEM, n=5)
     token = (await funded_user(clients, "b1@example.com"))["token"]
-    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Treg-Token": token})
+    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Stray-Token": token})
     assert run.status_code == 200, run.text
     assert run.json()["usage"]["price_micro"] == 10_000        # 5 rows x $0.002
     assert run.json()["usage"]["cost_micro"] == 11_000         # + one $0.001 step
@@ -901,7 +901,7 @@ async def test_a_script_charges_per_result(clients: AsyncClient, hub_on, platfor
 async def test_a_script_charges_a_margin_on_the_call_cost(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, MARGIN, n=3)
     token = (await funded_user(clients, "b4@example.com"))["token"]
-    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Treg-Token": token})
+    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Stray-Token": token})
     assert run.json()["usage"]["steps_micro"] == 1_000
     assert run.json()["usage"]["price_micro"] == 500          # 50% of $0.001
 
@@ -909,7 +909,7 @@ async def test_a_script_charges_a_margin_on_the_call_cost(clients: AsyncClient, 
 async def test_a_recipe_charges_its_fixed_price(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     tool_id = await _publish_priced(clients, monkeypatch, 0.02, n=5)
     token = (await funded_user(clients, "b2@example.com"))["token"]
-    run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers={"X-Treg-Token": token})
+    run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers={"X-Stray-Token": token})
     assert run.json()["usage"]["price_micro"] == 20_000 and run.json()["usage"]["cost_micro"] == 21_000
 
 
@@ -917,7 +917,7 @@ async def test_a_charged_run_moves_money_on_both_teams(clients: AsyncClient, hub
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, PER_ITEM, n=5)
     seller_org = (await clients.get("/orgs")).json()[0]["org_id"]
     seller_before = (await clients.get(f"/orgs/{seller_org}/balance")).json()["balance_micro"]
-    hdr = {"X-Treg-Token": (await funded_user(clients, "b5@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "b5@example.com"))["token"]}
     buyer_org = (await clients.get("/orgs", headers=hdr)).json()[0]["org_id"]
     buyer_before = (await clients.get(f"/orgs/{buyer_org}/balance", headers=hdr)).json()["balance_micro"]
     await clients.post(f"/call/{tool_id}", json={}, headers=hdr)
@@ -931,7 +931,7 @@ async def test_a_failed_charged_run_pays_the_seller_nothing(clients: AsyncClient
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, PER_ITEM, n=5)
     seller_org = (await clients.get("/orgs")).json()[0]["org_id"]
     seller_before = (await clients.get(f"/orgs/{seller_org}/balance")).json()["balance_micro"]
-    hdr = {"X-Treg-Token": (await funded_user(clients, "b6@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "b6@example.com"))["token"]}
     buyer_org = (await clients.get("/orgs", headers=hdr)).json()[0]["org_id"]
     buyer_before = (await clients.get(f"/orgs/{buyer_org}/balance", headers=hdr)).json()["balance_micro"]
     monkeypatch.setattr(call_service, "relay", _fake_relay(500, b'{"error": "down"}'))   # the step now fails
@@ -959,7 +959,7 @@ async def test_the_mine_list_carries_the_price_label(clients: AsyncClient, hub_o
 async def test_every_price_surface_leads_with_the_observed_range(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     """2026-09-18: the headline price is what a run actually cost (steps + seller part) over recent
     successful runs, one number or a low–high range. Before any run, the declared price or cap."""
-    from treg.domain.hub import range_label, seller_part_micro
+    from stray.domain.hub import range_label, seller_part_micro
     sc = {"uses": ["crustdata.companies.enrich"], "pricing": {"mode": "charge", "max_price_usd": 0.25}}
     assert range_label(sc, None, None) == "up to $0.25/run + provider fees"
     assert range_label({"uses": ["a.b"], "pricing": {"mode": "per_call", "price_usd": 0.01}}, None, None) == "$0.01/run + provider fees"
@@ -986,7 +986,7 @@ async def test_every_price_surface_leads_with_the_observed_range(clients: AsyncC
 async def test_earnings_report_carries_the_average_price(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     """9.4: avg_price_micro = earned / successful runs, per day and overall, and in the CSV."""
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, PER_ITEM, n=5)
-    hdr = {"X-Treg-Token": (await funded_user(clients, "b7@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "b7@example.com"))["token"]}
     for _ in range(2):                                             # two sales at 5 rows x $0.002
         assert (await clients.post(f"/call/{tool_id}", json={}, headers=hdr)).status_code == 200
     d = (await clients.get(f"/hub/tools/{tool_id}/earnings")).json()
@@ -1005,10 +1005,10 @@ ADMIN = "hub-admin-token"
 
 
 async def _decide(clients, monkeypatch, tool_id, decision, reason=""):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
     get_settings.cache_clear()
     return await clients.post(f"/admin/hub/listings/{tool_id}", json={"decision": decision, "reason": reason},
-                              headers={"X-Treg-Token": ADMIN})
+                              headers={"X-Stray-Token": ADMIN})
 
 
 async def test_listed_is_a_request_and_the_switches_flip_without_a_version_bump(clients: AsyncClient, hub_on, platform_on, monkeypatch):
@@ -1026,8 +1026,8 @@ async def test_listed_is_a_request_and_the_switches_flip_without_a_version_bump(
     assert (await clients.patch(f"/hub/tools/{tool_id}", json={})).status_code == 422
     token = (await funded_user(clients, "stranger@example.com"))["token"]
     assert (await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True},
-                                headers={"X-Treg-Token": token})).status_code == 404
-    assert "listing" not in (await clients.get(f"/hub/tools/{tool_id}", headers={"X-Treg-Token": token})).json()
+                                headers={"X-Stray-Token": token})).status_code == 404
+    assert "listing" not in (await clients.get(f"/hub/tools/{tool_id}", headers={"X-Stray-Token": token})).json()
 
 
 Q_OWN_WORDS = "decision makers verified emails"     # the test tool's own summary words
@@ -1049,7 +1049,7 @@ async def test_only_an_approved_tool_is_in_search(clients: AsyncClient, hub_on, 
     row = [r for r in body["results"] if r["id"] == tool_id][0]
     assert row["kind"] == "hub" and row["provider"] and row["price_line"].startswith("seller ")
     assert row["cost"]["usd"] == 0.011 and row["price_range"] == "$0.011/run (from the maker's own tests)" and "score" in row and "script" not in row and "uses" not in row
-    assert body["hints"][0] == f"treg catalog get {tool_id}   # params, cost and an example response" or tool_id in json.dumps(body["hints"])
+    assert body["hints"][0] == f"stray catalog get {tool_id}   # params, cost and an example response" or tool_id in json.dumps(body["hints"])
     assert (await clients.delete(f"/hub/tools/{tool_id}")).status_code == 200      # retired never appears
     assert tool_id not in await _search_ids(clients)
 
@@ -1062,13 +1062,13 @@ async def test_a_rejection_carries_a_reason_and_listing_again_asks_again(clients
     assert (await _decide(clients, monkeypatch, tool_id, "reject", "the summary does not say what it returns")).status_code == 200
     mine = [t for t in (await clients.get("/hub/tools/mine")).json() if t["tool_id"] == tool_id][0]
     assert mine["listing"]["state"] == "rejected" and mine["listing"]["reason"].startswith("the summary")
-    queue = (await clients.get("/admin/hub/listings", params={"state": "rejected"}, headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/listings", params={"state": "rejected"}, headers={"X-Stray-Token": ADMIN})).json()
     assert [q["tool_id"] for q in queue] == [tool_id] and queue[0]["price_label"] == "$0.01 a run"
     r = await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True})
     # asking again keeps the last reason, so the maker can still read what to fix
     assert r.json()["listing"] == {**r.json()["listing"], "state": "requested",
                                    "reason": "the summary does not say what it returns", "decided_at": None}
-    queue = (await clients.get("/admin/hub/listings", headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/listings", headers={"X-Stray-Token": ADMIN})).json()
     assert [q["tool_id"] for q in queue] == [tool_id]
     # unlisting withdraws it: nothing left to decide
     await clients.patch(f"/hub/tools/{tool_id}", json={"listed": False})
@@ -1082,31 +1082,31 @@ async def _v2(clients, tool_id, summary="Decision makers of a company, with veri
 
 
 async def _decide_update(clients, monkeypatch, tool_id, decision, reason=""):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
     get_settings.cache_clear()
     return await clients.post(f"/admin/hub/updates/{tool_id}", json={"decision": decision, "reason": reason},
-                              headers={"X-Treg-Token": ADMIN})
+                              headers={"X-Stray-Token": ADMIN})
 
 
 async def test_a_new_version_of_a_listed_tool_waits_for_review(clients: AsyncClient, hub_on, platform_on, monkeypatch):
-    """Round 4 (Jason): every update to a listed tool goes through treg. v2 passes its check and
+    """Round 4 (Jason): every update to a listed tool goes through stray. v2 passes its check and
     waits; v1 keeps serving callers and search; only the maker can try v2 by @2."""
     pub = await _live_tool_with_readme(clients, monkeypatch, price=0.01)
     tool_id = pub["tool_id"]
     await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True})
     await _decide(clients, monkeypatch, tool_id, "approve")
     r = await _v2(clients, tool_id)
-    assert r.status_code == 200 and r.json()["status"] == "review" and "waits for treg" in r.json()["message"]
+    assert r.status_code == 200 and r.json()["status"] == "review" and "waits for stray" in r.json()["message"]
     assert (await clients.get(f"/catalog/endpoints/{tool_id}")).json()["endpoint"]["version"] == 1
     assert tool_id in await _search_ids(clients)                                          # still listed, as v1
-    stranger = {"X-Treg-Token": (await funded_user(clients, "v2-stranger@example.com"))["token"]}
+    stranger = {"X-Stray-Token": (await funded_user(clients, "v2-stranger@example.com"))["token"]}
     run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=stranger)
     assert run.status_code == 200 and run.json()["recipe"] == f"{tool_id}@1"
     assert (await clients.post(f"/call/{tool_id}@2", json={"domain": "x"}, headers=stranger)).status_code == 404
     assert (await clients.post(f"/call/{tool_id}@2", json={"domain": "x"})).status_code == 200   # the maker
     assert (await clients.get(f"/catalog/endpoints/{tool_id}@2")).status_code == 404            # not public
     assert (await clients.get(f"/hub/{tool_id}@2")).status_code == 404
-    queue = (await clients.get("/admin/hub/updates", headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/updates", headers={"X-Stray-Token": ADMIN})).json()
     assert queue[0]["tool_id"] == tool_id and queue[0]["now"]["version"] == 1 and queue[0]["new"]["version"] == 2
     assert queue[0]["new"]["summary"].endswith("now faster.")
     r = await _decide_update(clients, monkeypatch, tool_id, "approve")
@@ -1144,10 +1144,10 @@ async def test_a_price_change_on_a_listed_tool_waits_for_review(clients: AsyncCl
     r = await clients.patch(f"/hub/tools/{tool_id}", json={"price_usd": 0.5})
     assert r.json()["price_label"] == "$0.01 a run" and r.json()["pending_price_usd"] == 0.5
     assert (await clients.patch(f"/hub/tools/{tool_id}", json={"price_usd": 500})).status_code == 422   # checked now
-    stranger = {"X-Treg-Token": (await funded_user(clients, "price-stranger@example.com"))["token"]}
+    stranger = {"X-Stray-Token": (await funded_user(clients, "price-stranger@example.com"))["token"]}
     run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=stranger)
     assert run.json()["usage"]["price_micro"] == 10_000                                   # the approved price
-    queue = (await clients.get("/admin/hub/updates", headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/updates", headers={"X-Stray-Token": ADMIN})).json()
     assert queue[0]["new_price_usd"] == 0.5 and queue[0]["new"] is None
     await _decide_update(clients, monkeypatch, tool_id, "approve")
     run = await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=stranger)
@@ -1170,7 +1170,7 @@ async def test_unlisting_an_approved_tool_keeps_it_under_review(clients: AsyncCl
     assert r.json()["pending_price_usd"] == 0.5
     got = (await clients.get(f"/catalog/endpoints/{tool_id}")).json()["endpoint"]
     assert got["version"] == 1 and got["price_line"].startswith("seller $0.01 a run")
-    queue = (await clients.get("/admin/hub/updates", headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/updates", headers={"X-Stray-Token": ADMIN})).json()
     assert [u["tool_id"] for u in queue] == [tool_id]
     r = await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True})
     assert r.json()["listing"]["state"] == "approved" and tool_id in await _search_ids(clients)
@@ -1217,7 +1217,7 @@ async def test_the_public_page_shows_recent_runs_and_never_the_caller_inputs_or_
     tool_id = pub["tool_id"]
     # a stranger calls twice; the relay now answers with a marker that must never reach the page
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"data": {"domain": "OUTPUT-MARKER-77"}}'))
-    hdr = {"X-Treg-Token": (await funded_user(clients, "stranger-log@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "stranger-log@example.com"))["token"]}
     for _ in range(2):
         assert (await clients.post(f"/call/{tool_id}", json={"domain": "INPUT-MARKER-55"}, headers=hdr)).status_code == 200
     page = (await clients.get(f"/hub/{tool_id}")).text
@@ -1254,7 +1254,7 @@ def test_the_dashboard_carries_the_listing_tab():
 # The run ceiling a tool declares, and the cost a script can see (built with lead-pipeline)
 
 def test_the_run_ceiling_comes_from_the_caller_then_the_tool_then_one_dollar():
-    from treg.application.hub.runner import _ceiling
+    from stray.application.hub.runner import _ceiling
     assert _ceiling(None) == 1_000_000                      # nothing declared: $1.00
     assert _ceiling(None, 3.0) == 3_000_000                 # the tool's own limits.cost_usd
     assert _ceiling("0.5", 3.0) == 500_000                  # the caller's header always wins
@@ -1262,38 +1262,38 @@ def test_the_run_ceiling_comes_from_the_caller_then_the_tool_then_one_dollar():
 
 async def test_a_script_sees_what_each_call_cost(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     """A script keeps its own budget from `cost_usd` on each ctx.call result, because a run that
-    passes its ceiling is stopped by treg and returns nothing. The x-treg-* headers stay hidden."""
+    passes its ceiling is stopped by stray and returns nothing. The x-stray-* headers stay hidden."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"data": [1]}'))
     m = _script_manifest(uses=[EP], output={"fields": ["rows", "count"]})
     script = ("export default async function run(ctx) {"
               f"  const r = await ctx.call({EP!r}, {{ query: {{ aweme_id: 'x' }} }});"
-              "  return { rows: [r.cost_usd, Object.keys(r.headers).filter(k => k.startsWith('x-treg-')).length], count: 1 };"
+              "  return { rows: [r.cost_usd, Object.keys(r.headers).filter(k => k.startsWith('x-stray-')).length], count: 1 };"
               "}")
     r = await clients.post("/hub/tools", json={"manifest": m, "script": script, "readme": "x",
                                                "check": {"inputs": {}, "fields": ["rows"]}})
     assert r.status_code == 201, r.text
     token = (await funded_user(clients, "cost-seen@example.com"))["token"]
-    run = await clients.post(f"/call/{r.json()['tool_id']}", json={}, headers={"X-Treg-Token": token})
+    run = await clients.post(f"/call/{r.json()['tool_id']}", json={}, headers={"X-Stray-Token": token})
     assert run.status_code == 200, run.text
-    assert run.json()["output"]["rows"] == [0.001, 0]        # the step's $0.001, and no x-treg header
+    assert run.json()["output"]["rows"] == [0.001, 0]        # the step's $0.001, and no x-stray header
 
 
 # ---------------------------------------------------------------------------------------------
-# TREG_HUB_TEAMS: the middle stage between off and open (owner, 2026-09-24)
+# STRAY_HUB_TEAMS: the middle stage between off and open (owner, 2026-09-24)
 
 def test_enabled_for_is_the_flag_then_the_team_list(monkeypatch):
-    from treg.application import hub as hub_app
-    monkeypatch.setenv("TREG_HUB_ENABLED", "1"); monkeypatch.setenv("TREG_HUB_TEAMS", "treg-hub, Acme")
+    from stray.application import hub as hub_app
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "1"); monkeypatch.setenv("STRAY_HUB_TEAMS", "stray-hub, Acme")
     get_settings.cache_clear()
     assert hub_app.enabled() is True
-    assert hub_app.enabled_for("treg-hub") and hub_app.enabled_for("acme") and hub_app.enabled_for("ACME")
+    assert hub_app.enabled_for("stray-hub") and hub_app.enabled_for("acme") and hub_app.enabled_for("ACME")
     assert not hub_app.enabled_for("someone-else") and not hub_app.enabled_for(None)
-    monkeypatch.setenv("TREG_HUB_TEAMS", "")
+    monkeypatch.setenv("STRAY_HUB_TEAMS", "")
     get_settings.cache_clear()
     assert hub_app.enabled_for("someone-else"), "an empty list means every team"
-    monkeypatch.setenv("TREG_HUB_ENABLED", "0"); monkeypatch.setenv("TREG_HUB_TEAMS", "treg-hub")
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "0"); monkeypatch.setenv("STRAY_HUB_TEAMS", "stray-hub")
     get_settings.cache_clear()
-    assert not hub_app.enabled_for("treg-hub"), "the flag off wins over the list"
+    assert not hub_app.enabled_for("stray-hub"), "the flag off wins over the list"
     get_settings.cache_clear()
 
 
@@ -1305,9 +1305,9 @@ async def test_a_team_outside_the_list_sees_no_trace_of_the_hub(clients: AsyncCl
     await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True})
     await _decide(clients, monkeypatch, tool_id, "approve")
     me = (await clients.get("/orgs")).json()[0]["slug"]
-    other = {"X-Treg-Token": (await funded_user(clients, "outsider@example.com"))["token"]}
+    other = {"X-Stray-Token": (await funded_user(clients, "outsider@example.com"))["token"]}
     anon = AsyncClient(transport=clients._transport, base_url=str(clients.base_url))
-    monkeypatch.setenv("TREG_HUB_TEAMS", me)
+    monkeypatch.setenv("STRAY_HUB_TEAMS", me)
     get_settings.cache_clear()
     try:
         async def found(**kw):
@@ -1318,24 +1318,24 @@ async def test_a_team_outside_the_list_sees_no_trace_of_the_hub(clients: AsyncCl
         assert await found()
         assert (await clients.get(f"/catalog/endpoints/{tool_id}")).status_code == 200
         assert (await clients.get(f"/hub/{tool_id}")).status_code == 200
-        assert "treg hub publish" in (await clients.get("/skill.md")).text
+        assert "stray hub publish" in (await clients.get("/skill.md")).text
         # another team
         assert (await clients.get("/hub/tools/mine", headers=other)).status_code == 404
         assert (await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=other)).status_code == 404
         assert not await found(headers=other)
         assert (await clients.get(f"/catalog/endpoints/{tool_id}", headers=other)).status_code == 404
         assert (await clients.get(f"/hub/{tool_id}", headers=other)).status_code == 404
-        assert "treg hub publish" not in (await clients.get("/skill.md", headers=other)).text
+        assert "stray hub publish" not in (await clients.get("/skill.md", headers=other)).text
         # nobody signed in
         async with anon:
             assert (await anon.get(f"/hub/{tool_id}")).status_code == 404
             assert (await anon.get(f"/catalog/endpoints/{tool_id}")).status_code == 404
             assert tool_id not in [r["id"] for r in (await anon.get("/catalog/search", params={"q": "leads-db"})).json()["results"]]
-            assert "treg hub publish" not in (await anon.get("/skill.md")).text
-            assert "treg hub list" not in (await anon.get("/llms.txt")).text
-        assert "treg hub list" in (await clients.get("/llms.txt")).text
+            assert "stray hub publish" not in (await anon.get("/skill.md")).text
+            assert "stray hub list" not in (await anon.get("/llms.txt")).text
+        assert "stray hub list" in (await clients.get("/llms.txt")).text
     finally:
-        monkeypatch.delenv("TREG_HUB_TEAMS", raising=False)
+        monkeypatch.delenv("STRAY_HUB_TEAMS", raising=False)
         get_settings.cache_clear()
 
 
@@ -1349,8 +1349,8 @@ async def _publish_charging_script(clients: AsyncClient, pricing: dict, script: 
     assert r.status_code == 201, r.text
     tool_id = r.json()["tool_id"]
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     async with session_maker() as s:
         await s.execute(update(HubTool).where(HubTool.tool_id == tool_id).values(status="live"))
         await s.commit()
@@ -1373,7 +1373,7 @@ async def test_max_price_usd_needs_a_script_and_shows_in_the_public_pricing(clie
 async def test_charges_are_billed_to_the_caller_and_earned_by_the_maker(
     clients: AsyncClient, hub_on,
 ):
-    """Jason's waterfall over vendors treg does not carry: the script bills a fee and what each step
+    """Jason's waterfall over vendors stray does not carry: the script bills a fee and what each step
     cost at the maker's vendor, the caller pays those lines, the maker earns all of it. Here: a fee
     of $0.01, $0.001 (vendor-a) and $0.03 (vendor-c hit), a zero line for a miss that is dropped:
     the caller pays $0.041, the maker earns $0.041, and the $0.05 cap is refunded down to that."""
@@ -1389,9 +1389,9 @@ async def test_charges_are_billed_to_the_caller_and_earned_by_the_maker(
     maker_org = (await clients.get("/orgs")).json()[0]["org_id"]
     maker_before = (await clients.get(f"/orgs/{maker_org}/balance")).json()["balance_micro"]
     buyer = await funded_user(clients, "waterfall-buyer@example.com")
-    buyer_before = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Treg-Token": buyer["token"]})).json()["balance_micro"]
+    buyer_before = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Stray-Token": buyer["token"]})).json()["balance_micro"]
 
-    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Treg-Token": buyer["token"]})
+    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Stray-Token": buyer["token"]})
     assert run.status_code == 200, run.text
     u = run.json()["usage"]
     assert u["charged_micro"] == 41_000 and u["price_micro"] == 41_000 and u["steps_micro"] == 0
@@ -1399,7 +1399,7 @@ async def test_charges_are_billed_to_the_caller_and_earned_by_the_maker(
     lines = [t for t in run.json()["trace"] if t["outcome"] == "charged"]
     assert [(t["call"], t["cost_micro"]) for t in lines] == [("fee", 10_000), ("vendor-a", 1_000), ("vendor-c hit", 30_000)]
 
-    buyer_after = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Treg-Token": buyer["token"]})).json()["balance_micro"]
+    buyer_after = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Stray-Token": buyer["token"]})).json()["balance_micro"]
     maker_after = (await clients.get(f"/orgs/{maker_org}/balance")).json()["balance_micro"]
     assert buyer_before - buyer_after == 41_000
     assert maker_after - maker_before == 41_000
@@ -1410,21 +1410,21 @@ async def test_a_charge_over_the_cap_fails_the_run_and_the_caller_pays_nothing(c
         clients, {"max_price_usd": 0.02},
         "export default async function run(ctx) { ctx.charge(0.5, 'vendor-d'); return { email: 'x@y.z', results: 1 }; }")
     buyer = await funded_user(clients, "capped-buyer@example.com")
-    before = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Treg-Token": buyer["token"]})).json()["balance_micro"]
-    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Treg-Token": buyer["token"]})
+    before = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Stray-Token": buyer["token"]})).json()["balance_micro"]
+    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Stray-Token": buyer["token"]})
     assert run.status_code == 424 and "max_price_usd" in run.text
-    after = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Treg-Token": buyer["token"]})).json()["balance_micro"]
+    after = (await clients.get(f"/orgs/{buyer['org_id']}/balance", headers={"X-Stray-Token": buyer["token"]})).json()["balance_micro"]
     assert before == after
 
 
 async def test_a_price_edit_on_a_script_moves_its_cap(clients: AsyncClient, hub_on, platform_on, monkeypatch):
-    """`treg hub price` on a script sets `max_price_usd`: its amounts live in run.js."""
+    """`stray hub price` on a script sets `max_price_usd`: its amounts live in run.js."""
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, PER_ITEM, n=5)
     r = await clients.patch(f"/hub/tools/{tool_id}", json={"price_usd": 0.004})
     assert r.json()["pricing"] == {"mode": "charge", "max_price_usd": 0.004}
     assert (await clients.patch(f"/hub/tools/{tool_id}", json={"price_usd": 0})).status_code == 422
     token = (await funded_user(clients, "b8@example.com"))["token"]
-    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Treg-Token": token})
+    run = await clients.post(f"/call/{tool_id}", json={}, headers={"X-Stray-Token": token})
     assert run.status_code == 424 and "max_price_usd" in run.text      # 5 rows x $0.002 passes the new cap
 
 
@@ -1450,7 +1450,7 @@ def test_capability_must_be_a_catalog_job(bad, words):
 
 
 def test_the_seed_gives_way_to_real_runs():
-    from treg.domain.hub import seeded_observed
+    from stray.domain.hub import seeded_observed
     assert seeded_observed(0, 0)["ok_rate"] == 0.9 and seeded_observed(0, 0)["estimated"] is True
     assert seeded_observed(20, 20)["ok_rate"] == 0.98 and seeded_observed(20, 20)["estimated"] is False
     assert seeded_observed(0, 20)["ok_rate"] == 0.18           # 20 failures outweigh the seed
@@ -1471,9 +1471,9 @@ async def _approved_with_capability(clients, monkeypatch, capability=None):
 
 async def test_an_approved_capability_puts_the_tool_beside_the_providers(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     tool_id = await _approved_with_capability(clients, monkeypatch)
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
     get_settings.cache_clear()
-    queue = (await clients.get("/admin/hub/listings", headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/listings", headers={"X-Stray-Token": ADMIN})).json()
     assert queue[0]["proposed_capability"] == CAP and queue[0]["proposed_capability_providers"] >= 2
     # before approval: nobody sees it beside the providers
     sib = (await clients.get(f"/catalog/endpoints/{EP}")).json()["siblings"]
@@ -1489,7 +1489,7 @@ async def test_an_approved_capability_puts_the_tool_beside_the_providers(clients
     assert got["endpoint"]["capability"] == CAP and got["endpoint"]["observed"]["estimated"] is True
     assert EP in [s["id"] for s in got["siblings"]]
     # a stranger's runs move the seed
-    hdr = {"X-Treg-Token": (await funded_user(clients, "cap-buyer@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "cap-buyer@example.com"))["token"]}
     for _ in range(2):
         assert (await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=hdr)).status_code == 200
     mine = [s for s in (await clients.get(f"/catalog/endpoints/{EP}")).json()["siblings"] if s["id"] == tool_id][0]
@@ -1498,13 +1498,13 @@ async def test_an_approved_capability_puts_the_tool_beside_the_providers(clients
 
 async def test_the_admin_can_change_or_clear_the_capability(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     tool_id = await _approved_with_capability(clients, monkeypatch)
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
     get_settings.cache_clear()
     bad = await clients.post(f"/admin/hub/listings/{tool_id}", json={"decision": "approve", "capability": "no.such.job"},
-                             headers={"X-Treg-Token": ADMIN})
+                             headers={"X-Stray-Token": ADMIN})
     assert bad.status_code == 422
     r = await clients.post(f"/admin/hub/listings/{tool_id}", json={"decision": "approve", "capability": ""},
-                           headers={"X-Treg-Token": ADMIN})
+                           headers={"X-Stray-Token": ADMIN})
     assert r.json()["listed"] is True and r.json()["listing"]["capability"] == ""
     assert tool_id not in [s["id"] for s in (await clients.get(f"/catalog/endpoints/{EP}")).json()["siblings"]]
     assert (await clients.get(f"/catalog/endpoints/{tool_id}")).json()["siblings"] == []
@@ -1517,7 +1517,7 @@ async def test_the_admin_can_change_or_clear_the_capability(clients: AsyncClient
 async def test_an_approved_tool_stays_visible_in_its_jobs_search_group(clients: AsyncClient, hub_on, platform_on, monkeypatch):
     """A routed job shows as one group, its providers capped; the hub tool of that job is in the
     group and never cut (found live 2026-09-24: it tied the providers and fell past the cap)."""
-    from treg.domain.catalog.store import group_routed
+    from stray.domain.catalog.store import group_routed
     rows = [{"id": "r", "kind": "routed", "capability": "c"}] + [{"id": f"p{i}", "kind": "data", "capability": "c"} for i in range(6)] \
         + [{"id": "h", "kind": "hub", "capability": "c"}]
     out = group_routed(rows, max_children=5)
@@ -1533,7 +1533,7 @@ async def test_the_public_price_follows_other_teams_runs_once_there_are_any(clie
     mine = [t for t in (await clients.get("/hub/tools/mine")).json() if t["tool_id"] == tool_id][0]
     assert mine["price_from_tests"] is True
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"data": [1, 1]}'))
-    hdr = {"X-Treg-Token": (await funded_user(clients, "public-price@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "public-price@example.com"))["token"]}
     assert (await clients.post(f"/call/{tool_id}", json={}, headers=hdr)).status_code == 200   # 2 rows: $0.005
     mine = [t for t in (await clients.get("/hub/tools/mine")).json() if t["tool_id"] == tool_id][0]
     assert mine["price_from_tests"] is False and mine["price_samples"] == 1
@@ -1547,20 +1547,20 @@ async def test_an_empty_answer_pays_no_seller_price(clients: AsyncClient, hub_on
               "  return ctx.inputs.search === 'none' ? { rows: null, count: null } : { rows: [1], count: 1 };"
               "}")
     tool_id = await _publish_script_priced(clients, monkeypatch, 0.5, script, n=1)
-    hdr = {"X-Treg-Token": (await funded_user(clients, "empty-answer@example.com"))["token"]}
+    hdr = {"X-Stray-Token": (await funded_user(clients, "empty-answer@example.com"))["token"]}
     full = await clients.post(f"/call/{tool_id}", json={}, headers=hdr)
     assert full.status_code == 200 and full.json()["usage"]["price_micro"] == 50_000
     empty = await clients.post(f"/call/{tool_id}", json={"search": "none"}, headers=hdr)
     assert empty.status_code == 200 and empty.json()["usage"]["price_micro"] == 0
-    from treg.application.hub.runner import _empty_answer
+    from stray.application.hub.runner import _empty_answer
     assert _empty_answer({"rows": [], "count": 0}, ["rows", "count"]) is False            # 0 is an answer
 
 
 # ---------------------------------------------------------------------------------------------
-# Team names (hub simulation run 2): a team named treg, official, or a catalog provider would let a
+# Team names (hub simulation run 2): a team named stray, official, or a catalog provider would let a
 # stranger's hub tool pass for ours or theirs.
 
-@pytest.mark.parametrize("name", ["treg", "treg-official", "Treg Hub Verified", "Acme Official Data", "tikhub"])
+@pytest.mark.parametrize("name", ["stray", "stray-official", "Stray Hub Verified", "Acme Official Data", "tikhub"])
 async def test_a_reserved_team_name_is_refused(clients: AsyncClient, name):
     r = await clients.post("/orgs", json={"name": name})
     assert r.status_code == 422 and "reserved" in r.text, r.text
@@ -1568,20 +1568,20 @@ async def test_a_reserved_team_name_is_refused(clients: AsyncClient, name):
 
 async def test_a_rename_to_a_reserved_slug_is_refused(clients: AsyncClient):
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
-    r = await clients.patch(f"/orgs/{org_id}", json={"slug": "treg"})
+    r = await clients.patch(f"/orgs/{org_id}", json={"slug": "stray"})
     assert r.status_code == 400 and "reserved" in r.text
-    r = await clients.patch(f"/orgs/{org_id}", json={"name": "Treg Official"})
+    r = await clients.patch(f"/orgs/{org_id}", json={"name": "Stray Official"})
     assert r.status_code == 400 and "reserved" in r.text
 
 
 async def test_a_team_with_a_reserved_name_cannot_publish(clients: AsyncClient, hub_on):
     """Teams made before the rule keep their name; their hub tools are refused at publish."""
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import Org
+    from stray.infra.db import session_maker
+    from stray.models import Org
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as s:
-        await s.execute(update(Org).where(Org.id == org_id).values(name="treg"))
+        await s.execute(update(Org).where(Org.id == org_id).values(name="stray"))
         await s.commit()
     await _own_supabase(clients)
     r = await clients.post("/hub/tools", json={"manifest": _steps_manifest(), "check": CHECK, "readme": "x"})
@@ -1589,7 +1589,7 @@ async def test_a_team_with_a_reserved_name_cannot_publish(clients: AsyncClient, 
 
 
 async def test_a_publish_that_changes_the_price_says_so(clients: AsyncClient, hub_on, platform_on, monkeypatch):
-    """Hub simulation run 2: a new version's recipe.json price undid `treg hub price` silently."""
+    """Hub simulation run 2: a new version's recipe.json price undid `stray hub price` silently."""
     pub = await _live_tool_with_readme(clients, monkeypatch, price=0.01)
     tool_id = pub["tool_id"]
     await clients.patch(f"/hub/tools/{tool_id}", json={"price_usd": 0.05})
@@ -1611,7 +1611,7 @@ async def test_the_update_queue_names_fields_the_new_version_stopped_returning(c
     r = await clients.put(f"/hub/tools/{tool_id}", json={"manifest": m, "script": script.replace("FULL", "false"),
                                                          "readme": "x", "check": {"inputs": {}, "fields": ["rows"]}})
     assert r.json()["status"] == "review", r.text
-    queue = (await clients.get("/admin/hub/updates", headers={"X-Treg-Token": ADMIN})).json()
+    queue = (await clients.get("/admin/hub/updates", headers={"X-Stray-Token": ADMIN})).json()
     assert queue[0]["fields_lost"] == ["count"]
 
 
@@ -1637,18 +1637,18 @@ async def test_a_maker_cannot_review_its_own_hub_tool(clients: AsyncClient, hub_
     pub = await _live_tool_with_readme(clients, monkeypatch, price=0.01)
     run = await clients.post(f"/call/{pub['tool_id']}", json={"domain": "x"})
     assert run.status_code == 200
-    from treg import audit
+    from stray import audit
     await audit.drain()  # the run's call record is a fire-and-forget write, and a review reads it
     r = await clients.post("/reviews", json={"call_id": run.json()["run_id"], "usefulness": "useful"})
     assert r.status_code == 400 and "own hub tool" in r.text, r.text
 
 
-async def test_a_team_tool_may_not_point_at_treg(clients: AsyncClient, hub_on):
+async def test_a_team_tool_may_not_point_at_stray(clients: AsyncClient, hub_on):
     sid = (await clients.post("/secrets", json={"name": "relay-key", "value": "K"})).json()["id"]
-    from treg.config import get_settings
+    from stray.config import get_settings
     host = get_settings().public_url.rstrip("/")
     r = await clients.post("/tools", json={"name": "relay", "base_url": f"{host}/call", "secret_id": sid})
-    assert r.status_code == 422 and "treg itself" in r.text
+    assert r.status_code == 422 and "stray itself" in r.text
 
 
 async def test_a_rejected_tool_serves_only_its_maker(clients: AsyncClient, hub_on, platform_on, monkeypatch):
@@ -1656,7 +1656,7 @@ async def test_a_rejected_tool_serves_only_its_maker(clients: AsyncClient, hub_o
     tool_id = pub["tool_id"]
     await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True})
     await _decide(clients, monkeypatch, tool_id, "reject", "poses as someone else")
-    other = {"X-Treg-Token": (await funded_user(clients, "rejected-caller@example.com"))["token"]}
+    other = {"X-Stray-Token": (await funded_user(clients, "rejected-caller@example.com"))["token"]}
     assert (await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=other)).status_code == 404
     assert (await clients.post(f"/call/{tool_id}", json={"domain": "x"})).status_code == 200      # the maker
     assert (await clients.get(f"/hub/{tool_id}")).status_code == 410
@@ -1664,43 +1664,43 @@ async def test_a_rejected_tool_serves_only_its_maker(clients: AsyncClient, hub_o
 
 
 async def test_a_listed_person_sees_the_hub_in_every_team_and_others_in_that_team_do_not(clients: AsyncClient, hub_on, monkeypatch):
-    """TREG_HUB_USERS (owner, 2026-09-26): colleagues use the hub from their own accounts, in any
+    """STRAY_HUB_USERS (owner, 2026-09-26): colleagues use the hub from their own accounts, in any
     team they work in, with no shared team. A teammate who is not on the list sees nothing."""
     tool_id = await _publish_live(clients)                  # published while the hub is open
     await clients.patch(f"/hub/tools/{tool_id}", json={"listed": True})
     await _decide(clients, monkeypatch, tool_id, "approve")
     colleague = await funded_user(clients, "colleague@example.com")
     stranger = await funded_user(clients, "stranger@example.com")
-    monkeypatch.setenv("TREG_HUB_TEAMS", "")
-    monkeypatch.setenv("TREG_HUB_USERS", "Colleague@example.com")
+    monkeypatch.setenv("STRAY_HUB_TEAMS", "")
+    monkeypatch.setenv("STRAY_HUB_USERS", "Colleague@example.com")
     get_settings.cache_clear()
     try:
-        c = {"X-Treg-Token": colleague["token"]}
-        s = {"X-Treg-Token": stranger["token"]}
+        c = {"X-Stray-Token": colleague["token"]}
+        s = {"X-Stray-Token": stranger["token"]}
         assert (await clients.get("/hub/tools/mine", headers=c)).status_code == 200
         # the tool is found for the colleague (its steps are not mocked here, so it fails later: 424)
         assert (await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=c)).status_code == 424
         assert (await clients.get(f"/catalog/endpoints/{tool_id}", headers=c)).status_code == 200
         assert tool_id in [r["id"] for r in (await clients.get("/catalog/search", params={"q": "leads-db"}, headers=c)).json()["results"]]
-        assert "treg hub publish" in (await clients.get("/skill.md", headers=c)).text
+        assert "stray hub publish" in (await clients.get("/skill.md", headers=c)).text
         assert (await clients.get("/hub/tools/mine", headers=s)).status_code == 404
         assert (await clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers=s)).status_code == 404
-        assert "treg hub publish" not in (await clients.get("/skill.md", headers=s)).text
+        assert "stray hub publish" not in (await clients.get("/skill.md", headers=s)).text
         # the maker's own account is on neither list now: its team sees the hub as off
         assert (await clients.get("/hub/tools/mine")).status_code == 404
     finally:
-        monkeypatch.delenv("TREG_HUB_USERS", raising=False)
-        monkeypatch.delenv("TREG_HUB_TEAMS", raising=False)
+        monkeypatch.delenv("STRAY_HUB_USERS", raising=False)
+        monkeypatch.delenv("STRAY_HUB_TEAMS", raising=False)
         get_settings.cache_clear()
 
 
 async def test_an_open_route_looks_up_a_key_once_a_minute(clients: AsyncClient, hub_on, monkeypatch):
     """While a list limits the hub, each open request that carries a key asks who it is: 3 to 5
     database reads each. The answer is remembered for a minute (review after the deploy, 2026-09-26)."""
-    from treg.domain.identity import access
-    from treg.routers import hub_gate
+    from stray.domain.identity import access
+    from stray.routers import hub_gate
     hub_gate._readers.clear()
-    monkeypatch.setenv("TREG_HUB_USERS", "someone@example.com")
+    monkeypatch.setenv("STRAY_HUB_USERS", "someone@example.com")
     get_settings.cache_clear()
     seen = []
     real = access.require_member
@@ -1715,5 +1715,5 @@ async def test_an_open_route_looks_up_a_key_once_a_minute(clients: AsyncClient, 
         assert len(seen) == 1
     finally:
         hub_gate._readers.clear()
-        monkeypatch.delenv("TREG_HUB_USERS", raising=False)
+        monkeypatch.delenv("STRAY_HUB_USERS", raising=False)
         get_settings.cache_clear()

@@ -31,7 +31,7 @@ facts_used: [F-01, F-02, F-03, F-04, F-05, F-06, F-07, F-08, F-09, F-10, F-11, F
 ### SEO Data: Google Results, Keywords and Backlinks
 
 ```text
-Using treg, get keyword volume and difficulty for these 10 terms, then pull the
+Using stray, get keyword volume and difficulty for these 10 terms, then pull the
 top 10 organic results for the highest-volume one. Show me who ranks and why.
 ```
 
@@ -45,10 +45,10 @@ top 10 organic results for the highest-volume one. Show me who ranks and why.
 
 ## The old way vs. the treg.to way
 
-| | The old way | With treg |
+| | The old way | With stray |
 |---|---|---|
 | **What you pay for** | Semrush $139/mo + SerpApi $75/mo + Moz $99/mo, running whether the agent does or not | One prepaid balance. A keyword lookup is a fraction of a cent |
-| **Keys** | One account, one login and one API key per provider, spread across machines and `.env` files | One treg token. Every tool in the catalog answers to it |
+| **Keys** | One account, one login and one API key per provider, spread across machines and `.env` files | One stray token. Every tool in the catalog answers to it |
 | **Picking a provider** | You guess, or you use the one you already pay for | `catalog get` lists every provider for that job with price, measured success rate, median speed and when it last answered |
 | **Commitment** | Annual plans and seat minimums to answer one research question | No subscription. Stop calling and you stop paying |
 | **The workflow** | Export a CSV from the keyword tool, another from the rank tracker, join them by hand | One agent run: keywords, difficulty, live results and competitors in a single pass |
@@ -287,4 +287,4 @@ subscriptions, not the suite you read reports in.
 
 # Ad and creator kit
 
-Campaign material is maintained in treg-internal.
+Campaign material is maintained in stray-internal.

@@ -25,7 +25,7 @@ One company's details from two independent sources, and whether they agree.
 
 ## Why use this instead of routing
 
-`treg.companies.enrich` returns the first provider that answers and never asks a second. When you
+`stray.companies.enrich` returns the first provider that answers and never asks a second. When you
 need to know whether the record is right, not only that it exists, this is the second opinion.
 
 ## Limits

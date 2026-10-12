@@ -45,7 +45,7 @@ Three camps, all using the same data layer:
 - **Claude Code + skills** — the fastest-growing. "We took every UI out of our outbound stack," says one agency; Growth Unhinged reports mature teams moving MCP → CLI because MCP costs 10–32x the tokens. YALC (MIT) is the open-source Clay of this camp.
 - **Cowork + vendor MCPs** — Apollo, Clay, HubSpot, Lemlist connectors, no code.
 
-The catalog is the same in all three: `treg call` from a shell, an HTTP node in n8n, or the MCP server in Claude Code. Pick by what your team can debug at 2am.
+The catalog is the same in all three: `stray call` from a shell, an HTTP node in n8n, or the MCP server in Claude Code. Pick by what your team can debug at 2am.
 
 ## The rules the operators agree on
 

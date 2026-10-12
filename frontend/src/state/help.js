@@ -5,7 +5,7 @@ async resetDemo(){ try{ await this.api('/onboard/reset',{method:'POST'}); this.o
 readMore(section){ try{ window.open('/tutorial'+(section?('#'+section):''),'_blank'); }catch(e){} },
 tutGo(i){ this.tut.i=Math.max(0,Math.min(this.tutSteps.length-1,i)); this.tutCopied=false; },
 xtutGo(i){ this.xtut.i=Math.max(0,Math.min(this.xtutSteps.length-1,i)); this.tutCopied=false; },
-tutHL(text,kind){ return (window.tregHL?window.tregHL(text, window.tregLang(text,kind)):text); },
+tutHL(text,kind){ return (window.strayHL?window.strayHL(text, window.strayLang(text,kind)):text); },
 async tutCopy(text){ if(!(await this.toClipboard(text))) return; this.tutCopied=true; setTimeout(()=>this.tutCopied=false,1500); },
 async toClipboard(text){  // guarded copy with a legacy fallback - navigator.clipboard is undefined on non-secure contexts
       try{ if(navigator.clipboard){ await navigator.clipboard.writeText(text); return true; } }catch(e){}

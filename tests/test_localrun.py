@@ -1,4 +1,4 @@
-"""`treg run` — grants for local CLI execution (docs/CLI-RUN-PLAN.md).
+"""`stray run` — grants for local CLI execution (docs/CLI-RUN-PLAN.md).
 
 Three layers, mirroring the plan's §12: pure unit tests on `localrun` (profile merge, deny
 semantics, validation), endpoint tests on /grant + /run-report (custody, opt-in, deny, audit,
@@ -14,14 +14,14 @@ import os
 import pytest
 from httpx import AsyncClient
 
-from treg import cli as _cli
-from treg import localrun
-from treg.models import Tool
+from stray import cli as _cli
+from stray import localrun
+from stray.models import Tool
 
 
 @pytest.fixture(autouse=True)
 def _no_installed_runner(monkeypatch):
-    """Unit tests must not depend on whether THIS machine has `treg setup-local-run` installed. Force the
+    """Unit tests must not depend on whether THIS machine has `stray setup-local-run` installed. Force the
     isolated-runner path OFF (as if not installed) so `cmd_run` exercises the in-process helper instead
     of doing a real `sudo` hand-off. A test that wants the hand-off patches os.path.exists itself (that
     runs after this fixture, so it wins)."""
@@ -77,9 +77,9 @@ def test_check_deny_word_boundary_and_source():
     prof = localrun.effective_profile(_tool(cli={"enabled": True, "deny": ["refunds create"]}),
                                       {"deny": [LIVE]})
     hit = localrun.check_deny(prof, ["get", "/v1/charges", "--live"])
-    assert hit == (LIVE, "the treg catalog defaults")
+    assert hit == (LIVE, "the stray catalog defaults")
     hit = localrun.check_deny(prof, ["refunds", "create"])
-    assert hit is not None and hit[1] == "this skill's treg.json"
+    assert hit is not None and hit[1] == "this skill's stray.json"
     assert localrun.check_deny(prof, ["get", "--liveness"]) is None  # no substring false-positive
     assert localrun.check_deny(prof, ["get", "/v1/balance"]) is None
 
@@ -140,7 +140,7 @@ def test_resolve_secret_id_ambiguous_multi_secret_returns_none():
 def test_catalog_cli_recipe_becomes_runnable_tool(tmp_path):
     # The bridge: a secret-less recipe skill the catalog knows as a CLI (stripe-cli) becomes a runnable
     # cli tool, sourcing its credential from an env var — a gap when absent, ready when present.
-    from treg import skills as sk, providers as prov
+    from stray import skills as sk, providers as prov
     d = tmp_path / "stripe-cli"
     d.mkdir()
     (d / "SKILL.md").write_text("# use the stripe CLI to do things")
@@ -156,7 +156,7 @@ def test_catalog_cli_recipe_becomes_runnable_tool(tmp_path):
 
 def test_deny_matches_flag_equals_value():
     # BUG #4: the shipped Stripe deny must catch --live AND --live=true, but not --livemode
-    from treg import providers as prov
+    from stray import providers as prov
     pat = next(p for p in prov.CATALOG if p["provider"] == "Stripe")["cli"]["deny"][0]
     prof = {"deny": [pat], "_own_deny": []}
     assert localrun.check_deny(prof, ["get", "--live"]) is not None
@@ -196,7 +196,7 @@ async def test_grant_local_tier_cli_injects_nothing(clients: AsyncClient):
     inject. Two regressions guarded: (1) the grant-time catalog merge must NOT re-add the catalog's
     inject — `gh`'s catalog profile carries `inject:[GH_TOKEN]`, which previously leaked back and failed
     to resolve; an empty inject overrides it. (2) an empty inject is a VALID grant (bin + audit, no
-    secret), not a 'profile has no inject entries' error — so `treg run gh` just execs gh."""
+    secret), not a 'profile has no inject entries' error — so `stray run gh` just execs gh."""
     r = await clients.post("/tools", json={"name": "gh", "base_url": "http://upstream",
                                            "cli": {"enabled": True, "bin": "gh", "inject": []}})
     assert r.status_code == 200, r.text
@@ -211,7 +211,7 @@ async def test_grant_local_tier_cli_injects_nothing(clients: AsyncClient):
 def test_catalog_deny_blocks_token_and_codeexec_subcommands():
     """The deny-rule audit: catalog CLIs must refuse features that print the injected key or run member
     code as the runner — while leaving normal subcommands alone. Enforced server-side at grant."""
-    from treg import providers as prov
+    from stray import providers as prov
 
     def prof(bin_):
         e = next(e for e in prov.CATALOG if (e.get("cli") or {}).get("bin") == bin_)
@@ -312,14 +312,14 @@ async def test_grant_creator_deny_and_deny_defaults_opt_out(clients: AsyncClient
     ok = await clients.post("/tools/stripe/grant", json={"argv": ["get", "/v1/charges", "--live"]})
     assert ok.status_code == 200                                   # catalog --live default opted out
     denied = await clients.post("/tools/stripe/grant", json={"argv": ["refunds", "create"]})
-    assert denied.status_code == 403 and "treg.json" in denied.json()["detail"]
+    assert denied.status_code == 403 and "stray.json" in denied.json()["detail"]
 
 
 # ---- endpoint: refusals --------------------------------------------------------------------
 async def test_grant_no_profile_409_with_template(clients: AsyncClient):
     await _mk_tool(clients, name="zzz-internal", cli=None)  # no catalog match, no contract cli
     r = await clients.post("/tools/zzz-internal/grant", json={"argv": []})
-    assert r.status_code == 409 and '"cli"' in r.json()["detail"]  # the treg.json template
+    assert r.status_code == 409 and '"cli"' in r.json()["detail"]  # the stray.json template
 
 
 async def test_grant_unsupported_cli_409_with_reason(clients: AsyncClient):
@@ -354,13 +354,13 @@ async def test_grant_refused_for_viewer_who_may_still_call(clients: AsyncClient)
     # exfiltrate every enabled key. Prove the viewer CAN call but CANNOT grant.
     team = (await clients.post("/orgs", json={"name": "RunTeam"})).json()
     otok, org_id = team["token"], team["org_id"]
-    h = {"X-Treg-Token": otok}
+    h = {"X-Stray-Token": otok}
     sid = (await clients.post("/secrets", json={"name": "stripe-key", "value": "sk_test_1"}, headers=h)).json()["id"]
     await clients.post("/tools", json={"name": "stripe", "base_url": "http://upstream", "secret_id": sid,
                                        "cli": {"enabled": True}}, headers=h)
     code = (await clients.post(f"/orgs/{org_id}/invites", json={"email": "vi@x.dev", "role": "viewer"}, headers=h)).json()["code"]
     vtok = (await clients.post("/invites/accept", json={"code": code, "email": "vi@x.dev"})).json()["token"]
-    vh = {"X-Treg-Token": vtok}
+    vh = {"X-Stray-Token": vtok}
     assert (await clients.get("/call/stripe/anything", headers=vh)).status_code == 200   # viewer may call
     r = await clients.post("/tools/stripe/grant", json={"argv": []}, headers=vh)
     assert r.status_code == 403 and "viewer" in r.json()["detail"].lower()               # but not extract
@@ -369,7 +369,7 @@ async def test_grant_refused_for_viewer_who_may_still_call(clients: AsyncClient)
 async def test_call_and_grant_are_tagged_by_kind(clients: AsyncClient):
     """The usage breakdown must tell a proxy call from a local-run grant: /call records kind='call',
     /tools/{name}/grant records kind='local_run' (both land in CallRecord)."""
-    from treg import audit
+    from stray import audit
     await _mk_tool(clients, cli=_ENV_CLI)
     await clients.get("/call/stripe/anything")                     # proxy call → kind 'call'
     await clients.post("/tools/stripe/grant", json={"argv": []})   # local-run grant → kind 'local_run'
@@ -401,7 +401,7 @@ async def test_grant_cross_org_isolation(clients: AsyncClient):
     await _mk_tool(clients, cli=_ENV_CLI)
     other = (await clients.post("/users", json={"email": "eve@other.dev"})).json()["token"]
     r = await clients.post("/tools/stripe/grant", json={"argv": []},
-                           headers={"X-Treg-Token": other})
+                           headers={"X-Stray-Token": other})
     assert r.status_code == 404                                     # her org has no such tool
 
 
@@ -494,7 +494,7 @@ async def test_param_kind_injects_into_grant_and_http_binding(clients: AsyncClie
 # ---- endpoint: the skill door (contract cli → registered tool → grant) ----------------------
 async def test_skill_contract_cli_registers_and_grants(clients: AsyncClient):
     payload = {
-        "name": "stripe-cli", "recipe": "# stripe\nuse `treg run stripe-cli`",
+        "name": "stripe-cli", "recipe": "# stripe\nuse `stray run stripe-cli`",
         "secrets": [{"local_name": "stripe-key", "value": "sk_test_9", "kind": "env"}],
         "tools": [{"name": "stripe-cli", "base_url": "https://api.stripe.com/v1",
                    "bindings": [{"secret": "stripe-key", "injector": "env", "location": "header",
@@ -581,12 +581,12 @@ class _FakeProc:
 
 
 def _run_args(tool: str, *cli_args: str):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     return cli_mod.build_parser().parse_args(["run", tool, "--", *cli_args])
 
 
 def test_cmd_run_env_composition_and_exit_code(monkeypatch):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     grant = _FakeResp(200, {"bin": "stripe", "inject": [{"via": "env", "name": "STRIPE_API_KEY", "value": "sk_INJECTED"},
                                          {"via": "argv", "argv": ["--extra"]}], "audit_id": 7, "warnings": [], "errors": []})
     fake = _FakeClient({"/grant": grant})
@@ -613,7 +613,7 @@ def test_cmd_run_env_composition_and_exit_code(monkeypatch):
 def test_cmd_run_macos_best_effort_without_setup(monkeypatch, capsys):
     # macOS now supports the same dedicated-user isolation as Linux. WITHOUT setup (no runner), it runs
     # best-effort as the member and hints how to enable isolation — parity with Linux.
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     grant = _FakeResp(200, {"bin": "gh", "inject": [{"via": "env", "name": "GH_TOKEN", "value": "t"}],
                             "audit_id": 1, "warnings": [], "errors": []})
     monkeypatch.setattr(cli_mod.sys, "platform", "darwin")
@@ -629,11 +629,11 @@ def test_cmd_run_macos_best_effort_without_setup(monkeypatch, capsys):
     assert seen["env"]["GH_TOKEN"] == "t"                       # still injects the credential
 
 
-def test_cmd_run_linux_hands_off_to_treg_run_user(monkeypatch):
+def test_cmd_run_linux_hands_off_to_stray_run_user(monkeypatch):
     # On Linux with local-run set up, the member never fetches the credential: it execs
-    # `sudo -u treg-run <runner>` and passes its own token through the environment.
-    from treg import cli as cli_mod
-    # From a cwd treg-run can't traverse, the hand-off chdirs to /tmp before exec; recording the
+    # `sudo -u stray-run <runner>` and passes its own token through the environment.
+    from stray import cli as cli_mod
+    # From a cwd stray-run can't traverse, the hand-off chdirs to /tmp before exec; recording the
     # cwd here makes monkeypatch restore it, since the stubbed exec returns into this process.
     monkeypatch.chdir(os.getcwd())
     monkeypatch.setattr(cli_mod.sys, "platform", "linux")
@@ -648,39 +648,39 @@ def test_cmd_run_linux_hands_off_to_treg_run_user(monkeypatch):
         cli_mod.cmd_run(_run_args("stripe", "get", "/v1/balance"),
                         {"token": "MEMBER_TOK", "base_url": "http://x", "active_org": "acme"})
     assert seen["file"] == "sudo"
-    assert seen["argv"][:4] == ["sudo", "-u", "treg-run", "--"]
+    assert seen["argv"][:4] == ["sudo", "-u", "stray-run", "--"]
     assert cli_mod._RUNNER_PATH in seen["argv"] and "stripe" in seen["argv"]
-    assert seen["env"]["TREG_RUN_TOKEN"] == "MEMBER_TOK" and seen["env"]["TREG_RUN_ORG"] == "acme"
+    assert seen["env"]["STRAY_RUN_TOKEN"] == "MEMBER_TOK" and seen["env"]["STRAY_RUN_ORG"] == "acme"
 
 
 def test_cmd_run_helper_uses_env_context(monkeypatch):
-    # The treg-run-side helper rebuilds its config from the env the member passed through sudo.
-    from treg import cli as cli_mod
+    # The stray-run-side helper rebuilds its config from the env the member passed through sudo.
+    from stray import cli as cli_mod
     grant = _FakeResp(200, {"bin": "gh", "inject": [{"via": "env", "name": "GH_TOKEN", "value": "t"}],
                             "audit_id": 9, "warnings": [], "errors": []})
     seen = {}
     monkeypatch.setattr(cli_mod, "_client", lambda cfg: seen.update(cfg=cfg) or _FakeClient({"/grant": grant}))
     monkeypatch.setattr(cli_mod.shutil, "which", lambda b: f"/bin/{b}")
     monkeypatch.setattr(cli_mod.subprocess, "Popen", lambda cmd, env=None, **kw: _FakeProc(0, b""))
-    monkeypatch.setenv("TREG_RUN_TOKEN", "T")
-    monkeypatch.setenv("TREG_RUN_BASE", "http://x")
-    monkeypatch.setenv("TREG_RUN_ORG", "acme")
+    monkeypatch.setenv("STRAY_RUN_TOKEN", "T")
+    monkeypatch.setenv("STRAY_RUN_BASE", "http://x")
+    monkeypatch.setenv("STRAY_RUN_ORG", "acme")
     with pytest.raises(SystemExit):
         cli_mod.cmd_run_helper(_run_args("gh", "api", "user"), {})
     assert seen["cfg"]["token"] == "T" and seen["cfg"]["active_org"] == "acme"
 
 
 def test_cmd_run_refusal_prints_server_detail(monkeypatch, capsys):
-    from treg import cli as cli_mod
-    fake = _FakeClient({"/grant": _FakeResp(403, {"detail": "denied by the treg catalog defaults: pattern '--live'"})})
+    from stray import cli as cli_mod
+    fake = _FakeClient({"/grant": _FakeResp(403, {"detail": "denied by the stray catalog defaults: pattern '--live'"})})
     monkeypatch.setattr(cli_mod, "_client", lambda cfg: fake)
     with pytest.raises(SystemExit) as e:
         cli_mod.cmd_run(_run_args("stripe", "get", "--live"), {"base_url": "http://x"})
-    assert "denied by the treg catalog defaults" in str(e.value.code)
+    assert "denied by the stray catalog defaults" in str(e.value.code)
 
 
 def test_cmd_run_reports_credential_invalid(monkeypatch, capsys):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     grant = _FakeResp(200, {"bin": "doctl", "inject": [{"via": "env", "name": "T", "value": "v"}], "audit_id": 11,
                             "warnings": [],
                             "errors": [{"pattern": "(?i)401|unauthorized", "verdict": "credential_invalid",
@@ -699,7 +699,7 @@ def test_cmd_run_reports_credential_invalid(monkeypatch, capsys):
 
 
 def test_cmd_run_missing_binary_shows_install_hint(monkeypatch):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     grant = _FakeResp(200, {"bin": "doctl", "inject": [], "audit_id": 1,
                             "install": "brew install doctl", "warnings": [], "errors": []})
     monkeypatch.setattr(cli_mod, "_client", lambda cfg: _FakeClient({"/grant": grant}))
@@ -714,7 +714,7 @@ def _args(**kw):
 
 
 def test_setup_local_run_guards(monkeypatch):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     # an unsupported OS is rejected
     monkeypatch.setattr(cli_mod.sys, "platform", "win32")
     with pytest.raises(SystemExit) as e:
@@ -729,12 +729,12 @@ def test_setup_local_run_guards(monkeypatch):
 
 
 def test_run_parser_remainder():
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     # argparse consumes the first `--` itself; flags after it survive verbatim into the remainder
     a = cli_mod.build_parser().parse_args(["run", "stripe", "--", "get", "/v1/balance", "--live"])
     assert a.fn is cli_mod.cmd_run and a.tool == "stripe"
     assert a.args == ["get", "/v1/balance", "--live"]
-    # without the separator, args that don't collide with treg flags also pass through
+    # without the separator, args that don't collide with stray flags also pass through
     b = cli_mod.build_parser().parse_args(["run", "gh", "pr", "list"])
     assert b.args == ["pr", "list"]
 
@@ -742,14 +742,14 @@ def test_run_parser_remainder():
 async def test_owner_only_binding_and_runner_proof(clients: AsyncClient, monkeypatch):
     """A member can't bind/extract a teammate's secret (Bug 2), and can't read a shared key via a direct
     /grant without the isolated-runner proof (Bug 1)."""
-    from treg.config import get_settings
+    from stray.config import get_settings
     victim = (await clients.post("/secrets", json={"name": "admin-key", "kind": "env", "value": "ADMIN-SECRET"})).json()["id"]
     await clients.post("/tools", json={"name": "shared", "base_url": "http://upstream", "secret_id": victim,
                                        "cli": {"enabled": True, "bin": "printenv", "inject": [{"via": "env", "name": "X"}]}})
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     inv = (await clients.post(f"/orgs/{org_id}/invites", json={"email": "memberb@x.dev", "role": "member"})).json()
     tokB = (await clients.post("/invites/accept", json={"code": inv["code"], "email": "memberb@x.dev"})).json()["token"]
-    hb = {"X-Treg-Token": tokB}
+    hb = {"X-Stray-Token": tokB}
 
     # A1 — member B cannot bind the owner's secret to a tool B controls
     r = await clients.post("/tools", json={"name": "steal", "base_url": "http://upstream", "secret_id": victim}, headers=hb)
@@ -757,14 +757,14 @@ async def test_owner_only_binding_and_runner_proof(clients: AsyncClient, monkeyp
 
     # A2 — B granting the owner's SHARED tool with no proof configured → refused
     r = await clients.post("/tools/shared/grant", json={"argv": []}, headers=hb)
-    assert r.status_code == 403 and "treg-run runner" in r.text
+    assert r.status_code == 403 and "stray-run runner" in r.text
 
     # A2 — with the server proof configured AND presented by the runner → allowed
     monkeypatch.setattr(get_settings(), "run_proof", "PROOF123")
-    r = await clients.post("/tools/shared/grant", json={"argv": []}, headers={**hb, "X-Treg-Run-Proof": "PROOF123"})
+    r = await clients.post("/tools/shared/grant", json={"argv": []}, headers={**hb, "X-Stray-Run-Proof": "PROOF123"})
     assert r.status_code == 200, r.text
     # wrong proof → still refused
-    r = await clients.post("/tools/shared/grant", json={"argv": []}, headers={**hb, "X-Treg-Run-Proof": "nope"})
+    r = await clients.post("/tools/shared/grant", json={"argv": []}, headers={**hb, "X-Stray-Run-Proof": "nope"})
     assert r.status_code == 403
     # the OWNER never needs a proof (they hold the key already)
     r = await clients.post("/tools/shared/grant", json={"argv": []})
@@ -793,7 +793,7 @@ async def test_cli_bin_rejects_paths_and_shell(clients: AsyncClient):
 
 
 def test_redact_argv_masks_short_flag_values_and_jwts():
-    from treg.api import _redact_argv
+    from stray.api import _redact_argv
     assert "Hunter2Hunter2" not in _redact_argv(["db", "--password", "Hunter2Hunter2"])
     assert "s3cret" not in _redact_argv(["x", "--token=s3cret"])
     jwt = "eyJhbGciOi.eyJzdWIiOiIxMjM0NTY3ODkw.SflKxwRJSMeKKF2QT4"
@@ -808,9 +808,9 @@ def test_check_deny_matches_per_argument_anchored_pattern():
 
 
 def test_cmd_run_rejects_a_tier_flag_after_the_tool(monkeypatch):
-    from treg import cli as cli_mod
-    # a tier flag typed AFTER the tool (no `--`) → wrong tier silently, so treg errors
-    monkeypatch.setattr(cli_mod.sys, "argv", ["treg", "run", "stripe", "--server", "list"])
+    from stray import cli as cli_mod
+    # a tier flag typed AFTER the tool (no `--`) → wrong tier silently, so stray errors
+    monkeypatch.setattr(cli_mod.sys, "argv", ["stray", "run", "stripe", "--server", "list"])
     args = cli_mod.build_parser().parse_args(["run", "stripe", "--server", "list"])
     with pytest.raises(SystemExit) as e:
         cli_mod.cmd_run(args, {})
@@ -818,9 +818,9 @@ def test_cmd_run_rejects_a_tier_flag_after_the_tool(monkeypatch):
 
 
 def test_cmd_run_allows_vendor_flags_after_the_separator(monkeypatch):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     # `--timeout`/`--server` AFTER `--` legitimately belong to the vendor CLI — must NOT be blocked
-    monkeypatch.setattr(cli_mod.sys, "argv", ["treg", "run", "db", "--", "fetch", "--timeout", "30"])
+    monkeypatch.setattr(cli_mod.sys, "argv", ["stray", "run", "db", "--", "fetch", "--timeout", "30"])
     args = cli_mod.build_parser().parse_args(["run", "db", "--", "fetch", "--timeout", "30"])
     fake = _FakeClient({"/grant": _FakeResp(500, {"detail": "stop-here"})})   # stop before real work
     monkeypatch.setattr(cli_mod, "_client", lambda cfg: fake)
@@ -830,7 +830,7 @@ def test_cmd_run_allows_vendor_flags_after_the_separator(monkeypatch):
 
 
 async def test_run_slot_caps_concurrent_runs_per_user():
-    from treg import runner
+    from stray import runner
     import contextlib
     async with contextlib.AsyncExitStack() as stack:
         for _ in range(runner.MAX_CONCURRENT_RUNS_PER_USER):        # fill this user's slots
@@ -843,7 +843,7 @@ async def test_run_slot_caps_concurrent_runs_per_user():
 
 
 def test_run_server_timeout_exits_nonzero(monkeypatch):
-    from treg import cli as cli_mod
+    from stray import cli as cli_mod
     fake = _FakeClient({"/run": _FakeResp(200, {"stdout": "", "stderr": "", "exit_code": 0, "timed_out": True})})
     monkeypatch.setattr(cli_mod, "_client", lambda cfg: fake)
     args = cli_mod.build_parser().parse_args(["run", "--server", "sk", "--", "x"])

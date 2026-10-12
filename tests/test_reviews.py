@@ -2,9 +2,9 @@
 import pytest
 from sqlmodel import select
 
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import CallRecord, CallReview, Feedback, LedgerEntry
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import CallRecord, CallReview, Feedback, LedgerEntry
 
 
 async def seed(clients, **values):
@@ -24,8 +24,8 @@ async def rows():
 
 
 async def submit(clients, org, **values):
-    return await clients.post('/reviews', headers={'X-Treg-Token': org['token'],
-                                                  'X-Treg-Client': 'review-test'},
+    return await clients.post('/reviews', headers={'X-Stray-Token': org['token'],
+                                                  'X-Stray-Client': 'review-test'},
                               json={'call_id': 'review-call', 'usefulness': 'useful'} | values)
 
 
@@ -47,7 +47,7 @@ async def test_review_receipt_retry_privacy_and_cleanup(clients):
     slug = next(item['slug'] for item in (await clients.get('/orgs')).json()
                 if item['org_id'] == org['org_id'])
     deleted = await clients.delete(f"/orgs/{org['org_id']}", params={'confirm': slug},
-                                   headers={'X-Treg-Token': org['token']})
+                                   headers={'X-Stray-Token': org['token']})
     assert deleted.status_code == 200, deleted.text
     assert await rows() == []
 
@@ -74,7 +74,7 @@ async def test_own_tool_cannot_be_reviewed(clients):
 @pytest.mark.parametrize('child', [True, False])
 async def test_routed_attribution(clients, monkeypatch, child):
     monkeypatch.setattr(get_settings(), 'review_sample_rate', 1)
-    org = await seed(clients, endpoint_id='treg.search', provider='treg', credential_tier='routed')
+    org = await seed(clients, endpoint_id='stray.search', provider='stray', credential_tier='routed')
     async with session_maker() as db:
         for ref, status, endpoint in [('review-call:r0', 503, 'failed.search'),
                                       ('review-call:r1', 200 if child else 500, 'winner.search'),
@@ -86,9 +86,9 @@ async def test_routed_attribution(clients, monkeypatch, child):
     assert (await submit(clients, org)).status_code == 201
     row, = await rows()
     assert row.invited is False
-    assert row.routed_via == 'treg.search'
-    assert row.endpoint_id == ('winner.search' if child else 'treg.search')
-    assert row.provider == ('winner' if child else 'treg')
+    assert row.routed_via == 'stray.search'
+    assert row.endpoint_id == ('winner.search' if child else 'stray.search')
+    assert row.provider == ('winner' if child else 'stray')
 
 
 @pytest.mark.parametrize('tier,rate,status,cached,invited', [
@@ -128,7 +128,7 @@ async def test_admin_review_pagination(clients, monkeypatch):
     await submit(clients, org, call_id='second')
     await submit(clients, org, call_id='third')
     monkeypatch.setattr(get_settings(), 'admin_token', 'review-admin')
-    headers = {'X-Treg-Token': 'review-admin'}
+    headers = {'X-Stray-Token': 'review-admin'}
     first = (await clients.get('/admin/reviews', headers=headers,
                                params={'limit': 1, 'endpoint_id': 'example.search'})).json()
     second = (await clients.get('/admin/reviews', headers=headers, params={
@@ -156,8 +156,8 @@ async def test_mcp_review_relay(clients, surface):
 
 
 async def test_mcp_review_schema():
-    from treg.mcp import mcp, directory_mcp
-    from treg.feedback_contract import REVIEW_DESCRIPTION, REVIEW_USEFULNESS
+    from stray.mcp import mcp, directory_mcp
+    from stray.feedback_contract import REVIEW_DESCRIPTION, REVIEW_USEFULNESS
 
     for server in [mcp, directory_mcp]:
         tool = next(tool for tool in await server.list_tools() if tool.name == 'review')
@@ -199,7 +199,7 @@ async def test_public_demo_cannot_submit_reviews(clients):
 
     org_id = await _org_with_stripe_tool(clients)
     token = await _mint_public(clients, org_id)
-    response = await clients.post('/reviews', headers={'X-Treg-Token': token},
+    response = await clients.post('/reviews', headers={'X-Stray-Token': token},
                                   json={'call_id': 'id', 'usefulness': 'useful'})
     assert response.status_code == 403
     assert await rows() == []

@@ -1,4 +1,4 @@
-"""DB-backed ephemeral state + rate limiter (treg.ratestore) — backlog #3.
+"""DB-backed ephemeral state + rate limiter (stray.ratestore) — backlog #3.
 
 The point of moving OTP codes + the auth throttles into the DB is that they (a) survive a restart and
 (b) are shared across instances. We prove (a)/(b) here by writing with one session and reading with a
@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from sqlalchemy.dialects import postgresql, sqlite
 
-from treg import ratestore
-from treg.infra.db import reset_db, session_maker
-from treg.models import Ephemeral
+from stray import ratestore
+from stray.infra.db import reset_db, session_maker
+from stray.models import Ephemeral
 
 
 async def _fresh_db():

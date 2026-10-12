@@ -1,4 +1,4 @@
-"""Skill-directory scanner + payload builder (`treg upload skills`).
+"""Skill-directory scanner + payload builder (`stray upload skills`).
 
 Pure logic over synthetic skill dirs — no DB, no network. Covers: classification (contract /
 generated-from-script / generated-from-file / recipe_only), the env-var gap, base_url + binding from a
@@ -6,10 +6,10 @@ script's `API=`, contract writing, and build_payload for all three kinds.
 """
 from __future__ import annotations
 
-from treg import skills as sk
+from stray import skills as sk
 
 
-def _skill(tmp_path, name, *, skillmd="# s\n", script=None, secret=None, treg=None):
+def _skill(tmp_path, name, *, skillmd="# s\n", script=None, secret=None, stray=None):
     d = tmp_path / name
     d.mkdir()
     (d / "SKILL.md").write_text(skillmd)
@@ -18,9 +18,9 @@ def _skill(tmp_path, name, *, skillmd="# s\n", script=None, secret=None, treg=No
     if secret:
         sd = d / ".secrets"; sd.mkdir()
         (sd / secret[0]).write_text(secret[1])
-    if treg:
+    if stray:
         import json
-        (d / "treg.json").write_text(json.dumps(treg))
+        (d / "stray.json").write_text(json.dumps(stray))
     return d
 
 
@@ -52,7 +52,7 @@ def test_generated_from_local_secret_file(tmp_path):
 
 
 def test_existing_contract_used_verbatim(tmp_path):
-    _skill(tmp_path, "gsc", treg={"name": "gsc", "base_url": "https://searchconsole.googleapis.com",
+    _skill(tmp_path, "gsc", stray={"name": "gsc", "base_url": "https://searchconsole.googleapis.com",
                                    "secrets": [{"file": ".secrets/token.json", "name": "gsc", "kind": "oauth"}],
                                    "bindings": [{"secret": "gsc", "injector": "oauth"}]})
     [d] = sk.scan_skills(str(tmp_path))
@@ -63,7 +63,7 @@ def test_write_contract_only_for_generated(tmp_path):
     _skill(tmp_path, "render", script='API = "https://api.render.com/v1"\nimport os\nos.environ.get("RENDER_API_KEY")\n')
     [d] = sk.scan_skills(str(tmp_path), env_names={"RENDER_API_KEY"})
     path = sk.write_contract(d)
-    assert path and (tmp_path / "render" / "treg.json").exists()
+    assert path and (tmp_path / "render" / "stray.json").exists()
     # re-writing is a no-op without force
     assert sk.write_contract(d) is None
 
@@ -114,7 +114,7 @@ def test_colliding_secret_file_stems_get_unique_names(tmp_path):
 
 
 def test_contract_health_and_examples_carried(tmp_path):
-    _skill(tmp_path, "svc", treg={"name": "svc", "base_url": "https://api.svc.com",
+    _skill(tmp_path, "svc", stray={"name": "svc", "base_url": "https://api.svc.com",
                                    "secrets": [], "bindings": [{"secret": "x"}],
                                    "health": {"path": "ping"}, "examples": [{"method": "GET", "path": "me"}]})
     [d] = sk.scan_skills(str(tmp_path))
@@ -144,7 +144,7 @@ def test_shell_script_skill_is_detected(tmp_path):
 
 
 def test_contract_flags_absent_env_and_missing_file(tmp_path):
-    _skill(tmp_path, "a", treg={"name": "a", "base_url": "https://api.a.com",
+    _skill(tmp_path, "a", stray={"name": "a", "base_url": "https://api.a.com",
                                 "secrets": [{"env": "A_KEY", "name": "a", "kind": "env"}],
                                 "bindings": [{"secret": "a"}]})
     [d] = sk.scan_skills(str(tmp_path), env_names=set())   # A_KEY not present

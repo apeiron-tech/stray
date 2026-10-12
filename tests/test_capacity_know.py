@@ -8,16 +8,16 @@ from datetime import timedelta
 import httpx
 from sqlalchemy import select
 
-from treg import ratestore
-from treg.infra.db import reset_db, session_maker
-from treg.domain.capacity import collectors
-from treg.domain.capacity.policy import (
+from stray import ratestore
+from stray.infra.db import reset_db, session_maker
+from stray.domain.capacity import collectors
+from stray.domain.capacity.policy import (
     AGGREGATORS, LatestState, default_policy, ensure_policies, latest_state, policy_population,
 )
-from treg.domain.capacity.sweep import STATE_NS, run_sweep, snapshot_from
-from treg.domain.capacity.view import LatestStateView
-from treg.models import CapacityPolicy, CapacitySnapshot
-from treg.timeutil import utcnow_naive
+from stray.domain.capacity.sweep import STATE_NS, run_sweep, snapshot_from
+from stray.domain.capacity.view import LatestStateView
+from stray.models import CapacityPolicy, CapacitySnapshot
+from stray.timeutil import utcnow_naive
 
 
 async def test_policy_population_covers_every_platform_slot_and_both_aggregators():
@@ -28,9 +28,9 @@ async def test_policy_population_covers_every_platform_slot_and_both_aggregators
 
 
 async def test_octen_platform_account_has_a_known_dashboard_only_capacity_policy(monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_OCTEN", "TEST-OCTEN-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_OCTEN", "TEST-OCTEN-KEY")
     get_settings.cache_clear()
     try:
         policy = default_policy("octen", has_key=True)
@@ -100,9 +100,9 @@ def test_latest_state_rules():
 
 async def test_sweep_one_failing_collector_does_not_stop_the_others(monkeypatch):
     await reset_db()
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FINDYMAIL", "k1")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_LEADSFORGE", "k2")
-    from treg.config import get_settings
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FINDYMAIL", "k1")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_LEADSFORGE", "k2")
+    from stray.config import get_settings
     get_settings.cache_clear()
 
     async def good(c, key):

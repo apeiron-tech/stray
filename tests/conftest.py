@@ -14,11 +14,11 @@ import socket
 import tempfile
 
 # Tests and their CLI subprocesses must never emit production analytics.
-os.environ["TREG_TELEMETRY"] = "0"
+os.environ["STRAY_TELEMETRY"] = "0"
 
-# Isolate the test DB from any .env / running dev server BEFORE importing treg (the engine is
+# Isolate the test DB from any .env / running dev server BEFORE importing stray (the engine is
 # built at import time). A real env var overrides the .env file in pydantic-settings.
-# TREG_TEST_DB_URL (not TREG_DATABASE_URL - a stray production URL in a shell must never become the
+# STRAY_TEST_DB_URL (not STRAY_DATABASE_URL - a stray production URL in a shell must never become the
 # test target) points the suite at a specific database, e.g. the Postgres CI job.
 # Otherwise every test process gets its OWN sqlite file, named by pid: processes sharing one file
 # wipe each other's rows mid-test, whether they are xdist workers of one run (1,022 errors on the
@@ -26,15 +26,15 @@ os.environ["TREG_TELEMETRY"] = "0"
 _worker = os.environ.get("PYTEST_XDIST_WORKER", "")
 # The files live under the system temp dir, NOT the repo root: sixteen 600 KB databases rewritten
 # on every run kept editors' file watchers busy re-indexing the working tree.
-_db_dir = os.path.join(tempfile.gettempdir(), "treg-tests")
+_db_dir = os.path.join(tempfile.gettempdir(), "stray-tests")
 os.makedirs(_db_dir, exist_ok=True)
-_db_file = os.path.join(_db_dir, f"treg-test-{os.getpid()}.db")
+_db_file = os.path.join(_db_dir, f"stray-test-{os.getpid()}.db")
 atexit.register(lambda: [os.remove(p) for p in glob.glob(_db_file + "*")])
 _default = f"sqlite+aiosqlite:///{_db_file}"
 
 
 def _per_worker_postgres(url: str) -> str:
-    """An xdist worker against Postgres gets its own database (treg_test_gw0, ...), created on first
+    """An xdist worker against Postgres gets its own database (stray_test_gw0, ...), created on first
     use: `reset_db()` empties every table, so workers sharing one database wipe each other's rows."""
     import asyncio
     import asyncpg
@@ -56,21 +56,21 @@ def _per_worker_postgres(url: str) -> str:
     return base.set(database=name).render_as_string(hide_password=False)
 
 
-_test_db_url = os.environ.get("TREG_TEST_DB_URL")
+_test_db_url = os.environ.get("STRAY_TEST_DB_URL")
 if _test_db_url and _worker and _test_db_url.startswith("postgresql"):
     # Resolved once per process: tests that import `tests.conftest` load this module a second time.
-    _test_db_url = os.environ.get("TREG_TEST_DB_URL_WORKER") or _per_worker_postgres(_test_db_url)
-    os.environ["TREG_TEST_DB_URL_WORKER"] = _test_db_url
-os.environ["TREG_DATABASE_URL"] = _test_db_url or _default
+    _test_db_url = os.environ.get("STRAY_TEST_DB_URL_WORKER") or _per_worker_postgres(_test_db_url)
+    os.environ["STRAY_TEST_DB_URL_WORKER"] = _test_db_url
+os.environ["STRAY_DATABASE_URL"] = _test_db_url or _default
 # Replica tests opt in explicitly; never inherit a real replica from the shell or .env.
-os.environ["TREG_READ_DATABASE_URL"] = ""
-os.environ["TREG_EMAIL_DEV_MODE"] = "true"  # tests need the returned OTP code (prod default is now False)
-os.environ["TREG_RESEND_API_KEY"] = ""  # never fire a real Resend send from the test suite (send_otp/send_invite skip when empty)
-os.environ["TREG_RUN_ALLOWED_BINS"] = "sh,echo,true,false,cat,sleep,treg-nonexistent-bin-xyz"  # allow the test CLIs for --server run tests
-os.environ["TREG_PROXY_SSRF_CHECK"] = "false"
+os.environ["STRAY_READ_DATABASE_URL"] = ""
+os.environ["STRAY_EMAIL_DEV_MODE"] = "true"  # tests need the returned OTP code (prod default is now False)
+os.environ["STRAY_RESEND_API_KEY"] = ""  # never fire a real Resend send from the test suite (send_otp/send_invite skip when empty)
+os.environ["STRAY_RUN_ALLOWED_BINS"] = "sh,echo,true,false,cat,sleep,stray-nonexistent-bin-xyz"  # allow the test CLIs for --server run tests
+os.environ["STRAY_PROXY_SSRF_CHECK"] = "false"
 # The production default is OFF. The established connector tests and committed route snapshots test
 # the enabled product surface; dedicated tests below also prove the disabled deployment shape.
-os.environ["TREG_CLAUDE_CONNECTOR_ENABLED"] = "true"
+os.environ["STRAY_CLAUDE_CONNECTOR_ENABLED"] = "true"
 # Blank every registry credential so the suite NEVER inherits a developer's real .env. Settings
 # reads .env, and a real env var beats it — so without this, a machine with Google/X/LinkedIn
 # credentials configured runs a different suite than CI, and provider tests pass or fail depending
@@ -97,19 +97,19 @@ for _k in (
     "PLATFORM_KEY_KEENABLE", "PLATFORM_KEY_OLOSTEP",
     "PLATFORM_KEY_SEARCH1API",
 ):
-    os.environ[f"TREG_{_k}"] = ""  # the test upstream is an in-process ASGI transport, not real DNS
+    os.environ[f"STRAY_{_k}"] = ""  # the test upstream is an in-process ASGI transport, not real DNS
 
 import pytest  # noqa: E402
 from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 
-from treg import audit  # noqa: E402
-from treg.api import app  # noqa: E402
-from treg import archive  # noqa: E402
-from treg.config import get_settings  # noqa: E402
-from treg.infra.db import reset_db  # noqa: E402
-from treg.domain.identity import api_keys as managed_keys  # noqa: E402
+from stray import audit  # noqa: E402
+from stray.api import app  # noqa: E402
+from stray import archive  # noqa: E402
+from stray.config import get_settings  # noqa: E402
+from stray.infra.db import reset_db  # noqa: E402
+from stray.domain.identity import api_keys as managed_keys  # noqa: E402
 
 
 # The OTP-start + sandbox throttles (and the OTP codes) now live in the DB's `ephemeral` table, not in
@@ -297,7 +297,7 @@ def make_upstream(hook_hits: list | None = None) -> FastAPI:
         # It also reports the token's scopes in a response HEADER, not the body.
         if "good" in request.headers.get("authorization", ""):
             return JSONResponse(
-                {"ok": True, "team": "Acme Workspace", "team_id": "T0ACME", "user": "treg"},
+                {"ok": True, "team": "Acme Workspace", "team_id": "T0ACME", "user": "stray"},
                 headers={"x-oauth-scopes": "chat:write,channels:read,users:read"},
             )
         return JSONResponse({"ok": False, "error": "invalid_auth"})
@@ -374,7 +374,7 @@ async def verified_identity(client, email):
     """Real OTP proof, capturing mail delivery even when Postgres hides dev codes."""
     from unittest.mock import patch
     import httpx
-    from treg import email as email_sender
+    from stray import email as email_sender
 
     delivered = {}
 
@@ -398,13 +398,13 @@ async def verified_signup(client, *, json, headers=None):
     """Funded test identity through OTP and team creation, with fixture identity fields."""
     import httpx
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.infra.db import session_maker
+    from stray.models import User
 
     email = json["email"]
     token = await verified_identity(client, email)
     response = await client.post("/orgs", json={"name": email},
-        headers={**(headers or {}), "X-Treg-Token": token})
+        headers={**(headers or {}), "X-Stray-Token": token})
     if response.status_code != 200:
         return response
     async with session_maker() as db:
@@ -422,8 +422,8 @@ async def funded_user(client, email, *, micro=1_000_000):
     for something funds the team here instead of leaning on a promo that no longer arrives.
     Returns the whole registration body, so `["token"]` and `["org_id"]` both work.
     """
-    from treg.domain import money
-    from treg.infra.db import session_maker
+    from stray.domain import money
+    from stray.infra.db import session_maker
 
     body = (await client.post("/users", json={"email": email})).json()
     async with session_maker() as db:
@@ -464,7 +464,7 @@ async def _drain_around_each_test():
 async def clients():
     # The archive report's 30s server-side cache would outlive this reset and serve the previous
     # test's numbers — clear it with the schema.
-    from treg.routers import admin as admin_routes
+    from stray.routers import admin as admin_routes
     admin_routes._archive_report_cache.clear()
     await reset_db()
     await app.state.endpoint_observation_reader.reset()
@@ -474,7 +474,7 @@ async def clients():
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:
             r = await verified_signup(c, json={"email": "tim@superdesign.dev"})
             assert r.status_code == 200, r.text
-            c.headers["X-Treg-Token"] = r.json()["token"]  # authed by default from here on
+            c.headers["X-Stray-Token"] = r.json()["token"]  # authed by default from here on
             yield c
     finally:
         await drain_background_writes()
@@ -490,34 +490,34 @@ def _reset_call_path_caches():
     Each cache is optional: the modules land in successive PRs of the capacity stack."""
     def _clear() -> None:
         try:
-            from treg.domain.capacity.view import view as capacity_view
+            from stray.domain.capacity.view import view as capacity_view
             capacity_view.invalidate()
             capacity_view._states = {}
             capacity_view._locks = {}
-            from treg.domain.capacity import marks as capacity_marks
+            from stray.domain.capacity import marks as capacity_marks
             capacity_marks._last_probe.clear()
         except ImportError:
             pass
         try:
-            from treg.domain.capacity.routes_view import view as routes_view
+            from stray.domain.capacity.routes_view import view as routes_view
             routes_view.invalidate()
             routes_view._routes = []
         except ImportError:
             pass
         try:
-            from treg.infra.upstream.limiter import limiter
+            from stray.infra.upstream.limiter import limiter
             limiter.reset()
         except ImportError:
             pass
         # The shared store's in-process fallback (the review-invitation budget): org ids restart
         # with every reset_db(), so a counter left over would ration the NEXT test's team.
-        from treg.infra import kv
+        from stray.infra import kv
         kv._store = None
         # Who a key is, for the hub's lists: remembered a minute, and keys repeat across resets.
-        from treg.routers import hub_gate
+        from stray.routers import hub_gate
         hub_gate._readers.clear()
         # The catalog's agent verdicts: a five-minute fold of callreview, which reset_db() empties.
-        from treg.application import feedback
+        from stray.application import feedback
         feedback.forget_endpoint_verdicts()
     _clear()
     yield
@@ -529,8 +529,8 @@ def posthog_events(monkeypatch):
     """The PostHog mirror, switched on for one test with its POST stubbed. `await posthog_events()`
     drains the queue and returns every `tool_called` event the server would have batched out, so a
     test can assert on the product-analytics shape of a call without the two-second flush timer."""
-    from treg import analytics
-    from treg.config import get_settings
+    from stray import analytics
+    from stray.config import get_settings
 
     monkeypatch.setattr(get_settings(), "posthog_key", "phc_test_suite", raising=False)
     sent: list[dict] = []
@@ -550,19 +550,19 @@ def posthog_events(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _no_ambient_treg_identity(monkeypatch):
-    """A dev machine may carry a per-agent identity in its environment (TREG_TOKEN et al — the
+def _no_ambient_stray_identity(monkeypatch):
+    """A dev machine may carry a per-agent identity in its environment (STRAY_TOKEN et al — the
     'Scope this agent' setup persists them into the coding agent's global env, and the CLI lets
     them beat any config). The suite must not change behavior because of who is running it."""
-    for var in ("TREG_TOKEN", "TREG_ORG", "TREG_URL", "TREG_CLIENT"):
+    for var in ("STRAY_TOKEN", "STRAY_ORG", "STRAY_URL", "STRAY_CLIENT"):
         monkeypatch.delenv(var, raising=False)
 
 
 @pytest.fixture
 def kitt_on(monkeypatch):
-    from treg.config import get_settings
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TRYKITT', 'TEST-KITT-KEY')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'trykitt')
+    from stray.config import get_settings
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TRYKITT', 'TEST-KITT-KEY')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'trykitt')
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -572,8 +572,8 @@ def kitt_on(monkeypatch):
 
 @pytest.fixture
 def contactout_platform(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_CONTACTOUT", "PLATFORM-TEST")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "contactout")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_CONTACTOUT", "PLATFORM-TEST")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "contactout")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Live-verify the EXTENDED tier in bulk, under a hard spend cap.
 
-    TREG_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify_extended.py tikhub \
+    STRAY_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify_extended.py tikhub \
         --budget 1.80 [--platform tiktok] [--limit 50] [--dry-run] [--refresh]
 
 scripts/catalog_verify.py is the CORE-tier tool: a handful of hand-written endpoints, one line of
@@ -62,7 +62,7 @@ import httpx
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "src" / "treg" / "catalog"
+CATALOG = ROOT / "src" / "stray" / "catalog"
 
 # far tighter than catalog_verify.py's core-tier caps — see the module docstring
 MAX_STR = 200
@@ -157,7 +157,7 @@ def cost_of(ep: dict) -> float:
 
 def auth_headers(service: str, cred: str) -> tuple[dict, dict, str]:
     sys.path.insert(0, str(ROOT / "src"))
-    from treg.oauth_providers import REGISTRY
+    from stray.oauth_providers import REGISTRY
 
     prov = REGISTRY.get(service)
     if prov is None:
@@ -520,9 +520,9 @@ def main(argv: list[str]) -> int:
     if args.retrim:
         return retrim(args.service)
 
-    cred = os.environ.get("TREG_CATALOG_CRED")
+    cred = os.environ.get("STRAY_CATALOG_CRED")
     if not cred and not args.dry_run:
-        print("TREG_CATALOG_CRED not set", file=sys.stderr)
+        print("STRAY_CATALOG_CRED not set", file=sys.stderr)
         return 2
 
     file = CATALOG / f"{args.service}.extended.yaml"

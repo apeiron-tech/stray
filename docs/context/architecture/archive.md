@@ -2,30 +2,30 @@
 title: Archive - versioned history and cache admission
 status: building
 sources:
-  - src/treg/archive.py
-  - src/treg/catalog/hunter.yaml
-  - src/treg/domain/catalog/results.py
-  - src/treg/alembic/versions/0031_archive_result_admission.py
+  - src/stray/archive.py
+  - src/stray/catalog/hunter.yaml
+  - src/stray/domain/catalog/results.py
+  - src/stray/alembic/versions/0031_archive_result_admission.py
   - tests/test_cache_result_admission.py
-  - src/treg/archive_bodies.py
-  - src/treg/config.py
-  - src/treg/infra/object_store.py
-  - src/treg/alembic/versions/0032_archive_body_storage.py
+  - src/stray/archive_bodies.py
+  - src/stray/config.py
+  - src/stray/infra/object_store.py
+  - src/stray/alembic/versions/0032_archive_body_storage.py
   - tests/test_archive_r2.py
   - tests/fake_object_store.py
   - scripts/smoke_archive_r2.py
-  - src/treg/alembic/versions/0002_archive_tables.py
-  - src/treg/alembic/versions/0003_callrecord_cached.py
-  - src/treg/alembic/versions/0004_archivekey_request_shape.py
-  - src/treg/alembic/versions/0011_callrecord_archive_link.py
-  - src/treg/application/call/service.py
-  - src/treg/application/call/settle.py
-  - src/treg/alembic/versions/0039_archive_own_key_and_repeat_pricing.py
+  - src/stray/alembic/versions/0002_archive_tables.py
+  - src/stray/alembic/versions/0003_callrecord_cached.py
+  - src/stray/alembic/versions/0004_archivekey_request_shape.py
+  - src/stray/alembic/versions/0011_callrecord_archive_link.py
+  - src/stray/application/call/service.py
+  - src/stray/application/call/settle.py
+  - src/stray/alembic/versions/0039_archive_own_key_and_repeat_pricing.py
   - scripts/backfill_call_archive_links.py
-  - src/treg/api.py
-  - src/treg/bootstrap.py
-  - src/treg/routers/admin.py
-  - src/treg/application/asynctasks.py
+  - src/stray/api.py
+  - src/stray/bootstrap.py
+  - src/stray/routers/admin.py
+  - src/stray/application/asynctasks.py
 related:
   - architecture/data-model.md
   - architecture/proxy-model.md
@@ -34,7 +34,7 @@ related:
 
 # The archive
 
-Async settlement archives terminal provider JSON under `treg://asynctasks/<call_id>` using the
+Async settlement archives terminal provider JSON under `stray://asynctasks/<call_id>` using the
 original endpoint and provider. This mandatory evidence may contain expiring result URLs; the worker
 never follows those URLs and never stores generated media bytes. `load_terminal_responses((call_id, endpoint_id), …)`, which looks them up by the indexed key hash
 they were stored under and tolerates a pruned carrier,
@@ -53,7 +53,7 @@ it is fresh and no later decisive observation invalidates it; **archive** is eve
 archive's top layer. History is kept on purpose: it is the future data product (per-key
 time-series — backlink profiles over time, price history), not waste.
 
-**Build state: COMPLETE (PR 6 of 6 — the panel shipped after the original five).** All five slices exist behind `TREG_ARCHIVE_MODE`:
+**Build state: COMPLETE (PR 6 of 6 — the panel shipped after the original five).** All five slices exist behind `STRAY_ARCHIVE_MODE`:
 skeleton, recorder, catalog `cache` field + report, serve path, and the learner + refresh worker.
 Every credential tier takes part (own-key answers are recorded and served, see "Own-key
 answers") and a metered hit has ONE pricing difference (see "Pricing a hit"). What does
@@ -76,10 +76,10 @@ Own-TOOL calls (no catalog entry) stay untouched. **An answer that quotes the te
 credential back is never recorded** (`_echoes_own_credential`: the exact renderings the error
 masking uses, failing closed when they cannot be rendered). The same guard, the same
 `origin_org_id` provenance and the same sharing rules apply to a metered call on an org
-credential that rides treg's pay-per-use OAuth app (`billed_oauth`): the token is the team's.
+credential that rides stray's pay-per-use OAuth app (`billed_oauth`): the token is the team's.
 
 **A hit on an own key is free**: nothing is reserved or settled (non-negotiable 1), the response
-carries the same `X-Treg-Cache: hit` headers and the audit row `cached: true`, and `cache_price`
+carries the same `X-Stray-Cache: hit` headers and the audit row `cached: true`, and `cache_price`
 reports `free`. Own-key observations train the timer and the result state of THEIR key like any
 other.
 
@@ -91,7 +91,7 @@ answer is — "the vendor allows storage" never implies "the answer does not dep
 
 | Who asked | `scope: any_account` | `scope: own_account` |
 |---|---|---|
-| treg's platform key | `public` | (never: own_account needs the caller's credential) |
+| stray's platform key | `public` | (never: own_account needs the caller's credential) |
 | the org's own credential (API key or OAuth token, metered or not) | `org`, or `public` only where the ENDPOINT declares `cache.sharing: public` | `connection` |
 
 Sharing is enforced by the KEY, not by a filter at read time: `scope_tags` folds `org:<id>` or
@@ -101,7 +101,7 @@ in one team never see each other's sites (a reconnect is a new secret, hence a f
 A caller consults its scopes most specific first — connection only; org then public (a
 platform-key fetch may serve an own-key caller free); public only — and records under the first.
 `ArchiveKey.scope` (`org` | `conn` | NULL = public, including every key from before the column)
-lets the refresh worker skip private keys: treg's platform key cannot re-ask them. History from
+lets the refresh worker skip private keys: stray's platform key cannot re-ask them. History from
 before this rule (platform and billed-OAuth rows, all NULL-origin, all on public keys) is
 therefore never served to an `own_account` caller and only ever served on `any_account`
 endpoints, where it was a public question anyway. `cache_sharing` and, on a hit, `cache_scope`
@@ -109,7 +109,7 @@ are on `tool_called`.
 
 `cache.sharing: public` is an ENDPOINT declaration (`_validate_cache` refuses it on a provider
 header, refuses any value but `public`, and refuses it on an `own_account` endpoint): it says
-this endpoint's answer is identical whoever asks — treg's own service OAuth reading public data
+this endpoint's answer is identical whoever asks — stray's own service OAuth reading public data
 is the intended case — and it is judged per endpoint, never inherited from a provider's licence.
 Nothing in the shipped catalog declares it yet.
 
@@ -118,7 +118,7 @@ Nothing in the shipped catalog declares it yet.
 A metered hit goes through the same reserve → settle as a live call (the hold is reserved
 before the lookup and settled once, whatever answered). The one difference is the amount, and
 it is per TEAM and per QUESTION: a team's first billed call on a question pays full price
-whether the vendor or the archive answered it — the archive saved treg a vendor call, not the
+whether the vendor or the archive answered it — the archive saved stray a vendor call, not the
 team its first price — and from that team's second call on, a hit settles at
 `archive_hit_repeat_price_percent` (default 10) of what the live call would cost. Another team's
 first hit on the same question is full price. A forced live call (`Cache-Control: no-cache`) is
@@ -160,7 +160,7 @@ interpreted as the legacy DB path and does not promise that bytes were retained.
 snapshots keep existing carrier dedup. No historical rows, body columns or objects are migrated
 or deleted by this change.
 
-All switches are settings, with environment prefix `TREG_`:
+All switches are settings, with environment prefix `STRAY_`:
 
 | Setting | Values | Default |
 |---|---|---|
@@ -285,10 +285,10 @@ Stats count snapshots with recoverable bodies in DB or R2, including deduplicate
 When archive mode is enabled, any R2 switch requires `ARCHIVE_OBJECT_STORE_ENDPOINT`, `ARCHIVE_OBJECT_STORE_BUCKET`,
 `ARCHIVE_OBJECT_STORE_ACCESS_KEY_ID` and `ARCHIVE_OBJECT_STORE_SECRET_ACCESS_KEY`; bootstrap refuses incomplete config
 before opening DB connections. See SECURITY.md. `scripts/smoke_archive_r2.py`
-performs a real PUT/HEAD/GET only on `treg-archive-dev`, outside CI; it leaves
+performs a real PUT/HEAD/GET only on `stray-archive-dev`, outside CI; it leaves
 one tiny test object. It reads environment variables only and prints SKIP with missing variable
 names when configuration/credentials are absent. `.env.example` contains blank placeholders. No real smoke runs as part of unit tests. Production values are managed
-separately in treg-internal.
+separately in stray-internal.
 
 ## The call→archive link (2026-09-03)
 
@@ -300,7 +300,7 @@ dict. The call service (`application/call/service.py`) keeps them in `archive_ke
 targets are already indexed). `archive.resolve_result(key_hash, content_hash)` walks
 row → key → newest snapshot with that content hash → `body_of` carrier, and returns the request
 shape (`req_*`, pre-injection) plus the answer; a hash-only version reports `stored: false`.
-`GET /calls/{id}/result` (api.py; `id` is the row id or the `X-Treg-Call-Id`) exposes it to members of the row's org, with a `note` on every
+`GET /calls/{id}/result` (api.py; `id` is the row id or the `X-Stray-Call-Id`) exposes it to members of the row's org, with a `note` on every
 "nothing on file" branch; `/calls` rows carry `has_result`. The archive stays platform-scoped —
 what makes the read safe is that the row belongs to the team and names the exact bytes that
 team already received. Failure evidence (`error_*`) is untouched and still admin-only.
@@ -393,7 +393,7 @@ request shape — method, vendor-facing URL, body, and the KEYING headers (`req_
 them the recording lands under a different key, found the hard way in tests) — with injection
 built by the ONE authoritative builder (`oauth_providers.platform_bindings` — moved out of
 api.py so this worker never imports api; the routers→api import boundary forbids that chain)
-and the key value from settings. The refresh spend is treg's own, attached to no org and absent from the ledger — the
+and the key value from settings. The refresh spend is stray's own, attached to no org and absent from the ledger — the
 cap is the brake. Each refresh records through the same `_store` (`origin="refresh"`), so
 refreshing IS the sampling that teaches the timer.
 
@@ -403,8 +403,8 @@ refreshing IS the sampling that teaches the timer.
 AND after the money reserve, replacing only the network trip. **Money on a hit has the same
 shape as a live call**: reserve, settle, cost header and ledger rows — the settle just closes
 the hold at the repeat price when the team has paid for the question before (see "Pricing a
-hit"; own-key hits are free). The response carries `X-Treg-Cache: hit`, `X-Treg-Fetched-At`,
-`X-Treg-Age`, and the audit row (+ `/calls`) carries `cached: true`. A hit is NOT a new
+hit"; own-key hits are free). The response carries `X-Stray-Cache: hit`, `X-Stray-Fetched-At`,
+`X-Stray-Age`, and the audit row (+ `/calls`) carries `cached: true`. A hit is NOT a new
 observation: no snapshot, no change statistics — only `last_requested_at` (fire-and-forget
 `_touch`), the demand signal PR 5 reads.
 
@@ -412,7 +412,7 @@ Freshness (phase 1) is `archive.ttl_for(entry)`: FIXED guesses per capability pr
 (`crypto.price` 5 min, `web.search` 1 h, `people.`/`company.` 7 d, default 1 h), always capped by
 a judged `cache.max_age_s` (CoinGecko's 24 h duty). The learner (PR 5) replaces these per key.
 `declared_max_age_s()` supplies the vendor ceiling to defaults, learning and lookup. Serving
-caps even an already-learned positive TTL by that declaration, then by caller `X-Treg-Max-Age`.
+caps even an already-learned positive TTL by that declaration, then by caller `X-Stray-Max-Age`.
 Without a declared ceiling, learned TTLs can exceed capability defaults; lookup never uses the
 static default to cap a positive learned TTL.
 
@@ -424,7 +424,7 @@ and on refresh, even over a learned timer. The learner cannot tell "flat over th
 served hours later. A vendor `max_age_s` and an operator ceiling stack with it (the minimum wins).
 
 Caller controls, always honored: `Cache-Control: no-cache`/`no-store` forces a live call (the
-read-after-write escape — the archive never guesses cross-endpoint effects); `X-Treg-Max-Age`
+read-after-write escape — the archive never guesses cross-endpoint effects); `X-Stray-Max-Age`
 tightens (never widens) the window; malformed values are ignored. None on every uncertain branch
 — serving off, veto, unjudged policy, no/stale/hash-only snapshot — and a lookup fault degrades
 to a live call (an api-side belt catches even a fault in lookup's own plumbing; tested by making
@@ -463,7 +463,7 @@ later for the timers; it complements `/admin/reconcile/repeats`, which prices wh
 Hooked in `call_tool` immediately after `_buffer_response` — the one line where "metered platform
 call, body already in memory" is a fact, which IS eligibility gate 3. Metered 2xx only, and never a 2xx the capacity
 signature table reads as our own account running dry (Icypeas' 200 "insufficient credits"); the
-serve path already emits `X-Treg-Cache: hit`. The call context also carries `cached` from
+serve path already emits `X-Stray-Cache: hit`. The call context also carries `cached` from
 `served_hit`, so review invitations can exclude archive hits independently of response headers. `archive.record()` is fire-and-forget with
 audit's discipline: bounded pending set (512), failures swallowed but logged at **ERROR** (a lost
 recording has to clear `FaultCaptureHandler`'s threshold to be reportable at all; degradations that
@@ -492,25 +492,25 @@ would have it stored — judge `cache` per provider with that in mind.
 
 ## The mode switch
 
-`TREG_ARCHIVE_MODE` (config `archive_mode`, default `off`) → `archive.mode()`:
+`STRAY_ARCHIVE_MODE` (config `archive_mode`, default `off`) → `archive.mode()`:
 `off` | `shadow` (record + learn, serve nothing — phase 0) | `serve` (shadow + answer eligible
 fresh hits — phase 1+). Any unrecognized value degrades to `off`: a typo must disable, never
 enable. Rollback is an environment-setting change through the deployment's normal configuration
 process.
 
-In serve mode the two rollout gates default open: `TREG_ARCHIVE_SERVE_ENDPOINTS` is `*` (every
-endpoint the policy allows) and `TREG_ARCHIVE_SERVE_PERCENT` is `100` (the sha256 team/endpoint
+In serve mode the two rollout gates default open: `STRAY_ARCHIVE_SERVE_ENDPOINTS` is `*` (every
+endpoint the policy allows) and `STRAY_ARCHIVE_SERVE_PERCENT` is `100` (the sha256 team/endpoint
 cohort still applies below 100). The allowlist is comma-separated and mixes three entry forms: an
 exact endpoint id, `capability:<prefix>` (a whole family — `capability:people.` matches every
 endpoint whose capability starts with it; `endpoint_served` checks the entry's capability), and
 `*`. Empty serves nothing — the rollback lever. An operator stages a rollout by narrowing the list
 to ids or families; the hosted service's staging plan lives in its private runbook. The refresh
-worker applies a family or `*` allowlist in Python after its query (`serve_ids_only` decides). `TREG_ARCHIVE_SERVE_MAX_AGE_S` remains the
-per-endpoint operator ceiling and `TREG_ARCHIVE_HIT_REPEAT_PRICE_PERCENT` (10) the repeat price.
+worker applies a family or `*` allowlist in Python after its query (`serve_ids_only` decides). `STRAY_ARCHIVE_SERVE_MAX_AGE_S` remains the
+per-endpoint operator ceiling and `STRAY_ARCHIVE_HIT_REPEAT_PRICE_PERCENT` (10) the repeat price.
 
 ## Conservative comparison and controlled serving (2026-09-08)
 
-The comparison setting and helper are removed. Old `TREG_ARCHIVE_COMPARISON_MODE` environment
+The comparison setting and helper are removed. Old `STRAY_ARCHIVE_COMPARISON_MODE` environment
 values are ignored, including `legacy_noise`. Events and admin props now report `json`: object
 order and whitespace are ignored by default. Endpoint declarations can further relax comparison
 using `cache.ignore_paths`; `archive_change_observed.masked_by_ignore` reports byte changes
@@ -526,8 +526,8 @@ remain lifetime mixed-policy statistics, not a clean measurement of strict compa
 `/admin/archive` exposes that caveat plus comparison mode, adaptive TTL policy, endpoint
 allowlist and rollout percentage.
 
-Serving now requires all three: `TREG_ARCHIVE_MODE=serve`, an exact endpoint ID in comma-separated
-`TREG_ARCHIVE_SERVE_ENDPOINTS` (default empty), and admission by `TREG_ARCHIVE_SERVE_PERCENT`
+Serving now requires all three: `STRAY_ARCHIVE_MODE=serve`, an exact endpoint ID in comma-separated
+`STRAY_ARCHIVE_SERVE_ENDPOINTS` (default empty), and admission by `STRAY_ARCHIVE_SERVE_PERCENT`
 (default 0). `rollout_reason` hashes the team ID plus endpoint into stable 0-99 buckets; increasing
 the percentage preserves existing treatment teams. Out-of-range percentages disable serving.
 Empty caller cohort also fails closed. These gates run before opening a lookup DB session.
@@ -536,7 +536,7 @@ A cohort is an experiment assignment, not an authorization boundary or a cache-k
 Only review endpoints whose request headers, account context and reuse rights fit the existing
 legacy key before allowlisting; key v2 is still future work.
 
-`TREG_ARCHIVE_REFRESH_DAILY_CAP` now defaults 0 so experiments do not accidentally trigger
+`STRAY_ARCHIVE_REFRESH_DAILY_CAP` now defaults 0 so experiments do not accidentally trigger
 platform spend. Explicitly enabled refresh requires a nonempty serving allowlist and valid
 positive rollout percentage; its candidate query is restricted to allowlisted endpoints and
 uses the same effective TTL policy. Turn it off during initial measurement.
@@ -635,7 +635,7 @@ table round-trips; listed in CI's serial Postgres job (never xdist — shared da
 
 ## The panel (PR 6)
 
-`GET /admin/archive/panel` serves `src/treg/web/archive-panel.html` — a data-free page SHELL,
+`GET /admin/archive/panel` serves `src/stray/web/archive-panel.html` — a data-free page SHELL,
 deliberately unauthenticated: every number arrives via fetch() with the admin token the page asks
 the operator to paste (kept in localStorage; a refused token reopens the gate). It polls
 `/admin/archive` every 5 s, and a clicked endpoint row loads `/admin/archive/keys?endpoint_id=`
@@ -730,7 +730,7 @@ inspector's own load. A dash in the TTL column means "click to learn".
 
 Startup uses the normalized archive mode (unknown values disable it). R2-only writes require
 all three reads to be `r2-first`; default, EU and FedRAMP R2 endpoints are accepted. The dev smoke
-script has no bucket argument and accepts only `treg-archive-dev`.
+script has no bucket argument and accepts only `stray-archive-dev`.
 
 ObjectStore owns the sole download hash validation; the memory fake follows the same contract.
 `put` accepts the internally computed content hash to avoid rehashing immutable bytes. Read and
@@ -838,10 +838,10 @@ that actually drove TTL learning for `caller` and `refresh` origins only. Cache 
 never emit `archive_change_observed`. The background task has a separate three-second observation
 budget after the existing 30-second DB stage. Failure cannot undo or prevent the recording.
 `_read_change_body` collects an `archive_bodies.pointer` in a short background session, closes it,
-then calls `archive_bodies.read`. Observation follows `TREG_ARCHIVE_BODY_READ_LOOKUP`: default
+then calls `archive_bodies.read`. Observation follows `STRAY_ARCHIVE_BODY_READ_LOOKUP`: default
 `db` makes no R2 requests; `r2-first` uses verified GET and falls back exclusively to the background
 pool. It cannot enable R2 independently of the existing startup checks or rollback switches.
-`TREG_ARCHIVE_CHANGE_OBSERVATION_ENABLED=false` disables change reporting and its reads/CPU work
+`STRAY_ARCHIVE_CHANGE_OBSERVATION_ENABLED=false` disables change reporting and its reads/CPU work
 (default true). Declared ignore-path TTL comparison remains a separate decision mechanism.
 Both ignore comparison and change reporting share the recorder/touch semaphore budget of two,
 including fallback sessions and CPU work. No DB connection is held during object I/O. New bodies
@@ -963,13 +963,13 @@ nonempty email string with a basic mailbox/domain shape; `not_found` without an 
 Other status/field combinations are unknown and cannot serve. This is result validation, not
 mailbox deliverability verification. Historical bytes remain unchanged and are reclassified on lookup.
 
-`TREG_ARCHIVE_SERVE_MAX_AGE_S` is a JSON mapping of exact endpoint IDs to positive integer
+`STRAY_ARCHIVE_SERVE_MAX_AGE_S` is a JSON mapping of exact endpoint IDs to positive integer
 seconds (empty by default). It is an operator freshness ceiling, independent of vendor declarations.
 Lookup takes the minimum of the learned TTL, vendor ceiling, operator ceiling and caller max-age;
 `TTL_NEVER` remains authoritative. The refresh worker also respects the operator ceiling for its
 80% due threshold. It does not reset or rewrite historical learning counters. `/admin/archive`
 reports `serve_max_age_s` so operators can verify the running configuration. The global team cohort
-percentage is unchanged. Production pilot values and rollback live in treg-internal.
+percentage is unchanged. Production pilot values and rollback live in stray-internal.
 
 The legacy archive-link backfill takes an explicit database connection (`--dsn` or
-`TREG_DATABASE_URL`). It does not provision network access or read cloud credentials.
+`STRAY_DATABASE_URL`). It does not provision network access or read cloud credentials.

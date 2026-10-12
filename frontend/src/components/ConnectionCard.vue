@@ -35,7 +35,7 @@ export default {
       <b>{{manage || a.s ? a.name : (a.c.resource_name || a.name)}}</b>
       <!-- The tool name is what an agent calls: several accounts of one provider each get their own.
            Only worth a line once it says more than the provider's own id. -->
-      <span v-if="a.c && a.c.name!==a.service" class="pl-meta" :title="'treg call '+a.c.name">{{a.c.name}}</span>
+      <span v-if="a.c && a.c.name!==a.service" class="pl-meta" :title="'stray call '+a.c.name">{{a.c.name}}</span>
     </span>
     <span class="cn-st" :title="a.st.title">{{a.st.label}}</span>
   </div>

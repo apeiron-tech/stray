@@ -1,5 +1,5 @@
 {
-  "name": "treg-dsh",
+  "name": "stray-dsh",
   "version": "0.22.0",
   "type": "module",
   "description": "OpenRouter for tools - 2,896 agent-friendly tools, pay for the usage, not subscription",
@@ -27,7 +27,7 @@
   "homepage": "https://treg.to",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/superdesigndev/treg.git"
+    "url": "git+https://github.com/apeiron-tech/stray.git"
   },
   "author": "Superdesign dev, Inc. <jason@superdesign.dev> (https://treg.to)",
   "license": "Apache-2.0"

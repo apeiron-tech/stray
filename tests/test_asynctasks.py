@@ -14,22 +14,22 @@ from httpx import AsyncClient, ReadTimeout
 from sqlalchemy import event
 from sqlmodel import select
 
-from treg.application import asynctasks as task_app
-from treg.application.call import service as call_service
-from treg.application.call.resolve import MarketplaceCall
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
-from treg import archive, audit, reconcile
-from treg.domain import asynctasks
-from treg.domain.catalog import store as catalog_store
-from treg.domain import money as ledger
-from treg.domain.money import settlement
-from treg.infra.db import _engine, session_maker
-from treg.models import (
+from stray.application import asynctasks as task_app
+from stray.application.call import service as call_service
+from stray.application.call.resolve import MarketplaceCall
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
+from stray import archive, audit, reconcile
+from stray.domain import asynctasks
+from stray.domain.catalog import store as catalog_store
+from stray.domain import money as ledger
+from stray.domain.money import settlement
+from stray.infra.db import _engine, session_maker
+from stray.models import (
     ArchiveKey, ArchiveSnapshot, AsyncResourceRecord, AsyncTaskRecord, CallRecord, Hold, LedgerEntry,
     Tool,
 )
-from treg.timeutil import utcnow_naive
+from stray.timeutil import utcnow_naive
 
 
 EP = "replicate.image-gen.flux-schnell"
@@ -76,8 +76,8 @@ def _response(status: int, document: object) -> UpstreamResponse:
 
 @pytest.fixture
 def replicate_platform(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_REPLICATE", "test-platform-token")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "replicate")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_REPLICATE", "test-platform-token")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "replicate")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -115,10 +115,10 @@ async def test_generation_is_never_replayed_across_orgs(
     second = await clients.post(f"/call/{EP}", json={"input": {
         "prompt": "A red kite over a beach.", "num_outputs": 1,
         "aspect_ratio": "1:1", "output_format": "webp",
-    }}, headers={"X-Treg-Token": other.json()["token"]})
+    }}, headers={"X-Stray-Token": other.json()["token"]})
     assert second.status_code == 201
     assert second.json()["id"] == "private-second-task"
-    assert second.headers.get("X-Treg-Cache") != "hit"
+    assert second.headers.get("X-Stray-Cache") != "hit"
 
 
 async def test_worker_errors_grow_backoff_and_progress_resets_it(
@@ -246,7 +246,7 @@ async def test_inline_success_waits_for_usage_and_then_closes_original_hold(
     clients: AsyncClient, monkeypatch, replicate_platform,
 ):
     submitted = await _submit(clients, monkeypatch, {"id": "usage-late"})
-    call_id = submitted.headers["X-Treg-Call-Id"]
+    call_id = submitted.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         row = await db.get(AsyncTaskRecord, call_id)
         row.settlement_basis = settlement.derive_basis(
@@ -283,7 +283,7 @@ async def test_inline_settlement_failure_preserves_response_and_cron_recovers(
     monkeypatch.setattr(call_service, "relay", live)
     response = await clients.get("/call/replicate.predictions.get?id=prediction-worker")
     assert response.status_code == 200 and response.json() == {"status": "succeeded"}
-    assert response.headers["X-Treg-Cost-Micro"] == "0"
+    assert response.headers["X-Stray-Cost-Micro"] == "0"
     async with session_maker() as db:
         assert (await db.get(AsyncTaskRecord, call_id)).status == "pending"
         assert await db.get(Hold, call_id) is not None
@@ -297,8 +297,8 @@ async def test_settle_fork_keeps_hold_and_writes_pending_row(
     response = await _submit(clients, monkeypatch, {
         "id": "prediction-1", "urls": {"get": "https://api.replicate.com/v1/predictions/1"}})
     assert response.status_code == 201
-    assert response.headers["X-Treg-Cost-Micro"] == "3000"
-    call_id = response.headers["X-Treg-Call-Id"]
+    assert response.headers["X-Stray-Cost-Micro"] == "3000"
+    call_id = response.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         row = await db.get(AsyncTaskRecord, call_id)
         hold = await db.get(Hold, call_id)
@@ -312,7 +312,7 @@ async def test_owned_free_poll_creates_no_money_entries(
     clients: AsyncClient, monkeypatch, replicate_platform, status: int,
 ):
     submitted = await _submit(clients, monkeypatch, {"id": "free-poll-task"})
-    submission_ref = submitted.headers["X-Treg-Call-Id"]
+    submission_ref = submitted.headers["X-Stray-Call-Id"]
     await audit.drain()
 
     async def fake_poll(*args, **kwargs):
@@ -335,8 +335,8 @@ async def test_owned_free_poll_creates_no_money_entries(
                  or sql.startswith("update org ")]
     assert money_sql == []
     assert response.status_code == status
-    assert response.headers["X-Treg-Cost-Micro"] == "0"
-    poll_ref = response.headers["X-Treg-Call-Id"]
+    assert response.headers["X-Stray-Cost-Micro"] == "0"
+    poll_ref = response.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         entries = (await db.execute(select(LedgerEntry).where(
             LedgerEntry.call_id == poll_ref))).scalars().all()
@@ -363,12 +363,12 @@ async def test_owned_free_poll_hidden_before_activity_pagination(
     assert polled.status_code == status
     await audit.drain()
     page = (await clients.get("/calls?limit=1&days=1")).json()
-    assert len(page) == 1 and page[0]["call_ref"] == second.headers["X-Treg-Call-Id"]
+    assert len(page) == 1 and page[0]["call_ref"] == second.headers["X-Stray-Call-Id"]
     older = (await clients.get(f"/calls?limit=1&before_id={page[0]['id']}")).json()
-    assert len(older) == 1 and older[0]["call_ref"] == first.headers["X-Treg-Call-Id"]
+    assert len(older) == 1 and older[0]["call_ref"] == first.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         record = (await db.execute(select(CallRecord).where(
-            CallRecord.call_ref == polled.headers["X-Treg-Call-Id"]))).scalar_one()
+            CallRecord.call_ref == polled.headers["X-Stray-Call-Id"]))).scalar_one()
         assert record.kind == "async_poll"
         assert record.cost_charged_micro == 0
         if status == 500:
@@ -395,7 +395,7 @@ async def test_owned_free_poll_bypasses_reserve_and_reads_fresh_status(
                                      headers={"Idempotency-Key": "same-poll"})
         assert response.status_code == 200
         assert response.json()["status"] == expected
-        assert response.headers["X-Treg-Cost-Micro"] == "0"
+        assert response.headers["X-Stray-Cost-Micro"] == "0"
 
 
 async def test_owned_free_poll_timeout_keeps_diagnostics_without_money_or_activity(
@@ -409,10 +409,10 @@ async def test_owned_free_poll_timeout_keeps_diagnostics_without_money_or_activi
     monkeypatch.setattr(call_service, "relay", timeout)
     response = await clients.get("/call/replicate.predictions.get?id=timeout-poll-task")
     assert response.status_code == 502
-    assert response.headers["X-Treg-Cost-Micro"] == "0"
+    assert response.headers["X-Stray-Cost-Micro"] == "0"
     await audit.drain()
     activity = (await clients.get("/calls")).json()
-    assert [row["call_ref"] for row in activity] == [submitted.headers["X-Treg-Call-Id"]]
+    assert [row["call_ref"] for row in activity] == [submitted.headers["X-Stray-Call-Id"]]
     async with session_maker() as db:
         row = (await db.execute(select(CallRecord).where(
             CallRecord.kind == "async_poll"))).scalar_one()
@@ -430,7 +430,7 @@ async def test_owned_terminal_poll_finalizes_original_task_before_response(
     clients: AsyncClient, monkeypatch, replicate_platform, terminal, expected, kind, charged,
 ):
     submitted = await _submit(clients, monkeypatch, {"id": "instant-task"})
-    call_id = submitted.headers["X-Treg-Call-Id"]
+    call_id = submitted.headers["X-Stray-Call-Id"]
     document = {"id": "instant-task", "status": terminal,
                 "output": ["https://example.invalid/first.png"]}
 
@@ -440,7 +440,7 @@ async def test_owned_terminal_poll_finalizes_original_task_before_response(
     monkeypatch.setattr(call_service, "relay", fake_poll)
     polled = await clients.get("/call/replicate.predictions.get?id=instant-task")
     assert polled.status_code == 200 and polled.json() == document
-    assert polled.headers["X-Treg-Cost-Micro"] == "0"
+    assert polled.headers["X-Stray-Cost-Micro"] == "0"
     async with session_maker() as db:
         row = await db.get(AsyncTaskRecord, call_id)
         assert row.status == expected and row.settled_micro == charged
@@ -467,8 +467,8 @@ async def test_owned_terminal_poll_finalizes_original_task_before_response(
 
 
 async def test_firecrawl_crawl_poll_settles_reported_credits_once(clients: AsyncClient, monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FIRECRAWL", "PLATFORM-FIRECRAWL")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "firecrawl")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FIRECRAWL", "PLATFORM-FIRECRAWL")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "firecrawl")
     get_settings.cache_clear()
     job_id = "01a0e894-a4fd-77fe-8131-e3f2d5720dbe"
     try:
@@ -522,8 +522,8 @@ async def test_a_2xx_without_a_readable_task_settles_at_zero_on_the_request_path
     monkeypatch.setattr(call_service, "relay", fake_relay)
     response = await clients.post(f"/call/{EP}", json={"input": {"prompt": "x", "num_outputs": 1}})
     assert response.status_code == status
-    assert response.headers["X-Treg-Cost-Micro"] == "0"
-    call_id = response.headers["X-Treg-Call-Id"]
+    assert response.headers["X-Stray-Cost-Micro"] == "0"
+    call_id = response.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         assert await db.get(AsyncTaskRecord, call_id) is None
         assert await db.get(Hold, call_id) is None
@@ -537,7 +537,7 @@ async def test_one_failing_row_does_not_abort_the_tick(
 ):
     """relay() raises GatewayFailed (an unset platform key, an SSRF refusal), which is not an
     httpx or JSON error: it must back that row off and let the tick serve the others."""
-    from treg.application.call.types import GatewayFailed
+    from stray.application.call.types import GatewayFailed
     broken = await _due_submission(clients, monkeypatch, {"status": "succeeded", "output": ["u"]})
     fine = await _due_submission(clients, monkeypatch, {"status": "succeeded", "output": ["u"]})
 
@@ -566,22 +566,22 @@ async def test_pending_row_write_failure_releases_the_hold_and_alerts(
         "urls": {"get": "https://api.replicate.com/v1/predictions/untracked"},
     })
     assert response.status_code == 201
-    assert response.headers["X-Treg-Cost-Micro"] == "0"
-    call_id = response.headers["X-Treg-Call-Id"]
+    assert response.headers["X-Stray-Cost-Micro"] == "0"
+    call_id = response.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         assert await db.get(AsyncTaskRecord, call_id) is None
         assert await db.get(Hold, call_id) is None
         entry = (await db.execute(select(LedgerEntry).where(
             LedgerEntry.call_id == call_id, LedgerEntry.kind == "release"))).scalar_one()
-    # treg's own failure is treg's cost: the whole reserve goes back, nothing is settled.
+    # stray's own failure is stray's cost: the whole reserve goes back, nothing is settled.
     assert entry.amount_micro == 3000
     assert entry.meta.get("reason") == "async_task_not_recorded"
 
 
 @pytest.fixture
 def minimax_platform(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_MINIMAX", "test-platform-token")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "minimax")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_MINIMAX", "test-platform-token")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "minimax")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -589,8 +589,8 @@ def minimax_platform(monkeypatch):
 
 @pytest.fixture
 def openrouter_platform(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_OPENROUTER", "test-platform-token")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "openrouter")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_OPENROUTER", "test-platform-token")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "openrouter")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -599,8 +599,8 @@ def openrouter_platform(monkeypatch):
 @pytest.fixture
 def legacy_async_platform(monkeypatch):
     for provider in ("apify", "brightdata", "companyenrich", "oceanio"):
-        monkeypatch.setenv(f"TREG_PLATFORM_KEY_{provider.upper()}", "test-platform-token")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "apify,brightdata,companyenrich,oceanio")
+        monkeypatch.setenv(f"STRAY_PLATFORM_KEY_{provider.upper()}", "test-platform-token")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "apify,brightdata,companyenrich,oceanio")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -697,7 +697,7 @@ async def test_platform_task_status_requires_same_org_submission(
     assert ambiguous.status_code == 400 and relayed == [True]
 
     other = await clients.post("/users", json={"email": "task-stranger@example.com"})
-    stranger = {"X-Treg-Token": other.json()["token"]}
+    stranger = {"X-Stray-Token": other.json()["token"]}
     denied = await clients.get(
         "/call/replicate.predictions.get?id=prediction-owned", headers=stranger)
     assert denied.status_code == 403 and relayed == [True]
@@ -713,7 +713,7 @@ async def test_byok_task_status_keeps_direct_provider_object_access(
     clients: AsyncClient, monkeypatch, request, platform, secret, url,
 ):
     """A team's own key reaches any object on its own provider account; ownership checks guard
-    only treg's shared key."""
+    only stray's shared key."""
     request.getfixturevalue(platform)
     await clients.post("/secrets", json={"name": secret, "value": "own-token"})
 
@@ -784,7 +784,7 @@ async def test_legacy_platform_async_resources_are_recorded_and_authorized(
         assert (await clients.get(url)).status_code == 200
 
     other = await clients.post("/users", json={"email": "legacy-stranger@example.com"})
-    denied = await clients.get(owned_calls[0], headers={"X-Treg-Token": other.json()["token"]})
+    denied = await clients.get(owned_calls[0], headers={"X-Stray-Token": other.json()["token"]})
     assert denied.status_code == 403
 
     async with session_maker() as db:
@@ -809,9 +809,9 @@ async def test_legacy_platform_async_utilities_deny_unknown_ids_before_relay(
 
 
 async def test_icypeas_shared_key_reads_only_this_teams_searches(clients: AsyncClient, monkeypatch):
-    """The listing modes enumerate every search on treg's one Icypeas account: every team's."""
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ICYPEAS", "test-platform-token")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "icypeas")
+    """The listing modes enumerate every search on stray's one Icypeas account: every team's."""
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ICYPEAS", "test-platform-token")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "icypeas")
     get_settings.cache_clear()
     responses = [{"success": True, "item": {"_id": "search-owned", "status": "NONE"}},
                  {"success": True, "status": "in_progress", "file": "file-owned"}]
@@ -838,7 +838,7 @@ async def test_icypeas_shared_key_reads_only_this_teams_searches(clients: AsyncC
         response = await clients.post(f"/call/{endpoint}", json=body)
         assert response.status_code in (400, 403), (endpoint, body, response.status_code)
     other = await clients.post("/users", json={"email": "icypeas-stranger@example.com"})
-    stranger = {"X-Treg-Token": other.json()["token"]}
+    stranger = {"X-Stray-Token": other.json()["token"]}
     for endpoint, body in owned:
         assert (await clients.post(f"/call/{endpoint}", json=body, headers=stranger)).status_code == 403
     get_settings.cache_clear()
@@ -848,7 +848,7 @@ async def test_apify_actor_start_needs_own_key(
     clients: AsyncClient, monkeypatch, legacy_async_platform,
 ):
     async def must_not_relay(*args, **kwargs):
-        raise AssertionError("an unmetered actor run reached treg's Apify account")
+        raise AssertionError("an unmetered actor run reached stray's Apify account")
 
     monkeypatch.setattr(call_service, "relay", must_not_relay)
     response = await clients.post(
@@ -879,7 +879,7 @@ async def _submit_minimax(clients: AsyncClient, monkeypatch, task_id: str) -> st
         "model": "MiniMax-Hailuo-2.3", "prompt": "A paper boat.", "duration": 6,
         "resolution": "768P"})
     assert response.status_code == 200
-    return response.headers["X-Treg-Call-Id"]
+    return response.headers["X-Stray-Call-Id"]
 
 
 async def test_owned_terminal_poll_teaches_result_id_before_fetch(
@@ -909,7 +909,7 @@ async def test_owned_terminal_poll_teaches_result_id_before_fetch(
     other = await clients.post("/users", json={"email": "file-stranger@example.com"})
     denied = await clients.get(
         "/call/minimax.video-gen.result.retrieve?file_id=minimax-file-owned",
-        headers={"X-Treg-Token": other.json()["token"]})
+        headers={"X-Stray-Token": other.json()["token"]})
     assert denied.status_code == 403 and len(relay_calls) == 2
 
 
@@ -940,8 +940,8 @@ async def test_a_2xx_that_fails_the_expect_rule_releases_and_is_not_deferred(
         "model": "MiniMax-Hailuo-2.3", "prompt": "A paper boat.", "duration": 6,
         "resolution": "768P"})
     assert response.status_code == 200
-    assert response.headers["X-Treg-Cost-Micro"] == "0"
-    call_id = response.headers["X-Treg-Call-Id"]
+    assert response.headers["X-Stray-Cost-Micro"] == "0"
+    call_id = response.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         assert await db.get(AsyncTaskRecord, call_id) is None
         assert await db.get(Hold, call_id) is None
@@ -956,7 +956,7 @@ async def _due_submission(clients, monkeypatch, document: dict) -> str:
         "id": "prediction-worker",
         "urls": {"get": "https://api.replicate.com/v1/predictions/worker"},
     })
-    call_id = response.headers["X-Treg-Call-Id"]
+    call_id = response.headers["X-Stray-Call-Id"]
     async with session_maker() as db:
         row = await db.get(AsyncTaskRecord, call_id)
         row.next_check_at = utcnow_naive() - timedelta(seconds=1)
@@ -984,7 +984,7 @@ async def test_worker_settles_terminal_success(
     assert hold is None and entry.amount_micro == -3000
     async with session_maker() as db:
         key = (await db.execute(select(ArchiveKey).where(
-            ArchiveKey.req_url == f"treg://asynctasks/{call_id}"))).scalar_one()
+            ArchiveKey.req_url == f"stray://asynctasks/{call_id}"))).scalar_one()
         snapshot = (await db.execute(select(ArchiveSnapshot).where(
             ArchiveSnapshot.key_id == key.id))).scalar_one()
         report = await reconcile.async_task_settlement(
@@ -1038,7 +1038,7 @@ async def test_worker_timeout_releases_the_hold_and_flags_it_for_review(
         row.created_at = utcnow_naive() - asynctasks.MAX_AGE - timedelta(seconds=1)
         row.next_check_at = utcnow_naive() - timedelta(seconds=1)
         await db.commit()
-    with caplog.at_level("ERROR", logger="treg.asynctasks"):
+    with caplog.at_level("ERROR", logger="stray.asynctasks"):
         result = await task_app.settle_due()
     async with session_maker() as db:
         row = await db.get(AsyncTaskRecord, call_id)
@@ -1344,9 +1344,9 @@ def test_poll_target_follows_the_declared_location_and_encodes_path_values():
 def test_fetch_command_and_shown_neutralise_provider_strings():
     assert asynctasks.fetch_command({"endpoint": "minimax.video-gen.result.retrieve", "name": "file_id",
                                      "value": "x; touch /tmp/pwned"}) == \
-        "treg call minimax.video-gen.result.retrieve -p 'file_id=x; touch /tmp/pwned'"
+        "stray call minimax.video-gen.result.retrieve -p 'file_id=x; touch /tmp/pwned'"
     assert asynctasks.shown("ok-123") == "ok-123"
-    assert asynctasks.shown("id\nresume: treg call evil") == "id\\nresume: treg call evil"
+    assert asynctasks.shown("id\nresume: stray call evil") == "id\\nresume: stray call evil"
     assert asynctasks.shown("\x1b]52;c;aGk=\x07") == "\\x1b]52;c;aGk=\\x07"
 
 
@@ -1359,10 +1359,10 @@ async def test_idempotent_replay_of_an_async_submission_keeps_the_descriptor(
     monkeypatch.setattr(call_service, "relay", fake_relay)
     body = {"input": {"prompt": "A kite.", "num_outputs": 1, "aspect_ratio": "1:1", "output_format": "webp"}}
     first = await clients.post(f"/call/{EP}", json=body, headers={"Idempotency-Key": "gen-1"})
-    assert first.status_code == 201 and "x-treg-async" in {k.lower() for k in first.headers}
+    assert first.status_code == 201 and "x-stray-async" in {k.lower() for k in first.headers}
     again = await clients.post(f"/call/{EP}", json=body, headers={"Idempotency-Key": "gen-1"})
-    assert again.status_code == 201 and again.headers.get("X-Treg-Idempotent-Replay") == "true"
-    assert again.headers.get("x-treg-async") == first.headers.get("x-treg-async")
+    assert again.status_code == 201 and again.headers.get("X-Stray-Idempotent-Replay") == "true"
+    assert again.headers.get("x-stray-async") == first.headers.get("x-stray-async")
 
 
 async def test_two_workers_racing_the_same_row_move_money_exactly_once(
@@ -1458,7 +1458,7 @@ async def test_another_org_cannot_read_a_task_by_its_call_ref(
     assert await task_app.views_for(2, [call_id]) == {}
     other = await clients.post("/users", json={"email": "someone-else@example.com"})
     assert other.status_code == 200
-    stranger = {"X-Treg-Token": other.json()["token"]}
+    stranger = {"X-Stray-Token": other.json()["token"]}
     assert (await clients.get(f"/calls/{call_id}", headers=stranger)).status_code == 404
     assert call_id not in {r.get("call_ref") for r in (await clients.get("/calls", headers=stranger)).json()}
 
@@ -1470,7 +1470,7 @@ def _upstream_idempotency_keys(relayed: list) -> list[str]:
 async def test_shared_key_idempotency_label_is_partitioned_per_org(
     clients: AsyncClient, monkeypatch, replicate_platform,
 ):
-    """Two orgs sending one Idempotency-Key on treg's key must not collide on the provider account.
+    """Two orgs sending one Idempotency-Key on stray's key must not collide on the provider account.
 
     Reproduced live against LeadsForge (2026-09-09): the provider returned org A's job to org B under
     the shared label, and `resource_ownership.produces` then made B its owner.
@@ -1486,14 +1486,14 @@ async def test_shared_key_idempotency_label_is_partitioned_per_org(
                       "aspect_ratio": "1:1", "output_format": "webp"}}
     label = {"Idempotency-Key": "retry-1"}
     other = await verified_signup(clients, json={"email": "idem-stranger@example.com"})
-    stranger = {"X-Treg-Token": other.json()["token"], **label}
+    stranger = {"X-Stray-Token": other.json()["token"], **label}
 
     assert (await clients.post(f"/call/{EP}", json=body, headers=label)).status_code == 201
     assert (await clients.post(f"/call/{EP}", json=body, headers=stranger)).status_code == 201
     keys = _upstream_idempotency_keys(relayed)
     assert len(keys) == 2 and keys[0] != keys[1], "the two orgs reached the provider under one label"
     assert "retry-1" not in keys, "the caller's raw label reached the shared provider account"
-    # The same org retrying the same label is still served by treg's own replay, not the provider.
+    # The same org retrying the same label is still served by stray's own replay, not the provider.
     assert (await clients.post(f"/call/{EP}", json=body, headers=label)).status_code == 201
     assert len(relayed) == 2
 
@@ -1517,12 +1517,12 @@ def _upstream_user_agents(relayed: list) -> list[str]:
     return [v.decode() for req in relayed for k, v in req.raw_headers if k.lower() == b"user-agent"]
 
 
-async def test_shared_key_calls_carry_treg_user_agent_own_key_the_callers(
+async def test_shared_key_calls_carry_stray_user_agent_own_key_the_callers(
     clients: AsyncClient, monkeypatch, replicate_platform,
 ):
-    """On treg's key the provider sees treg's account, so it sees treg's User-Agent, never a library
+    """On stray's key the provider sees stray's account, so it sees stray's User-Agent, never a library
     default its bot rules block (LimaData and Wiza answered Cloudflare 1010 to Python's default)."""
-    from treg.config import TREG_USER_AGENT
+    from stray.config import STRAY_USER_AGENT
     relayed = []
 
     async def fake_relay(request, *args, **kwargs):
@@ -1532,7 +1532,7 @@ async def test_shared_key_calls_carry_treg_user_agent_own_key_the_callers(
     monkeypatch.setattr(call_service, "relay", fake_relay)
     python = {"User-Agent": "Python-urllib/3.13"}
     assert (await clients.post(f"/call/{EP}", json={"input": {"prompt": "a"}}, headers=python)).status_code == 201
-    assert _upstream_user_agents(relayed) == [TREG_USER_AGENT]
+    assert _upstream_user_agents(relayed) == [STRAY_USER_AGENT]
     await clients.post("/secrets", json={"name": "replicate", "value": "own-token"})
     assert (await clients.post(f"/call/{EP}", json={"input": {"prompt": "b"}}, headers=python)).status_code == 201
     assert _upstream_user_agents(relayed)[1:] == ["Python-urllib/3.13"], "a team's own key relays the caller's header"
@@ -1546,7 +1546,7 @@ async def test_a_slow_first_catalog_load_does_not_time_out_a_poll(
     inside the timed poll and blocked the event loop past POLL_TIMEOUT_S, so polls timed out with a
     fast provider. The tick now loads the catalog first, off the loop; the poll reads the cache."""
     import time as _time
-    from treg.domain.catalog import store as catalog_store
+    from stray.domain.catalog import store as catalog_store
 
     call_id = await _due_submission(clients, monkeypatch, {"status": "succeeded", "output": ["url"]})
     real_load, first = catalog_store.load, {"cold": True}

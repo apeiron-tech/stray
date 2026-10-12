@@ -56,5 +56,5 @@ honest version of this workflow starts from competitor-post **commenters** on Li
 "grok bot lead generation" has no measured volume yet (17 days old) and a soft SERP (x.ai
 announcement, a day-old YouTube, an r/AI_Agents thread, two setup guides). The page that targets it
 is **the existing lead-list workflow**, retitled for the term when it has an agent-specific
-rendering, or the X Article in `marketing/_grok-bot-treg-2026-08-28.md` linking to it. Day-7 /
+rendering, or the X Article in `marketing/_grok-bot-stray-2026-08-28.md` linking to it. Day-7 /
 day-21 on exact-head position; autocomplete rechecked weekly.

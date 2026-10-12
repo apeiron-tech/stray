@@ -7,13 +7,13 @@ export default { setup: useDashboard }
 
           <!-- chooser -->
           <template v-if="!helpMode">
-            <h1>Tutorial</h1><p class="sub">Four ways to learn treg - pick one.</p>
+            <h1>Tutorial</h1><p class="sub">Four ways to learn stray - pick one.</p>
             <div class="grid" style="max-width:680px">
               <div class="card" @click="helpMode='cli'" style="cursor:pointer">
                 <h3>▤ CLI tutorial</h3><p class="muted" style="font-family:var(--sans);margin:7px 0 0">The whole registry from your terminal - copy each command and follow along. {{tutSteps.length}} steps.</p>
               </div>
               <div class="card" @click="helpMode='dashboard'; tourI=0" style="cursor:pointer">
-                <h3>▚ Dashboard tour</h3><p class="muted" style="font-family:var(--sans);margin:7px 0 0">Everything you can do in this web UI, a screenshot per step. {{tourSteps.length}} steps.</p>
+                <h3>▛ Dashboard tour</h3><p class="muted" style="font-family:var(--sans);margin:7px 0 0">Everything you can do in this web UI, a screenshot per step. {{tourSteps.length}} steps.</p>
               </div>
               <div class="card" @click="helpMode='import-shell'; xtut.i=0" style="cursor:pointer">
                 <h3>▞ Import &amp; shell</h3><p class="muted" style="font-family:var(--sans);margin:7px 0 0">Turn the CLIs on your machine into team tools, then use them in a shell where they just work - plus the security sandbox. {{(tutData.importShell||[]).length}} steps.</p>

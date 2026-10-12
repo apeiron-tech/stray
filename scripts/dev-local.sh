@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 #
-# dev-local.sh — bring the treg dev stack up in one command.
+# dev-local.sh — bring the stray dev stack up in one command.
 #
-# One service: the FastAPI server (`python -m treg`, port 18790) in a tmux window,
-# started with TREG_EMAIL_DEV_MODE=true (the OTP shows in the login page / API
-# response — no mail sender needed) and its own sqlite DB (treg-dev.db), so your
+# One service: the FastAPI server (`python -m stray`, port 18790) in a tmux window,
+# started with STRAY_EMAIL_DEV_MODE=true (the OTP shows in the login page / API
+# response — no mail sender needed) and its own sqlite DB (stray-dev.db), so your
 # real data and .env stay untouched.
 #
-# The `cli` subcommand runs the WORKING-TREE treg CLI in a sandboxed HOME
+# The `cli` subcommand runs the WORKING-TREE stray CLI in a sandboxed HOME
 # (scripts/.dev-home), pre-pointed at localhost — it never touches
-# ~/.treg/config.json, which usually points at production.
+# ~/.stray/config.json, which usually points at production.
 #
 # Usage:
 #   scripts/dev-local.sh up            # start the server (idempotent)
-#   TREG_HUB_ENABLED=1 …/dev-local.sh up   # a feature flag from your shell reaches the server
+#   STRAY_HUB_ENABLED=1 …/dev-local.sh up   # a feature flag from your shell reaches the server
 #   scripts/dev-local.sh down          # stop it
 #   scripts/dev-local.sh status        # window list + port check
 #   scripts/dev-local.sh logs          # tail the server window
@@ -24,39 +24,39 @@
 #
 set -euo pipefail
 
-SESSION="treg-dev"
+SESSION="stray-dev"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT=18790
-DEV_DB="${TREG_DEV_DB:-$ROOT/treg-dev.db}"                 # *.db is gitignored
+DEV_DB="${STRAY_DEV_DB:-$ROOT/stray-dev.db}"                 # *.db is gitignored
 DEV_HOME="$ROOT/scripts/.dev-home"         # sandbox HOME for the dev CLI
 
 DEV_KEYS="$DEV_HOME/dev-keys.env"           # stable dev-only Fernet + session keys, minted once —
                                             # without them every --reload restart drops sessions/secrets
 # Feature flags from YOUR shell reach the server through here. A tmux session inherits the TMUX
-# SERVER's environment, not the calling client's, so `TREG_HUB_ENABLED=1 dev-local.sh up` would
+# SERVER's environment, not the calling client's, so `STRAY_HUB_ENABLED=1 dev-local.sh up` would
 # otherwise start a server that never saw the flag: it looks like it worked, and every hub route
 # answers 404. These expand HERE, in this script's own process, so the value is baked into the
 # command string tmux runs. Add a flag to the list to pass it through.
 PASSTHROUGH=""
 # Keys never go here (they would sit in the tmux command line): put them in $DEV_KEYS, which the
-# server sources. The first-run onboarding, for instance, reads TREG_ONBOARDING_TREG_TOKEN,
-# TREG_ONBOARDING_GITHUB_TOKEN and TREG_AI_GATEWAY_API_KEY from there.
-for _v in TREG_HUB_ENABLED TREG_TABLE_ENABLED TREG_TABLE_TEAMS TREG_TABLE_USERS TREG_SHEETS_REDIRECT_URIS \
-          TREG_ONBOARDING_V2 TREG_ONBOARDING_V2_EMAILS TREG_ONBOARDING_TREG_URL; do
+# server sources. The first-run onboarding, for instance, reads STRAY_ONBOARDING_STRAY_TOKEN,
+# STRAY_ONBOARDING_GITHUB_TOKEN and STRAY_AI_GATEWAY_API_KEY from there.
+for _v in STRAY_HUB_ENABLED STRAY_TABLE_ENABLED STRAY_TABLE_TEAMS STRAY_TABLE_USERS STRAY_SHEETS_REDIRECT_URIS \
+          STRAY_ONBOARDING_V2 STRAY_ONBOARDING_V2_EMAILS STRAY_ONBOARDING_STRAY_URL; do
   [ -n "${!_v:-}" ] && PASSTHROUGH="$PASSTHROUGH $_v=${!_v}"
 done
 # This script's own three come LAST so they always win: the dev stack keeps its own sqlite database
 # and its OTP dev mode whatever the caller's shell says.
-SERVER_ENV="${PASSTHROUGH# } TREG_EMAIL_DEV_MODE=true TREG_FRONTEND_DEV=${TREG_FRONTEND_DEV:-true} TREG_PUBLIC_URL=http://localhost:$PORT TREG_CONNECT_DEMO_ENABLED=true TREG_DATABASE_URL=sqlite+aiosqlite:///$DEV_DB"
-SERVER_CMD="cd $ROOT && set -a && . $DEV_KEYS && set +a && env $SERVER_ENV uv run python -m treg --reload"
+SERVER_ENV="${PASSTHROUGH# } STRAY_EMAIL_DEV_MODE=true STRAY_FRONTEND_DEV=${STRAY_FRONTEND_DEV:-true} STRAY_PUBLIC_URL=http://localhost:$PORT STRAY_CONNECT_DEMO_ENABLED=true STRAY_DATABASE_URL=sqlite+aiosqlite:///$DEV_DB"
+SERVER_CMD="cd $ROOT && set -a && . $DEV_KEYS && set +a && env $SERVER_ENV uv run python -m stray --reload"
 
 ensure_dev_keys() {
   [ -f "$DEV_KEYS" ] && return
   mkdir -p "$DEV_HOME"
   info "minting dev keys (once) → $DEV_KEYS"
   {
-    printf 'TREG_SECRET_KEY=%s\n' "$(cd "$ROOT" && uv run python -m treg keygen)"
-    printf 'TREG_SESSION_SECRET=%s\n' "$(openssl rand -hex 24)"
+    printf 'STRAY_SECRET_KEY=%s\n' "$(cd "$ROOT" && uv run python -m stray keygen)"
+    printf 'STRAY_SESSION_SECRET=%s\n' "$(openssl rand -hex 24)"
   } > "$DEV_KEYS"
 }
 
@@ -118,10 +118,10 @@ restart() { ensure_dev_keys; tmux respawn-window -k -t "$SESSION:server" "$SERVE
 attach()  { tmux attach -t "$SESSION"; }
 
 cli() {
-  # Working-tree CLI, sandboxed: HOME is swapped so ~/.treg/config.json (prod) is never touched.
-  mkdir -p "$DEV_HOME/.treg"
-  [ -f "$DEV_HOME/.treg/config.json" ] || printf '{"base_url":"http://localhost:%s"}\n' "$PORT" > "$DEV_HOME/.treg/config.json"
-  (cd "$ROOT" && HOME="$DEV_HOME" uv run treg "$@")
+  # Working-tree CLI, sandboxed: HOME is swapped so ~/.stray/config.json (prod) is never touched.
+  mkdir -p "$DEV_HOME/.stray"
+  [ -f "$DEV_HOME/.stray/config.json" ] || printf '{"base_url":"http://localhost:%s"}\n' "$PORT" > "$DEV_HOME/.stray/config.json"
+  (cd "$ROOT" && HOME="$DEV_HOME" uv run stray "$@")
 }
 
 reset() {

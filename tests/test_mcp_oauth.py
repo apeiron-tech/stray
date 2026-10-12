@@ -1,4 +1,4 @@
-"""treg as an OAuth authorization server — the metadata, the refusals, and client registration.
+"""stray as an OAuth authorization server — the metadata, the refusals, and client registration.
 
 Nothing issues tokens yet. This file covers the half that says NO, deliberately built first: there is
 never a window where the server accepts tokens it has not learned to check.
@@ -6,7 +6,7 @@ never a window where the server accepts tokens it has not learned to check.
 The assertion that matters most is the audience one. Everything else here — signature, expiry, type —
 is ordinary token hygiene that any login system needs. `aud` is the one that exists because we are a
 RESOURCE server: a user grants a client access to a named resource, and a token addressed to some
-other MCP server must not spend a treg balance just because it happens to be validly signed by us.
+other MCP server must not spend a stray balance just because it happens to be validly signed by us.
 """
 
 from __future__ import annotations
@@ -17,10 +17,10 @@ import json
 
 import pytest
 
-from treg import mcp
-from treg.domain.identity import mcp_oauth, session
-from treg.routers import auth as auth_routes
-from treg.config import Settings, get_settings
+from stray import mcp
+from stray.domain.identity import mcp_oauth, session
+from stray.routers import auth as auth_routes
+from stray.config import Settings, get_settings
 
 # The MCP transport helpers live with the MCP tests; a token is only interesting here because it can
 # drive a tool, so reuse them rather than keeping a second copy that can drift.
@@ -84,7 +84,7 @@ async def test_metadata_advertises_BOTH_ways_for_a_client_to_identify_itself(cli
 
 async def test_a_token_for_ANOTHER_resource_is_refused():
     """The load-bearing check. A user consented to some other MCP server; that grant must not spend
-    a treg balance merely because we signed the token."""
+    a stray balance merely because we signed the token."""
     ours = mcp_oauth.mcp_resource_url()
     elsewhere = mcp_oauth.make_access_token(user_id=7, org_id=3,
                                             audience="https://evil.example.com/mcp/")
@@ -93,7 +93,7 @@ async def test_a_token_for_ANOTHER_resource_is_refused():
 
 
 async def test_a_session_cookie_is_not_an_access_token():
-    """treg mints session cookies and identity tokens with the same HMAC construction. Without a type
+    """stray mints session cookies and identity tokens with the same HMAC construction. Without a type
     marker one class of credential would silently validate as another — a browser session becoming an
     MCP grant, which nobody consented to."""
     cookie = session.make_session(7)
@@ -149,7 +149,7 @@ async def test_dynamic_registration_mints_a_client(clients):
         "redirect_uris": ["http://127.0.0.1:8976/callback"]})
     assert r.status_code == 201, r.text
     body = r.json()
-    assert body["client_id"].startswith("treg-client-")
+    assert body["client_id"].startswith("stray-client-")
     assert body["redirect_uris"] == ["http://127.0.0.1:8976/callback"]
     assert body["token_endpoint_auth_method"] == "none"   # public client + PKCE
 
@@ -173,7 +173,7 @@ async def test_loopback_http_is_allowed_because_a_CLI_cannot_hold_a_certificate(
 async def test_redirect_matching_is_EXACT_not_prefix():
     """The classic defeat of this check. `https://good.test/cb.evil` starts with the registered URI,
     and an open redirect under a registered host turns one sloppy page into stolen codes."""
-    from treg.domain.identity.mcp_oauth import redirect_uri_allowed
+    from stray.domain.identity.mcp_oauth import redirect_uri_allowed
 
     class C:
         redirect_uris = ["https://good.test/cb"]
@@ -187,10 +187,10 @@ async def test_redirect_matching_is_EXACT_not_prefix():
 async def test_loopback_redirect_allows_ANY_port_but_not_other_drift():
     """RFC 8252 §7.3: a native/CLI client (Claude Code, Codex, Cursor) registers a PORTLESS loopback
     URI and sends the ephemeral port it actually bound at authorize time. The AS MUST allow the port
-    to vary — treg's pure exact-match rejected `http://localhost:3118/callback` against a registered
+    to vary — stray's pure exact-match rejected `http://localhost:3118/callback` against a registered
     `http://localhost/callback` and broke every native client. Port varies; scheme, host and path do
     NOT, and the loopback exception must not leak to public hosts."""
-    from treg.domain.identity.mcp_oauth import redirect_uri_allowed
+    from stray.domain.identity.mcp_oauth import redirect_uri_allowed
 
     class C:  # exactly what Claude Code's client-id metadata document registers
         redirect_uris = ["http://localhost/callback", "http://127.0.0.1/callback"]
@@ -221,7 +221,7 @@ async def test_loopback_redirect_allows_ANY_port_but_not_other_drift():
 async def test_cimd_refuses_unsafe_urls(url):
     """`client_id` is a URL our SERVER fetches, which makes it a request-forgery primitive unless
     fenced. Reuses the same guard the webhook and tool base_url paths already use."""
-    from treg.domain.identity.mcp_oauth import fetch_client_id_metadata
+    from stray.domain.identity.mcp_oauth import fetch_client_id_metadata
 
     assert await fetch_client_id_metadata(url) is None
 
@@ -231,8 +231,8 @@ async def test_cimd_document_must_claim_its_own_url(monkeypatch):
     the consent users granted them."""
     import httpx
 
-    from treg import health
-    from treg.domain.identity import mcp_oauth
+    from stray import health
+    from stray.domain.identity import mcp_oauth
 
     monkeypatch.setattr(health, "safe_webhook_url", lambda u: True)
     monkeypatch.setattr(health, "host_is_public", lambda h: True)
@@ -251,8 +251,8 @@ async def test_cimd_accepts_a_well_formed_document(monkeypatch):
     """Not vacuous: the refusals above only mean something if a good document DOES load."""
     import httpx
 
-    from treg import health
-    from treg.domain.identity import mcp_oauth
+    from stray import health
+    from stray.domain.identity import mcp_oauth
 
     monkeypatch.setattr(health, "safe_webhook_url", lambda u: True)
     monkeypatch.setattr(health, "host_is_public", lambda h: True)
@@ -297,22 +297,22 @@ async def _signed_in(clients, email="oauth-user@superdesign.dev"):
     r = await verified_signup(clients, json={"email": email})
     assert r.status_code == 200, r.text
     token = r.json()["token"]
-    prev = clients.headers.get("X-Treg-Token")
-    clients.headers["X-Treg-Token"] = token
+    prev = clients.headers.get("X-Stray-Token")
+    clients.headers["X-Stray-Token"] = token
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     me = (await clients.get("/auth/me")).json()
     if prev:
-        clients.headers["X-Treg-Token"] = prev
+        clients.headers["X-Stray-Token"] = prev
     from sqlmodel import select
 
-    from treg.domain.identity import session as _sess
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.domain.identity import session as _sess
+    from stray.infra.db import session_maker
+    from stray.models import User
 
     async with session_maker() as db:
         user = (await db.execute(select(User).where(User.email == me["email"]))).scalar_one()
         cookie = _sess.make_session(user.id, token_version=user.token_version)
-    clients.cookies.set("treg_session", cookie)   # on the client: httpx deprecates per-request
+    clients.cookies.set("stray_session", cookie)   # on the client: httpx deprecates per-request
     return cookie, org_id
 
 
@@ -325,7 +325,7 @@ async def test_the_whole_flow_end_to_end(clients):
     params = {"client_id": client_id, "redirect_uri": "https://client.test/cb",
               "response_type": "code", "code_challenge": challenge,
               "code_challenge_method": "S256", "state": "xyz",
-              "resource": mcp_oauth.mcp_resource_url(), "scope": "treg:call"}
+              "resource": mcp_oauth.mcp_resource_url(), "scope": "stray:call"}
 
     shown = await clients.get("/oauth/authorize", params=params,
                               headers={"Accept": "application/json"})
@@ -363,7 +363,7 @@ async def test_v2_dcr_flow_mints_only_a_v2_audience(clients):
     params = {"client_id": client_id, "redirect_uri": "https://client.test/cb",
               "response_type": "code", "code_challenge": challenge,
               "code_challenge_method": "S256", "state": "v2", "resource": resource,
-              "scope": "treg:call"}
+              "scope": "stray:call"}
 
     shown = await clients.get("/oauth/authorize", params=params,
                               headers={"Accept": "application/json"})
@@ -486,11 +486,11 @@ async def test_you_cannot_approve_for_a_team_you_are_not_in(clients):
     client_id = await _register(clients)
     cookie, _ = await _signed_in(clients, "outsider@superdesign.dev")
     other = await clients.post("/users", json={"email": "stranger@superdesign.dev"})
-    prev = clients.headers.get("X-Treg-Token")
-    clients.headers["X-Treg-Token"] = other.json()["token"]
+    prev = clients.headers.get("X-Stray-Token")
+    clients.headers["X-Stray-Token"] = other.json()["token"]
     foreign_org = (await clients.get("/orgs")).json()[0]["org_id"]
     if prev:
-        clients.headers["X-Treg-Token"] = prev
+        clients.headers["X-Stray-Token"] = prev
     _, challenge = _pkce()
     r = await clients.post("/oauth/authorize", data={
         "client_id": client_id, "redirect_uri": "https://client.test/cb", "response_type": "code",
@@ -503,8 +503,8 @@ async def test_a_GET_never_grants_anything(clients):
     browser navigate — even with `org_id` supplied, as here."""
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import OAuthCode
+    from stray.infra.db import session_maker
+    from stray.models import OAuthCode
 
     client_id = await _register(clients)
     cookie, org_id = await _signed_in(clients, "getonly@superdesign.dev")
@@ -524,7 +524,7 @@ async def test_a_GET_never_grants_anything(clients):
 # ---- step 4: the consent screen — the only place a human sees what they grant ----------------
 
 async def test_the_consent_page_says_what_it_costs_in_WORDS(clients):
-    """A screen that lists `treg:call` and calls that informed consent is a formality. The two things
+    """A screen that lists `stray:call` and calls that informed consent is a formality. The two things
     that actually cost money or expose data have to be legible: this client can spend the team's
     balance, and can use keys the team registered."""
     client_id = await _register(clients)
@@ -578,7 +578,7 @@ async def test_a_CROSS_ORIGIN_submission_is_refused(clients):
 
 async def test_the_consent_page_cannot_be_framed(clients):
     """Clickjacking: an invisible frame over a decoy page turns "Allow" into a click the user thought
-    was something else. treg sets this globally; asserting it here is what notices if that changes."""
+    was something else. stray sets this globally; asserting it here is what notices if that changes."""
     client_id = await _register(clients)
     cookie, _ = await _signed_in(clients, "framed@superdesign.dev")
     _, challenge = _pkce()
@@ -642,7 +642,7 @@ async def test_the_token_spends_from_the_team_ON_THE_GRANT(clients):
 
 
 async def test_revoking_your_tokens_kills_an_existing_grant(clients):
-    """`token_version` is treg's kill switch for a leaked credential. An OAuth grant must honour it
+    """`token_version` is stray's kill switch for a leaked credential. An OAuth grant must honour it
     too, or the one button a user has for "make it stop" would quietly miss this door."""
     access, _ = await _grant(clients, "revoker@superdesign.dev")
     async with mcp_session(clients) as c:
@@ -651,8 +651,8 @@ async def test_revoking_your_tokens_kills_an_existing_grant(clients):
 
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.infra.db import session_maker
+    from stray.models import User
     async with session_maker() as db:
         user = (await db.execute(
             select(User).where(User.email == "revoker@superdesign.dev"))).scalar_one()
@@ -773,15 +773,15 @@ async def test_refresh_tokens_are_stored_HASHED(clients):
     worth stealing."""
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import OAuthRefresh
+    from stray.infra.db import session_maker
+    from stray.models import OAuthRefresh
 
     body, _, _ = await _grant_full(clients, "hashed@superdesign.dev")
     async with session_maker() as db:
         rows = (await db.execute(select(OAuthRefresh))).scalars().all()
     assert rows, "expected a stored refresh token"
     assert all(body["refresh_token"] not in (r.token_hash or "") for r in rows)
-    assert all(len(r.token_hash) == 64 for r in rows), "sha256 hex, as everywhere else in treg"
+    assert all(len(r.token_hash) == 64 for r in rows), "sha256 hex, as everywhere else in stray"
 
 
 # ---- step 6: what an INDEPENDENT client found ------------------------------------------------
@@ -790,7 +790,7 @@ async def test_a_resource_we_do_not_serve_is_refused_UP_FRONT(clients):
     """Found by driving the flow with the MCP SDK's own client instead of my curl.
 
     It sent the URL it had dialled (`http://127.0.0.1:18790/mcp/`) rather than the canonical
-    identifier our metadata declares, which is a reasonable thing for a client to do. treg accepted
+    identifier our metadata declares, which is a reasonable thing for a client to do. stray accepted
     it and minted a token that was valid, well-formed and silently useless — the audience did not
     match, so the first tool call answered "not signed in" and pointed the reader at authentication
     when the real problem was the resource.
@@ -863,7 +863,7 @@ async def test_a_null_origin_from_a_redirect_chain_is_not_treated_as_cross_site(
 
 async def test_a_signed_out_user_is_returned_to_the_consent_screen(clients):
     """The bug ChatGPT found on its first real connect. A signed-out user clicking "Sign in with
-    treg" landed on the dashboard and the authorization was silently dropped.
+    stray" landed on the dashboard and the authorization was silently dropped.
 
     The cause was a `?next=` query I invented and nothing implemented, so the sign-in doors simply
     ignored it. The destination is now parked in a cookie and resumed at the dashboard, which is the
@@ -879,13 +879,13 @@ async def test_a_signed_out_user_is_returned_to_the_consent_screen(clients):
     sent_away = await clients.get("/oauth/authorize", params=params, follow_redirects=False)
     assert sent_away.status_code == 302
     assert sent_away.headers["location"] == "/?signin=oauth"
-    parked = (sent_away.cookies.get("treg_oauth_return") or "").strip('"')
+    parked = (sent_away.cookies.get("stray_oauth_return") or "").strip('"')
     assert parked.startswith("/oauth/authorize?"), f"nothing was parked: {parked!r}"
     assert params["client_id"] in parked, "the parked destination must be THIS request"
 
     # now sign in and land on the dashboard, as every browser door does
     cookie, _ = await _signed_in(clients, "returner@superdesign.dev")
-    clients.cookies.set("treg_oauth_return", parked)
+    clients.cookies.set("stray_oauth_return", parked)
     back = await clients.get("/app", follow_redirects=False)
     assert back.status_code == 302, "the dashboard must resume the parked authorization"
     assert back.headers["location"].startswith("/oauth/authorize?")
@@ -895,32 +895,32 @@ async def test_email_sign_in_on_the_homepage_resumes_the_parked_authorization(cl
     """The OAuth sign-in modal opens on `/`, and the email-code door reloads that page once the code
     is accepted, so the plain homepage must resume the authorization too. Only `/app` did, and an
     email sign-in from an MCP client ended on the marketing page with the connection abandoned."""
-    clients.cookies.set("treg_oauth_return", "/oauth/authorize?client_id=x")
+    clients.cookies.set("stray_oauth_return", "/oauth/authorize?client_id=x")
     signed_out = await clients.get("/", follow_redirects=False)
     assert signed_out.status_code == 200, "a signed-out visitor sees the homepage, not a loop"
 
     await _signed_in(clients, "homepage-returner@superdesign.dev")
-    clients.cookies.set("treg_oauth_return", "/oauth/authorize?client_id=x")
+    clients.cookies.set("stray_oauth_return", "/oauth/authorize?client_id=x")
     back = await clients.get("/", follow_redirects=False)
     assert back.status_code == 302
     assert back.headers["location"] == "/oauth/authorize?client_id=x"
 
-    clients.cookies.set("treg_oauth_return", "/anything-else")
+    clients.cookies.set("stray_oauth_return", "/anything-else")
     assert (await clients.get("/", follow_redirects=False)).status_code == 200
 
 
 async def test_connect_demo_is_explicitly_enabled_and_never_displays_token_prefixes(
     monkeypatch, clients,
 ):
-    monkeypatch.delenv("TREG_CONNECT_DEMO_ENABLED", raising=False)
+    monkeypatch.delenv("STRAY_CONNECT_DEMO_ENABLED", raising=False)
     assert Settings(_env_file=None).connect_demo_enabled is False, "the demo is off by default"
-    monkeypatch.setenv("TREG_CONNECT_DEMO_ENABLED", "false")
+    monkeypatch.setenv("STRAY_CONNECT_DEMO_ENABLED", "false")
     get_settings.cache_clear()
     try:
         assert (await clients.get("/connect-demo")).status_code == 404
         assert (await clients.get("/connect-demo/callback")).status_code == 404
 
-        monkeypatch.setenv("TREG_CONNECT_DEMO_ENABLED", "true")
+        monkeypatch.setenv("STRAY_CONNECT_DEMO_ENABLED", "true")
         get_settings.cache_clear()
         page = await clients.get("/connect-demo")
         callback = await clients.get("/connect-demo/callback")
@@ -939,37 +939,37 @@ async def test_the_parked_destination_cannot_be_used_as_an_open_redirect(clients
     cookie, _ = await _signed_in(clients, "openredir@superdesign.dev")
     for evil in ("https://attacker.test/", "//attacker.test/", "/app/../oauth/authorize?x=1",
                  "/anything-else"):
-        clients.cookies.set("treg_oauth_return", evil)
+        clients.cookies.set("stray_oauth_return", evil)
         r = await clients.get("/app", follow_redirects=False)
         assert r.status_code == 200, f"{evil!r} must NOT be honoured, got {r.status_code}"
-    clients.cookies.delete("treg_oauth_return")
+    clients.cookies.delete("stray_oauth_return")
 
 
 async def test_a_signed_out_visitor_is_not_bounced_in_a_loop(clients):
     """Resuming only once signed in. Otherwise the dashboard would send them to /oauth/authorize,
     which would send them back here, forever."""
     clients.cookies.clear()
-    clients.cookies.set("treg_oauth_return", "/oauth/authorize?client_id=x")
+    clients.cookies.set("stray_oauth_return", "/oauth/authorize?client_id=x")
     r = await clients.get("/app", follow_redirects=False)
     assert r.status_code == 200
 
 
 # ---- moving a live grant to another team --------------------------------------------------------
 async def _as(email: str) -> dict:
-    """Headers that act as a given user — an identity token, minted the way `treg login` does."""
+    """Headers that act as a given user — an identity token, minted the way `stray login` does."""
     from sqlmodel import select
 
-    from treg.domain.identity import session as _sess
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.domain.identity import session as _sess
+    from stray.infra.db import session_maker
+    from stray.models import User
 
     async with session_maker() as db:
         user = (await db.execute(select(User).where(User.email == email))).scalar_one()
-    return {"X-Treg-Token": _sess.make_identity(user.id, token_version=user.token_version)}
+    return {"X-Stray-Token": _sess.make_identity(user.id, token_version=user.token_version)}
 
 
 async def test_the_team_on_a_grant_can_be_moved_without_reconnecting(clients):
-    """The consent screen's choice was invisible and permanent: an agent reported a slug, `treg org
+    """The consent screen's choice was invisible and permanent: an agent reported a slug, `stray org
     ls` listed the teams of whoever was logged in THERE, and those need not be the same account.
     Money left a team nobody had opened. The team lives on the refresh family, so moving it is a row
     update the next refresh picks up — no tearing down a working connector to fix which balance it
@@ -1006,9 +1006,9 @@ async def test_a_rolling_deploy_family_without_authority_can_be_listed_and_moved
     from datetime import datetime
     from sqlmodel import select
 
-    from treg import crypto
-    from treg.infra.db import session_maker
-    from treg.models import OAuthGrant, OAuthRefresh
+    from stray import crypto
+    from stray.infra.db import session_maker
+    from stray.models import OAuthGrant, OAuthRefresh
 
     email = "rolling-gap@superdesign.dev"
     body, client_id, original_org_id = await _grant_full(clients, email)
@@ -1065,9 +1065,9 @@ async def test_refresh_repairs_missing_authority_with_the_original_consent_time(
     from datetime import datetime
     from sqlmodel import select
 
-    from treg import crypto
-    from treg.infra.db import session_maker
-    from treg.models import OAuthGrant, OAuthRefresh
+    from stray import crypto
+    from stray.infra.db import session_maker
+    from stray.models import OAuthGrant, OAuthRefresh
 
     body, client_id, _ = await _grant_full(clients, "rolling-refresh@superdesign.dev")
     consented_at = datetime(2026, 2, 3, 4, 5, 6)
@@ -1096,9 +1096,9 @@ async def test_only_the_grants_own_user_can_move_it(clients):
                                headers=await _as("owner@superdesign.dev"))).json()[0]["grant"]
 
     stranger = (await clients.post("/users", json={"email": "stranger@superdesign.dev"})).json()
-    theirs = (await clients.get("/orgs", headers={"X-Treg-Token": stranger["token"]})).json()[0]
+    theirs = (await clients.get("/orgs", headers={"X-Stray-Token": stranger["token"]})).json()[0]
     r = await clients.post(f"/oauth/grants/{grant}/team", json={"team": theirs["slug"]},
-                           headers={"X-Treg-Token": stranger["token"]})
+                           headers={"X-Stray-Token": stranger["token"]})
     assert r.status_code == 404, "and it must not confirm the grant exists"
 
 
@@ -1112,14 +1112,14 @@ async def test_balance_tells_an_oauth_caller_how_to_move_the_team(clients):
 
 
 async def test_the_listed_grant_id_is_the_one_use_team_accepts(clients, monkeypatch):
-    """The id printed by `treg mcp grants` is an ARGUMENT, not prose. It is 22 characters and the
+    """The id printed by `stray mcp grants` is an ARGUMENT, not prose. It is 22 characters and the
     table clipped it to 13 plus an ellipsis, so the one command the table exists to feed answered
     404 for anything a human copied off their screen — report #5's fix, broken end to end, with a
     test suite that never once went through the CLI."""
     import io
     from contextlib import redirect_stdout
 
-    from treg import cli
+    from stray import cli
 
     email = "roundtrip@superdesign.dev"
     await _grant_full(clients, email)
@@ -1157,8 +1157,8 @@ async def test_a_grant_dies_with_the_membership_it_was_consented_under(clients):
     springing back to life, with no new consent, the day membership was restored."""
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import Membership, User
+    from stray.infra.db import session_maker
+    from stray.models import Membership, User
 
     body, client_id, org_id = await _grant_full(clients, "departing@superdesign.dev")
     async with session_maker() as db:
@@ -1207,8 +1207,8 @@ async def test_a_rotation_started_before_a_move_cannot_drag_the_team_back(client
     # this fix) reverts the move permanently right here.
     from sqlmodel import select as _select
 
-    from treg.infra.db import session_maker
-    from treg.models import OAuthRefresh as _RT
+    from stray.infra.db import session_maker
+    from stray.models import OAuthRefresh as _RT
 
     async with session_maker() as db:
         newest = (await db.execute(_select(_RT).where(_RT.family_id == grant)
@@ -1242,14 +1242,14 @@ async def test_a_rotation_started_before_a_move_cannot_drag_the_team_back(client
 
 
 async def test_a_team_you_cannot_use_is_indistinguishable_from_one_that_does_not_exist(clients):
-    """Told apart, this route reports whether an arbitrary slug exists on treg — an oracle any
+    """Told apart, this route reports whether an arbitrary slug exists on stray — an oracle any
     signed-in account could walk."""
     await _grant_full(clients, "prober@superdesign.dev")
     me = await _as("prober@superdesign.dev")
     grant = (await clients.get("/oauth/grants", headers=me)).json()[0]["grant"]
 
     outsider = (await clients.post("/users", json={"email": "elsewhere@superdesign.dev"})).json()
-    theirs = (await clients.get("/orgs", headers={"X-Treg-Token": outsider["token"]})).json()[0]
+    theirs = (await clients.get("/orgs", headers={"X-Stray-Token": outsider["token"]})).json()[0]
 
     real_but_not_mine = await clients.post(f"/oauth/grants/{grant}/team",
                                            json={"team": theirs["slug"]}, headers=me)
@@ -1266,9 +1266,9 @@ async def test_an_expired_grant_is_not_presented_as_authorized(clients):
     from datetime import datetime, timedelta, timezone
     from sqlmodel import select
 
-    from treg import crypto
-    from treg.infra.db import session_maker
-    from treg.models import OAuthRefresh
+    from stray import crypto
+    from stray.infra.db import session_maker
+    from stray.models import OAuthRefresh
 
     body, client_id, _ = await _grant_full(clients, "expired-list@superdesign.dev")
     me = await _as("expired-list@superdesign.dev")
@@ -1293,9 +1293,9 @@ async def test_an_expired_grant_cannot_be_moved(clients):
     from datetime import datetime, timedelta, timezone
     from sqlmodel import select
 
-    from treg import crypto
-    from treg.infra.db import session_maker
-    from treg.models import OAuthRefresh
+    from stray import crypto
+    from stray.infra.db import session_maker
+    from stray.models import OAuthRefresh
 
     body, _, _ = await _grant_full(clients, "expired-move@superdesign.dev")
     me = await _as("expired-move@superdesign.dev")
@@ -1320,8 +1320,8 @@ async def test_rotation_does_not_change_the_grant_date(clients):
     from datetime import timedelta
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import OAuthRefresh
+    from stray.infra.db import session_maker
+    from stray.models import OAuthRefresh
 
     body, client_id, _ = await _grant_full(clients, "grant-date@superdesign.dev")
     me = await _as("grant-date@superdesign.dev")
@@ -1345,7 +1345,7 @@ async def test_rotation_does_not_change_the_grant_date(clients):
 async def test_a_moved_grant_keeps_retired_token_team_provenance(clients, monkeypatch):
     """A replay audit is evidence about the token that was copied. Moving the live grant later
     must not rewrite history and attribute a team-A token to team B."""
-    from treg import audit
+    from stray import audit
 
     email = "provenance@superdesign.dev"
     body, client_id, original_org_id = await _grant_full(clients, email)

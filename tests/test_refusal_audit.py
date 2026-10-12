@@ -1,6 +1,6 @@
 """Every `/call/` refusal leaves a CallRecord stamped `refused_by` — the funnel's early friction.
 
-Before this, a call treg refused BEFORE the relay fell into two buckets: money refusals were
+Before this, a call stray refused BEFORE the relay fell into two buckets: money refusals were
 audited (but indistinguishable from a provider's own 402), and everything earlier — bad token,
 unknown tool, ACL, deny rule — left no row at all. The 2026-08-12 Hunter incident is the motivating
 case: 309 pre-relay refusals read as "Hunter is failing" until the rows were re-derived from
@@ -13,12 +13,12 @@ from httpx import AsyncClient
 import pytest
 from sqlmodel import select
 
-from treg import api as A
-from treg.application.call import service as call_service
-from treg.infra.upstream.relay import relay as upstream_relay
-from treg import audit
-from treg.infra.db import session_maker
-from treg.models import CallRecord
+from stray import api as A
+from stray.application.call import service as call_service
+from stray.infra.upstream.relay import relay as upstream_relay
+from stray import audit
+from stray.infra.db import session_maker
+from stray.models import CallRecord
 
 
 async def _rows() -> list[CallRecord]:
@@ -78,7 +78,7 @@ async def test_catalog_shaped_miss_suggests_the_orgs_own_tool_and_is_audited(
 async def test_bad_token_is_recorded_anonymously_as_an_auth_refusal(clients: AsyncClient):
     """No Caller ever existed, so the row cannot say who — but an anonymous row is still the
     fact that someone knocked with a dead token, which zero rows could never say."""
-    r = await clients.get("/call/echo-tool/echo", headers={"X-Treg-Token": "garbage"})
+    r = await clients.get("/call/echo-tool/echo", headers={"X-Stray-Token": "garbage"})
     assert r.status_code == 401
     (rec,) = await _rows()
     assert rec.refused_by == "auth"
@@ -102,7 +102,7 @@ async def test_retired_catalog_call_is_actionable_audited_and_does_not_shadow_an
     monkeypatch.setattr(call_service, "relay", unexpected_relay)
     response = await clients.get(f"/call/{endpoint}")
     assert response.status_code == 410, response.text
-    assert response.headers["X-Treg-Error"] == "1"
+    assert response.headers["X-Stray-Error"] == "1"
     assert "collapsed" in response.json()["detail"]
     # 41 of the 50 retirements have no same-provider successor, so `superseded_by` is silent and a
     # cross-provider sibling is the only migration path left. This is the exact endpoint the org in
@@ -138,18 +138,18 @@ async def test_retired_catalog_call_is_actionable_audited_and_does_not_shadow_an
     assert own.json()["auth"] == "Bearer own-key"
 
 
-async def test_a_credential_dead_end_names_a_sibling_treg_can_already_serve(
+async def test_a_credential_dead_end_names_a_sibling_stray_can_already_serve(
     clients: AsyncClient, monkeypatch: pytest.MonkeyPatch,
 ):
     """The 2026-08-19 report's worst refusal: one org spent 268 calls on
-    `meta-ad-library.meta-ads.library.search`, which treg holds no key for, while
-    `scrapecreators.…-search-ads` — the SAME capability, on a key treg already has — answered 192
+    `meta-ad-library.meta-ads.library.search`, which stray holds no key for, while
+    `scrapecreators.…-search-ads` — the SAME capability, on a key stray already has — answered 192
     of 208 calls for fourteen other teams. The refusal knew the capability the whole time and never
     said so. Tier 3 must now name the sibling, and mark whether it is callable or needs a
     credential, so a dead end becomes a choice rather than a wall.
     """
-    monkeypatch.setenv("TREG_PLATFORM_KEY_SCRAPECREATORS", "platform-scrapecreators-key")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "scrapecreators")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_SCRAPECREATORS", "platform-scrapecreators-key")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "scrapecreators")
     A.get_settings.cache_clear()
 
     endpoint = "meta-ad-library.meta-ads.library.search"
@@ -163,29 +163,29 @@ async def test_a_credential_dead_end_names_a_sibling_treg_can_already_serve(
     detail = response.json()["detail"]
     # The original advice survives — the caller may still want their own Meta token.
     assert "no meta-ad-library credential in this org" in detail
-    assert "treg connections connect --provider meta-ad-library" in detail
+    assert "stray connections connect --provider meta-ad-library" in detail
     # ...and the sibling is now offered, flagged as servable, so the caller can act immediately.
     assert "another provider serves meta-ads.library.search:" in detail
     assert sibling in detail
-    assert "callable now on treg's key" in detail
+    assert "callable now on stray's key" in detail
     # It COMPARES, never routes: the refusal stands and nothing was silently substituted.
     (record,) = await _rows()
     assert record.status_code == 404 and record.refused_by == "resolution"
     assert record.tool_name == endpoint
 
-    # A provider treg holds no key for is still worth naming, but must not claim to be callable.
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "")
+    # A provider stray holds no key for is still worth naming, but must not claim to be callable.
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "")
     A.get_settings.cache_clear()
     unkeyed = (await clients.get(f"/call/{endpoint}", params=query)).json()["detail"]
     assert sibling in unkeyed
-    assert "callable now on treg's key" not in unkeyed
+    assert "callable now on stray's key" not in unkeyed
     assert "needs your own scrapecreators credential" in unkeyed
     A.get_settings.cache_clear()
 
 
 async def test_a_catalog_id_with_a_url_path_names_the_parameter_slots(clients: AsyncClient):
-    """`treg call reapi.tasks.get tasks/<id>` is the own-tool shape applied to a catalog id. The old
-    answer, "no tool 'reapi.tasks.get' in this org", described the wrong half of treg; the caller
+    """`stray call reapi.tasks.get tasks/<id>` is the own-tool shape applied to a catalog id. The old
+    answer, "no tool 'reapi.tasks.get' in this org", described the wrong half of stray; the caller
     had the right id and only needed to know where the parameter goes."""
     r = await clients.get("/call/reapi.tasks.get/tasks/task_01")
     assert r.status_code == 400

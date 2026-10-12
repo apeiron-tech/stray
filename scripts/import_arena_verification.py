@@ -9,7 +9,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from treg.application.arena_verification_insights import build_snapshot, publish_snapshot
+from stray.application.arena_verification_insights import build_snapshot, publish_snapshot
 
 
 def main():

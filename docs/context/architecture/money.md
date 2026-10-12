@@ -2,43 +2,43 @@
 title: Money — prepaid balance, the ledger, Stripe, and the reports that check it
 status: shipped
 sources:
-  - src/treg/catalog/tavily.yaml
-  - src/treg/catalog/tinyfish.yaml
+  - src/stray/catalog/tavily.yaml
+  - src/stray/catalog/tinyfish.yaml
   - tests/test_tinyfish.py
-  - src/treg/domain/money/__init__.py
-  - src/treg/domain/money/settlement.py
-  - src/treg/domain/asynctasks/__init__.py
-  - src/treg/models.py
-  - src/treg/application/billing.py
-  - src/treg/application/call/idempotency.py
-  - src/treg/application/call/intake.py
-  - src/treg/application/call/resolve.py
-  - src/treg/application/call/octen.py
-  - src/treg/application/call/service.py
-  - src/treg/application/call/async_bridge.py
-  - src/treg/application/call/route.py
-  - src/treg/application/call/reserve.py
-  - src/treg/application/call/settle.py
-  - src/treg/catalog/tomba.yaml
-  - src/treg/application/asynctasks.py
-  - src/treg/alembic/versions/0017_async_task_record.py
-  - src/treg/alembic/versions/0018_async_resource_ownership.py
-  - src/treg/alembic/versions/0019_async_poll_failures.py
-  - src/treg/application/referrals.py
-  - src/treg/domain/governance/budgets.py
-  - src/treg/infra/__init__.py
-  - src/treg/infra/stripe.py
-  - src/treg/reconcile.py
-  - src/treg/domain/referrals.py
-  - src/treg/api.py
-  - src/treg/application/signup.py
-  - src/treg/domain/identity/promotions.py
-  - src/treg/alembic/versions/0033_signup_promo_eligibility.py
-  - src/treg/routers/admin.py
-  - src/treg/routers/billing.py
-  - src/treg/routers/call.py
-  - src/treg/routers/orgs.py
-  - src/treg/routers/referrals.py
+  - src/stray/domain/money/__init__.py
+  - src/stray/domain/money/settlement.py
+  - src/stray/domain/asynctasks/__init__.py
+  - src/stray/models.py
+  - src/stray/application/billing.py
+  - src/stray/application/call/idempotency.py
+  - src/stray/application/call/intake.py
+  - src/stray/application/call/resolve.py
+  - src/stray/application/call/octen.py
+  - src/stray/application/call/service.py
+  - src/stray/application/call/async_bridge.py
+  - src/stray/application/call/route.py
+  - src/stray/application/call/reserve.py
+  - src/stray/application/call/settle.py
+  - src/stray/catalog/tomba.yaml
+  - src/stray/application/asynctasks.py
+  - src/stray/alembic/versions/0017_async_task_record.py
+  - src/stray/alembic/versions/0018_async_resource_ownership.py
+  - src/stray/alembic/versions/0019_async_poll_failures.py
+  - src/stray/application/referrals.py
+  - src/stray/domain/governance/budgets.py
+  - src/stray/infra/__init__.py
+  - src/stray/infra/stripe.py
+  - src/stray/reconcile.py
+  - src/stray/domain/referrals.py
+  - src/stray/api.py
+  - src/stray/application/signup.py
+  - src/stray/domain/identity/promotions.py
+  - src/stray/alembic/versions/0033_signup_promo_eligibility.py
+  - src/stray/routers/admin.py
+  - src/stray/routers/billing.py
+  - src/stray/routers/call.py
+  - src/stray/routers/orgs.py
+  - src/stray/routers/referrals.py
   - tests/test_call_architecture.py
   - tests/test_marketplace_call.py
   - tests/test_asynctasks.py
@@ -63,19 +63,19 @@ $100 for 6,667 credits, rounded up to $0.015 per credit. Only fixed, synchronous
 shared key. Variable charges, a route billed on HTTP 404, extraction modifiers, and asynchronous
 refunds remain BYOK-only, so no LimaData settlement branch is needed.
 
-MoltSets is the first real `treg_shared_plan` catalog rate: $0.01 per ordinary successful record on
+MoltSets is the first real `stray_shared_plan` catalog rate: $0.01 per ordinary successful record on
 the flat $27 subscription. Its verified 5,000-record weekly allowance is conservatively 20,000 per
 four-week month, so the disclosed 2,700-call monthly break-even is 13.5% utilization. Generic
 success-only settlement handles its eligible tools; variable, batch, and dual-meter phone operations
 stay BYOK-only.
 
-A catalogued endpoint can be served on **treg's own key** - no provider signup for the caller - which
-means treg pays the provider and bills the team. That needs a balance, a way to top it up, and a way
+A catalogued endpoint can be served on **stray's own key** - no provider signup for the caller - which
+means stray pays the provider and bills the team. That needs a balance, a way to top it up, and a way
 to prove afterwards that the numbers were real. Three modules, one job each:
 
-Two wallets of treg's spend through this machinery, and only these two: **tier-4 platform keys**
-(`TREG_PLATFORM_KEY_*`) and **oauth-billed apps** - providers like X whose upstream bills the app
-owner per use, so even a call on the org's *own* connection spends treg's prepaid credits
+Two wallets of stray's spend through this machinery, and only these two: **tier-4 platform keys**
+(`STRAY_PLATFORM_KEY_*`) and **oauth-billed apps** - providers like X whose upstream bills the app
+owner per use, so even a call on the org's *own* connection spends stray's prepaid credits
 (`MarketplaceCall.billed_oauth`; detection and rates live in
 [auth-secrets](auth-secrets.md)). Both run the same reserve→relay→settle path in `routers/call.py`, share the
 fail-closed daily cap, and are distinguished in ledger meta by `tier: platform` vs `tier: oauth`.
@@ -174,7 +174,7 @@ application opened). `tests/test_call_architecture.py` enforces the no-commit bo
 bodies of all five, with a mutation self-check that proves an injected commit is still detected.
 
 Release metadata distinguishes a failed call from a normal non-billable provider response, and says
-which side failed. A provider that answered 5xx releases as `provider_failed_<status>`; a call treg
+which side failed. A provider that answered 5xx releases as `provider_failed_<status>`; a call stray
 never got an answer for (timeout, connect error, SSRF refusal, a failed oauth refresh) releases as
 `call_failed_<status>`; excluded provider statuses such as a per-success 400 retain
 `not_billable_<status>`. Both failure kinds are usually a 502, so the prefix is what tells them
@@ -192,7 +192,7 @@ cancellation after an idempotency claim but before reserve; with no hold yet, it
 back immediately so the next attempt does not wait for claim expiry.
 
 A release that itself fails is logged and left to the reaper (`_platform_settle` never raises).
-The response still reports `X-Treg-Cost-Micro: 0`, which is what the call ends up costing - but the
+The response still reports `X-Stray-Cost-Micro: 0`, which is what the call ends up costing - but the
 balance only catches up when the hold is reaped, so a caller reading its balance immediately after
 a failed call may still see the reserve withheld.
 
@@ -294,7 +294,7 @@ An authorized platform poll with an explicit `free` price and zero estimate is
 `MarketplaceCall.free_owned_poll`, not a new metered operation. It skips `_platform_reserve` and
 `_platform_settle`, including their spend checks, stale-hold sweep, auto-top-up scheduling and all
 new poll Hold/LedgerEntry/TagSpend writes. Ordinary authorization, usage limits and provider rate smoothing
-still apply. Its response reports `X-Treg-Cost-Micro: 0`; the original submission's hold remains
+still apply. Its response reports `X-Stray-Cost-Micro: 0`; the original submission's hold remains
 owned by the original task and may close on this poll's terminal evidence. This no-new-hold exception does not cover fetch utilities, BYOK,
 billed OAuth, or a zero estimate on a paid endpoint.
 A 2xx that is not an accepted submission (not JSON, fails the endpoint's `expect` rule, or carries
@@ -331,9 +331,9 @@ must not read it alone. `application.asynctasks.views_for(org_id, call_ids, pinn
 joins the org's `AsyncTaskRecord`s, loads the archived terminal JSON for settled ones, and derives
 the artifact with the pure `domain.asynctasks.artifact(descriptor, terminal)` - the first URL under
 `result.path`, or the `{endpoint, name, value}` retrieval target for fetch-mode descriptors (the
-view formats it as `treg call … -p name=value`), plus `ttl_note`. The CLI's `--await` calls the
+view formats it as `stray call … -p name=value`), plus `ttl_note`. The CLI's `--await` calls the
 same function; there is one reading of the descriptor, not a mirror. `/calls`,
-`/calls/{ref}`, `treg audit` and the dashboard Activity page all render from this one view.
+`/calls/{ref}`, `stray audit` and the dashboard Activity page all render from this one view.
 
 **Idempotency on `topup` is enforced by the database.** `stripe_payment_intent` is UNIQUE, and `topup`
 FLUSHES its INSERT inside a SAVEPOINT, before the balance moves: the loser of a race rolls back only
@@ -425,7 +425,7 @@ $100 charge reads as intended rather than as a mistake.
 *manual* top-up and returns the first preset above it, never past `topup_default_cap_usd` ($50):
 $10 → $50, $50 → $50, nothing yet → `topup_default_usd`. Auto refills are skipped so the ladder
 cannot ratchet on its own. The dashboard modal preselects it (`GET /billing` → `topup.default_usd`,
-now per-org) and `POST /billing/topup` with no amount uses it - which is what `treg topup` sends.
+now per-org) and `POST /billing/topup` with no amount uses it - which is what `stray topup` sends.
 Presets are four (`[10, 50, 100, 200]`) plus "Other": with eight cards from $5 up nobody ever
 picked $100+ and repeat payers stayed flat; the minimum is $10 (fee math, and the referral
 qualifying amount). The threshold for auto top-up is validated separately (`validate_threshold_usd`,
@@ -473,7 +473,7 @@ that all notice the low balance produces exactly ONE charge.
 
 The wait between charges (`billing.autotopup_wait_s`) is one hour after a FAILED charge
 (`autotopup_cooldown_s`), else one hour divided by the team's `autotopup_max_per_hour` (0 = the
-default `autotopup_default_per_hour`, 5; 1-60 via `POST /billing/autotopup` `per_hour`, `treg topup
+default `autotopup_default_per_hour`, 5; 1-60 via `POST /billing/autotopup` `per_hour`, `stray topup
 --per-hour`, or the billing page). The number is part of the mandate text. A call refused for
 balance also calls `maybe_schedule_autotopup` (`reserve.py`, one read of the org by primary key):
 before this only a call that got through did, so a team at $0 stayed empty until something else
@@ -488,7 +488,7 @@ and an invoice archive are the org's money, not a member's preference.
 in-flight holds; the **funding detail** (credit blocks, the ledger) stays admin+. It used to be
 admin-only, which meant a machine identity could not read the balance it was spending - while every
 402 already hands the caller `balance_micro`, and both `llms.txt` and `skill.md` tell an agent to run
-`treg balance` after a call. Refusing the number there while shipping it in an error was incoherent.
+`stray balance` after a call. Refusing the number there while shipping it in an error was incoherent.
 (Reported by Jason, 2026-08-07.)
 
 The 402 also carries `autotopup_enabled` and an `auto top-up:` line in `message`. Off → the one
@@ -544,7 +544,7 @@ Provider-specific calculation stays outside the faithful relay.
 | Tavily Search | Reserve one credit for Basic, Fast and Ultra-fast or two for Advanced and an auto-selected depth; an explicit Basic depth overrides automatic selection. Platform Search requires caller-supplied `include_usage: true` and settles finite nonnegative per-request `usage.credits`. Empty results remain a paid routing miss. Missing or malformed usage keeps the frozen reserve. BYOK is unmetered and need not request usage. The endpoint-specific rate table must be complete, positive and finite; catalog validation rejects bad declarations and runtime refuses the call before reserve or relay instead of pricing it at zero |
 | Tavily Extract | Reserve the requested URL count (bounded by the documented 20-URL maximum) at 0.2 credit per Basic or 0.4 per Advanced extraction. Settle that fractional allocation for each valid entry in `results`; `failed_results` and grouped `usage.credits` do not charge the caller. A documented empty results list is free; malformed evidence keeps the frozen reserve |
 | Tavily Map | Platform calls require an explicit integer `limit` from 1 to 20. Reserve that many pages at 0.1 credit each, or 0.2 when the caller supplied nonempty `instructions`; settle valid URL strings in `results` at the frozen per-page unit. Empty results are free, malformed evidence keeps the reserve, and grouped `usage.credits` is ignored |
-| Tavily Crawl | Platform calls require the same 1-20 limit. Reserve per returned extraction at 0.3 credit (Basic), 0.4 (Basic + instructions), 0.5 (Advanced), or 0.6 (Advanced + instructions), then settle valid extracted entries in `results`. This is a conservative deterministic allocation, not the exact Tavily account charge: the response does not expose every page successfully mapped before extraction. treg absorbs any hidden mapping difference, bounded by the 20-page platform cap. Grouped `usage.credits` is ignored and BYOK remains unmetered |
+| Tavily Crawl | Platform calls require the same 1-20 limit. Reserve per returned extraction at 0.3 credit (Basic), 0.4 (Basic + instructions), 0.5 (Advanced), or 0.6 (Advanced + instructions), then settle valid extracted entries in `results`. This is a conservative deterministic allocation, not the exact Tavily account charge: the response does not expose every page successfully mapped before extraction. stray absorbs any hidden mapping difference, bounded by the 20-page platform cap. Grouped `usage.credits` is ignored and BYOK remains unmetered |
 | Octen search and extraction | Reserve the documented maximum from `count`, Broad `max_queries`, optional full-content results, News subjects, or Extract URL count at the advanced rate. Settle Web and News from the call base plus `meta.usage.full_content_extra_count`, Broad from `num_search_queries` plus extras, and Extract from `successful_by_mode`. Missing, malformed, or over-ceiling usage keeps the frozen hold; failed HTTP responses release it. Rates are frozen from `cost.octen_rates` before relay. Own-key calls remain unmetered and have no platform request cap. |
 | Legacy reported charge | DataForSEO `cost`, ScrapeCreators and Dropleads finder/verifier `credits_charged`, Akta and Dropleads person enrichment `credits_consumed`, Dropleads company `credits.creditsDeducted`, Lusha `billing.creditsCharged`, Exa `costDollars.total`, and Prospeo bulk `total_cost`; credit amounts use the catalog FX rate |
 | Crustdata, cloro, AI Ark, Crawl4AI | Read the charge from a response header through `_CREDIT_HEADERS` using the same FX rate. Crawl4AI `x-c4-cost` is a positive charge in credits; its streamed batch and its jobs settle by `settle: usage` instead (`summary.cost` on the stream's last line, read by `settle._usage_document`; a finished job's `usage.cost`), and a usage figure written as a decimal string (`"0.500"`) is read as a number. Crustdata `X-Credits-Used` and cloro `X-Credits-Charged` are positive charges; AI Ark `X-Credit` is a negative debit and declares an explicit -1 multiplier. Invalid signs and non-finite values are ignored. cloro omits the header on its free routes and on a failed extraction, neither of which it bills, so an absent header settles at the estimate, not at zero |
@@ -625,12 +625,12 @@ transaction): a team's first billed call on a question pays full price whether t
 archive answered; from that team's second call on, a hit settles at
 `archive_hit_repeat_price_percent` (default 10) of the live amount — applied to the RAW amount by
 floor division, then the margin as usual. Another team's first hit on the same question is full
-price. The settle entry's meta says `cached: true` and `cache_price_percent`; `X-Treg-Cost-Micro`
+price. The settle entry's meta says `cached: true` and `cache_price_percent`; `X-Stray-Cost-Micro`
 reports what was actually charged. Own-key hits are never metered (non-negotiable 1) and so never
 priced or marked. No new ledger entry kind: the hold is settled for less and the remainder
 released, like any settle below its reserve. Detail in [archive](archive.md#pricing-a-hit).
 
-## Shared-plan pricing: flat-fee providers, and the rate treg sets
+## Shared-plan pricing: flat-fee providers, and the rate stray sets
 
 A flat-fee provider (a monthly subscription with a rate limit or unlimited calls) has no per-call
 vendor price, which kept every one of them out of the catalog. The ladder that admits them:
@@ -640,25 +640,25 @@ vendor price, which kept every one of them out of the catalog. The ladder that a
 | real credits | vendor price ÷ credits (the normal fx entry) |
 | a monthly request cap | fee ÷ cap - same arithmetic |
 | a rate limit only | fee ÷ theoretical max is the FLOOR; the rate sits above it at a stated break-even |
-| unlimited | a treg-set rate with the break-even printed |
+| unlimited | a stray-set rate with the break-even printed |
 
 The honesty rule that makes the last two rungs defensible: **we never claim these are vendor
-prices.** What treg sells there is its own service - subscription custody, the key, a share of the
+prices.** What stray sells there is its own service - subscription custody, the key, a share of the
 rate limit - at a published rate whose fee and break-even are printed beside it (fx.yaml
-`kind: treg_shared_plan`; `check_fx` makes the marker impossible to carry dishonestly). The price is
+`kind: stray_shared_plan`; `check_fx` makes the marker impossible to carry dishonestly). The price is
 also congestion control: at $0, one looping agent exhausts a shared rate limit for every team at
 once.
 
-Mechanically a shared-plan provider is just a credit provider whose credit is "one call on treg's
+Mechanically a shared-plan provider is just a credit provider whose credit is "one call on stray's
 shared plan" - `cost_view`, holds, caps and settlement needed zero changes. What is new:
 
 - **A 429 is never billable**, under any cost type. Capacity refusing a request is not the caller's
-  bad input, and on a shared key it is treg's own saturation. This also fixed a pre-existing wrong:
+  bad input, and on a shared key it is stray's own saturation. This also fixed a pre-existing wrong:
   `per_call` used to bill upstream 429s, and no vendor bills a request it refused to accept.
 - **A relayed 405 is never billable**, under any cost type. A catalog caller cannot choose a stale
   method: `_resolve_marketplace_call` rejects a mismatch before relay. The only method the provider
-  can reject is therefore treg's recorded method, so settling a `per_call` hold would charge the
-  team for catalog metadata treg owns. `_NOT_THE_CALLERS_FAULT` makes that path release the hold.
+  can reject is therefore stray's recorded method, so settling a `per_call` hold would charge the
+  team for catalog metadata stray owns. `_NOT_THE_CALLERS_FAULT` makes that path release the hold.
 - **A caller-input 4xx (400/404/422) under `per_call` bills only what the provider reports.**
   The estimate prices a served call; a rejection served nothing, and no rate card says a vendor
   takes a credit for a request it bounced at validation. `_platform_settle` therefore settles such
@@ -675,18 +675,18 @@ shared plan" - `cost_view`, holds, caps and settlement needed zero changes. What
   4xx and releases the hold with reason `capacity_<kind>` (`test_apollo_out_of_credits_on_a_per_call_
   endpoint_*` in `tests/test_capacity_overflow.py`).
 - **`shared_plan_recovery`** (`GET /admin/reconcile/shared-plans`): fee versus collected per
-  treg-set rate, with `suggested_usd = fee ÷ measured calls` and an action at ±50% thresholds. It
+  stray-set rate, with `suggested_usd = fee ÷ measured calls` and an action at ±50% thresholds. It
   REPORTS; a human edits fx.yaml monthly. An auto-adjusting price would move under an agent's feet,
   and a rate card that moves on its own is not a rate card. The fee is scaled to the report's
   window, so a 7-day report compares against a quarter of the fee.
 - **`price_drift` never sees these providers** - drift compares our estimate against the provider's
   own reported charge, and a flat-fee provider never reports one. Pinned by a test that fires if an
   observed-cost parser is ever added for one, because at that point the drift report would be
-  policing a price treg itself set.
+  policing a price stray itself set.
 
 ### Trial pools: the $0 rung
 
-A third treg-set rate, `kind: treg_trial` (fx.yaml): a provider served on treg's own FREE-tier key
+A third stray-set rate, `kind: stray_trial` (fx.yaml): a provider served on stray's own FREE-tier key
 at exactly $0, capped per team per day (`trial_calls_per_team_day`, enforced by
 `_enforce_trial_allowance` - successful platform calls with a non-free catalog cost only,
 fail-closed, refusal 429 `trial_allowance_reached` with a connect-your-own-key hint). Free discovery
@@ -697,7 +697,7 @@ only per-team brake, so the validator refuses a trial entry without one.
 
 GetLeads.io uses this contract at five successful credit-using platform calls per team per day; its
 free search-count and filter-discovery tools do not consume the allowance. Its one-time promotional
-database credits have no published USD replacement price, so $0 describes treg's limited trial, not
+database credits have no published USD replacement price, so $0 describes stray's limited trial, not
 a vendor credit valuation. The separately priced Live Leads wallet is not substituted for that
 missing database-credit price.
 
@@ -716,9 +716,9 @@ still pay the provider twice.
 - Metered successes retain status, body, charge and call id for 24 hours. Uncharged failures
   (every routed failure since routed children defer their holds to the parent, catalog.md), BYOK
   calls and owned free polls release the label immediately, so a retry tries again.
-- Replays return `X-Treg-Idempotent-Replay: true`, `X-Treg-Cost-Micro: 0` (nothing new was charged,
+- Replays return `X-Stray-Idempotent-Replay: true`, `X-Stray-Cost-Micro: 0` (nothing new was charged,
   so a client summing the header stays right) and the first call's figure in
-  `X-Treg-Original-Cost-Micro`; MCP returns `replayed: true`. An async submission replay echoes its
+  `X-Stray-Original-Cost-Micro`; MCP returns `replayed: true`. An async submission replay echoes its
   original reservation there.
 - Refusal and cancellation cleanup return an acquired label. Expired entries are swept lazily,
   scoped to the caller, at claim time.
@@ -726,16 +726,16 @@ still pay the provider twice.
 This protects retries that opt in. Ordinary non-billable failures already release their hold;
 a retry without a label after a paid success remains a new charge.
 
-## Tag-based billing - a builder reselling treg to their own users
+## Tag-based billing - a builder reselling stray to their own users
 
-A builder embeds treg in their product and bills their own users. treg's job is exactly three things:
-**attribution**, **enforcement**, **export**. treg never bills their end user, never holds their card
+A builder embeds stray in their product and bills their own users. stray's job is exactly three things:
+**attribution**, **enforcement**, **export**. stray never bills their end user, never holds their card
 and never sets their price; margin stays 0%.
 
 They run one org, one balance, one token, and tag each call with their own ids:
 
 ```
-X-Treg-Meta: customer=cust_8123, workspace=ws_9, feature=email-finder
+X-Stray-Meta: customer=cust_8123, workspace=ws_9, feature=email-finder
 ```
 
 Up to 5 pairs. It is a **header, never a tool argument** - a model asked to pass an id drops it
@@ -822,7 +822,7 @@ it must hold whichever dimension they slice by.
 A tag is a **label, not a boundary** - anyone holding the token can send any tag. That is fine when
 the only budgets and reports it touches are the builder's own. When a token will run on an end user's
 *own machine*, the builder mints an agent token pinned to that user (`Membership.pinned_tags`,
-`treg org agent-new --pin customer=cust_A`). The pin **beats the header**: naming a different value is
+`stray org agent-new --pin customer=cust_A`). The pin **beats the header**: naming a different value is
 a 403, because otherwise the holder could retag their calls and walk out of their own budget, which is
 the entire point of giving them a scoped token.
 
@@ -921,7 +921,7 @@ resolution - and both are listed in the dataplane write allowlist on their own
 
 `MarketplaceCall.max_cost_micro` carries the caller's remaining ceiling. `_platform_reserve`
 checks the actual reservation estimate with margin before opening its transaction or creating a
-hold. Direct calls only set it when the caller supplies `X-Treg-Route-Max-Cost`; routed children
+hold. Direct calls only set it when the caller supplies `X-Stray-Route-Max-Cost`; routed children
 always inherit their route's remaining ceiling, including its default. A refusal is a 402
 `route_max_cost` and moves no money for that attempt. Overflow inherits the same field via its
 child snapshot and checks its own estimate; a preceding direct charge reduces the remainder.
@@ -935,18 +935,18 @@ The overflow child (`application.call.overflow`) is an ordinary metered cycle on
 and `cost_source: "aggregator"` + `served_via` in the ledger `meta`, so `reconcile` needs no join.
 `OverflowSpend` (per aggregator per UTC day) is updated inside that same settle transaction; it is
 accounting for the per-aggregator daily budget, not a balance. That budget is
-`TREG_OVERFLOW_DAILY_BUDGET_USD`: the code default is $20 per aggregator. A deployment may set a
+`STRAY_OVERFLOW_DAILY_BUDGET_USD`: the code default is $20 per aggregator. A deployment may set a
 different value in its private operational configuration. Shadow mode places no hold and charges
 nothing.
 
-**The relay price is disclosed wherever a price is read.** `/call/` says `X-Treg-Served-Via:
-overflow:<aggregator>` with `X-Treg-Cost-Micro` the child's charge; the MCP `call` result (both
+**The relay price is disclosed wherever a price is read.** `/call/` says `X-Stray-Served-Via:
+overflow:<aggregator>` with `X-Stray-Cost-Micro` the child's charge; the MCP `call` result (both
 `/mcp/` and `/mcp/v2/`, one `_call_impl`) lifts that header into `served_via` and a one-line `hint`
 naming the relay and the exhausted provider, because an MCP client never sees headers.
 `GET /catalog/endpoints/{id}` and `catalog_get` carry `overflow_price_usd`, `overflow_price_unit`
 and `overflow_via` on a platform-eligible endpoint the deployment can relay (mode on, a key for the
 aggregator, an enabled route), so a catalog-free endpoint is never silently a paid one: on 2026-09-08
-`apollo.people.search` (cost `free`) billed $0.002 through Orthogonal 8,810 times while treg's
+`apollo.people.search` (cost `free`) billed $0.002 through Orthogonal 8,810 times while stray's
 Apollo account was out, and no read surface said it could. What still is NOT disclosed up front is
 *when* a free endpoint is diverted: the route enables whenever the aggregator's price is at most
 `FREE_ROUTE_MAX_USD` (`domain.capacity.routes`), and a caller learns it was relayed only from the
@@ -965,13 +965,13 @@ struck `overflow:orthogonal` for every org and turned every Apollo call for a qu
 `application.call.settle._observed_cost_micro` treats `unknown` and `catch_all` verification
 results as zero cost, independently of routing (both are useful verdicts). Definitive results
 use the documented $0.00178 estimate, including invalid results. Upstream deducts credits first
-and automatically returns risky credits for eligible accounts after verification. Treg uses its
+and automatically returns risky credits for eligible accounts after verification. Stray uses its
 existing reserve/settle cycle to close the hold at zero for unknown/catch-all as soon as the
 response arrives; it does not wait for the upstream return, poll the balance, or create a later
-refund transaction. The zero-cost rule reflects treg's pricing policy, not confirmation of an
-individual upstream return. If the platform account loses eligibility due to upstream misuse rules, treg absorbs
+refund transaction. The zero-cost rule reflects stray's pricing policy, not confirmation of an
+individual upstream return. If the platform account loses eligibility due to upstream misuse rules, stray absorbs
 that exception rather than charging callers for these advertised free results. Own keys still
-bypass treg metering. The response's `free` flag describes the email service and `credits` is a
+bypass stray metering. The response's `free` flag describes the email service and `credits` is a
 delayed account balance, so neither field is interpreted as per-call cost.
 
 ## Per-success response rules
@@ -1021,7 +1021,7 @@ price: the runner reserved the declared maximum and pays the real price, `docs/h
 The entries: a `settle` entry on the payer whose meta names
 `payee_org_id`, and a `grant` entry on the payee whose meta names `payer_org_id` and the run. The
 invariant holds on both teams at every instant. It does not commit; the hub runner owns the
-transaction. It is the only cross-team money movement in treg.
+transaction. It is the only cross-team money movement in stray.
 ## Top-up product attribution
 
 Manual checkout accepts optional product attribution independent of billing policy. `start_topup`
@@ -1047,7 +1047,7 @@ label is released and retrying performs another free read. MIME type never decid
 
 A metered 2xx on an endpoint declaring `spooled_response` keeps the same completeness rule with
 the body on disk: `_spool_response` settles from the paths its row reads (usage meters, `expect` leaf) before headers go
-out, so `X-Treg-Cost-Micro` stays exact and the hold closes once on the normal path. An answer the
+out, so `X-Stray-Cost-Micro` stays exact and the hold closes once on the normal path. An answer the
 provider completed but whose evidence is missing or unparseable settles at the reserve (the image
 exists); an oversized or budget-refused body is a `response_buffer_limit` release. The label is
 released rather than stored, so an idempotent retry is a new, separately billed generation.
@@ -1095,11 +1095,11 @@ Apify's `usageTotalUsd` trails a finished run by minutes, so it is not settlemen
 that exceeds its own timeout, FAILS or is ABORTED answers 400 `run-failed` with no rows and releases,
 although Apify may have billed events up to the cap; so does an answer over the 8 MiB evidence limit.
 So does a caller who disconnects mid-run: the hold releases while the run keeps billing. The $1
-ceiling bounds each loss. That body names the run, so treg's Apify account must keep general
+ceiling bounds each loss. That body names the run, so stray's Apify account must keep general
 resource access Restricted: with public access anyone could read the unbilled run's dataset by id.
 Settling such a run from its own event counts would need a deferred settle; `usageTotalUsd` lags. `timeout` is required and at most 90 seconds (and
 30 under `call_timeout_s`), because a run still going when Apify's 300-second synchronous wait,
-treg's upstream read timeout or the MCP client's 120 s ends leaves a failed call that releases
+stray's upstream read timeout or the MCP client's 120 s ends leaves a failed call that releases
 unbilled while the run keeps billing. The cap must cover `call_fee` plus three rows, or the
 within-two-rows rule would bill an empty answer in full. BYOK calls never enter this money path.
 

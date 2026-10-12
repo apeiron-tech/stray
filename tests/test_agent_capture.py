@@ -1,6 +1,6 @@
 """Runtime attribution + the observed-agents roster.
 
-The treg CLI reports which coding agent it runs inside (X-Treg-Client). The registry stamps it on
+The stray CLI reports which coding agent it runs inside (X-Stray-Client). The registry stamps it on
 the audit trail and derives "detected agents" from it: one row per (member, runtime) — the
 zero-setup half of the agents story. Attribution, never authentication: nothing may GATE on it.
 
@@ -19,16 +19,16 @@ from sqlmodel import select
 
 from conftest import make_upstream
 
-from treg import audit, crypto
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
-from treg.models import CallRecord, Membership, Org, User
+from stray import audit, crypto
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
+from stray.models import CallRecord, Membership, Org, User
 
 
 def _h(t: str, client: str | None = None) -> dict:
-    h = {"X-Treg-Token": t}
+    h = {"X-Stray-Token": t}
     if client is not None:
-        h["X-Treg-Client"] = client
+        h["X-Stray-Client"] = client
     return h
 
 
@@ -127,8 +127,8 @@ def test_detect_runtime_ignores_config_location_vars(monkeypatch):
     """CODEX_HOME sits in the shell profile of anyone who installed Codex — a config path, not an
     'executing inside Codex' marker. Treating it as one tagged every plain terminal on that machine
     as codex (found on a real machine)."""
-    from treg.cli import _detect_runtime
-    for var in ("TREG_CLIENT", "CLAUDECODE", "CODEX_SANDBOX", "CODEX_SANDBOX_NETWORK_DISABLED",
+    from stray.cli import _detect_runtime
+    for var in ("STRAY_CLIENT", "CLAUDECODE", "CODEX_SANDBOX", "CODEX_SANDBOX_NETWORK_DISABLED",
                 "CURSOR_AGENT", "CURSOR_TRACE_ID", "GEMINI_CLI", "PI_CODING_AGENT",
                 "GITHUB_COPILOT_AGENT"):
         monkeypatch.delenv(var, raising=False)
@@ -138,28 +138,28 @@ def test_detect_runtime_ignores_config_location_vars(monkeypatch):
     assert _detect_runtime() == "codex"
     monkeypatch.setenv("CLAUDECODE", "1")
     assert _detect_runtime() == "claude-code"
-    monkeypatch.setenv("TREG_CLIENT", "my-agent")
+    monkeypatch.setenv("STRAY_CLIENT", "my-agent")
     assert _detect_runtime() == "my-agent"
 
 
-def test_treg_token_env_overrides_the_config_file(monkeypatch):
-    """Per-PROCESS identity: TREG_TOKEN/TREG_ORG in a runtime's env make the CLI act as that
-    agent while ~/.treg/config.json stays the human's — several agents on one machine, each with
+def test_stray_token_env_overrides_the_config_file(monkeypatch):
+    """Per-PROCESS identity: STRAY_TOKEN/STRAY_ORG in a runtime's env make the CLI act as that
+    agent while ~/.stray/config.json stays the human's — several agents on one machine, each with
     its own scope. Without this, every runtime shared the machine-global config identity."""
-    from treg.cli import _client
-    monkeypatch.setenv("TREG_TOKEN", "agent-token")
-    monkeypatch.setenv("TREG_ORG", "test-team")
+    from stray.cli import _client
+    monkeypatch.setenv("STRAY_TOKEN", "agent-token")
+    monkeypatch.setenv("STRAY_ORG", "test-team")
     c = _client({"base_url": "http://x", "token": "human-token", "active_org": "other"})
-    assert c.headers["X-Treg-Token"] == "agent-token"
-    assert c.headers["X-Treg-Org"] == "test-team"
-    monkeypatch.setenv("TREG_URL", "http://dev-registry:1")
+    assert c.headers["X-Stray-Token"] == "agent-token"
+    assert c.headers["X-Stray-Org"] == "test-team"
+    monkeypatch.setenv("STRAY_URL", "http://dev-registry:1")
     c = _client({"base_url": "http://x", "token": "human-token", "active_org": "other"})
-    assert str(c.base_url).startswith("http://dev-registry:1"), "TREG_URL must ride with the token"
-    for var in ("TREG_TOKEN", "TREG_ORG", "TREG_URL"):
+    assert str(c.base_url).startswith("http://dev-registry:1"), "STRAY_URL must ride with the token"
+    for var in ("STRAY_TOKEN", "STRAY_ORG", "STRAY_URL"):
         monkeypatch.delenv(var)
     c = _client({"base_url": "http://x", "token": "human-token", "active_org": "other"})
-    assert c.headers["X-Treg-Token"] == "human-token"
-    assert c.headers["X-Treg-Org"] == "other"
+    assert c.headers["X-Stray-Token"] == "human-token"
+    assert c.headers["X-Stray-Org"] == "other"
 
 
 # ---- promotion: a detected pair becomes a real agent --------------------------------------------
@@ -209,14 +209,14 @@ async def test_call_emits_one_tool_called_event(env, posthog_events):
     assert p["provider"] == "upstream"  # own tool → vendor falls back to the upstream host
     assert p["$groups"] == {"team": "team"}
     assert p["outcome"] == "ok" and p["refused_by"] is None
-    assert p["call_ref"] == r.headers["X-Treg-Call-Id"]
+    assert p["call_ref"] == r.headers["X-Stray-Call-Id"]
     assert p["cached"] is False and p["smoothed"] is None and p["hit"] is None
     assert p["ua_family"] == "python-httpx" and p["user_agent"].startswith("python-httpx/")
     assert "capacity_signal" not in p, "a capacity reading belongs to catalog calls only"
 
 
 async def test_no_key_no_tool_called_events(env):
-    from treg import analytics
+    from stray import analytics
     analytics._queue.clear()  # default settings: no key
     assert (await env.c.get("/call/alpha/ok", headers=_h(env.member, "codex"))).status_code == 200
     assert analytics._queue == []

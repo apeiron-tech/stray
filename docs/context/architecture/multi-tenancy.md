@@ -2,39 +2,39 @@
 title: Multi-tenancy — orgs, memberships, invites, per-org scoping
 status: shipped
 sources:
-  - src/treg/domain/governance/access.py
-  - src/treg/alembic/versions/0042_pinned_read_scope.py
+  - src/stray/domain/governance/access.py
+  - src/stray/alembic/versions/0042_pinned_read_scope.py
   - tests/test_pinned_read_scope.py
-  - src/treg/models.py
-  - src/treg/api.py
-  - src/treg/caller_metadata.py
-  - src/treg/application/auth.py
-  - src/treg/application/asynctasks.py
-  - src/treg/application/call/resolve.py
-  - src/treg/application/provider_resources.py
-  - src/treg/domain/provider_resources.py
-  - src/treg/routers/provider_resources.py
-  - src/treg/alembic/versions/0043_provider_resources.py
-  - src/treg/application/signup.py
-  - src/treg/domain/governance/access.py
-  - src/treg/domain/governance/budgets.py
-  - src/treg/domain/governance/publicdemo.py
-  - src/treg/domain/governance/teams.py
-  - src/treg/domain/governance/usage.py
-  - src/treg/domain/identity/access.py
-  - src/treg/domain/identity/api_keys.py
-  - src/treg/domain/identity/session.py
-  - src/treg/domain/identity/promotions.py
+  - src/stray/models.py
+  - src/stray/api.py
+  - src/stray/caller_metadata.py
+  - src/stray/application/auth.py
+  - src/stray/application/asynctasks.py
+  - src/stray/application/call/resolve.py
+  - src/stray/application/provider_resources.py
+  - src/stray/domain/provider_resources.py
+  - src/stray/routers/provider_resources.py
+  - src/stray/alembic/versions/0043_provider_resources.py
+  - src/stray/application/signup.py
+  - src/stray/domain/governance/access.py
+  - src/stray/domain/governance/budgets.py
+  - src/stray/domain/governance/publicdemo.py
+  - src/stray/domain/governance/teams.py
+  - src/stray/domain/governance/usage.py
+  - src/stray/domain/identity/access.py
+  - src/stray/domain/identity/api_keys.py
+  - src/stray/domain/identity/session.py
+  - src/stray/domain/identity/promotions.py
   - tests/test_team_limit.py
   - tests/test_auth.py
   - tests/test_token_revocation.py
-  - src/treg/routers/auth.py
-  - src/treg/routers/orgs.py
-  - src/treg/routers/resources.py
-  - src/treg/domain/tools/bundles.py
-  - src/treg/infra/db.py
-  - src/treg/alembic/versions/0017_async_task_record.py
-  - src/treg/alembic/versions/0018_async_resource_ownership.py
+  - src/stray/routers/auth.py
+  - src/stray/routers/orgs.py
+  - src/stray/routers/resources.py
+  - src/stray/domain/tools/bundles.py
+  - src/stray/infra/db.py
+  - src/stray/alembic/versions/0017_async_task_record.py
+  - src/stray/alembic/versions/0018_async_resource_ownership.py
   - tests/test_asynctasks.py
 related:
   - architecture/data-model.md
@@ -105,7 +105,7 @@ Team deletion removes evaluations before their runs through `ORG_SCOPED_MODELS`.
   legitimately backs tools in several projects.
 - **Machine identities** — a `User` on an **unroutable domain**, which is what makes it a machine
   rather than a person. Two exist: the published demo token (`PUBLIC_DEMO_DOMAIN`) and an **agent**
-  (`AGENT_DOMAIN` = `agents.treg.local`). Both are minted by an admin and act ONLY by their token:
+  (`AGENT_DOMAIN` = `agents.stray.local`). Both are minted by an admin and act ONLY by their token:
   `_is_machine_email` gates them out of every login door and out of `require_identity` (below). An
   agent needs **no new table and no migration** — it is a `Membership`, so it inherits `daily_call_cap`,
   `tool_access`, `local_run_enabled` and per-identity audit for free, which is exactly what makes those
@@ -123,12 +123,12 @@ Team deletion removes evaluations before their runs through `ORG_SCOPED_MODELS`.
   throttled background write after this dependency commits; it never extends the authentication
   transaction or changes authorization.
 - Newly minted signed human credentials declare their purpose in the signed `scp` claim.
-  `scp=team` is a Default key: its `org` is authoritative, so a conflicting `X-Treg-Org` is rejected
-  instead of charging another team. That response tells older CLI users to run `treg update`, then
-  `treg login`, because those clients can save a team before they obtain its key. `scp=bootstrap` is
+  `scp=team` is a Default key: its `org` is authoritative, so a conflicting `X-Stray-Org` is rejected
+  instead of charging another team. That response tells older CLI users to run `stray update`, then
+  `stray login`, because those clients can save a team before they obtain its key. `scp=bootstrap` is
   the short-lived, org-less login credential:
   it may identify the account for onboarding (list teams, create one, inspect/accept invitations),
-  but `require_member` rejects it even when a caller supplies `X-Treg-Org`. Untyped tokens minted by
+  but `require_member` rejects it even when a caller supplies `X-Stray-Org`. Untyped tokens minted by
   older releases retain the prior header-first behavior during the compatibility window.
 - **`_role_at_least` + `_can_manage`**: admin/owner may manage any resource in the org; a member only
   what they created (`resource.owner == caller.email`). Update/delete return 404 when the resource is in
@@ -168,7 +168,7 @@ Team deletion removes evaluations before their runs through `ORG_SCOPED_MODELS`.
   registration. New verified accounts can receive one promotional balance, so farming verified inboxes
   remains an abuse path even though repeated team creation no longer earns credit. **Entirely configuration**: the classifier
   (`_is_blocked_email` in `domain/identity/access.py`, pure — it only answers) reads
-  `TREG_BLOCKED_EMAIL_DOMAINS` and nothing else, parsed once per distinct value in `config.py`
+  `STRAY_BLOCKED_EMAIL_DOMAINS` and nothing else, parsed once per distinct value in `config.py`
   (trim, drop a leading `@`/`.`, lowercase, and drop any dotless entry so a typed `com` cannot
   refuse the world). Unset — the default — blocks nothing, and the next domain is a **dashboard
   edit, no redeploy**. No list lives in the code: a blocklist is a speed bump, since a new domain
@@ -213,8 +213,8 @@ Team deletion removes evaluations before their runs through `ORG_SCOPED_MODELS`.
   stamps the minting admin, giving every agent an owner in the roster.
 - **Observed agents (`GET /orgs/{id}/agents/observed`, admin+).** The OTHER half of the agents story:
   the runtimes already calling under members' own tokens. The CLI fingerprints its host runtime
-  (`CLAUDECODE` → `claude-code`, `CODEX_*`, `CURSOR_*`, …; `TREG_CLIENT` overrides) and sends
-  `X-Treg-Client`; `_client_of` normalizes it (slug ≤32, versions stripped, unknown-but-well-formed
+  (`CLAUDECODE` → `claude-code`, `CODEX_*`, `CURSOR_*`, …; `STRAY_CLIENT` overrides) and sends
+  `X-Stray-Client`; `_client_of` normalizes it (slug ≤32, versions stripped, unknown-but-well-formed
   kept so a new runtime needs no release) onto `CallRecord.client` / `RunRecord.client` at all three
   audit points. The endpoint aggregates 30 days into one row per (member, runtime), excluding
   `''`/`cli` (a roster listing every human twice teaches nothing) and machine identities (already
@@ -260,7 +260,7 @@ bearer path refuses it once expired rather than reviving an expired cookie.
   — **the user ONLY, no auto personal org**. Every identity door calls
   it (GitHub / Google callbacks, email OTP), so "first proof = registration" is identical. A brand-new
   user therefore lands with **zero teams** and must name + create their first one (the dashboard's
-  mandatory welcome, or `treg org create`). Their seven-day bootstrap token works before an org exists
+  mandatory welcome, or `stray org create`). Their seven-day bootstrap token works before an org exists
   but cannot call or read team resources. **`create_org` uses `require_identity`, NOT
   `require_member`** — else a zero-org user could never make their first team — and returns the new
   membership's team-scoped Default key. See [api](../interface/api.md).
@@ -326,20 +326,20 @@ bearer path refuses it once expired rather than reviving an expired cookie.
 - **Governance never evaporates.** `admin_delete_user` promotes the earliest-joined survivor to owner
   when it removes an org's sole owner; the accept/create paths return a clean `409` (not a 500) on the
   membership/slug uniqueness race (`create_org` retries with a fresh `_unique_slug`).
-- **Slug vs id.** `_resolve_org` resolves `X-Treg-Org` by slug first (an all-digit slug like `2024` is
+- **Slug vs id.** `_resolve_org` resolves `X-Stray-Org` by slug first (an all-digit slug like `2024` is
   producible and must not be reinterpreted as a primary key), then by `previous_slug`, then by id.
 - **Rename.** `PATCH /orgs/{id}` (admin+, `teams.rename_org`) changes `name` and/or `slug`. The slug
-  is baked into signed team keys, `~/.treg`, MCP pins and agent addresses, so a slug change retires
+  is baked into signed team keys, `~/.stray`, MCP pins and agent addresses, so a slug change retires
   the old one into `previous_slug` instead of revoking every copied key: it still resolves, and no
   other team may take it (`_slug_taken` checks both columns). One alias only; a second rename
   overwrites it. Slugs are validated as their own `_slugify`, 3–40 chars, never `sbx-` (the sandbox
   shape). Stripe metadata and the analytics group key keep the slug they were stamped with.
 - **Reserved names.** `teams.reserved_reason(text, extra)` refuses a name or slug that *reads* as
-  treg itself, as "official"/"verified", or as a catalog provider/platform (a hub tool's callable id
+  stray itself, as "official"/"verified", or as a catalog provider/platform (a hub tool's callable id
   is `<team slug>.<name>`, so a squatted slug could pass a stranger's tool off as ours or a
   provider's). Matching is by how the text reads, not its bytes: NFKC-fold, map lookalike
   Latin/Cyrillic/Greek letters and leetspeak digits (`teams._LOOKALIKE`), strip separators, then
-  compare words — so `trеg-hub` (Cyrillic е), `t-r-e-g`, `apol1o` and `Hunter.io data` are all
+  compare words — so `strаy-hub` (Cyrillic а), `s-t-r-a-y`, `apol1o` and `Hunter.io data` are all
   caught. `signup.reserved_team_names()` supplies the catalog-derived `extra` set (provider slugs
   exact-or-prefix, platform slugs `=`-marked for an exact-word match only). Checked at `create_org`,
   `register_user`'s default team name, and `rename_org` (`PATCH /orgs/{id}`); a superadmin may bypass
@@ -355,7 +355,7 @@ floor. `db.verify_db()` checks revision compatibility without creating or repair
 
 ## Caller tags and pinned read scopes
 
-Caller-supplied `X-Treg-Meta` tags remain attribution labels: an unpinned org token may choose any
+Caller-supplied `X-Stray-Meta` tags remain attribution labels: an unpinned org token may choose any
 valid value. A restricted agent's `Membership.pinned_tags` is enforced by the server; a conflicting
 header is a 403. An unpinned operator retains the org-wide view and the shared balance.
 
@@ -387,7 +387,7 @@ can run with the additive schema, but does not enforce the new read boundary.
 Both run audit writers store membership pins. Both history sources in `/runs`, and all three in
 `/activity`, filter before their limits. Runs do not gain caller-supplied metadata parsing in this change.
 
-Treg's replay key includes the full pin as well as the existing primary-tag scope, so changing a
+Stray's replay key includes the full pin as well as the existing primary-tag scope, so changing a
 secondary pin cannot expose an old replay. On the shared provider credential, the forwarded
 idempotency label is additionally partitioned by the full pin; unpinned forwarding is byte-for-byte
 unchanged. The plain BYOK label remains verbatim. Public media URLs are still bearer-by-possession
@@ -431,7 +431,7 @@ previous token after selecting the new team. A scoped Default key must still rej
 
 `routers.auth_helpers.require_managed_cli` stops these known old-client requests with HTTP 426
 before issuing email credentials, creating a team, or consuming an invite. The response tells the
-user to run `treg update` and retry. Current CLI requests send `X-Treg-Key-Protocol: 1` and save the
+user to run `stray update` and retry. Current CLI requests send `X-Stray-Key-Protocol: 1` and save the
 returned team's key. The legacy-client hint is the released CLI's `python-httpx/` User-Agent plus
 `ngrok-skip-browser-warning: 1`, without that protocol marker. It is a compatibility check, not an
 authorization boundary or a universal client-version detector. Browsers and generic API clients

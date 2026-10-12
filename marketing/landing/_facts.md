@@ -7,7 +7,7 @@ Verified **2026-08-17** unless stated. Re-verify with:
 
 ```bash
 curl -s https://treg.to/catalog/platforms | python3 -c "..."   # counts
-treg catalog get <endpoint_id>                                  # price + measured stats
+stray catalog get <endpoint_id>                                  # price + measured stats
 ```
 
 ---
@@ -20,15 +20,15 @@ treg catalog get <endpoint_id>                                  # price + measur
 | `F-02` | $1.00 free credit once per new verified account | treg.to; `llms.txt`; `application/signup.py`; `config.py promo_grant_micro = 1_000_000` | 2026-09-10 |
 | `F-03` | 0% additional fee — treg.to does not mark up provider call prices | treg.to ("0% additional fee — we earn on volume pricing with vendors, not on you") | 2026-08-17 |
 | `F-04` | Credentials injected server-side; response relayed verbatim; every call audited | `llms.txt` | 2026-08-17 |
-| `F-05` | Your own key always wins over treg's, and those calls are never metered | `llms.txt`; treg.to | 2026-08-17 |
+| `F-05` | Your own key always wins over stray's, and those calls are never metered | `llms.txt`; treg.to | 2026-08-17 |
 | `F-06` | treg.to does **not** choose a provider or fail over for you, by design | `llms.txt` line 182 | 2026-08-17 |
 | `F-07` | 5xx, timeouts and network errors are never billed; `Idempotency-Key` prevents paying twice for a retry | `llms.txt` | 2026-08-17 |
 | `F-08` | Sign-in doors: GitHub, Google, email one-time code. No card required to create a team or spend the grant | treg.to sign-in modal; `ledger.grant` fires at org creation | 2026-08-17 |
 | `F-09` | Installer registers the MCP server into Claude Code, Cursor and opencode; other MCP clients connect via OAuth; anything that runs a shell can use the CLI | `llms.txt` | 2026-08-17 |
-| `F-10` | 100% open source, AGPL — github.com/superdesigndev/treg | treg.to footer | 2026-08-17 |
+| `F-10` | 100% open source, AGPL — github.com/apeiron-tech/stray | treg.to footer | 2026-08-17 |
 | `F-11` | Price is visible before the call (`catalog get` / `estimated_cost_usd`) | `llms.txt` | 2026-08-17 |
 | `F-12` | Out of balance returns HTTP 402 with `balance_micro`, `estimated_cost_micro` and a top-up URL | `llms.txt` | 2026-08-17 |
-| `F-13` | A team can pin a capability to one provider: `treg org pin <capability> --provider <p>` | `llms.txt` CLI reference | 2026-08-17 |
+| `F-13` | A team can pin a capability to one provider: `stray org pin <capability> --provider <p>` | `llms.txt` CLI reference | 2026-08-17 |
 
 > **Why `F-01` is a rounded claim, not an exact one.** Three surfaces currently disagree: treg.to's hero
 > says 2,617 endpoints / 42 providers, `llms.txt` says "~2,600 endpoints across ~48 providers", and
@@ -53,7 +53,7 @@ treg catalog get <endpoint_id>                                  # price + measur
 | `F-23` | Optmyzr $249/mo · Revealbot $99/mo · Madgicx $55/mo · Adalysis $99/mo · Tailwind $25/mo · BrightLocal $39/mo |
 | `F-24` | treg.to's own summed example: "$371/mo of seats → cents per call" |
 
-## Measured endpoint data — `treg catalog get`, 2026-08-17
+## Measured endpoint data — `stray catalog get`, 2026-08-17
 
 Columns: **cost** · **success rate (sample size)** · **median latency**. `—` means nobody has called it
 enough to measure, which is itself worth showing.
@@ -208,7 +208,7 @@ These historical per-endpoint figures were exposed by the public catalog. Refres
 The stats pool every org deliberately: **there is no per-tenant breakdown, so the observed calls could be forty
 teams or four.** Our own `superdesign` org contributes under 40 of them, so the demand is genuinely
 external — but its concentration is unknown. Treat this as directional for targeting, not as proof of a
-market. The team count needs `TREG_ADMIN_TOKEN` and one `/admin/*` call.
+market. The team count needs `STRAY_ADMIN_TOKEN` and one `/admin/*` call.
 
 ---
 

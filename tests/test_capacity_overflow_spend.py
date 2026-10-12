@@ -6,10 +6,10 @@ import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from treg.infra.db import session_maker
-from treg.domain.capacity import overflow_spend as spend_ledger
-from treg.domain.capacity.overflow_spend import add_in_transaction
-from treg.models import OverflowSpend
+from stray.infra.db import session_maker
+from stray.domain.capacity import overflow_spend as spend_ledger
+from stray.domain.capacity.overflow_spend import add_in_transaction
+from stray.models import OverflowSpend
 
 
 async def test_add_in_transaction_does_not_commit_for_its_caller(clients):

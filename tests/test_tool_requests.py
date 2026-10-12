@@ -13,10 +13,10 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
-from treg import audit
-from treg.api import TOOLREQ_RATE_MAX, app
-from treg.infra.db import session_maker
-from treg.models import SearchMiss, ToolRequest
+from stray import audit
+from stray.api import TOOLREQ_RATE_MAX, app
+from stray.infra.db import session_maker
+from stray.models import SearchMiss, ToolRequest
 
 
 async def _fetch_rows() -> list[ToolRequest]:

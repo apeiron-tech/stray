@@ -9,7 +9,7 @@ export default { components: { BrandMark }, setup: useDashboard }
     <div class="lc-modal" role="dialog" aria-modal="true" aria-label="Sign in" v-dialog="() => { demo.signin=false }">
       <button class="cls" @click="demo.signin=false" aria-label="Close">✕</button>
       <div style="font-size:22px;line-height:1"><BrandMark/></div>
-      <h2 style="margin:8px 0 2px;font-family:var(--mono)">{{oauthSignin?'Sign in to continue connecting Treg':(invitePrefill?'Accept your invite':(shareGate?'Sign in to view it':(publicCatalog?'Start calling':'Make it yours')))}}</h2>
+      <h2 style="margin:8px 0 2px;font-family:var(--mono)">{{oauthSignin?'Sign in to continue connecting Stray':(invitePrefill?'Accept your invite':(shareGate?'Sign in to view it':(publicCatalog?'Start calling':'Make it yours')))}}</h2>
       <p v-if="oauthSignin" class="sub">After sign-in, review the requested access before you approve it.</p>
       <p v-else-if="invitePrefill" class="sub">Sign in with <b>{{invitePrefill}}</b> and you'll drop straight into the team.</p>
       <p v-else-if="shareGate" class="sub">You'll land on “{{shareGate.name}}” right after.</p>
@@ -30,7 +30,7 @@ export default { components: { BrandMark }, setup: useDashboard }
       </div>
       <details v-if="!oauthSignin" style="margin-top:12px;text-align:left">
         <summary class="sub" style="cursor:pointer;text-align:center">or paste an org token (agents &amp; CLI)</summary>
-        <div class="field" style="margin-top:8px"><input v-model="tokenInput" type="password" placeholder="X-Treg-Token" @keyup.enter="addToken(tokenInput)"/></div>
+        <div class="field" style="margin-top:8px"><input v-model="tokenInput" type="password" placeholder="X-Stray-Token" @keyup.enter="addToken(tokenInput)"/></div>
         <button class="btn" style="width:100%" @click="addToken(tokenInput)" :disabled="busy">{{busy?'Checking…':'Sign in with token'}}</button>
       </details>
       <div v-if="loginErr" class="banner" style="margin-top:12px">{{loginErr}}</div>

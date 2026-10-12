@@ -2,7 +2,7 @@
 
 **Status: SHIPPED and live on production.** Built in the six steps below, each reviewed
 before the next. The acceptance test passed — the MCP SDK's own OAuth client drove the
-whole flow with no treg-specific special case — and ChatGPT connected over CIMD, made a
+whole flow with no stray-specific special case — and ChatGPT connected over CIMD, made a
 metered call and was billed correctly. Reference doc: `docs/context/architecture/mcp-oauth.md`.
 
 ## Not a ChatGPT feature
@@ -36,16 +36,16 @@ production with no token:
 | `catalog_search`, `catalog_get` | work — the catalog is public |
 | `call`, `balance`, `my_tools` | `{"error": "not authenticated"}` |
 
-treg is multi-tenant: every call has to answer whose balance pays, whose keys may be used, whose cap
+stray is multi-tenant: every call has to answer whose balance pays, whose keys may be used, whose cap
 applies, whose audit row is written. The token is what answers that. Without one there is no caller —
 not for a reviewer, and not for anyone who installs the plugin. Putting a token in the URL instead
 would hand every user in the directory the same team's balance and the same team's private keys,
-which is the exact thing treg exists to prevent.
+which is the exact thing stray exists to prevent.
 
 ## The direction is new
 
-treg already speaks OAuth, but only as a **client**: `oauth.py` builds PKCE challenges to sign in
-with GitHub and Google and to connect provider accounts. Here treg must be the **authorization
+stray already speaks OAuth, but only as a **client**: `oauth.py` builds PKCE challenges to sign in
+with GitHub and Google and to connect provider accounts. Here stray must be the **authorization
 server** — the thing that issues tokens rather than the thing that redeems them. That role does not
 exist yet.
 
@@ -86,7 +86,7 @@ does not care how the client arrived.
 ### 1. Two metadata documents
 
 Static JSON, no state. `/.well-known/oauth-protected-resource` names the canonical resource
-(`https://treg.superdesign.dev/mcp/`), points at treg as its own authorization server, and lists
+(`https://treg.superdesign.dev/mcp/`), points at stray as its own authorization server, and lists
 scopes. `/.well-known/oauth-authorization-server` advertises the authorize and token endpoints,
 `code_challenge_methods_supported: ["S256"]`, and CIMD support.
 
@@ -116,7 +116,7 @@ and cannot recover is a support ticket per user per day.
 
 Because the consent page is a normal URL, a client with no browser integration can still use it: print
 the link, the human opens it, approves, and pastes back a short code — the same shape as
-`treg login` today. That keeps Claude Code and any terminal client working without special support
+`stray login` today. That keeps Claude Code and any terminal client working without special support
 from us.
 
 ### 4. Token acceptance in `mcp.py`

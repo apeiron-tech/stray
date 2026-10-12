@@ -53,7 +53,7 @@ export default { components: { FindAnswer, CatalogSearch }, setup: useDashboard 
         <span class="pl-tool-b">
           <span class="cat-name"><b>{{platShort(pl.label)}}</b>
             <!-- A member's own credential, and only the positive fact: calls here use your account or
-                 key. Neutral, not green: every platform works, on treg's key; a green "Connected" read
+                 key. Neutral, not green: every platform works, on stray's key; a green "Connected" read
                  as "only these do". -->
             <span v-if="!publicCatalog && platOwn(pl).length" class="cat-own" role="img"
                   :title="platConnTitle(pl)" :aria-label="platConnTitle(pl)">

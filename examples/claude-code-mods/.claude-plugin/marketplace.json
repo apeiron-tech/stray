@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "treg-mods",
-  "description": "Claude Code mods built on treg",
+  "name": "stray-mods",
+  "description": "Claude Code mods built on stray",
   "owner": {
     "name": "Superdesign dev, Inc.",
     "url": "https://treg.to"

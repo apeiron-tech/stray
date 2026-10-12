@@ -2,11 +2,11 @@
 #
 # Two rows, and the second one is the interesting one.
 #
-# `treg-skill` publishes the packaged SKILL.md on `ctx.skills`. It costs nothing
+# `stray-skill` publishes the packaged SKILL.md on `ctx.skills`. It costs nothing
 # and needs no token, so it is always on.
 #
-# `treg-mcp` connects the hosted MCP server and registers its tools as
-# `mcp__treg__*`. It is DISABLED until `TREG_TOKEN` is in the environment,
+# `stray-mcp` connects the hosted MCP server and registers its tools as
+# `mcp__stray__*`. It is DISABLED until `STRAY_TOKEN` is in the environment,
 # because a connector registered without a token is five always-on tools that
 # 401 on every call - the same reason the Claude Code manifest declares no MCP
 # server (docs/CLAUDE-PLUGIN.md). Set the token and restart dsh and the tools
@@ -17,18 +17,18 @@
 # https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md
 
 - insert:
-    - id: treg-skill
-      name: treg-dsh
+    - id: stray-skill
+      name: stray-dsh
 
     # The expression may NOT begin with `!`: YAML reads a second `!` after the
     # `!!js` tag as another tag property and the whole file fails to parse
     # ("duplication of a tag property"), taking the profile down with it.
-    - id: treg-mcp
+    - id: stray-mcp
       name: '@deepseek-ai/dsh-mcp-client'
-      disabled: !!js (process.env.TREG_TOKEN ?? '') === ''
+      disabled: !!js (process.env.STRAY_TOKEN ?? '') === ''
       config:
-        serverName: treg
+        serverName: stray
         transport: streamable-http
         url: https://treg.to/mcp/
         headers:
-          Authorization: !!js '`Bearer ${process.env.TREG_TOKEN}`'
+          Authorization: !!js '`Bearer ${process.env.STRAY_TOKEN}`'

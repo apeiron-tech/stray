@@ -8,7 +8,7 @@ re-implementing them, so what you review is what ships. Adds a review bar the li
 not have: page switcher, per-page status, and the blockers.
 
 Fonts differ from production by necessity: the artifact host blocks font CDNs, so the page
-falls back through treg's own stack (Georgia / system-ui / ui-monospace) instead of
+falls back through stray's own stack (Georgia / system-ui / ui-monospace) instead of
 Geist Pixel / Inter / DM Mono. Everything else is identical.
 """
 import re, sys, pathlib, html
@@ -16,7 +16,7 @@ import build_html as B
 from build_preview import inline_logos
 
 HERE = pathlib.Path(__file__).parent
-CSS = (HERE.parent.parent / "src" / "treg" / "web" / "usecase.css").read_text()
+CSS = (HERE.parent.parent / "src" / "stray" / "web" / "usecase.css").read_text()
 
 TAB = [("p1", "SEO"), ("p2", "Enrichment"), ("p3", "Social"), ("p4", "Ads"), ("p5", "Company")]
 

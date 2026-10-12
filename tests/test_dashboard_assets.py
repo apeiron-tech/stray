@@ -5,14 +5,14 @@ import re
 import pytest
 
 
-from treg import api
+from stray import api
 
 
 @pytest.fixture
 async def new_dashboard(clients):
-    from treg.infra.db import session_maker
-    from treg.models import User
-    from treg.domain.identity import session
+    from stray.infra.db import session_maker
+    from stray.models import User
+    from stray.domain.identity import session
     from sqlmodel import select
     async with session_maker() as db:
         user = (await db.execute(select(User).where(User.email == 'tim@superdesign.dev'))).scalar_one()
@@ -26,7 +26,7 @@ async def test_every_entry_serves_the_compiled_app_to_every_visitor(new_dashboar
     clients = new_dashboard
     paths = ['/app', '/app/tools/shared', '/app/skills/shared', '/catalog', '/catalog/google', '/search']
     signed_in = dict(clients.cookies)
-    for cookies in (signed_in, {}, {'treg_session': 'forged'}):
+    for cookies in (signed_in, {}, {'stray_session': 'forged'}):
         clients.cookies.clear()
         clients.cookies.update(cookies)
         for path in paths:
@@ -69,7 +69,7 @@ async def test_dashboard_redesign_assets_are_served_from_the_same_origin(new_das
 async def test_dashboard_dev_entry_refuses_a_public_hostname(new_dashboard, monkeypatch):
     clients = new_dashboard
     import pytest
-    from treg.config import get_settings
+    from stray.config import get_settings
     monkeypatch.setattr(get_settings(), 'frontend_dev', True)
     monkeypatch.setattr(get_settings(), 'public_url', 'https://registry.example.com')
     with pytest.raises(RuntimeError, match='loopback'):
@@ -83,7 +83,7 @@ async def test_arena_onboarding_widgets_are_compiled_from_the_dashboard_source(c
     assert script.status_code == 200
     assert script.headers['content-type'].startswith('application/javascript')
     assert script.headers['cache-control'] == 'no-cache'
-    assert 'TregAgentSetup' in script.text
+    assert 'StrayAgentSetup' in script.text
     assert 'template:' not in script.text   # compiled render functions, no runtime compiler needed
     assert '/agent-setup.js' in (await clients.get('/enrich-arena')).text
     assert '/agent-setup.js' not in (await clients.get('/app')).text

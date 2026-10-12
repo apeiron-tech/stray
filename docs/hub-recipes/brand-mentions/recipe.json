@@ -7,7 +7,7 @@
     "sources": {"type": "string", "default": "reddit,x", "note": "comma list: reddit, x"},
     "limit": {"type": "int", "default": 20, "min": 1, "max": 50, "note": "the most mentions returned (and billed)"}
   },
-  "uses": ["scrapecreators.reddit.search.posts", "treg.x.search.posts"],
+  "uses": ["scrapecreators.reddit.search.posts", "stray.x.search.posts"],
   "script": "run.js",
   "output": {"fields": ["term", "mentions", "results", "scanned", "dropped_as_noise"]},
   "pricing": {"max_price_usd": 0.1}

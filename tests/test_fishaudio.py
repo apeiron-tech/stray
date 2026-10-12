@@ -8,21 +8,21 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from treg import audit
-from treg.application.call import resolve as call_resolution
-from treg.application.call import service as call_service
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
-from treg.domain import provider_resources
-from treg.domain.identity import api_keys as managed_keys
-from treg.infra.db import _engine, session_maker
-from treg.models import ProviderResource
+from stray import audit
+from stray.application.call import resolve as call_resolution
+from stray.application.call import service as call_service
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
+from stray.domain import provider_resources
+from stray.domain.identity import api_keys as managed_keys
+from stray.infra.db import _engine, session_maker
+from stray.models import ProviderResource
 
 
 @pytest.fixture
 def fishaudio_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FISHAUDIO", "PLATFORM-FISH-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "fishaudio")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FISHAUDIO", "PLATFORM-FISH-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "fishaudio")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -71,7 +71,7 @@ async def test_voice_create_is_private_and_becomes_an_org_resource(
     listed = await clients.get(
         f"/orgs/{await _org_id(clients)}/provider-resources?provider=fishaudio&kind=voice"
     )
-    assert listed.headers["X-Treg-Resource-Source"] == "platform"
+    assert listed.headers["X-Stray-Resource-Source"] == "platform"
     rows = listed.json()
     assert [(row["upstream_id"], row["display_name"], row["status"]) for row in rows] == [
         ("voice-created", "Narrator", "active")
@@ -96,7 +96,7 @@ async def test_unified_voice_list_uses_byok_and_normalizes_without_holding_db(
         f"/orgs/{await _org_id(clients)}/provider-resources?provider=fishaudio&kind=voice"
     )
     assert response.status_code == 200, response.text
-    assert response.headers["X-Treg-Resource-Source"] == "byok"
+    assert response.headers["X-Stray-Resource-Source"] == "byok"
     assert response.json() == [{
         "id": "account-voice",
         "provider": "fishaudio",
@@ -155,7 +155,7 @@ async def test_platform_resource_source_never_substitutes_byok_account_rows(
         f"/orgs/{await _org_id(clients)}/provider-resources?source=platform"
     )
     assert response.status_code == 200, response.text
-    assert response.headers["X-Treg-Resource-Source"] == "platform"
+    assert response.headers["X-Stray-Resource-Source"] == "platform"
     assert [row["upstream_id"] for row in response.json()] == ["team-voice"]
     assert called is False
 
@@ -217,8 +217,8 @@ async def test_unknown_and_cross_org_voice_ids_are_identical_403_without_upstrea
         "/call/fishaudio.voices.update?id=unknown",
         json={"title": "Nope", "visibility": "private"})
     other = (await clients.post("/orgs", json={"name": "Other Fish Team"})).json()
-    clients.headers["X-Treg-Token"] = other["token"]
-    clients.headers.pop("X-Treg-Org", None)
+    clients.headers["X-Stray-Token"] = other["token"]
+    clients.headers.pop("X-Stray-Org", None)
     cross_org = await clients.patch(
         "/call/fishaudio.voices.update?id=voice-team-one",
         json={"title": "Nope", "visibility": "private"})
@@ -232,8 +232,8 @@ async def test_cross_org_tts_voice_is_denied_without_public_lookup(
 ):
     await _add_voice(clients, "private-team-one")
     other = (await clients.post("/orgs", json={"name": "Other Fish TTS Team"})).json()
-    clients.headers["X-Treg-Token"] = other["token"]
-    clients.headers.pop("X-Treg-Org", None)
+    clients.headers["X-Stray-Token"] = other["token"]
+    clients.headers.pop("X-Stray-Org", None)
     called = False
 
     async def relay(*args, **kwargs):

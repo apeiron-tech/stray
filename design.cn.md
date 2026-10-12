@@ -1,9 +1,9 @@
 ---
-name: treg-design-guidelines
-description: 为 treg 设计和实现产品界面。以新版 Getting started 设计为视觉基准，覆盖品牌、布局、字体、颜色、组件、响应式、交互与可访问性。
+name: stray-design-guidelines
+description: 为 stray 设计和实现产品界面。以新版 Getting started 设计为视觉基准，覆盖品牌、布局、字体、颜色、组件、响应式、交互与可访问性。
 ---
 
-# Design interfaces like treg
+# Design interfaces like stray
 
 让用户知道 agent 能做什么，并能立即完成下一步：接入 agent、找到工具、连接自己的账号、检查调用与花费。界面应清楚、轻盈、有技术气质；通过像素标题、柔和表面和真实任务场景形成辨识度。
 
@@ -16,10 +16,10 @@ description: 为 treg 设计和实现产品界面。以新版 Getting started �
 | 来源 | 用途 |
 | --- | --- |
 | [Vercel design.md](https://vercel.com/design.md) | 借鉴其任务优先、规则优先级、视觉系统、交互与验收的组织方法，不继承 Vercel 品牌、CSS 或专属报告布局 |
-| [新版线上原型](https://treg-design.vercel.app/#start) | 核对部署中的 HTML、CSS 与交互源码 |
-| [设计仓库](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | 固定参考版本；该版本 `styles.css` 与本次获取的线上 CSS 字节一致 |
-| [Figma 新版完整页面，12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=12-596) | 已读取设计上下文和截图；作为 Getting started 的主要视觉依据 |
-| [Figma 工作区，1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=1-3) | 包含多个版本；`12:33` 的侧栏布局不作为新版默认外壳 |
+| [新版线上原型](https://stray-design.vercel.app/#start) | 核对部署中的 HTML、CSS 与交互源码 |
+| [设计仓库](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | 固定参考版本；该版本 `styles.css` 与本次获取的线上 CSS 字节一致 |
+| [Figma 新版完整页面，12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=12-596) | 已读取设计上下文和截图；作为 Getting started 的主要视觉依据 |
+| [Figma 工作区，1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=1-3) | 包含多个版本；`12:33` 的侧栏布局不作为新版默认外壳 |
 
 本次视觉核对使用 Figma 截图，线上样式与行为核对使用源码；未完成线上浏览器渲染与交互验收。
 
@@ -35,12 +35,12 @@ description: 为 treg 设计和实现产品界面。以新版 Getting started �
 
 ## 2. 产品表达
 
-- 品牌写作 **treg**，保持小写。说明 agent 能完成的任务，避免空泛的能力宣言。
+- 品牌写作 **stray**，保持小写。说明 agent 能完成的任务，避免空泛的能力宣言。
 - **a tool / 工具**：agent 调用的对象。
 - **the catalog / 工具目录**：公开可发现的工具。
 - **your own tools / 你自己的工具**：团队自己的 keys 和 skills 所支持的工具。
 - **registry**：只指服务端本身。不要把任何一半产品称为 vault、marketplace 或 registry。
-- 团队自己的 key 优先，不经 treg 计量收费，也不参与路由或溢出。计费文案必须保留这个区别。
+- 团队自己的 key 优先，不经 stray 计量收费，也不参与路由或溢出。计费文案必须保留这个区别。
 - 不笼统承诺「自动选最优 provider」。只有明确披露的 routed endpoints 和 overflow 场景可表达对应行为。
 - provider 数量、价格、余额、连接状态和奖励来自真实数据。原型的团队名、头像、余额和 demo token 都不是生产默认值。
 
@@ -96,7 +96,7 @@ description: 为 treg 设计和实现产品界面。以新版 Getting started �
 
 正文 fallback 为 Inter、系统 sans-serif；代码 fallback 为系统 monospace。Geist Pixel 缺失时允许回退到 mono，不能阻塞页面。中文内容须提供具有完整字形的系统字体回退，不能强制使用缺失字形的像素字体。
 
-保留 DM Mono 用于余额这一 treg 细节，不照搬 Vercel 将财务数字全部设置为 Sans 的规则。比较数值使用 tabular numerals，单位与精度保持一致。
+保留 DM Mono 用于余额这一 stray 细节，不照搬 Vercel 将财务数字全部设置为 Sans 的规则。比较数值使用 tabular numerals，单位与精度保持一致。
 
 Logo 字标以 Figma 的 Google Sans Flex 15px / 500 为目标；当前原型 `.brand` 仍继承早期 mono 声明，是已知差异，不作为第二种品牌字体规则。
 
@@ -133,7 +133,7 @@ Logo 字标以 Figma 的 Google Sans Flex 15px / 500 为目标；当前原型 `.
 | 用途 | 参考圆角 |
 | --- | --- |
 | 接入主卡 | 32px；窄屏 24px |
-| Try it out、Build on treg 外层 | 24px |
+| Try it out、Build on stray 外层 | 24px |
 | 设置分组、场景图片卡 | 20px |
 | 代码表面、图片预览、场景文字覆盖层 | 16px |
 | Catalog 平台卡 | 15px |
@@ -150,19 +150,19 @@ Logo 字标以 Figma 的 Google Sans Flex 15px / 500 为目标；当前原型 `.
 - **局部磨砂**：顶栏参考 blur 14px；场景卡文字覆盖层参考 blur 32px。无滤镜支持时仍须有足够不透明的可读底色。
 - **局部渐变**：保留场景图片的可读性遮罩、余额胶囊的极淡渐变，以及已设计的推荐入口效果。不扩展为全站渐变按钮、发光边框或渐变文字。
 
-不要把 Vercel 对纹理、图片或磨砂的全面限制直接套用到 treg；也不要将这里的局部例外扩展成每页都需要的装饰。
+不要把 Vercel 对纹理、图片或磨砂的全面限制直接套用到 stray；也不要将这里的局部例外扩展成每页都需要的装饰。
 
 ## 8. 核心组件与任务流程
 
 ### Getting started
 
-按「Set up your agent → Try it out → 可选的 Build on treg」组织。步骤编号表示操作顺序，不是装饰性章节号。
+按「Set up your agent → Try it out → 可选的 Build on stray」组织。步骤编号表示操作顺序，不是装饰性章节号。
 
 - 接入卡同时展示所选 agent、相应说明、可复制的命令或提示词。切换 agent 后，这些内容和适用的图像应一致。
-- treg token 默认遮蔽；显隐和复制分别操作。复制完整且被授权展示的值，不能复制遮蔽字符串；复制成功也不自动展开 token。
+- stray token 默认遮蔽；显隐和复制分别操作。复制完整且被授权展示的值，不能复制遮蔽字符串；复制成功也不自动展开 token。
 - 示例卡整卡可复制提示词，用局部 `Copied` 状态确认；不要把复制包装成已经执行了调用。
 - OAuth 连接按用户任务分组。入口说明连接的服务；实际授权范围、审核状态和错误来自产品逻辑。
-- Build on treg 是可选路径。两种受众通过分段切换看到各自说明；手动设置使用渐进展开。
+- Build on stray 是可选路径。两种受众通过分段切换看到各自说明；手动设置使用渐进展开。
 
 ### Catalog
 
@@ -189,7 +189,7 @@ Logo 字标以 Figma 的 Google Sans Flex 15px / 500 为目标；当前原型 `.
 
 背景视频和 agent 预览属于可选品牌媒体。静态 poster 必须构成完整体验；视频不能阻塞页面、承担状态提示或自动发声。尊重 reduced motion：停用两类自动视频与非必要位移，保留静态图；长时间自动播放还须有可访问的暂停方式。只暂停 ASCII 背景而继续播放 agent 预览不算完整支持。
 
-资产从设计仓库的 [`assets/figma/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) 和 [`assets/icons/treg/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/treg) 获取。复用真实 treg mark、provider 标志和图标，不用 emoji 或手画近似图替代。固定图像尺寸避免布局跳动；正式交付使用项目托管资产，不依赖临时 Figma 导出 URL。
+资产从设计仓库的 [`assets/figma/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) 和 [`assets/icons/stray/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/stray) 获取。复用真实 stray mark、provider 标志和图标，不用 emoji 或手画近似图替代。固定图像尺寸避免布局跳动；正式交付使用项目托管资产，不依赖临时 Figma 导出 URL。
 
 ## 10. 响应式与可访问性
 
@@ -216,11 +216,11 @@ Logo 字标以 Figma 的 Google Sans Flex 15px / 500 为目标；当前原型 `.
 
 ## 12. 交付前检查
 
-1. 首屏能看出当前任务、下一步动作与 treg 身份；页面没有为品牌装饰推迟主要操作。
+1. 首屏能看出当前任务、下一步动作与 stray 身份；页面没有为品牌装饰推迟主要操作。
 2. 字体、图片裁切、圆角、对齐线与指定 Figma 版本一致；没有混入旧侧栏稿。
 3. 浅深主题均可读；没有丢失焦点、低对比关键文案、溢出或窄屏消失的必要入口。
 4. 接入选择、复制、显隐、搜索、筛选、菜单和主题切换真实可用；成功、失败、空态与加载态清楚。
-5. 文案遵守 treg 词汇，余额和状态来自真实数据；没有 demo token、模拟成功或虚构功能。
+5. 文案遵守 stray 词汇，余额和状态来自真实数据；没有 demo token、模拟成功或虚构功能。
 6. reduced motion、字体失败和媒体失败均有完整退路。
 7. 在真实浏览器中对照首屏与整页，检查桌面、手机、键盘路径及深色模式；未验证的部分明确记录，不把源码阅读当成视觉验收。
 

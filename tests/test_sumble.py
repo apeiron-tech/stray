@@ -4,18 +4,18 @@ import json
 import httpx
 import pytest
 
-from treg.application.call import resolve as resolution, service, settle
-from treg.config import get_settings
-from treg.domain.catalog import store
-from treg.domain.capacity import collectors
-from treg.domain.capacity.policy import default_policy
+from stray.application.call import resolve as resolution, service, settle
+from stray.config import get_settings
+from stray.domain.catalog import store
+from stray.domain.capacity import collectors
+from stray.domain.capacity.policy import default_policy
 from test_marketplace_call import _balance, _entries, _mk, platform_on  # noqa: F401
 
 
 @pytest.fixture
 def sumble_on(monkeypatch, platform_on):  # noqa: F811
-    monkeypatch.setenv('TREG_PLATFORM_KEY_SUMBLE', 'PLATFORM-SUMBLE')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'sumble')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_SUMBLE', 'PLATFORM-SUMBLE')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'sumble')
     get_settings.cache_clear()
 
 

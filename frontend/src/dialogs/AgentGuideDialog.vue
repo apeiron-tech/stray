@@ -11,7 +11,7 @@ export default { setup: useDashboard }
           Widening it later means going through the provider's consent screen again.</p>
         <p v-if="capAsk.provider.consent_notice" class="mk-notice" style="margin:0 0 14px">{{capAsk.provider.consent_notice}}</p>
         <!-- The price BEFORE the consent screen, not on the invoice: an oauth-billed provider (X)
-             charges treg's app per use, so calls on this connection are metered from the balance. -->
+             charges stray's app per use, so calls on this connection are metered from the balance. -->
         <p v-if="capAsk.provider.metered" class="mk-notice" style="margin:0 0 14px">Calls on this connection are
           metered from your team balance — {{capAsk.provider.display_name}} bills per use
           (reads ~${{capAsk.provider.billed_rates.read_per_result_usd}}/result,

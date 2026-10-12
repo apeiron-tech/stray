@@ -24,15 +24,15 @@ from sqlmodel import select
 
 from conftest import make_upstream
 
-from treg import api, crypto
-from treg.api import LOCAL_ORG_NAME, LOCAL_USER_EMAIL, app
-from treg.config import Settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import DenyRule, Membership, Org, User
+from stray import api, crypto
+from stray.api import LOCAL_ORG_NAME, LOCAL_USER_EMAIL, app
+from stray.config import Settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import DenyRule, Membership, Org, User
 
 
 def _h(t: str) -> dict:
-    return {"X-Treg-Token": t}
+    return {"X-Stray-Token": t}
 
 
 async def _mint(email: str, org_id: int, role: str) -> tuple[str, int]:
@@ -236,8 +236,8 @@ async def test_the_sweep_leaves_org_wide_rules_and_other_members_alone(env):
 async def test_deleting_a_user_clears_their_rules_in_every_org(env, monkeypatch):
     """`DenyRule.user_id` is a FOREIGN KEY. A super-admin delete that left one behind would dangle —
     Postgres refuses that outright, and SQLite only hides it because it does not enforce FKs."""
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", "sa-token")
-    from treg.config import get_settings
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", "sa-token")
+    from stray.config import get_settings
     get_settings.cache_clear()
     try:
         await env.c.post(f"/orgs/{env.org_id}/deny", headers=_h(env.owner),

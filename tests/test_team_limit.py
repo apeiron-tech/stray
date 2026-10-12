@@ -26,14 +26,14 @@ async def test_concurrent_creations_share_the_last_slot(clients):
 
 async def test_deletion_frees_a_slot_and_legacy_first_team_counts(clients):
     first = (await clients.post('/users', json={'email': 'legacy-limit@example.org'})).json()
-    headers = {'X-Treg-Token': first['token']}
+    headers = {'X-Stray-Token': first['token']}
     for i in range(9):
         r = await clients.post('/orgs', headers=headers, json={'name': f'legacy-{i}'})
         assert r.status_code == 200
     last = r.json()
     assert (await clients.post('/orgs', headers=headers, json={'name': 'blocked'})).status_code == 403
     deleted = await clients.delete(f"/orgs/{last['org_id']}", params={'confirm': last['org']},
-                                   headers={'X-Treg-Token': last['token']})
+                                   headers={'X-Stray-Token': last['token']})
     assert deleted.status_code == 200, deleted.text
     assert (await clients.post('/orgs', headers=headers, json={'name': 'replacement'})).status_code == 200
     assert (await clients.post('/orgs', headers=headers, json={'name': 'blocked-again'})).status_code == 403
@@ -41,11 +41,11 @@ async def test_deletion_frees_a_slot_and_legacy_first_team_counts(clients):
 
 async def test_joining_does_not_count_but_promotion_does(clients):
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.infra.db import session_maker
+    from stray.models import User
 
     other = (await clients.post('/users', json={'email': 'other-owner@example.org'})).json()
-    other_headers = {'X-Treg-Token': other['token']}
+    other_headers = {'X-Stray-Token': other['token']}
     inv = await clients.post(f"/orgs/{other['org_id']}/invites", headers=other_headers,
                              json={'email': 'tim@superdesign.dev', 'role': 'member'})
     accepted = await clients.post('/invites/accept', json={
@@ -59,7 +59,7 @@ async def test_joining_does_not_count_but_promotion_does(clients):
     promoted = await clients.patch(f"/orgs/{other['org_id']}/members/{uid}",
                                    headers=other_headers, json={'role': 'owner'})
     assert promoted.status_code == 403, promoted.text
-    assert (await clients.get('/tools', headers={'X-Treg-Token': accepted.json()['token']})).status_code == 200
+    assert (await clients.get('/tools', headers={'X-Stray-Token': accepted.json()['token']})).status_code == 200
 
 
 async def test_demo_cannot_bypass_limit_but_existing_demo_can_be_reused(clients):
@@ -75,8 +75,8 @@ async def test_demo_cannot_bypass_limit_but_existing_demo_can_be_reused(clients)
 
 async def test_demo_refused_at_ten_and_existing_excess_teams_preserved(clients):
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import Membership, Org, User
+    from stray.infra.db import session_maker
+    from stray.models import Membership, Org, User
 
     # Seed the pre-upgrade state, which normal creation can no longer produce.
     async with session_maker() as db:
@@ -97,11 +97,11 @@ async def test_demo_refused_at_ten_and_existing_excess_teams_preserved(clients):
 
 async def test_promotion_and_creation_compete_for_same_slot(clients):
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.infra.db import session_maker
+    from stray.models import User
 
     other = (await clients.post('/users', json={'email': 'race-owner@example.org'})).json()
-    headers = {'X-Treg-Token': other['token']}
+    headers = {'X-Stray-Token': other['token']}
     inv = await clients.post(f"/orgs/{other['org_id']}/invites", headers=headers,
                              json={'email': 'tim@superdesign.dev'})
     assert (await clients.post('/invites/accept', json={

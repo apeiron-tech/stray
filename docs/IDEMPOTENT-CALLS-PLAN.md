@@ -7,7 +7,7 @@
 > "how does result pricing handle retries, agents need idempotent billing before this works"
 
 Asked publicly, and correct. Agents retry far more than humans do, so this is not an edge case for
-treg. It is the main traffic pattern.
+stray. It is the main traffic pattern.
 
 ## What already works, so we do not rebuild it
 
@@ -31,13 +31,13 @@ catalog.
 
 One case, and only one:
 
-1. treg calls the provider
+1. stray calls the provider
 2. the provider succeeds, and bills us
 3. the response is lost on the way back to the agent, or the agent's own client times out
 4. the agent retries
-5. treg calls the provider again and bills again
+5. stray calls the provider again and bills again
 
-From treg's side those are two successful calls with nothing linking them. The money is real: we pay
+From stray's side those are two successful calls with nothing linking them. The money is real: we pay
 the provider twice and charge the team twice.
 
 `ledger.topup` already has an idempotency key for exactly this reason (Stripe redelivers webhooks).
@@ -46,7 +46,7 @@ the provider twice and charge the team twice.
 ## Not-charging-twice is not enough
 
 The cheap version is to remember that a key was already billed and skip the second charge. It is
-wrong, and it is worth being explicit about why: treg would still make the upstream call, so **we
+wrong, and it is worth being explicit about why: stray would still make the upstream call, so **we
 still pay the provider**. We would be moving the double cost from the customer onto ourselves rather
 than removing it.
 
@@ -65,7 +65,7 @@ thing to ask of an API.
 
 ### Scope: metered calls only
 
-A team calling on its **own** key is their bill and their relationship with the provider. treg has no
+A team calling on its **own** key is their bill and their relationship with the provider. stray has no
 business caching that, and storing those responses would mean holding other people's data for a
 reason that benefits nobody.
 

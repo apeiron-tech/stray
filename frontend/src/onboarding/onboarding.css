@@ -500,7 +500,7 @@
 @media (max-width:700px){.ob2 .sheet{padding:24px 16px}.ob2 .dock-in{padding:10px 14px}}
 .ob2 .ob-preview-chip{display:inline-flex;margin-bottom:12px;font:11.5px var(--mono);color:var(--amber-ink);background:var(--amber-soft);
   border:1px dashed var(--amber-line);border-radius:999px;padding:3px 12px}
-/* Type: Geist throughout (the sans of the family whose pixel cut is treg's display face). Each step
+/* Type: Geist throughout (the sans of the family whose pixel cut is stray's display face). Each step
    opens with one short title. */
 .ob2{--sans:"Geist Variable","Suisse Intl",system-ui,sans-serif}
 .ob2 .sh-title{font:600 34px/1.12 var(--sans);letter-spacing:-.032em;color:var(--ink);text-wrap:balance}

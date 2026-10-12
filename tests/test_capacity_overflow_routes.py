@@ -11,16 +11,16 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from treg.infra.db import reset_db, session_maker
-from treg.domain.capacity import routes as R
-from treg.domain.capacity import signatures as S
-from treg.domain.capacity import verify as V
-from treg.domain.capacity.policy import ensure_policies
-from treg.domain.catalog import store as catalog_store
-from treg.infra.upstream.aggregators import (VENDOR_DRY, VENDOR_REFUSAL, by_name, monid,
+from stray.infra.db import reset_db, session_maker
+from stray.domain.capacity import routes as R
+from stray.domain.capacity import signatures as S
+from stray.domain.capacity import verify as V
+from stray.domain.capacity.policy import ensure_policies
+from stray.domain.catalog import store as catalog_store
+from stray.infra.upstream.aggregators import (VENDOR_DRY, VENDOR_REFUSAL, by_name, monid,
                                               orthogonal, with_vendor_verdict)
-from treg.models import CapacityPolicy, OverflowRoute
-from treg.timeutil import utcnow_naive
+from stray.models import CapacityPolicy, OverflowRoute
+from stray.timeutil import utcnow_naive
 
 FIX = Path(__file__).parent / "fixtures" / "aggregators"
 
@@ -323,9 +323,9 @@ _UNRECORDED_SIGNATURE = {
 def test_every_platform_provider_has_a_recorded_or_acknowledged_signature():
     """The guard. A provider gains a `platform_key_*` slot → record how it says "out of credits"
     (a row in `_TABLE`) or add it above knowingly. Silence is how Apollo's 422 went unseen."""
-    from treg.config import platform_setting_name
-    from treg.domain.capacity.collectors import all_platform_providers
-    from treg.domain.catalog import store as catalog_store
+    from stray.config import platform_setting_name
+    from stray.domain.capacity.collectors import all_platform_providers
+    from stray.domain.catalog import store as catalog_store
     # Slot spelling is not provider spelling (`fiber_ai` vs `fiber-ai`); rows match `mk.provider`,
     # the catalog id, so the guard must speak that or a row written to satisfy it never fires.
     settings = {"platform_key_" + s for s in all_platform_providers()}
@@ -344,7 +344,7 @@ _CF_PAGE = (b"<!DOCTYPE html><html><head><title>Access denied | api.example.com 
 
 
 def test_a_cdn_block_page_is_an_edge_block_not_an_account_signal():
-    """A CDN refusing the request's shape says nothing about treg's account: never exhausting."""
+    """A CDN refusing the request's shape says nothing about stray's account: never exhausting."""
     assert S.classify("anyone", 403, {"cf-mitigated": "challenge"}, b"").kind == "edge_block"
     assert S.classify("anyone", 503, {"cf-mitigated": "challenge"}, b"").kind == "edge_block"
     hdrs = ((b"Server", b"cloudflare"), (b"Content-Type", b"text/html; charset=UTF-8"), (b"CF-RAY", b"9x"))
@@ -511,7 +511,7 @@ def test_shape_fingerprint_ignores_values_but_not_structure():
 def test_shape_empty_vs_nonempty_list_differs_but_both_empty_match():
     """Regression for leadsforge.people.enrich.job.list shape verification failure.
 
-    The endpoint lists account-specific jobs. Direct (treg's Leadsforge account) vs relay
+    The endpoint lists account-specific jobs. Direct (stray's Leadsforge account) vs relay
     (Orthogonal's Leadsforge account) returned different job histories: one had jobs, the
     other empty. `shape()` distinguishes `[]` from `[{...}]`, so verify failed.
 
@@ -625,7 +625,7 @@ async def test_verify_route_marks_same_shape_and_polls_async_runs():
 
 
 def test_pdl_operation_allowance_does_not_lock_other_pdl_products():
-    from treg.domain.capacity.marks import lock_key
+    from stray.domain.capacity.marks import lock_key
     body = b'{"status":402,"error":{"message":"You have hit your account maximum for person_identify (all matches used)"}}'
     signal = S.classify('pdl', 402, None, body)
     assert signal.kind == 'quota'
@@ -637,7 +637,7 @@ def test_pdl_operation_allowance_does_not_lock_other_pdl_products():
 def test_orthogonal_relaying_icypeas_empty_pool_is_the_aggregators_dry_account():
     """Orthogonal's own Icypeas pool can run dry too, and relays the same 200: never served, never billed."""
     import json as _json
-    from treg.infra.upstream.aggregators import VENDOR_DRY, orthogonal, with_vendor_verdict
+    from stray.infra.upstream.aggregators import VENDOR_DRY, orthogonal, with_vendor_verdict
     envelope = {"success": True, "data": _json.loads(ICYPEAS_OUT_OF_CREDITS), "priceCents": 1,
                 "requestId": "run_x", "billing": {"chargedPriceCents": 1}}
     res = with_vendor_verdict(orthogonal.parse(200, _json.dumps(envelope).encode()), "icypeas")

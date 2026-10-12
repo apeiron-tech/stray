@@ -40,7 +40,7 @@ The per-call version has no credit. A found email is one price; a verification i
 | Tech stack by domain | tomba.companies.tech_stack | $0.0089 | 8 calls |
 | Company profile | scrapecreators LinkedIn company page | $0.00188 | 754 calls, 100% |
 
-Typical case, first or second provider hits: **$0.01–0.03 per verified email**. Every finder in the loop documents a miss as free, and for tomba, hunter, leadmagic and leadsforge we have watched the credit counter confirm it. One caveat from our own ledger: treg currently meters findymail (and Fiber) at the full rate whether or not the call hits, until the cost parser for those providers is fixed — budget findymail rungs as if every call were a hit.
+Typical case, first or second provider hits: **$0.01–0.03 per verified email**. Every finder in the loop documents a miss as free, and for tomba, hunter, leadmagic and leadsforge we have watched the credit counter confirm it. One caveat from our own ledger: stray currently meters findymail (and Fiber) at the full rate whether or not the call hits, until the cost parser for those providers is fixed — budget findymail rungs as if every call were a hit.
 
 ## The script
 
@@ -48,17 +48,17 @@ Typical case, first or second provider hits: **$0.01–0.03 per verified email**
 # waterfall.sh — find + verify one work email across five sync providers, cheapest first, stop at first hit
 NAME="$1"; DOMAIN="$2"; FIRST="${NAME%% *}"; LAST="${NAME#* }"
 try() { EMAIL=$(eval "$2" | jq -r "$3 // empty"); [ -n "$EMAIL" ] && VIA="$1"; }
-try tomba     "treg call tomba.people.email.find --query domain=$DOMAIN --query 'full_name=$NAME'"                                   '.data.email'
-[ -z "$EMAIL" ] && try findymail "treg call findymail.search.name --method POST --data '{\"name\":\"$NAME\",\"domain\":\"$DOMAIN\"}'" '.contact.email'
-[ -z "$EMAIL" ] && try hunter    "treg call hunter.people.email.find --query domain=$DOMAIN --query 'full_name=$NAME'"                '.data.email'
-[ -z "$EMAIL" ] && try leadsforge "treg call leadsforge.people.email.find --method POST --data '{\"firstName\":\"$FIRST\",\"lastName\":\"$LAST\",\"companyDomain\":\"$DOMAIN\"}'" '.email'
-[ -z "$EMAIL" ] && try leadmagic "treg call leadmagic.people.email.find --method POST --data '{\"full_name\":\"$NAME\",\"domain\":\"$DOMAIN\"}'" '.email'
+try tomba     "stray call tomba.people.email.find --query domain=$DOMAIN --query 'full_name=$NAME'"                                   '.data.email'
+[ -z "$EMAIL" ] && try findymail "stray call findymail.search.name --method POST --data '{\"name\":\"$NAME\",\"domain\":\"$DOMAIN\"}'" '.contact.email'
+[ -z "$EMAIL" ] && try hunter    "stray call hunter.people.email.find --query domain=$DOMAIN --query 'full_name=$NAME'"                '.data.email'
+[ -z "$EMAIL" ] && try leadsforge "stray call leadsforge.people.email.find --method POST --data '{\"firstName\":\"$FIRST\",\"lastName\":\"$LAST\",\"companyDomain\":\"$DOMAIN\"}'" '.email'
+[ -z "$EMAIL" ] && try leadmagic "stray call leadmagic.people.email.find --method POST --data '{\"full_name\":\"$NAME\",\"domain\":\"$DOMAIN\"}'" '.email'
 [ -z "$EMAIL" ] && { echo "miss"; exit 1; }
-STATUS=$(treg call leadmagic.people.email.verify --method POST --data "{\"email\":\"$EMAIL\"}" | jq -r '.email_status')
+STATUS=$(stray call leadmagic.people.email.verify --method POST --data "{\"email\":\"$EMAIL\"}" | jq -r '.email_status')
 echo "$EMAIL  $STATUS  via $VIA"
 ```
 
-Each provider has its own parameter shape — two take a query string, three take a JSON body — which is exactly the tedium Clay's waterfall column hides. `treg catalog get <endpoint>` prints the exact input, the response path and the price. Icypeas is left out of the sync loop because its finder and verifier are async (submit, then read the result by id); add it as the sixth rung with `icypeas.bulk.search` when you run lists. The loop is the whole product: treg shows the providers side by side with price and success rate — **the script picks the order; treg does not route or fail over on its own.**
+Each provider has its own parameter shape — two take a query string, three take a JSON body — which is exactly the tedium Clay's waterfall column hides. `stray catalog get <endpoint>` prints the exact input, the response path and the price. Icypeas is left out of the sync loop because its finder and verifier are async (submit, then read the result by id); add it as the sixth rung with `icypeas.bulk.search` when you run lists. The loop is the whole product: stray shows the providers side by side with price and success rate — **the script picks the order; stray does not route or fail over on its own.**
 
 Run it over a CSV and you have Clay's "Find work email" waterfall column. Add the people search in front and you have the "Find people at company" column. Add the tech-stack call and you have the "Uses Salesforce?" filter.
 

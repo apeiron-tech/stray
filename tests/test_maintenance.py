@@ -25,11 +25,11 @@ def _env(tmp_path: Path, *, single_user: bool = False) -> tuple[dict[str, str], 
     token_file = tmp_path / "local-token"
     env = os.environ.copy()
     env.update({
-        "TREG_DATABASE_URL": f"sqlite+aiosqlite:///{database}",
-        "TREG_PUBLIC_URL": "http://localhost:18790",
-        "TREG_SINGLE_USER": "true" if single_user else "false",
-        "TREG_SINGLE_USER_TOKEN_FILE": str(token_file),
-        "TREG_CLAUDE_CONNECTOR_ENABLED": "false",
+        "STRAY_DATABASE_URL": f"sqlite+aiosqlite:///{database}",
+        "STRAY_PUBLIC_URL": "http://localhost:18790",
+        "STRAY_SINGLE_USER": "true" if single_user else "false",
+        "STRAY_SINGLE_USER_TOKEN_FILE": str(token_file),
+        "STRAY_CLAUDE_CONNECTOR_ENABLED": "false",
     })
     return env, database, token_file
 
@@ -42,7 +42,7 @@ def _run(args: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[st
 
 
 def _upgrade(env: dict[str, str]) -> subprocess.CompletedProcess[str]:
-    return _run(["-m", "treg", "upgrade"], env)
+    return _run(["-m", "stray", "upgrade"], env)
 
 
 def _alembic_upgrade(env: dict[str, str], revision: str) -> subprocess.CompletedProcess[str]:
@@ -56,8 +56,8 @@ def _create_unstamped_schema(env: dict[str, str]) -> None:
 
         from sqlmodel import SQLModel
 
-        from treg import models
-        from treg.infra.db import _engine, dispose_engine
+        from stray import models
+        from stray.infra.db import _engine, dispose_engine
 
         async def main():
             async with _engine.begin() as connection:
@@ -76,7 +76,7 @@ def _create_unstamped_schema(env: dict[str, str]) -> None:
 def _script_directory():
     from alembic.script import ScriptDirectory
 
-    from treg.maintenance import _alembic_config
+    from stray.maintenance import _alembic_config
 
     return ScriptDirectory.from_config(_alembic_config())
 
@@ -108,9 +108,9 @@ def _seed_connection(env: dict[str, str]) -> None:
         from sqlalchemy import insert
         from sqlalchemy import inspect as sa_inspect
 
-        from treg import oauth_providers
-        from treg.infra.db import session_maker
-        from treg.models import Org, Secret, Tool
+        from stray import oauth_providers
+        from stray.infra.db import session_maker
+        from stray.models import Org, Secret, Tool
 
         async def seed():
             provider = oauth_providers.get("google-analytics")
@@ -165,7 +165,7 @@ def _free_port() -> int:
 def _boot_raw_asgi(env: dict[str, str], tmp_path: Path) -> tuple[bool, str]:
     port = _free_port()
     base_url = f"http://127.0.0.1:{port}"
-    env = {**env, "PORT": str(port), "TREG_PUBLIC_URL": base_url, "NO_COLOR": "1"}
+    env = {**env, "PORT": str(port), "STRAY_PUBLIC_URL": base_url, "NO_COLOR": "1"}
     # The assertions read the server's log text. Rich honours FORCE_COLOR even into a file and
     # then highlights numbers with escape codes ("Database revision \x1b[1;36m9999"), so a shell
     # that forces colour (agent harnesses do) would fail the revision checks for no reason.
@@ -181,7 +181,7 @@ def _boot_raw_asgi(env: dict[str, str], tmp_path: Path) -> tuple[bool, str]:
                 sys.executable,
                 "-m",
                 "uvicorn",
-                "treg.api:app",
+                "stray.api:app",
                 "--host",
                 "127.0.0.1",
                 "--port",
@@ -222,7 +222,7 @@ def test_real_serve_path_can_query_database_after_pre_serve_maintenance(tmp_path
     env, _, token_file = _env(tmp_path, single_user=True)
     port = _free_port()
     base_url = f"http://127.0.0.1:{port}"
-    env.update({"PORT": str(port), "TREG_PUBLIC_URL": base_url})
+    env.update({"PORT": str(port), "STRAY_PUBLIC_URL": base_url})
     stdout_path = tmp_path / "server.stdout"
     stderr_path = tmp_path / "server.stderr"
     ready = False
@@ -231,7 +231,7 @@ def test_real_serve_path_can_query_database_after_pre_serve_maintenance(tmp_path
 
     with stdout_path.open("w") as stdout, stderr_path.open("w") as stderr:
         process = subprocess.Popen(
-            [sys.executable, "-m", "treg"],
+            [sys.executable, "-m", "stray"],
             cwd=ROOT,
             env=env,
             text=True,
@@ -255,7 +255,7 @@ def test_real_serve_path_can_query_database_after_pre_serve_maintenance(tmp_path
             if ready and token_file.exists():
                 request = urllib.request.Request(
                     f"{base_url}/tools",
-                    headers={"X-Treg-Token": token_file.read_text().strip()},
+                    headers={"X-Stray-Token": token_file.read_text().strip()},
                 )
                 try:
                     with urllib.request.urlopen(request, timeout=10) as response:
@@ -290,8 +290,8 @@ def test_empty_database_upgrade_uses_pure_alembic_without_provisioning_a_user(tm
     result = _upgrade(env)
 
     assert result.returncode == 0, result.stderr
-    assert "treg schema: alembic upgrade head (empty database)" in result.stdout
-    assert "treg upgrade complete" in result.stdout
+    assert "stray schema: alembic upgrade head (empty database)" in result.stdout
+    assert "stray upgrade complete" in result.stdout
     with sqlite3.connect(database) as db:
         tables = {row[0] for row in db.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table'"
@@ -324,7 +324,7 @@ def test_raw_asgi_refuses_a_database_behind_head(tmp_path):
 
     assert not ready
     assert "behind this build" in server_stderr
-    assert "python -m treg upgrade" in server_stderr
+    assert "python -m stray upgrade" in server_stderr
 
 
 def test_raw_asgi_warns_and_serves_when_database_revision_is_unknown_newer(tmp_path):
@@ -351,8 +351,8 @@ def test_upgrade_refuses_an_unstamped_pre_adoption_database(tmp_path):
     result = _upgrade(env)
 
     assert result.returncode != 0
-    assert "tools-registry[server]==0.14.*" in result.stderr
-    assert "python -m treg upgrade" in result.stderr
+    assert "stray[server]==0.14.*" in result.stderr
+    assert "python -m stray upgrade" in result.stderr
     assert "Nothing was changed" in result.stderr
     assert _alembic_version(database) is None
 
@@ -385,7 +385,7 @@ def test_upgrade_applies_a_pending_revision_from_one_behind_head(tmp_path):
     result = _upgrade(env)
 
     assert result.returncode == 0, result.stderr
-    assert "treg schema: alembic upgrade head (stamped database)" in result.stdout
+    assert "stray schema: alembic upgrade head (stamped database)" in result.stdout
     assert _alembic_version(database) == _alembic_head()
 
 
@@ -409,8 +409,8 @@ def test_upgrade_backfills_companions_and_is_idempotent(tmp_path):
 def test_app_lifespan_does_not_run_release_backfills(tmp_path, ads_enabled):
     env, database, _ = _env(tmp_path)
     # An empty outbox starts the real worker without making any upstream calls.
-    env["TREG_GOOGLE_ADS_CUSTOMER_ID"] = "test-customer" if ads_enabled else ""
-    env["TREG_ADS_CONV_REFRESH_TOKEN"] = "test-refresh-token" if ads_enabled else ""
+    env["STRAY_GOOGLE_ADS_CUSTOMER_ID"] = "test-customer" if ads_enabled else ""
+    env["STRAY_ADS_CONV_REFRESH_TOKEN"] = "test-refresh-token" if ads_enabled else ""
     initial = _upgrade(env)
     assert initial.returncode == 0, initial.stderr
     _seed_connection(env)
@@ -419,7 +419,7 @@ def test_app_lifespan_does_not_run_release_backfills(tmp_path, ads_enabled):
         """
         import asyncio
 
-        from treg.bootstrap import create_app
+        from stray.bootstrap import create_app
 
         async def start_and_stop():
             app = create_app("all")
@@ -462,7 +462,7 @@ def _other_database_error() -> Exception:
 
 def _fake_upgrade(monkeypatch, outcomes: list[Exception | None]) -> list[str]:
     """`alembic upgrade head` that raises each queued outcome in turn, then succeeds."""
-    from treg import maintenance
+    from stray import maintenance
 
     calls: list[str] = []
 
@@ -482,11 +482,11 @@ def _fake_upgrade(monkeypatch, outcomes: list[Exception | None]) -> list[str]:
 
 
 async def test_upgrade_retries_a_lock_timeout_and_resumes(monkeypatch, caplog):
-    from treg import maintenance
+    from stray import maintenance
 
     calls = _fake_upgrade(monkeypatch, [_lock_timeout(), _lock_timeout()])
 
-    with caplog.at_level("WARNING", logger="treg.maintenance"):
+    with caplog.at_level("WARNING", logger="stray.maintenance"):
         await maintenance._upgrade_schema()
 
     assert calls == ["head", "head", "head"]
@@ -499,7 +499,7 @@ async def test_upgrade_retries_a_lock_timeout_and_resumes(monkeypatch, caplog):
 async def test_upgrade_gives_up_after_the_retry_budget(monkeypatch):
     from sqlalchemy.exc import DBAPIError
 
-    from treg import maintenance
+    from stray import maintenance
 
     monkeypatch.setattr(maintenance, "LOCK_RETRY_ATTEMPTS", 3)
     calls = _fake_upgrade(monkeypatch, [_lock_timeout()] * 5)
@@ -513,7 +513,7 @@ async def test_upgrade_gives_up_after_the_retry_budget(monkeypatch):
 async def test_upgrade_does_not_retry_other_database_errors(monkeypatch):
     from sqlalchemy.exc import DBAPIError
 
-    from treg import maintenance
+    from stray import maintenance
 
     calls = _fake_upgrade(monkeypatch, [_other_database_error()])
 

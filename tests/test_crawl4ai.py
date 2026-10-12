@@ -1,17 +1,17 @@
-"""Crawl4AI Cloud: every paid route runs on treg's key and settles at the charge Crawl4AI reports
+"""Crawl4AI Cloud: every paid route runs on stray's key and settles at the charge Crawl4AI reports
 (x-c4-cost on a single answer, the closing summary line of a batch stream, a finished job's
-usage.cost). Prices and wire shapes observed live 2026-10-05; see src/treg/catalog/crawl4ai.yaml."""
+usage.cost). Prices and wire shapes observed live 2026-10-05; see src/stray/catalog/crawl4ai.yaml."""
 from __future__ import annotations
 
 import json
 
 import pytest
 
-from treg.application.call import settle as call_settle
-from treg.application.call.resolve import MarketplaceCall
-from treg.domain.capacity import signatures as S
-from treg.domain.catalog import store as cs
-from treg.domain.money import settlement as settlement_basis
+from stray.application.call import settle as call_settle
+from stray.application.call.resolve import MarketplaceCall
+from stray.domain.capacity import signatures as S
+from stray.domain.catalog import store as cs
+from stray.domain.money import settlement as settlement_basis
 
 
 def test_every_paid_crawl4ai_route_is_platform_priced():

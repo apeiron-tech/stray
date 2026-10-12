@@ -1,12 +1,29 @@
 # Changelog
 
-Notable changes to treg. Dates are release dates; anything under **Unreleased** is on `main` but not
+Notable changes to stray (called treg before the rename; entries below keep the name they
+shipped under). Dates are release dates; anything under **Unreleased** is on `main` but not
 yet published to PyPI or Homebrew.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and treg uses
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and stray uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+### Changed
+
+- **treg is now stray.** The product, the CLI and every surface that carries the name moved
+  together, with a new mark: three squares in formation and a fourth that has strayed to the corner
+  (`▛`, replacing `▚`).
+  - Python package `treg` is `stray`; the distribution is `stray`; the commands are `stray` and
+    `stray-worker`; `python -m stray` runs the server.
+  - Wire names follow: `X-Treg-*` headers are `X-Stray-*`, `TREG_*` environment variables are
+    `STRAY_*`, session and tracking cookies are `stray_*`, API keys start `stray_`, and catalog
+    tool ids that began `treg.` begin `stray.`.
+  - **Not changed:** hostnames (`treg.to`, `treg.superdesign.dev`) and the upstream project's social
+    handle, which stay until the deployment has its own domain; licence and copyright lines.
+  - **Upgrading an existing deployment is not transparent.** Set the `STRAY_*` variables before the
+    first boot, expect every signed-in session and every `treg_` API key to stop working, and note
+    that Stripe metadata written under `treg_org_id` / `treg_kind` is not read back.
 
 ### Added
 

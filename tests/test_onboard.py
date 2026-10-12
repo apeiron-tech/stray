@@ -12,22 +12,22 @@ from sqlalchemy import select
 
 from conftest import make_upstream
 
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
-from treg.domain.identity import session as sess
-from treg.models import CallRecord, DenyRule, Membership, Org, Secret, Tool, User
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
+from stray.domain.identity import session as sess
+from stray.models import CallRecord, DenyRule, Membership, Org, Secret, Tool, User
 
 ADMIN = "ENV-ADMIN-SECRET"
 
 
 def _h(t: str) -> dict:
-    return {"X-Treg-Token": t}
+    return {"X-Stray-Token": t}
 
 
 @pytest.fixture
 async def c(monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
-    from treg.config import get_settings
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
+    from stray.config import get_settings
     get_settings.cache_clear()
     await reset_db()
     app.state.http = AsyncClient(transport=ASGITransport(app=make_upstream()), base_url="http://upstream")
@@ -56,9 +56,9 @@ async def test_onboard_seeds_a_populated_team(c):
         users = {u.id: u for u in (await s.execute(select(User))).scalars().all()}
         roles = {users[m.user_id].email: m.role for m in mems}
         assert roles["founder@x.io"] == "owner"
-        assert roles["ada@demo.treg.local"] == "admin"
-        assert roles["ben@demo.treg.local"] == "member"
-        assert roles["cora@demo.treg.local"] == "viewer"
+        assert roles["ada@demo.stray.local"] == "admin"
+        assert roles["ben@demo.stray.local"] == "member"
+        assert roles["cora@demo.stray.local"] == "viewer"
 
         tool = (await s.execute(select(Tool).where(Tool.org_id == oid, Tool.name == "echo"))).scalar_one()
         assert tool.bindings and tool.bindings[0]["name"] == "Authorization"
@@ -100,13 +100,13 @@ async def test_reset_removes_demo_footprint(c):
 
 
 async def test_demo_teammate_cannot_request_a_login_code(c):
-    r = await c.post("/auth/email/start", json={"email": "ada@demo.treg.local"})
+    r = await c.post("/auth/email/start", json={"email": "ada@demo.stray.local"})
     assert r.status_code == 400
 
 
 async def test_seed_tool_and_accept_teammate(c):
     # the dashboard narrative: the user creates a REAL team, seeds the echo tool, and invites a
-    # demo teammate that auto-joins. Use an IDENTITY token (like the dashboard session) so X-Treg-Org
+    # demo teammate that auto-joins. Use an IDENTITY token (like the dashboard session) so X-Stray-Org
     # resolves the active team across orgs — a per-org token is bound to one org.
     started = (await c.post("/auth/email/start", json={"email": "builder@x.io"})).json()
     if code := started.get("dev_code"):
@@ -127,11 +127,11 @@ async def test_seed_tool_and_accept_teammate(c):
     assert st.status_code == 200 and st.json()["tool"] == "echo"
     assert any(t["name"] == "echo" for t in (await c.get("/tools", headers=oh)).json())
     # user invites the demo teammate, then onboarding auto-accepts it
-    await c.post(f"/orgs/{org['org_id']}/invites", json={"email": "alex@demo.treg.local", "role": "member"}, headers=oh)
-    at = await c.post("/onboard/accept-teammate", json={"email": "alex@demo.treg.local"}, headers=oh)
+    await c.post(f"/orgs/{org['org_id']}/invites", json={"email": "alex@demo.stray.local", "role": "member"}, headers=oh)
+    at = await c.post("/onboard/accept-teammate", json={"email": "alex@demo.stray.local"}, headers=oh)
     assert at.status_code == 200
     members = {m["email"]: m["role"] for m in (await c.get(f"/orgs/{org['org_id']}/members", headers=oh)).json()}
-    assert members.get("alex@demo.treg.local") == "member"  # joined instantly
+    assert members.get("alex@demo.stray.local") == "member"  # joined instantly
     # accept-teammate refuses a non-demo email
     await c.post(f"/orgs/{org['org_id']}/invites", json={"email": "real@person.com", "role": "member"}, headers=oh)
     bad = await c.post("/onboard/accept-teammate", json={"email": "real@person.com"}, headers=oh)
@@ -139,7 +139,7 @@ async def test_seed_tool_and_accept_teammate(c):
     assert bad.json() == {"detail": "onboarding auto-accept is for demo teammates only"}
     missing = await c.post(
         "/onboard/accept-teammate",
-        json={"email": "missing@demo.treg.local"},
+        json={"email": "missing@demo.stray.local"},
         headers=oh,
     )
     assert missing.status_code == 404
@@ -167,10 +167,10 @@ async def test_reset_sweeps_deny_rules_naming_a_demo_teammate(c):
     tok = sess.make_identity(user.id)
     org = (await c.post("/orgs", json={"name": "Acme"}, headers=_h(tok))).json()
     oh = _h(org["token"])
-    await c.post(f"/orgs/{org['org_id']}/invites", json={"email": "alex@demo.treg.local", "role": "member"}, headers=oh)
-    assert (await c.post("/onboard/accept-teammate", json={"email": "alex@demo.treg.local"}, headers=oh)).status_code == 200
+    await c.post(f"/orgs/{org['org_id']}/invites", json={"email": "alex@demo.stray.local", "role": "member"}, headers=oh)
+    assert (await c.post("/onboard/accept-teammate", json={"email": "alex@demo.stray.local"}, headers=oh)).status_code == 200
     async with session_maker() as s:
-        alex = (await s.execute(select(User).where(User.email == "alex@demo.treg.local"))).scalar_one()
+        alex = (await s.execute(select(User).where(User.email == "alex@demo.stray.local"))).scalar_one()
     r = await c.post(f"/orgs/{org['org_id']}/deny", json={"host": "api.example.com", "user_id": alex.id}, headers=oh)
     assert r.status_code == 200, r.text
     rr = await c.post("/onboard/reset", headers=oh)

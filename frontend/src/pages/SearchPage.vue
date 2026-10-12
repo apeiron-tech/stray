@@ -145,12 +145,12 @@ export default {
     mountField(){
       const mount=()=>{
         if(this._isUnmounted || !this.$refs.stage) return;
-        this.field=window.tregMountField?.(this.$refs.stage);
+        this.field=window.strayMountField?.(this.$refs.stage);
         if(!this.field) return;
         const loop=t=>{ this.field.tick(t); this.fieldRaf=requestAnimationFrame(loop); };
         this.fieldRaf=requestAnimationFrame(loop);
       };
-      if(window.tregMountField) return mount();
+      if(window.strayMountField) return mount();
       const script=document.createElement('script');
       script.src='/media/landing/hero-particles.js'; script.onload=mount;
       document.head.appendChild(script);
@@ -402,7 +402,7 @@ html.sp-lock,html.sp-lock body{overflow:hidden;overscroll-behavior:none}
 </style>
 
 <style scoped>
-/* Same visual language as the landing page (src/treg/web/landing.html): warm paper, white surfaces
+/* Same visual language as the landing page (src/stray/web/landing.html): warm paper, white surfaces
    lifted by soft shadows rather than borders, pill controls, Geist Pixel display type. */
 .sp{--l-bg:#f4f4f1;--l-surface:#fff;--l-ink:#1a1a1a;--l-muted:#7c7c7c;--l-muted2:#989898;--l-line:#2626231a;--l-line2:#25252233;
   --l-inverse:#1a1a1a;--l-inverse-ink:#f8f8f7;--l-shadow-sm:0 1px 2px #00000014;

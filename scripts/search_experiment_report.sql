@@ -4,7 +4,7 @@
 -- ten minutes, to an endpoint that was on the page. `searchlog.shown` is the page as served, with
 -- each row's owner; `callrecord` (audit) carries the call. No labels anywhere — the join IS the label.
 --
--- Run against the read replica:  psql "$TREG_READ_DATABASE_URL" -f scripts/search_experiment_report.sql
+-- Run against the read replica:  psql "$STRAY_READ_DATABASE_URL" -f scripts/search_experiment_report.sql
 -- `-v mode=v2` reads another mode's arms, `-v window='7 days'` another window (the defaults below
 -- apply only where the variable was not given). Postgres only (jsonb functions). Every block is
 -- read-only.

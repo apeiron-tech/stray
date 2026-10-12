@@ -7,11 +7,11 @@ import asyncio
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from treg.domain import money as ledger
-from treg.application.call import settle as call_settle
-from treg.application.call.resolve import MarketplaceCall
-from treg.infra.db import session_maker
-from treg.models import Hold, LedgerEntry, TagSpend
+from stray.domain import money as ledger
+from stray.application.call import settle as call_settle
+from stray.application.call.resolve import MarketplaceCall
+from stray.infra.db import session_maker
+from stray.models import Hold, LedgerEntry, TagSpend
 
 
 async def _funded_call(clients: AsyncClient, call_id: str) -> tuple[int, int, MarketplaceCall]:

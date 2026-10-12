@@ -48,7 +48,7 @@ test('an empty auto answer is one line, never a page', async ({ page }) => {
   await answer(page, { verdict: 'none', reason: 'gap' })
   await box(page).fill('book a table for two tonight')
   const line = page.locator('.fa .fa-line')
-  await expect(line).toContainText('treg does not have this kind of data or action yet')
+  await expect(line).toContainText('stray does not have this kind of data or action yet')
   await expect(page.locator('.fa .fa-note, .fa .ui-table')).toHaveCount(0)
   expect((await line.boundingBox())!.height).toBeLessThan(40)
   await expect(page.locator('.pl-sec').first()).toBeVisible()

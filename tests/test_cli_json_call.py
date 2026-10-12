@@ -1,11 +1,11 @@
-"""`treg --json call`: stdout is one JSON line a script can parse, and stderr stays silent, so a
+"""`stray --json call`: stdout is one JSON line a script can parse, and stderr stays silent, so a
 caller that merges the two streams still parses every result. Driven through `main()`."""
 import json
 
 import httpx
 import pytest
 
-from treg import cli
+from stray import cli
 
 
 def _serve(monkeypatch, response: httpx.Response):
@@ -24,27 +24,27 @@ def _serve(monkeypatch, response: httpx.Response):
 
 
 def _charged(status=200, **kw):
-    return httpx.Response(status, headers={"X-Treg-Cost-Micro": "98000", "X-Treg-Call-Id": "abc123",
-                                           "X-Treg-Hint": "review", **kw.pop("headers", {})}, **kw)
+    return httpx.Response(status, headers={"X-Stray-Cost-Micro": "98000", "X-Stray-Call-Id": "abc123",
+                                           "X-Stray-Hint": "review", **kw.pop("headers", {})}, **kw)
 
 
 def test_json_call_prints_one_envelope_and_nothing_on_stderr(monkeypatch, capsys):
     _serve(monkeypatch, _charged(json={"items": [{"name": "A"}]}))
-    cli.main(["--json", "call", "treg.people.search", "--data", '{"title":"CEO"}'])
+    cli.main(["--json", "call", "stray.people.search", "--data", '{"title":"CEO"}'])
     out, err = capsys.readouterr()
     assert err == ""
     assert out.count("\n") == 1
-    assert json.loads(out) == {"result": {"items": [{"name": "A"}]}, "_treg": {
+    assert json.loads(out) == {"result": {"items": [{"name": "A"}]}, "_stray": {
         "http_status": 200, "call_id": "abc123", "charged_micro": 98000, "hint": "review"}}
 
 
 def test_json_call_error_is_still_one_envelope_and_exits_nonzero(monkeypatch, capsys):
     _serve(monkeypatch, _charged(402, json={"detail": {"error": "insufficient_balance"}}))
     with pytest.raises(SystemExit) as exc:
-        cli.main(["call", "treg.people.search", "--json"])
+        cli.main(["call", "stray.people.search", "--json"])
     assert exc.value.code == 1
     out, err = capsys.readouterr()
-    assert err == "" and json.loads(out)["_treg"]["http_status"] == 402
+    assert err == "" and json.loads(out)["_stray"]["http_status"] == 402
     assert json.loads(out)["result"] == {"detail": {"error": "insufficient_balance"}}
 
 
@@ -58,18 +58,18 @@ def test_json_call_carries_text_and_binary_bodies(monkeypatch, capsys):
 
 
 def test_async_submission_reports_a_reservation_not_a_charge(monkeypatch, capsys):
-    _serve(monkeypatch, _charged(202, json={"id": "t1"}, headers={"X-Treg-Async": "{}"}))
+    _serve(monkeypatch, _charged(202, json={"id": "t1"}, headers={"X-Stray-Async": "{}"}))
     cli.main(["--json", "call", "x.submit"])
-    meta = json.loads(capsys.readouterr().out)["_treg"]
+    meta = json.loads(capsys.readouterr().out)["_stray"]
     assert meta["reserved_micro"] == 98000 and meta["async"] is True and "charged_micro" not in meta
 
 
 def test_default_call_output_is_unchanged(monkeypatch, capsys):
     _serve(monkeypatch, _charged(json={"items": []}))
-    cli.main(["call", "treg.people.search"])
+    cli.main(["call", "stray.people.search"])
     out, err = capsys.readouterr()
     assert json.loads(out) == {"items": []}
-    assert "treg: charged $0.098" in err and "abc123" in err
+    assert "stray: charged $0.098" in err and "abc123" in err
 
 
 def test_json_and_org_flags_last_one_invocation(monkeypatch, capsys):
@@ -77,9 +77,9 @@ def test_json_and_org_flags_last_one_invocation(monkeypatch, capsys):
     called directly, starts from plain output and the saved team, even after an error exit."""
     _serve(monkeypatch, _charged(402, json={"detail": {"error": "insufficient_balance"}}))
     with pytest.raises(SystemExit):
-        cli.main(["--json", "--org", "acme", "call", "treg.people.search"])
+        cli.main(["--json", "--org", "acme", "call", "stray.people.search"])
     assert cli._JSON_OVERRIDE is False and cli._ORG_OVERRIDE is None
     capsys.readouterr()
     _serve(monkeypatch, _charged(json={"items": []}))
-    cli.main(["call", "treg.people.search"])
+    cli.main(["call", "stray.people.search"])
     assert json.loads(capsys.readouterr().out) == {"items": []}

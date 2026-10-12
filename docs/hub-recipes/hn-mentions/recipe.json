@@ -2,7 +2,7 @@
   "name": "hn-mentions",
   "summary": "Hacker News stories and comments that mention a term in the last N days, with points, comment counts and links, newest or top first.",
   "inputs": {
-    "query": {"type": "string", "example": "treg", "note": "a word or phrase; quote a phrase for an exact match"},
+    "query": {"type": "string", "example": "stray", "note": "a word or phrase; quote a phrase for an exact match"},
     "days": {"type": "int", "default": 7, "min": 1, "max": 365, "note": "how far back"},
     "kind": {"type": "string", "default": "all", "note": "all | story | comment"},
     "sort": {"type": "string", "default": "new", "note": "new (newest first) | top (most points first)"},

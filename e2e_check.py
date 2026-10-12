@@ -1,6 +1,6 @@
 """End-to-end verification of failure capture against a REAL provider.
 
-Deliberately hits real upstreams on treg's real platform keys, because the whole point is that the
+Deliberately hits real upstreams on stray's real platform keys, because the whole point is that the
 provider's own error body survives redaction and lands in the column. Spend is a few tenths of a
 cent. The platform credential is asserted against but NEVER printed.
 """
@@ -33,7 +33,7 @@ def req(method: str, path: str, token: str | None = None, body=None, timeout=90)
     r = urllib.request.Request(BASE + path, method=method, data=data)
     r.add_header("Content-Type", "application/json")
     if token:
-        r.add_header("X-Treg-Token", token)
+        r.add_header("X-Stray-Token", token)
     try:
         with urllib.request.urlopen(r, timeout=timeout) as resp:
             return resp.status, resp.read().decode("utf-8", "replace")
@@ -69,7 +69,7 @@ def platform_keys() -> list[str]:
     here = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(here, ".env")) as fh:
         for line in fh:
-            if line.startswith("TREG_PLATFORM_KEY_") and "=" in line:
+            if line.startswith("STRAY_PLATFORM_KEY_") and "=" in line:
                 v = line.split("=", 1)[1].strip().strip('"').strip("'")
                 if len(v) >= 8:
                     out.append(v)
@@ -81,7 +81,7 @@ def main() -> int:
     print(f"\n\033[1me2e: failure capture\033[0m  ({len(keys)} real platform keys loaded for leak checks)\n")
 
     # A fresh identity per run: the database persists between runs, and a re-registration 409s.
-    email = f"e2e-{os.urandom(4).hex()}@treg.local"
+    email = f"e2e-{os.urandom(4).hex()}@stray.local"
     status, body = req("POST", "/users", body={"email": email})
     tok = json.loads(body).get("token") if status == 200 else None
     if not tok:
@@ -130,7 +130,7 @@ def main() -> int:
         print(f"      \033[2msaid:\033[0m {row['error_response'][:150]}")
         print(f"      \033[2msent:\033[0m {row['error_request'][:120]}")
     else:
-        check(False, "no provider failure could be produced", "every attempt was refused by treg first")
+        check(False, "no provider failure could be produced", "every attempt was refused by stray first")
 
     # ---- 3. the platform credential must appear nowhere -----------------------------------------
     print("\n\033[1m3. no platform credential in any captured row\033[0m")

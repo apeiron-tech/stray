@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 
 from scripts import catalog_validate as validator
-from treg.domain.catalog import store as catalog_store
-from treg.application.call import resolve
-from treg.application.call.types import ResolutionFailed
+from stray.domain.catalog import store as catalog_store
+from stray.application.call import resolve
+from stray.application.call.types import ResolutionFailed
 
 
 def test_catalog_body_optional_arrays_are_optional_and_validate_each_item():
@@ -726,7 +726,7 @@ def test_enrichlayer_result_rule_requires_bounded_declared_credit_price():
 
 def test_contactout_person_routes_cannot_recapture_pii():
     import yaml
-    path = Path(__file__).parents[1] / "src" / "treg" / "catalog" / "contactout.yaml"
+    path = Path(__file__).parents[1] / "src" / "stray" / "catalog" / "contactout.yaml"
     endpoints = yaml.safe_load(path.read_text())["endpoints"]
     safe = {"contactout.people.count", "contactout.people.email.verify",
             "contactout.companies.search", "contactout.companies.enrich"}
@@ -994,7 +994,7 @@ def test_the_fast_catalog_loader_reads_every_file_like_the_pure_python_one():
     """`store._Loader` uses libyaml's C parser when it is installed; every shipped catalog file must
     parse to the same document as with the pure-Python SafeLoader, timestamps kept as strings."""
     import yaml
-    from treg.domain.catalog import store
+    from stray.domain.catalog import store
 
     class Pure(yaml.SafeLoader):
         pass

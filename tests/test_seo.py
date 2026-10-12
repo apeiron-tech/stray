@@ -13,8 +13,8 @@ from xml.etree import ElementTree as ET
 import pytest
 from httpx import AsyncClient
 
-from treg.config import get_settings
-from treg.routers.web import _SITEMAP_PAGES, _USE_CASES
+from stray.config import get_settings
+from stray.routers.web import _SITEMAP_PAGES, _USE_CASES
 
 
 SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
@@ -156,7 +156,7 @@ def test_no_shelf_is_published_that_the_app_grid_hides():
     would still render and the sitemap would still publish it — but nothing in the app's own grid
     would link to it. Give the new platform a label and category in capabilities.yaml.
     """
-    from treg.routers.catalog import _platform_rows
+    from stray.routers.catalog import _platform_rows
     orphans = [r["slug"] for r in _platform_rows() if r["category"] == "Other"]
     assert not orphans, (
         f"{orphans} have endpoints but no capabilities.yaml `platforms:` entry — the sitemap will "
@@ -167,7 +167,7 @@ def test_no_shelf_is_published_that_the_app_grid_hides():
 _TEMPLATED_PATHS = sorted(
     {path for path, _, _ in _SITEMAP_PAGES}
     | {f"/use-cases/{slug}" for slug in _USE_CASES}
-    | {"/robots.txt", "/skill.md", "/llms.txt", "/.well-known/skills/treg/SKILL.md", "/integrate.md",
+    | {"/robots.txt", "/skill.md", "/llms.txt", "/.well-known/skills/stray/SKILL.md", "/integrate.md",
        "/tutorial.md", "/quickstart.md", "/contact", "/help"})
 
 
@@ -185,7 +185,7 @@ async def test_no_page_ships_an_unsubstituted_base(clients: AsyncClient, path: s
 # ------------------------------------------------------------------------------------ redirects
 
 async def test_indexnow_key_is_served_from_the_root(clients: AsyncClient):
-    from treg.routers.web import INDEXNOW_KEY
+    from stray.routers.web import INDEXNOW_KEY
     r = await clients.get(f"/{INDEXNOW_KEY}.txt")
     assert r.status_code == 200 and r.text == INDEXNOW_KEY
 

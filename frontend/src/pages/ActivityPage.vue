@@ -69,13 +69,13 @@ export default {
     <template #cell-call="{ row: a }"><b class="act-tool">{{a.tool}}</b><span v-if="a.kind==='run'" class="act-kind" :title="a.where==='local'?'ran on this member\'s machine':'ran on the registry server'">{{a.where||'run'}} run</span>
         <span class="pl-sub mono">{{a.action}}</span>
         <span v-if="a.tags || (a.task && (a.task.result_url||a.task.fetch_command))" class="act-extra">
-          <span v-for="(v,k) in a.tags" :key="k" class="chip act-tag" :title="'X-Treg-Meta '+k+'='+v">{{k}}={{v}}</span>
-          <!-- A generation task's artifact, once it succeeded: the provider's time-limited URL, or the CLI command that retrieves it (treg never downloads media). -->
+          <span v-for="(v,k) in a.tags" :key="k" class="chip act-tag" :title="'X-Stray-Meta '+k+'='+v">{{k}}={{v}}</span>
+          <!-- A generation task's artifact, once it succeeded: the provider's time-limited URL, or the CLI command that retrieves it (stray never downloads media). -->
           <template v-if="a.task"><a v-if="a.task.result_url" :href="a.task.result_url" target="_blank" rel="noopener" class="act-link" :title="taskArtifactTitle(a.task)" @click.stop>result ↗</a><span v-else-if="a.task.fetch_command" class="chip act-tag" :title="'retrieve it from the CLI: '+a.task.fetch_command">result via CLI</span><span v-if="a.task.result_url||a.task.fetch_command" class="act-dim"> {{a.task.ttl_note?'expires in '+a.task.ttl_note:'time-limited link'}}</span></template>
         </span></template>
     <template #cell-status="{ row: a }"><span class="act-st" :class="a.ok?'ok':'bad'">{{a.status}}</span><span v-if="a.task" class="act-st pending" :title="taskStateTitle(a.task)">{{taskStateLabel(a.task)}}</span><span v-if="a.has_result" class="act-view">Result ›</span></template>
     <template #cell-cost="{ row: a }"><span class="act-cost" :title="a.held?'reserved - settles when the task finishes, refunded if it fails':(a.tier==='platform'?'charged to team balance':(a.cost!=null?'estimated - billed to your own provider key':''))">
-        <span v-if="a.cached" class="act-cached" title="Served from treg's archive instead of calling the provider.">Cached</span><span v-if="a.held" class="act-dim">hold </span>{{a.cost!=null?money(a.cost):'-'}}</span></template>
+        <span v-if="a.cached" class="act-cached" title="Served from stray's archive instead of calling the provider.">Cached</span><span v-if="a.held" class="act-dim">hold </span>{{a.cost!=null?money(a.cost):'-'}}</span></template>
   </DataTable>
   <p v-if="callsLoaded && !activityRows.length" class="pl-empty">No activity yet. Calls your agents make show up here.</p>
   <p v-else-if="callsLoaded && !activityShown.length" class="pl-empty">{{activityHasOlder?"None of the loaded calls succeeded.":"No successful calls yet."}} <button class="pl-link" @click="actOkOnly=false">Show all {{activityRows.length}}</button></p>
@@ -127,7 +127,7 @@ export default {
          invoices from, so it has to be complete. -->
     <template v-for="key in tagKeys" :key="key">
       <section v-if="tagUsage[key]" class="pl-sec">
-        <h2 class="pl-h"><span>Spend by {{key}}</span><i></i><em title="a caller tag from X-Treg-Meta">X-Treg-Meta</em></h2>
+        <h2 class="pl-h"><span>Spend by {{key}}</span><i></i><em title="a caller tag from X-Stray-Meta">X-Stray-Meta</em></h2>
         <p class="cat-hint">What each <b>{{key}}</b> spent, from the ledger. A call is credited in full to every
           tag it carries, so these sections are different slices of the same money: never add two of them together.</p>
         <DataTable :columns="tagColumns" :rows="tagRows(key)" :row-key="r => r.value ?? '(untagged)'" surface :empty="'Nothing tagged '+key+' in this window.'">

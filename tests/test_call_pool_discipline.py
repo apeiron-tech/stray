@@ -25,16 +25,16 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from treg import api as A
-from treg.domain.catalog import stats as catalog_stats
-from treg.application.call import service as call_service
-from treg.routers import call as call_routes
-from treg import audit
-from treg.domain import money as ledger
-from treg.config import get_settings
-from treg.infra.db import _background_engine, _engine, session_maker
-from treg.infra.upstream.relay import relay as upstream_relay
-from treg.models import CallRecord, Hold
+from stray import api as A
+from stray.domain.catalog import stats as catalog_stats
+from stray.application.call import service as call_service
+from stray.routers import call as call_routes
+from stray import audit
+from stray.domain import money as ledger
+from stray.config import get_settings
+from stray.infra.db import _background_engine, _engine, session_maker
+from stray.infra.upstream.relay import relay as upstream_relay
+from stray.models import CallRecord, Hold
 
 from test_marketplace_call import EP, EP_MICRO, platform_on  # noqa: F401 — fixture reuse
 from test_mcp import _call_tool, mcp_session
@@ -135,12 +135,12 @@ async def test_a_saturated_pool_answers_a_typed_503_not_an_anonymous_500(
     monkeypatch.setattr(call_service, "_resolve_call", _no_slot)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 503, r.text
-    assert r.json()["treg_saturated"] is True
+    assert r.json()["stray_saturated"] is True
     assert r.headers.get("Retry-After") == "2"
 
 
 @pytest.mark.skipif(
-    not os.environ.get("TREG_TEST_DB_URL"), reason="requires the Postgres test database"
+    not os.environ.get("STRAY_TEST_DB_URL"), reason="requires the Postgres test database"
 )
 async def test_a_catalog_search_storm_cannot_starve_calls_of_the_pool(
     clients: AsyncClient, platform_on, monkeypatch,
@@ -194,7 +194,7 @@ async def test_a_catalog_search_storm_cannot_starve_calls_of_the_pool(
 
 
 @pytest.mark.skipif(
-    not os.environ.get("TREG_TEST_DB_URL"), reason="requires the Postgres test database"
+    not os.environ.get("STRAY_TEST_DB_URL"), reason="requires the Postgres test database"
 )
 async def test_http_and_mcp_catalog_search_share_one_nonblocking_refresh(
     clients: AsyncClient, monkeypatch, dispose_exhausted_pool_on_its_own_loop,
@@ -214,7 +214,7 @@ async def test_http_and_mcp_catalog_search_share_one_nonblocking_refresh(
         return await original(db, endpoint_ids, **kwargs)
 
     monkeypatch.setattr(catalog_stats, "observed", _slow_observed)
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with mcp_session(clients) as mcp_client:
         http_search = asyncio.create_task(clients.get("/catalog/search?q=backlinks&limit=8"))
         mcp_search = asyncio.create_task(_call_tool(
@@ -264,12 +264,12 @@ async def test_a_settle_that_loses_the_pool_once_retries_and_still_charges(
     before = (await clients.get(f"/orgs/{org_id}/balance")).json()["balance_micro"]
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 200 and calls == 2
-    assert r.headers.get("X-Treg-Cost-Micro") == str(EP_MICRO)
+    assert r.headers.get("X-Stray-Cost-Micro") == str(EP_MICRO)
     assert (await clients.get(f"/orgs/{org_id}/balance")).json()["balance_micro"] == before - EP_MICRO
 
 
 @pytest.mark.skipif(
-    not os.environ.get("TREG_TEST_DB_URL"), reason="requires the Postgres test database"
+    not os.environ.get("STRAY_TEST_DB_URL"), reason="requires the Postgres test database"
 )
 async def test_auth_releases_a_single_slot_pool_before_an_application_session(
     clients: AsyncClient,
@@ -308,7 +308,7 @@ async def test_wrapped_deadlock_retry_preserves_response_and_transaction(
     from sqlalchemy import text
     from sqlalchemy.exc import DBAPIError
     from sqlalchemy.dialects.postgresql.asyncpg import AsyncAdapt_asyncpg_dbapi
-    from treg.models import LedgerEntry
+    from stray.models import LedgerEntry
 
     original = ledger.settle_in_transaction
     sessions = []
@@ -330,7 +330,7 @@ async def test_wrapped_deadlock_retry_preserves_response_and_transaction(
     assert response.status_code == 200
     assert len(sessions) == attempts and len({id(s) for s in sessions}) == attempts
     succeeded = sqlstate == '40P01' and failures == 1
-    assert response.headers['X-Treg-Cost-Micro'] == str(EP_MICRO if succeeded else 0)
+    assert response.headers['X-Stray-Cost-Micro'] == str(EP_MICRO if succeeded else 0)
     async with session_maker() as db:
         holds = (await db.execute(select(Hold).where(Hold.org_id == org_id))).scalars().all()
         entries = (await db.execute(select(LedgerEntry).where(

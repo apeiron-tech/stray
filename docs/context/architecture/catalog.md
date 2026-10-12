@@ -2,165 +2,165 @@
 title: Endpoint catalog — what you can DO with a connected key, and which provider should do it
 status: shipped
 sources:
-  - src/treg/catalog/fetchinio.yaml
-  - src/treg/web/logos/fetchinio.svg
-  - src/treg/catalog/examples/fetchinio.linkedin.user.profile.json
-  - src/treg/catalog/examples/fetchinio.linkedin.company.profile.json
-  - src/treg/catalog/examples/fetchinio.linkedin.user.posts.json
-  - src/treg/catalog/examples/fetchinio.linkedin.user.reactions.json
-  - src/treg/catalog/examples/fetchinio.linkedin.post.comments.json
-  - src/treg/catalog/examples/fetchinio.linkedin.post.reactions.json
-  - src/treg/catalog/examples/fetchinio.linkedin.post.engagement.json
-  - src/treg/catalog/fishaudio.yaml
-  - src/treg/catalog/examples/fishaudio.tts.s2-1-pro.json
-  - src/treg/catalog/examples/fishaudio.voices.create.json
-  - src/treg/catalog/examples/fishaudio.voices.discover.json
-  - src/treg/application/provider_resources.py
-  - src/treg/domain/provider_resources.py
-  - src/treg/routers/provider_resources.py
-  - src/treg/catalog/tavily.yaml
-  - src/treg/application/call/octen.py
-  - src/treg/application/call/enrichlayer.py
-  - src/treg/catalog/enrichlayer.yaml
-  - src/treg/catalog/examples/enrichlayer.companies.search.json
-  - src/treg/catalog/examples/enrichlayer.company.employees.count.json
-  - src/treg/catalog/examples/enrichlayer.company.employees.list.json
-  - src/treg/catalog/examples/enrichlayer.company.employees.search.json
-  - src/treg/catalog/examples/enrichlayer.company.lookup-id.json
-  - src/treg/catalog/examples/enrichlayer.company.lookup.json
-  - src/treg/catalog/examples/enrichlayer.company.profile-picture.json
-  - src/treg/catalog/examples/enrichlayer.company.profile.json
-  - src/treg/catalog/examples/enrichlayer.company.role.lookup.json
-  - src/treg/catalog/examples/enrichlayer.contacts.personal-email.json
-  - src/treg/catalog/examples/enrichlayer.contacts.personal-phone.json
-  - src/treg/catalog/examples/enrichlayer.contacts.reverse-phone.json
-  - src/treg/catalog/examples/enrichlayer.email.disposable-check.json
-  - src/treg/catalog/examples/enrichlayer.jobs.profile.json
-  - src/treg/catalog/examples/enrichlayer.jobs.search.json
-  - src/treg/catalog/examples/enrichlayer.people.search.json
-  - src/treg/catalog/examples/enrichlayer.person.lookup.json
-  - src/treg/catalog/examples/enrichlayer.person.profile-picture.json
-  - src/treg/catalog/examples/enrichlayer.person.profile.json
-  - src/treg/catalog/examples/enrichlayer.person.reverse-email.json
-  - src/treg/catalog/examples/enrichlayer.person.work-email.json
-  - src/treg/catalog/examples/enrichlayer.school.profile.json
-  - src/treg/web/logos/enrichlayer.svg
-  - src/treg/catalog/linkup.yaml
-  - src/treg/catalog/you.yaml
-  - src/treg/catalog/examples/you.web.search.json
-  - src/treg/catalog/examples/you.web.contents.json
-  - src/treg/web/logos/you.svg
-  - src/treg/web/logos/linkup.svg
-  - src/treg/catalog/examples/linkup.web.search.json
-  - src/treg/catalog/examples/linkup.web.fetch.json
-  - src/treg/catalog/examples/linkup.web.fetch.structured.json
-  - src/treg/catalog/examples/linkup.web.answer.json
-  - src/treg/catalog/examples/linkup.web.answer.status.json
-  - src/treg/catalog/keenable.yaml
-  - src/treg/catalog/olostep.yaml
-  - src/treg/catalog/spidercloud.yaml
-  - src/treg/catalog/examples/spidercloud.web.scrape.json
-  - src/treg/catalog/examples/spidercloud.web.crawl.json
-  - src/treg/catalog/examples/spidercloud.web.search.json
-  - src/treg/catalog/examples/spidercloud.web.links.json
-  - src/treg/catalog/examples/spidercloud.web.unblock.json
-  - src/treg/catalog/examples/spidercloud.web.screenshot.json
-  - src/treg/catalog/tinyfish.yaml
-  - src/treg/catalog/examples/tinyfish.web.search.json
-  - src/treg/catalog/examples/tinyfish.web.search.news.json
-  - src/treg/catalog/examples/tinyfish.web.search.publications.json
-  - src/treg/catalog/examples/tinyfish.web.fetch.json
-  - src/treg/catalog/examples/tinyfish.web.agent.run.json
-  - src/treg/catalog/examples/tinyfish.web.agent.run.get.json
-  - src/treg/catalog/examples/tinyfish.web.agent.run.cancel.json
+  - src/stray/catalog/fetchinio.yaml
+  - src/stray/web/logos/fetchinio.svg
+  - src/stray/catalog/examples/fetchinio.linkedin.user.profile.json
+  - src/stray/catalog/examples/fetchinio.linkedin.company.profile.json
+  - src/stray/catalog/examples/fetchinio.linkedin.user.posts.json
+  - src/stray/catalog/examples/fetchinio.linkedin.user.reactions.json
+  - src/stray/catalog/examples/fetchinio.linkedin.post.comments.json
+  - src/stray/catalog/examples/fetchinio.linkedin.post.reactions.json
+  - src/stray/catalog/examples/fetchinio.linkedin.post.engagement.json
+  - src/stray/catalog/fishaudio.yaml
+  - src/stray/catalog/examples/fishaudio.tts.s2-1-pro.json
+  - src/stray/catalog/examples/fishaudio.voices.create.json
+  - src/stray/catalog/examples/fishaudio.voices.discover.json
+  - src/stray/application/provider_resources.py
+  - src/stray/domain/provider_resources.py
+  - src/stray/routers/provider_resources.py
+  - src/stray/catalog/tavily.yaml
+  - src/stray/application/call/octen.py
+  - src/stray/application/call/enrichlayer.py
+  - src/stray/catalog/enrichlayer.yaml
+  - src/stray/catalog/examples/enrichlayer.companies.search.json
+  - src/stray/catalog/examples/enrichlayer.company.employees.count.json
+  - src/stray/catalog/examples/enrichlayer.company.employees.list.json
+  - src/stray/catalog/examples/enrichlayer.company.employees.search.json
+  - src/stray/catalog/examples/enrichlayer.company.lookup-id.json
+  - src/stray/catalog/examples/enrichlayer.company.lookup.json
+  - src/stray/catalog/examples/enrichlayer.company.profile-picture.json
+  - src/stray/catalog/examples/enrichlayer.company.profile.json
+  - src/stray/catalog/examples/enrichlayer.company.role.lookup.json
+  - src/stray/catalog/examples/enrichlayer.contacts.personal-email.json
+  - src/stray/catalog/examples/enrichlayer.contacts.personal-phone.json
+  - src/stray/catalog/examples/enrichlayer.contacts.reverse-phone.json
+  - src/stray/catalog/examples/enrichlayer.email.disposable-check.json
+  - src/stray/catalog/examples/enrichlayer.jobs.profile.json
+  - src/stray/catalog/examples/enrichlayer.jobs.search.json
+  - src/stray/catalog/examples/enrichlayer.people.search.json
+  - src/stray/catalog/examples/enrichlayer.person.lookup.json
+  - src/stray/catalog/examples/enrichlayer.person.profile-picture.json
+  - src/stray/catalog/examples/enrichlayer.person.profile.json
+  - src/stray/catalog/examples/enrichlayer.person.reverse-email.json
+  - src/stray/catalog/examples/enrichlayer.person.work-email.json
+  - src/stray/catalog/examples/enrichlayer.school.profile.json
+  - src/stray/web/logos/enrichlayer.svg
+  - src/stray/catalog/linkup.yaml
+  - src/stray/catalog/you.yaml
+  - src/stray/catalog/examples/you.web.search.json
+  - src/stray/catalog/examples/you.web.contents.json
+  - src/stray/web/logos/you.svg
+  - src/stray/web/logos/linkup.svg
+  - src/stray/catalog/examples/linkup.web.search.json
+  - src/stray/catalog/examples/linkup.web.fetch.json
+  - src/stray/catalog/examples/linkup.web.fetch.structured.json
+  - src/stray/catalog/examples/linkup.web.answer.json
+  - src/stray/catalog/examples/linkup.web.answer.status.json
+  - src/stray/catalog/keenable.yaml
+  - src/stray/catalog/olostep.yaml
+  - src/stray/catalog/spidercloud.yaml
+  - src/stray/catalog/examples/spidercloud.web.scrape.json
+  - src/stray/catalog/examples/spidercloud.web.crawl.json
+  - src/stray/catalog/examples/spidercloud.web.search.json
+  - src/stray/catalog/examples/spidercloud.web.links.json
+  - src/stray/catalog/examples/spidercloud.web.unblock.json
+  - src/stray/catalog/examples/spidercloud.web.screenshot.json
+  - src/stray/catalog/tinyfish.yaml
+  - src/stray/catalog/examples/tinyfish.web.search.json
+  - src/stray/catalog/examples/tinyfish.web.search.news.json
+  - src/stray/catalog/examples/tinyfish.web.search.publications.json
+  - src/stray/catalog/examples/tinyfish.web.fetch.json
+  - src/stray/catalog/examples/tinyfish.web.agent.run.json
+  - src/stray/catalog/examples/tinyfish.web.agent.run.get.json
+  - src/stray/catalog/examples/tinyfish.web.agent.run.cancel.json
   - tests/test_tinyfish.py
-  - src/treg/catalog/exa.yaml
-  - src/treg/catalog/anyapi.extended.yaml
-  - src/treg/catalog/adyntel.yaml
-  - src/treg/catalog/examples/adyntel.meta-ads.library.advertiser.json
-  - src/treg/catalog/examples/adyntel.meta-ads.library.search.json
-  - src/treg/catalog/examples/adyntel.linkedin.search.ads.company.json
-  - src/treg/catalog/examples/adyntel.linkedin.search.ads.keyword.json
-  - src/treg/catalog/examples/adyntel.google.ads.transparency.json
-  - src/treg/catalog/examples/adyntel.tiktok-ads.library.search.company.json
-  - src/treg/catalog/examples/adyntel.google.domain.keywords.overview.json
-  - src/treg/web/logos/adyntel.svg
-  - src/treg/catalog/trestleiq.yaml
-  - src/treg/catalog/financialdatasets.yaml
+  - src/stray/catalog/exa.yaml
+  - src/stray/catalog/anyapi.extended.yaml
+  - src/stray/catalog/adyntel.yaml
+  - src/stray/catalog/examples/adyntel.meta-ads.library.advertiser.json
+  - src/stray/catalog/examples/adyntel.meta-ads.library.search.json
+  - src/stray/catalog/examples/adyntel.linkedin.search.ads.company.json
+  - src/stray/catalog/examples/adyntel.linkedin.search.ads.keyword.json
+  - src/stray/catalog/examples/adyntel.google.ads.transparency.json
+  - src/stray/catalog/examples/adyntel.tiktok-ads.library.search.company.json
+  - src/stray/catalog/examples/adyntel.google.domain.keywords.overview.json
+  - src/stray/web/logos/adyntel.svg
+  - src/stray/catalog/trestleiq.yaml
+  - src/stray/catalog/financialdatasets.yaml
   - tests/test_financialdatasets.py
-  - src/treg/catalog/quickenrich.yaml
-  - src/treg/catalog/influencersclub.yaml
-  - src/treg/catalog/quickenrich.extended.yaml
-  - src/treg/catalog/trykitt.yaml
-  - src/treg/catalog/contracts.yaml
-  - src/treg/catalog/millionverifier.yaml
-  - src/treg/catalog/adapters.yaml
-  - src/treg/catalog/capabilities.yaml
-  - src/treg/catalog/prospeo.yaml
+  - src/stray/catalog/quickenrich.yaml
+  - src/stray/catalog/influencersclub.yaml
+  - src/stray/catalog/quickenrich.extended.yaml
+  - src/stray/catalog/trykitt.yaml
+  - src/stray/catalog/contracts.yaml
+  - src/stray/catalog/millionverifier.yaml
+  - src/stray/catalog/adapters.yaml
+  - src/stray/catalog/capabilities.yaml
+  - src/stray/catalog/prospeo.yaml
   - tests/test_route_cost_ceiling.py
-  - src/treg/catalog/tomba.yaml
-  - src/treg/domain/catalog/routing/__init__.py
-  - src/treg/domain/catalog/routing/contracts.py
-  - src/treg/domain/catalog/routing/paths.py
-  - src/treg/domain/catalog/routing/plan.py
-  - src/treg/domain/catalog/routing/synthetic.py
-  - src/treg/application/call/async_bridge.py
-  - src/treg/application/call/route.py
-  - src/treg/catalog/wiza.yaml
-  - src/treg/catalog/examples/wiza.people.email.find.json
-  - src/treg/catalog/examples/wiza.people.email.find.terminal.json
-  - src/treg/catalog/examples/wiza.people.phone.find.json
-  - src/treg/catalog/examples/wiza.people.phone.find.terminal.json
+  - src/stray/catalog/tomba.yaml
+  - src/stray/domain/catalog/routing/__init__.py
+  - src/stray/domain/catalog/routing/contracts.py
+  - src/stray/domain/catalog/routing/paths.py
+  - src/stray/domain/catalog/routing/plan.py
+  - src/stray/domain/catalog/routing/synthetic.py
+  - src/stray/application/call/async_bridge.py
+  - src/stray/application/call/route.py
+  - src/stray/catalog/wiza.yaml
+  - src/stray/catalog/examples/wiza.people.email.find.json
+  - src/stray/catalog/examples/wiza.people.email.find.terminal.json
+  - src/stray/catalog/examples/wiza.people.phone.find.json
+  - src/stray/catalog/examples/wiza.people.phone.find.terminal.json
   - tests/test_routing.py
   - tests/test_wiza.py
   - .github/workflows/catalog-drift.yml
   - scripts/catalog_drift.py
   - scripts/catalog_ingest.py
   - scripts/catalog_validate.py
-  - src/treg/catalog/aliases.yaml
-  - src/treg/catalog/fx.yaml
-  - src/treg/catalog/cloro.yaml
-  - src/treg/catalog/aviato.yaml
-  - src/treg/catalog/crustdata.yaml
-  - src/treg/catalog/google-search-console.yaml
-  - src/treg/catalog/google-search-console.extended.yaml
-  - src/treg/catalog/google-tag-manager.yaml
-  - src/treg/catalog/google-tag-manager.extended.yaml
-  - src/treg/catalog/instagram.yaml
-  - src/treg/catalog/instagram.extended.yaml
-  - src/treg/catalog/justoneapi.extended.yaml
-  - src/treg/catalog/minimax.yaml
-  - src/treg/catalog/apify.yaml
-  - src/treg/catalog/brightdata.yaml
-  - src/treg/catalog/companyenrich.yaml
-  - src/treg/catalog/oceanio.yaml
-  - src/treg/catalog/akta.extended.yaml
-  - src/treg/catalog/dataforseo.yaml
-  - src/treg/catalog/dataforseo.extended.yaml
-  - src/treg/catalog/scrapecreators.yaml
-  - src/treg/catalog/scrapecreators.extended.yaml
-  - src/treg/catalog/serpapi.yaml
-  - src/treg/catalog/serpapi.extended.yaml
-  - src/treg/catalog/diffbot.yaml
-  - src/treg/catalog/diffbot.extended.yaml
-  - src/treg/catalog/tikhub.extended.yaml
-  - src/treg/catalog/lusha.extended.yaml
-  - src/treg/catalog/openrouter.yaml
-  - src/treg/catalog/openrouter.extended.yaml
-  - src/treg/catalog/replicate.yaml
-  - src/treg/catalog/replicate.extended.yaml
-  - src/treg/catalog/reapi.yaml
-  - src/treg/catalog/piapi.yaml
-  - src/treg/domain/catalog/__init__.py
-  - src/treg/domain/catalog/store.py
-  - src/treg/catalog/hunter.yaml
-  - src/treg/mcp.py
-  - src/treg/domain/money/settlement.py
-  - src/treg/domain/catalog/stats.py
-  - src/treg/infra/catalog_observations.py
-  - src/treg/application/catalog_stats.py
-  - src/treg/alembic/versions/0038_endpoint_day_stats.py
-  - src/treg/routers/catalog.py
+  - src/stray/catalog/aliases.yaml
+  - src/stray/catalog/fx.yaml
+  - src/stray/catalog/cloro.yaml
+  - src/stray/catalog/aviato.yaml
+  - src/stray/catalog/crustdata.yaml
+  - src/stray/catalog/google-search-console.yaml
+  - src/stray/catalog/google-search-console.extended.yaml
+  - src/stray/catalog/google-tag-manager.yaml
+  - src/stray/catalog/google-tag-manager.extended.yaml
+  - src/stray/catalog/instagram.yaml
+  - src/stray/catalog/instagram.extended.yaml
+  - src/stray/catalog/justoneapi.extended.yaml
+  - src/stray/catalog/minimax.yaml
+  - src/stray/catalog/apify.yaml
+  - src/stray/catalog/brightdata.yaml
+  - src/stray/catalog/companyenrich.yaml
+  - src/stray/catalog/oceanio.yaml
+  - src/stray/catalog/akta.extended.yaml
+  - src/stray/catalog/dataforseo.yaml
+  - src/stray/catalog/dataforseo.extended.yaml
+  - src/stray/catalog/scrapecreators.yaml
+  - src/stray/catalog/scrapecreators.extended.yaml
+  - src/stray/catalog/serpapi.yaml
+  - src/stray/catalog/serpapi.extended.yaml
+  - src/stray/catalog/diffbot.yaml
+  - src/stray/catalog/diffbot.extended.yaml
+  - src/stray/catalog/tikhub.extended.yaml
+  - src/stray/catalog/lusha.extended.yaml
+  - src/stray/catalog/openrouter.yaml
+  - src/stray/catalog/openrouter.extended.yaml
+  - src/stray/catalog/replicate.yaml
+  - src/stray/catalog/replicate.extended.yaml
+  - src/stray/catalog/reapi.yaml
+  - src/stray/catalog/piapi.yaml
+  - src/stray/domain/catalog/__init__.py
+  - src/stray/domain/catalog/store.py
+  - src/stray/catalog/hunter.yaml
+  - src/stray/mcp.py
+  - src/stray/domain/money/settlement.py
+  - src/stray/domain/catalog/stats.py
+  - src/stray/infra/catalog_observations.py
+  - src/stray/application/catalog_stats.py
+  - src/stray/alembic/versions/0038_endpoint_day_stats.py
+  - src/stray/routers/catalog.py
   - tests/test_aigc_pr_b.py
   - tests/test_catalog_api.py
   - tests/test_catalog_validate.py
@@ -187,7 +187,7 @@ contracts describe those provider-native operations.
 Live balance deltas on 2026-09-24 confirmed one credit for every ordinary successful route and two
 for combined engagement. The shared account's acquired PAYG replacement rate is $1.50 per 1,000
 credits, so the rows are $0.0015 and $0.003 per call. Fetchin also bills one credit for a 404 while
-every other failure is free. Its response contains no per-call charge evidence, and treg's generic
+every other failure is free. Its response contains no per-call charge evidence, and stray's generic
 settlement rule never charges a rejected response on an estimate; the shared tier therefore absorbs
 that upstream 404 cost. `fullProfile=true` can cost either one or two credits without reporting
 which happened, so the strict curated profile row excludes it. A team's raw BYOK tool remains a
@@ -262,7 +262,7 @@ platform/capability pairs describe the returned dataset: Meta advertiser/search,
 search, Google Ads Transparency, TikTok ad search and Google domain overview. They are direct-only:
 none declares a routing adapter or enters Enrich Arena because none matches an existing shared
 response contract. Every row is both BYOK-callable and platform-callable; the own-key-first ladder
-keeps a team's credential unmetered and ahead of treg's key.
+keeps a team's credential unmetered and ahead of stray's key.
 
 The shared account is pay-as-you-go and is replenished manually in the provider dashboard. Adyntel
 does not expose an account balance endpoint, response charge field or remaining-capacity header, so
@@ -270,7 +270,7 @@ capacity is manual/informational rather than API-observed. The catalog holds at 
 ordinary page and $0.022 for the two-credit calls/modifiers, then settles successful results or
 releases HTTP 204 and failures. The provider asks clients to stay at or below 5 requests/second.
 An eight-request concurrent live burst returned eight HTTP 200 responses and no `Retry-After`
-header, so no enforced 429 signature was observed; treg still follows the published 5 rps guidance.
+header, so no enforced 429 signature was observed; stray still follows the published 5 rps guidance.
 HTTP 402 is documented for balance problems, but an insufficient-balance response was not forced
 against the funded account and is not treated as a unique exhaustion signal.
 
@@ -288,8 +288,8 @@ The catalog adds that operations layer:
 - **verified example responses** → captured during live testing, because docs show request params
   but choosing an API comes down to what actually comes back.
 
-Crustdata and Aviato support both BYOK and treg's platform-key tier. Their catalog costs stay in the
-vendors' native credits; `fx.yaml` converts the actual replacement rates treg pays ($0.30 per
+Crustdata and Aviato support both BYOK and stray's platform-key tier. Their catalog costs stay in the
+vendors' native credits; `fx.yaml` converts the actual replacement rates stray pays ($0.30 per
 Crustdata credit from the configured 500-for-$150 auto-top-up, $0.01 per Aviato credit from the
 configured 1,000-for-$10 recharge and paid receipt). Every paid row therefore has a computable USD
 price and is platform-eligible when the deployment keys and allow-list are set.
@@ -329,7 +329,7 @@ That evidence showed that company single and bulk rescrape, person single rescra
 email riders are not billed, although the authenticated price page lists them. Person single email
 and person bulk rescrape riders are billed. A `reserve_only: true` modifier keeps each documented
 but unbilled rider in the temporary hold. `settle: modifiers` then uses only the measured modifiers
-for the final charge. This protects treg from a documented maximum without overcharging the caller.
+for the final charge. This protects stray from a documented maximum without overcharging the caller.
 
 A `cost.modifiers` rule names a parameter location (`query`, `body`, or `lookups`), a match rule
 (`truthy` or `present`), and exactly one credit effect: make the call free, add fixed credits, or add
@@ -344,7 +344,7 @@ Tavily follows the provider-specific request/response pattern used for Hunter, T
 hold. Search reserves one or two credits and `settle._tavily_cost_micro` reads its per-request
 `usage.credits`. Extract and Map instead settle fractional per-success rates from their documented
 `results` arrays. Crawl settles a conservative per-returned-extraction allocation combining its
-mapping and extraction modes; Tavily does not expose every successfully mapped page, so treg absorbs
+mapping and extraction modes; Tavily does not expose every successfully mapped page, so stray absorbs
 any hidden mapping difference under the 20-page platform cap. Extract, Map and Crawl never use the
 provider account's grouped `usage.credits` to decide which team pays. BYOK bypasses all metering.
 Each endpoint's `tavily_rates` mapping has an exact mode-key contract. Catalog validation rejects an
@@ -380,7 +380,7 @@ probe produced a very large response and a variable charge, so the catalog expos
 listing form. The other five routes remain BYOK-only because bandwidth, compute, browser and
 Unblocker charges depend on the target. `max_credits_allowed=1` did not stop Search or Unblocker
 from debiting more than one credit, so it is not used as a shared-key reserve ceiling. A team's own
-credential remains unmetered by treg.
+credential remains unmetered by stray.
 
 A verification stamp proves the request shape, response shape, and paid behavior that the evidence
 actually observed. A placeholder path value or a free miss does not prove a paid hit. Such rows keep
@@ -400,7 +400,7 @@ through one placeholder and accidentally encoded as `%2F`.
 ## Where things live
 
 ```
-src/treg/catalog/
+src/stray/catalog/
   capabilities.yaml        # the shared capability taxonomy (the cross-provider join key)
   aliases.yaml             # query word -> catalog words (search-time vocabulary bridge)
   fx.yaml                  # currency -> USD rates + per-PROVIDER credit rates (see "Cost" below)
@@ -414,7 +414,7 @@ scripts/
   catalog_verify_extended.py  # the same for the extended tier, in bulk, under a spend cap
   catalog_ingest.py           # bulk-generates the extended tier from provider specs
   catalog_cost_provenance.py  # backfills cost units + provenance; re-run after any re-ingest
-src/treg/routers/catalog.py    # open Catalog JSON routes, attached in legacy registration order
+src/stray/routers/catalog.py    # open Catalog JSON routes, attached in legacy registration order
 ```
 
 Data files are YAML (curation-friendly) and loaded through `catalog_store`. The open JSON handlers
@@ -447,7 +447,7 @@ target deliberately, and a full-fidelity example. See "bulk-verifying the extend
 **An ingested price is a claim we will charge on, so a generated `free` is a bug, not a default.**
 `x.extended.yaml` shipped 168 routes priced `free` off a plan-tier model X had already abolished,
 while the proxy — which skips a `free` block, its `usd` being falsy — billed the provider fallback:
-the catalog published $0 and the balance moved $0.10. Where the upstream bills *treg* (an
+the catalog published $0 and the balance moved $0.10. Where the upstream bills *stray* (an
 `oauth_billed` provider, [auth-secrets](auth-secrets.md)), the generator must therefore price every
 route it emits, and a test walks the provider asserting the published price equals the reserved one.
 
@@ -457,8 +457,8 @@ publishes a row per ACTION, and creating a list is $0.010, managing one $0.005, 
 interaction $0.010. Read the rate card and transcribe it (`catalog_ingest.X_RATES` is the card,
 `X_ROUTE_RATES` the route→row mapping, and each entry's note names the row it was priced from);
 where the mapping is a judgement call, `confidence: inferred` says so and takes the dearer reading,
-because treg pays the difference. Watch for **conditional** rates in particular: X's $0.001 "owned
-read" applies only when the caller owns the developer app, which on a registry connect is treg —
+because stray pays the difference. Watch for **conditional** rates in particular: X's $0.001 "owned
+read" applies only when the caller owns the developer app, which on a registry connect is stray —
 quoting it for our members under-billed the very calls we are charged the most for.
 
 Core wins on collision: `catalog_ingest.py` drops any `(method, path)` the provider's core file
@@ -567,7 +567,7 @@ endpoints:
                                     #   fall back to `summary` when absent.
     summary: "Public TikTok profile by username"  # the provider's own description, kept VERBATIM —
                                     #   `name` is ours to word, `summary` is theirs
-    input:                           # split by location — mirrors treg's binding model
+    input:                           # split by location — mirrors stray's binding model
       queryArrayEncoding: json      # optional default for array query params: json | comma |
                                     # repeated (the compatibility default).
       queryParams:
@@ -632,7 +632,7 @@ pretending that its kickoff body is the final enrichment result.
 **Poll mode in practice.** Every listed provider polls a static catalog id (`poll.endpoint`), which
 the CLI reaches through `/call/<id>` on any credential tier. Replicate offers both `urls.get` and the
 stable `GET /v1/predictions/{id}`; the static form is listed (`replicate.predictions.get`) because a
-`--await` that polled the absolute URL through `/call/https://…` was refused for a team on treg's
+`--await` that polled the absolute URL through `/call/https://…` was refused for a team on stray's
 key - that path resolves only a team's own tool (sample run, 2026-09-02). The dynamic-URL mode
 (`poll.url_from` + `url_hosts`) stays in the schema, validator and worker for a provider that offers
 nothing else (BFL), but today it works only for BYOK teams; serving it on the platform key needs a
@@ -671,7 +671,7 @@ async:
 A `cost.table` also prices out as a range: at load time `_table_floor` computes the cheapest row
 (a `times` row at its field's declared `min`) into `cost.table_min`, and `cost_view` exposes it as
 `usd_min` beside `usd`, which stays the validated ceiling (what reserve and eligibility read). Every
-price surface - the wall, `treg catalog search`, the dashboard, `/access` - shows `$low-$high` for a
+price surface - the wall, `stray catalog search`, the dashboard, `/access` - shows `$low-$high` for a
 table rather than the worst case alone. A table whose every row multiplies by a recognized meter
 field is quoted at that unit rate: `duration` is displayed in seconds and `max_steps` in steps.
 For example, a video's `$0.47-$13.9/success` (shortest clip at the cheapest resolution
@@ -699,18 +699,18 @@ outside the frozen contract because no surveyed provider uses it and the generic
 faithfully execute it. Dynamic URLs require a non-empty `url_hosts` allow-list. Any endpoint with
 `async:` must use `cost.type: per_success`. The descriptor is metadata
 beside the faithful relay: it never changes provider-native parameters or response bodies. The call
-router serializes the effective descriptor into `X-Treg-Async` before the response stream starts;
+router serializes the effective descriptor into `X-Stray-Async` before the response stream starts;
 it does not inspect or buffer the upstream body.
 
 Older async pairs that settle on their existing request paths use `resource_ownership` alongside
 the deferred-settlement design. `produces` maps response JSON paths to provider-local resource
-kinds; `requires` binds a path/query parameter to one of those kinds. On treg's shared key, a 2xx
+kinds; `requires` binds a path/query parameter to one of those kinds. On stray's shared key, a 2xx
 producer records the opaque id for the caller org, and a consumer is refused before relay unless the
 same org owns that provider/kind/id tuple. This covers Apify run/dataset ids, Bright Data snapshot
 ids, CompanyEnrich bulk job ids and LeadsForge enrichment/followers job ids without changing their
 billing behavior. Ownership is only as trustworthy as the producer's answer: a provider that dedupes
 on `Idempotency-Key` would hand one org another's job under a shared label, which is why the relay
-re-scopes that header per org on treg's key ([proxy-model](proxy-model.md)). The validator requires
+re-scopes that header per org on stray's key ([proxy-model](proxy-model.md)). The validator requires
 declared parameters and exact non-empty `{kind, path}` / `{kind, param}` shapes. BYOK does not use
 this metadata because the provider account itself belongs to the caller.
 Formal descriptors also materialize their poll/fetch ids under endpoint-namespaced resource kinds;
@@ -722,7 +722,7 @@ required id but omit this metadata, so new legacy-style pairs cannot rely on a r
 boundary by hand.
 Generated legacy task consumers for which no trustworthy producer→id chain is represented are
 explicitly `platform_blocked` instead: Akta request status, TikHub's captions-result route, and the
-DataForSEO on-page/SERP task consumers remain callable with BYOK but never receive treg's shared key.
+DataForSEO on-page/SERP task consumers remain callable with BYOK but never receive stray's shared key.
 `carry_verification` preserves that reviewed block across re-ingestion just like a verification
 stamp; silently regenerating it away would reopen the tenant boundary.
 
@@ -741,7 +741,7 @@ until a deliberate paid verification call is authorized; documentation provenanc
 platform eligibility, but is not presented as live route evidence. The Voice generation Actions
 shelf exposes `minimax.voice-gen.voices.list` so callers can discover valid system voice IDs. Its
 request is fixed to `voice_type: system`: account-specific cloned and generated voices must not
-cross team boundaries when treg's shared MiniMax connection is used. The synchronous
+cross team boundaries when stray's shared MiniMax connection is used. The synchronous
 `minimax.image-gen.from_text` row likewise pins `body.model: image-01` through `platform_request`.
 
 reAPI answers every submission with a bare `{id, status}` and reports the charge on the poll body
@@ -872,7 +872,7 @@ Rules:
     for its KG, Extract, Web Search, and Natural Language host families; Web Search's target also
     changes query-token injection to its documented Bearer header. Absence of `host` retains the
     primary provider profile and `base_url`.
-  - `scope_gap: <one line>` — the credential treg's OAuth app obtains CANNOT call this, and this is
+  - `scope_gap: <one line>` — the credential stray's OAuth app obtains CANNOT call this, and this is
     the scope that is missing. These are listed rather than dropped on purpose: the set of gaps is
     the answer to "which scopes should we add to the registered app", and it is only visible if the
     endpoints stay in the file. `scope_gap` present ⇒ expect 403 until the app is widened.
@@ -946,7 +946,7 @@ The rules (applied catalog-wide in the 2026-08-20 rewrite; every new provider fo
 A `cost` block stays in whatever unit the PROVIDER bills in; that is the number that stays correct
 when a rate moves. `cost.usd` is added at SERVE time by `Catalog.cost_view` from `fx.yaml`, so a
 rate refresh re-prices the whole catalog without touching a provider file. Clients (dashboard cards,
-`treg catalog search`, `treg catalog get`) lead with `usd` because a column is only comparable in
+`stray catalog search`, `stray catalog get`) lead with `usd` because a column is only comparable in
 one unit, and fall back to the native amount when `usd` is null.
 
 The full block:
@@ -1014,7 +1014,7 @@ that row is left out of the advertised per-second rate span. The money fragment 
 
 `value` + `currency` + `per` answer *how much*; `type` + `unit` answer *per what*; `source` +
 `source_url` + `checked` + `confidence` answer *says who, and how sure*. All four questions have to
-have an answer before treg will spend its OWN money on an endpoint (see "platform-eligible" below),
+have an answer before stray will spend its OWN money on an endpoint (see "platform-eligible" below),
 which is the whole reason the provenance keys exist.
 
 **`per` and `unit`.** Read a block as "`value` `currency` per `per` `unit`". SpyFu bills a CPM, so
@@ -1054,10 +1054,10 @@ never zero; the normal request/envelope checks decide whether the provider serve
   providers' credits do, so each gets its own row. Before this existed, Moz's `quota_rows` blocks
   carried no `currency` at all, defaulted to USD, and served every Moz route as costing $1.00.
 
-A `credit_rates_usd` entry may carry **`kind: treg_shared_plan`**: a rate TREG SET for a flat-fee
+A `credit_rates_usd` entry may carry **`kind: stray_shared_plan`**: a rate STRAY SET for a flat-fee
 provider (a subscription with a rate limit or unlimited calls), where no per-call vendor price can
-exist. The credit is then "one call on treg's shared plan" and the machinery is unchanged — the
-honesty lives in the entry: the basis must start with "treg shared-plan rate", name the vendor fee,
+exist. The credit is then "one call on stray's shared plan" and the machinery is unchanged — the
+honesty lives in the entry: the basis must start with "stray shared-plan rate", name the vendor fee,
 and state the break-even volume, and `fee_usd_month` must be present as data (the validator's
 `check_fx` enforces all of it). The rate is reviewed monthly against `reconcile.shared_plan_recovery`
 and edited by hand. The full ladder: docs/SHARED-PLAN-PRICING-PLAN.md; the billing side (429 never
@@ -1079,7 +1079,7 @@ price. A token-metered row settles on `usage`; a fixed price (Lyria's per song) 
 rule so a refused generation is not billed. The validator requires one of the two and refuses the
 field beside `async`, `resource_ownership` or `managed_resource`, which need the whole body.
 
-A `pathParams` field that declares an `enum` is enforced on treg's key: the value names what the
+A `pathParams` field that declares an `enum` is enforced on stray's key: the value names what the
 shared credential is spent on (Google AI's `model`), so any other value is a 400 before reserve.
 Own-key calls still relay whatever path the caller asks for.
 
@@ -1094,8 +1094,8 @@ enrichment excludes separately billed contact reveals from the shared-key reques
 applies these only after selecting the platform offer and
 before reserve; a team's own credential retains the upstream contract.
 
-A second treg-set kind, **`kind: treg_trial`**, prices a provider at exactly **$0** with a
-`trial_calls_per_team_day` allowance as data beside the zero: a capped taste served on treg's own
+A second stray-set kind, **`kind: stray_trial`**, prices a provider at exactly **$0** with a
+`trial_calls_per_team_day` allowance as data beside the zero: a capped taste served on stray's own
 FREE-tier key. The allowance is what makes $0 honest — at zero the price gives no brake, so the cap
 is the congestion control (`_enforce_trial_allowance`, per team per UTC day, successful platform
 calls with a non-free catalog cost only, fail-closed). Free endpoints, failed calls and BYOK calls
@@ -1138,7 +1138,7 @@ indistinguishable, downstream, from "price unknown".
 pricing to these keys, and is re-runnable — the extended tier is regenerated wholesale, so
 provenance typed by hand into a generated file would not survive the next `catalog_ingest.py`.
 
-#### Platform-eligible — when treg may serve a catalog fallback
+#### Platform-eligible — when stray may serve a catalog fallback
 
 `Catalog.platform_eligible(endpoint)` is the single predicate behind catalog fallback access.
 Most eligible rows use prepaid platform-key tier 4. A row with `platform_auth: anonymous` instead
@@ -1212,7 +1212,7 @@ Do these steps in order; each has a hard success criterion.
    "Cost" above. `quota_rows` is for row-quota APIs (Moz). Unknown exact value → `value: null` +
    `confidence: unknown` + a `note` saying why. If the provider exposes its rate card as an
    endpoint, prefer it over the pricing page and record it as `source: rate_card_api`: it is
-   re-checkable, which is what lets treg serve the route on its own key.
+   re-checkable, which is what lets stray serve the route on its own key.
 6. **Test-request.** Give every endpoint a `test_request` that is CHEAP (smallest limit, one item,
    public well-known target — e.g. user "tiktok", domain "moz.com"). This is what verification and
    future health checks replay, so it must not burn meaningful credits.
@@ -1222,7 +1222,7 @@ Do these steps in order; each has a hard success criterion.
    calls). Always pass an explicit smallest limit, and on row-quota APIs check the usage endpoint
    before and after the first call.
 7. **Verify + capture.** Run `scripts/catalog_verify.py <service>.yaml` with the credential in the
-   `TREG_CATALOG_CRED` env var. It calls every endpoint's `test_request`, checks `expect`, writes
+   `STRAY_CATALOG_CRED` env var. It calls every endpoint's `test_request`, checks `expect`, writes
    the truncated example response to `examples/`, and prints PASS/FAIL per endpoint. Stamp
    `verified: <today>` ONLY on endpoints that passed — documented ≠ verified; docs lie.
 8. **Scrub.** Read every captured example: replace anything personal that is not the public test
@@ -1246,7 +1246,7 @@ uv run python scripts/catalog_validate.py               # must exit 0
 
 The script owns `<service>.extended.yaml` end to end: it fetches the provider's spec, maps every
 route to a platform, drops what the core file already covers, and rewrites the file. Downloads are
-cached under `~/.cache/treg-catalog-ingest` (override `TREG_INGEST_CACHE`); `--refresh` re-fetches.
+cached under `~/.cache/stray-catalog-ingest` (override `STRAY_INGEST_CACHE`); `--refresh` re-fetches.
 Output is deterministic — a re-run with unchanged upstreams produces a byte-identical file, so a
 diff always means the provider changed.
 
@@ -1257,7 +1257,7 @@ Three rules it must honour:
   billed 1400 times (see the quota trap above). TikHub's methods come from an `OPTIONS` request,
   which Starlette answers `405 + allow:` before the handler — and therefore the meter — runs.
 - **The published spec outranks the probe** (`resolve_method`). A wrong method is not a cosmetic
-  error: treg *enforces* the recorded verb, so the endpoint becomes uncallable from both sides at
+  error: stray *enforces* the recorded verb, so the endpoint becomes uncallable from both sides at
   once — POST refused here ("… is GET"), GET refused upstream (405). The probe is weaker than it
   looks: a preflight answering with a method *list* walks its preference order and comes out `GET`
   whatever the handler takes. So when the OpenAPI declares exactly one method, that wins; probe and
@@ -1278,7 +1278,7 @@ the provider — it went stale, and at the time **nothing re-checked a provider'
 
 That reframed the fix. Preferring the spec over the probe is a genuine hardening, but it only helps
 *at re-ingest time*, and only if the cached spec was refreshed — the cache under
-`~/.cache/treg-catalog-ingest` is what an unqualified `catalog_ingest.py <provider>` reads, so a
+`~/.cache/stray-catalog-ingest` is what an unqualified `catalog_ingest.py <provider>` reads, so a
 re-run against a months-old cache faithfully reproduces months-old truth. A `verified:` stamp is
 evidence about the day it was written and nothing after it.
 
@@ -1313,7 +1313,7 @@ never enters catalog lookup.
 The validator treats the marker as a contract: only `retired` and `broken` are valid; every marker
 needs a non-empty note; `status_note` and `superseded_by` cannot float without `status`; and a
 successor must be a different, existing, live catalog id. A marked id is therefore an explanation,
-not an alias chain or a route treg will still spend against.
+not an alias chain or a route stray will still spend against.
 
 The marker is not TikHub-specific, and the provider does not have to answer 404 for a row to be
 dead. `lusha.x.decision-makers` (2026-09-09) is the second shape: Lusha removed
@@ -1328,10 +1328,10 @@ the provider's OpenAPI bundle without a live probe and says so with `skipped` an
 hand-maintained (no ingester reads Lusha's client-rendered reference), so the "regenerated wholesale"
 caveat above does not apply to it and the tombstone survives.
 
-### `platform_blocked:` — works upstream, but not on treg's plan
+### `platform_blocked:` — works upstream, but not on stray's plan
 
 A third state sits between "offer" and "tombstone": the route works and the price is real, but
-treg's own subscription cannot serve it — Akta answers every alternative-data call (jobs, posts,
+stray's own subscription cannot serve it — Akta answers every alternative-data call (jobs, posts,
 website-traffic, employee-reviews, headcount-trends, product-reviews) on the shared key with a
 free 403 "Your current subscription does not include access to this endpoint". Marking those
 `status: broken` would be a lie (a caller's OWN key on a bigger plan serves them fine) and leaving
@@ -1351,7 +1351,7 @@ can say "bring your own key" *before* the call instead of relaying the 403 after
 ### The first-party OAuth wave (2026-07-28; Google Tag Manager added 2026-08-27)
 
 The scraper providers sell breadth and their extended tier reads as a menu. The nine providers
-where treg owns the OAuth app are the opposite question — *what can this one connected account
+where stray owns the OAuth app are the opposite question — *what can this one connected account
 actually do?* — and their sources differ per provider:
 
 | service | source | entries | scope gaps |
@@ -1383,7 +1383,7 @@ Three things generalise from it:
   queryable resource. Forty entries share a path and differ in `input.note` and `docs_url`.
 - **No test_request anywhere in this wave.** Every route needs a property id, a customer id or a
   Page id that belongs to the connected business and that no spec can supply. They are verified by
-  replay against a live connection (`--via-treg`), not by a generated blind call.
+  replay against a live connection (`--via-stray`), not by a generated blind call.
 - **Instagram Messaging is deliberately core-curated.** Conversation listing and message sending
   carry the Page-token/IGSID/window constraints and complete Try-form inputs in `instagram.yaml`;
   conversation listing targets the linked Facebook Page id (`/{page_id}/conversations` with
@@ -1396,8 +1396,8 @@ Three things generalise from it:
 ## Process — bulk-verifying the extended tier
 
 ```
-TREG_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify_extended.py tikhub --dry-run
-TREG_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify_extended.py tikhub --budget 1.80
+STRAY_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify_extended.py tikhub --dry-run
+STRAY_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify_extended.py tikhub --budget 1.80
 uv run python scripts/catalog_validate.py            # must exit 0
 ```
 
@@ -1544,27 +1544,27 @@ A provider's other quirks live on its rows as `note`, `enum` or `example`, never
 307 capabilities are served by more than one provider, and prices inside one capability differ by up
 to **261×**. So "which provider" is a real decision, made on every call.
 
-**The agent makes it, not treg** — see `docs/CAPABILITY-CHOICE-PLAN.md` for the measurement behind
+**The agent makes it, not stray** — see `docs/CAPABILITY-CHOICE-PLAN.md` for the measurement behind
 that. Two reasons, and the second is the load-bearing one. Providers of the same capability take
-*different requests* (only 5 of 171 match exactly), so a router would need a canonical schema treg
+*different requests* (only 5 of 171 match exactly), so a router would need a canonical schema stray
 does not have; and they sometimes ask a different QUESTION entirely — `hunter.people.email.find`
 wants a domain and a name, `leadmagic.x.b2b-profile-email` wants a LinkedIn URL. **Only the caller
 knows which inputs it holds.** A router picking on price would choose the second for someone holding
-a name, and fail. Routing would also have been the first feature to break the founding rule that treg
+a name, and fail. Routing would also have been the first feature to break the founding rule that stray
 relays rather than models.
 
-What treg owes instead is the half only treg can supply, because only treg sees every call from every
+What stray owes instead is the half only stray can supply, because only stray sees every call from every
 tenant: `endpoint_stats.observed()` aggregates **success rate, p50/p95 latency, last-answered and
 sample size** per endpoint from `CallRecord` — which has recorded `endpoint_id`, `status_code` and
 `duration_ms` since the marketplace shipped and was never read. It rides on
 `/catalog/endpoints/{id}`, attached to the endpoint **and every sibling**, because the choice is made
 on that page and an agent will not make a second round-trip to compare reliability.
 
-The same page states the one price the `cost` block cannot: what the call bills when treg's own
+The same page states the one price the `cost` block cannot: what the call bills when stray's own
 account is out and the overflow relay serves it. `routers.catalog._overflow_disclosure` reads the
 enabled `OverflowRoute` through `domain.capacity.routes_view` (a read, the worker stays the only
 writer) and puts `overflow_price_usd`, `overflow_price_unit` and `overflow_via` on the endpoint view
-plus a hint, only when the deployment can actually relay it (`TREG_OVERFLOW_MODE=on`, a key for the
+plus a hint, only when the deployment can actually relay it (`STRAY_OVERFLOW_MODE=on`, a key for the
 aggregator, `platform_eligible`, an enabled route). A catalog-free endpoint with an overflow route is
 the case that made this necessary (`apollo.people.search`, 2026-09-08); the MCP `catalog_get` lifts
 the three fields onto its result so the schema advertises them.
@@ -1592,7 +1592,7 @@ counters plus `refresh` and `refresh_failure` counts. Its invalidation story is 
 and process restarts begin cold, and no cross-instance correctness depends on the cache.
 
 **The evidence is folded once, off the request path** (`application/catalog_stats.py`, run by the
-`treg-worker catalog stats` cron). Refreshing straight from `callrecord` meant every web process
+`stray-worker catalog stats` cron). Refreshing straight from `callrecord` meant every web process
 re-aggregating thirty days of audit rows for an endpoint and its siblings whenever its cache
 expired, and again from cold after each deploy: on a large audit table that is tens of seconds per
 pass, each pass evicting the pages the money path needs. The worker instead
@@ -1600,7 +1600,7 @@ walks the audit table by primary key from a persisted cursor (`EndpointStatCurso
 row into one `EndpointDayStat` bucket per endpoint per UTC day: counts, the newest success, the
 `hit`/per-success tallies, and a uniform reservoir of at most `stats.LATENCY_SAMPLE` successful
 durations. Rows younger than sixty seconds wait for the next run so an audit insert that commits
-late is never skipped; a plain tool call (no `endpoint_id`) and a treg refusal (`refused_by`) are
+late is never skipped; a plain tool call (no `endpoint_id`) and a stray refusal (`refused_by`) are
 not evidence and are not folded, exactly as the live query excludes them. The first run bisects the
 primary key to the first row inside the window rather than reading older pages, consumes at most
 `--max-rows` per run, and the reader keeps computing the live aggregate until a run reports it
@@ -1636,7 +1636,7 @@ Five rules worth keeping:
   WORKS column read `— (7)`: indistinguishable from an endpoint nobody had tried. That is the half
   of the 2026-08-17 report that survived two rounds of review — fixing `LAST OK` stopped the row
   claiming success, but only this makes it say *failure*.
-- **A treg refusal is not evidence about the endpoint.** Rows with `refused_by` set (a paywall 402,
+- **A stray refusal is not evidence about the endpoint.** Rows with `refused_by` set (a paywall 402,
   a daily-cap 429 — see the data-model fragment) never reached the provider; they are excluded even
   from `samples`, or a burst of refused calls dresses itself up as traffic. The 2026-08-12 Hunter
   incident — 309 refusals next to 488 real calls — is why.
@@ -1657,7 +1657,7 @@ Five rules worth keeping:
   for `NO_MATCH` (a miss) and for `INVALID_DATAPOINTS` (a fault), so its three person endpoints
   declare `miss: {status: 400, when: "error_code == 'NO_MATCH'"}`. Provider knowledge lives in
   the YAML; `route.py` never names a provider. Live 2026-09-18: 64% of three days of
-  `treg.people.email.find` 502s were a limadata 404 or a prospeo NO_MATCH among otherwise clean
+  `stray.people.email.find` 502s were a limadata 404 or a prospeo NO_MATCH among otherwise clean
   misses — the block had never been declared on either (limadata's cost note said "a 404 miss is
   free"; prose is not read by the router). Before 2026-09-04 only PDL carried the block; the annotated set (aviato, hunter,
   leadmagic, findymail, companyenrich, thecompaniesapi, fiber-ai, scrapecreators linkedin) came
@@ -1732,7 +1732,7 @@ task-phrase aliases are real searchable keys rather than discarded punctuation s
 remain one token, while targets may be lowercase hyphenated phrases because matching tests the
 target string directly against catalog text. This makes `t2v` → `text-to-video` selective. The
 original AIGC aliases mapped model names and Chinese task phrases to `video`/`image`: live
-`treg catalog search` expanded Hailuo/Seedance/t2v to 521 endpoints and Flux to 172, including
+`stray catalog search` expanded Hailuo/Seedance/t2v to 521 endpoints and Flux to 172, including
 YouTube and unrelated image utilities. Model-family aliases were removed once real endpoint text
 contained those names; compact and Chinese task terms now target only `text-to-video` and/or
 `image-to-video`. A post-change CLI run returned 10 Hailuo, 11 Seedance, and 14 Flux matches; the
@@ -1799,7 +1799,7 @@ Team policy sits on top: `CapabilityPin` (see [data-model](data-model.md)) lets 
 capability to one provider, enforced in `_resolve_marketplace_call` before anything is reserved.
 
 Its boundary, verified rather than assumed: a pin gates the **catalog id**, which is the only route
-to treg's own key — so it cannot be side-stepped to spend our money (a URL-passthrough call resolves
+to stray's own key — so it cannot be side-stepped to spend our money (a URL-passthrough call resolves
 against the org's OWN tools and 404s without one). A team holding its own key for another provider
 can still call that provider by URL; that is their credential and their bill, and `DenyRule` —
 host-scoped, applied to every shape of call — is the tool for blocking it.
@@ -1810,9 +1810,9 @@ Three rules, all in `group_routed` / `search`, shared by `/catalog/search`, MCP 
 and the CLI so the three surfaces cannot disagree:
 
 - **A matched child brings its routed parent.** `find leads` matched `leadsforge.*` on the
-  provider's NAME; the row an agent should see first for that job — `treg.people.search`, where
-  treg chooses among every provider — contained no word of the query. `search` now adds
-  `treg.<capability>` at the best child's score whenever a child matched. The token-filter tests
+  provider's NAME; the row an agent should see first for that job — `stray.people.search`, where
+  stray chooses among every provider — contained no word of the query. `search` now adds
+  `stray.<capability>` at the best child's score whenever a child matched. The token-filter tests
   exempt these pulled-in rows: their own text need not contain the query.
 - **Vocabulary before ranking.** The same query first ranked `people.email.find` above
   `people.search` because `find` is a token of the former's capability NAME (weight 3) and only of
@@ -1822,12 +1822,12 @@ and the CLI so the three surfaces cannot disagree:
 - **A group shows its best `MAX_ROUTED_CHILDREN` (5) children.** One capability's 24 providers had
   eaten the whole 25-row page. An approved hub tool of the same job (`kind: "hub"`) sits in the
   group but is never cut: the router does not list it. The parent is stamped `children_hidden`; the CLI prints
-  `+ N more providers — treg catalog get <parent>`, MCP says so in `routed`. To keep the page full
+  `+ N more providers — stray catalog get <parent>`, MCP says so in `routed`. To keep the page full
   after collapsing, search ranks a band of 4× the page (≤ 100) and cuts to `limit` AFTER grouping.
 
-## Routing — first-party routed endpoints (`treg.<capability>`)
+## Routing — first-party routed endpoints (`stray.<capability>`)
 
-The one place treg **models** an upstream API, and the explicit opt-in where the caller asks treg
+The one place stray **models** an upstream API, and the explicit opt-in where the caller asks stray
 to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog stays verbatim relay.
 
 - **Contracts** — `contracts.yaml`: per capability, one-of *identity* variants (structural keys,
@@ -1836,25 +1836,25 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   *output* core (`email` required; `confidence`, names, `verified` optional) and `miss` in
   canonical terms. `raw` — the winning provider's body — is always returned and never documented
   as stable. `advice_unverified` (email and phone finds, and `people.search`) is one sentence the
-  router attaches as `_treg.advice` to a hit whose `verified` is not true — a found contact is not
+  router attaches as `_stray.advice` to a hit whose `verified` is not true — a found contact is not
   a confirmed one (Hunter's `accept_all`, LeadMagic's personal finder, every phone provider), and a
   team that sent to such hits unverified bounced on most of them (2026-09-06). A search contract
   has no `verified` output, so its advice attaches to every hit: rows are directory listings, and
   the same team's 79-address bounce list (2026-09-08) was 73 unverified Hunter domain-search rows
   and agent-guessed `info@` addresses that one verify call each would have caught. The
   `hunter.companies.emails` catalog summary carries the same warning for direct `/call/` users,
-  whose body is relayed verbatim. A suggestion only: treg never chains the verify call, which
+  whose body is relayed verbatim. A suggestion only: stray never chains the verify call, which
   would double every hit's price and change what the find bills. `routed: false` declares an
   admission-only contract: its adapters verify like any other (which is what the archive's
-  `has_result_rules` reads), but no `treg.<capability>` row is ever generated from it. For a
-  capability whose "children" are one provider's price tiers, not a choice treg should make.
+  `has_result_rules` reads), but no `stray.<capability>` row is ever generated from it. For a
+  capability whose "children" are one provider's price tiers, not a choice stray should make.
   `scoping` names identity keys that scope the answer rather than describe it (`people.search`:
   `company_domain`). A candidate whose adapter never sends one the caller supplied is dropped from
   the plan with the reason, not ranked down like an ignored filter: a title-only search asked for
   one company's CEO returns title-matched strangers for any company and bills them as a hit. The
   rule is per candidate, so `{q, company_domain}` also drops the `q`-only providers.
   `prefer` is the contract's default provider order, used when the caller sends no
-  `X-Treg-Route-Prefer` (a caller's header replaces it). Cost per hit ignores time:
+  `X-Stray-Route-Prefer` (a caller's header replaces it). Cost per hit ignores time:
   `ai-search.perplexity.answer` sets `prefer: [dataforseo]` because cost per hit ranked the cheaper
   but slower and less reliable cloro first. Its `source_kind` output says
   whether the answer read the Perplexity website (`website`, cloro) or its model API (`model_api`).
@@ -1890,9 +1890,9 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   exists and its filters match; `Catalog.for_capability` counts those memberships. An invalid
   extra never disables the primary.
 - **The generated row** — `routing/synthetic.py`: every capability with ≥ 2 verified children gets
-  `treg.<capability>` (`store.load` skips a `routed: false` contract) (`provider: treg`, `kind: routed`, `POST /<capability>`, `input` = the
+  `stray.<capability>` (`store.load` skips a `routed: false` contract) (`provider: stray`, `kind: routed`, `POST /<capability>`, `input` = the
   contract, `cost` = the children's range, `routed_children`, `miss_billed_by` = the children priced
-  per call or per result, whose provider bills an answer treg judges a miss: the caller pays those
+  per call or per result, whose provider bills an answer stray judges a miss: the caller pays those
   too, and the cost note says so). Never hand-written; not in any
   provider file.
   `catalog_get` on it returns the contract and the ranked **plan** (the quote) —
@@ -1903,7 +1903,7 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   is the measured hit rate when ≥ 20 decided samples exist, else `ok_rate`, else 1.0 (flagged
   `unmeasured`). `build_plan` reads that evidence through bootstrap's shared process cache; cold or
   unavailable observations degrade to unmeasured ranking while the cache refreshes off the request
-  path. `X-Treg-Route-Prefer` / `-Exclude` override. An exhausted platform provider with an enabled
+  path. `X-Stray-Route-Prefer` / `-Exclude` override. An exhausted platform provider with an enabled
   overflow route remains a candidate at the overflow route's price, so the ordinary child ladder can
   skip the known-dry direct account and use the aggregator; without an enabled route it is dropped.
   Providers with no key on the deployment are also dropped and named in `dropped` (`needs {…}` says
@@ -1931,24 +1931,24 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   waterfall continues; the identity's `linkedin_url` is normalised once at planning time
   (`canonical_identity`: scheme-less URL or bare handle → public URL) so no adapter forwards an
   invalid URL. Our 5xx/503/429 or a vendor 5xx/429/402 = error →
-  next candidate, at most two extra, only for idempotent contracts. A treg-side
+  next candidate, at most two extra, only for idempotent contracts. A stray-side
   `tool_access_denied`, `policy_denied`, or `capability_pinned` refusal is local to that child and
   follows the same error fallback. A platform child's vendor 401/403 also falls back because it
-  indicates treg's provider credential, not the routed caller's request. Balance and spend-cap
+  indicates stray's provider credential, not the routed caller's request. Balance and spend-cap
   refusals remain terminal because another provider cannot change the org-wide decision. A 2xx
   response whose body lacks a REQUIRED core field is a MISS, not a hit (dataforseo's `result: null`
   under a 20000 envelope). A
   MISS tries the next candidate — the waterfall is ON by default (decided
   2026-08-28: the endpoint's job is to find the thing, and misses on the per-success children are
-  free); `X-Treg-Route-Waterfall: 0` stops at the first miss. **A child never settles its own
+  free); `X-Stray-Route-Waterfall: 0` stops at the first miss. **A child never settles its own
   hold**: it leaves it open in the parent's `deferred_settles` list (`settle.DeferredSettle`) with
   the amount its settle would charge, and `run_routed` closes every one exactly once at the end
   (`settle.close_deferred`, one transaction): settled at that real price when the routed call
   answers (a hit or a 200 miss), RELEASED when it fails (`route_failed`, `route_caller_fault`,
   `route_max_cost`, a balance refusal, a cancellation). A routed call that fails therefore charges
   nothing (owner decision 2026-09-21): its error detail says `charged_micro: 0` and
-  `released_micro` names what the providers billed treg. A crash between the two leaves the holds
-  to the reaper, which releases in the caller's favour. `X-Treg-Route-Max-Cost` (default $1)
+  `released_micro` names what the providers billed stray. A crash between the two leaves the holds
+  to the reaper, which releases in the caller's favour. `X-Stray-Route-Max-Cost` (default $1)
   bounds the sum before each reserve (a candidate
   that would breach it is `skipped`). Quota-row quotes scale with the requested row count, just
   like per-result quotes. Each child also receives the remaining ceiling after actual earlier
@@ -1957,18 +1957,18 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   without using the provider-error retry allowance; if every candidate is skipped, return 402
   `route_max_cost`. A retained weak answer keeps its own outcome when later candidates are skipped.
   When the waterfall ends with some candidates skipped due to max-cost, the response includes
-  `_treg.capped: true` and `X-Treg-Route-Capped: true` — a partial miss is distinguishable from an
+  `_stray.capped: true` and `X-Stray-Route-Capped: true` — a partial miss is distinguishable from an
   exhaustive one, so callers can raise their budget if needed (feedback #131, 2026-09).
-  Response: `{output, raw, _treg: {served_by, provider, tier,
-  outcome, tried[], charged_micro, capped?}}`, `X-Treg-Served-By`, `X-Treg-Providers-Tried`,
-  `X-Treg-Route-Outcome`, `X-Treg-Route-Capped?`, `X-Treg-Cost-Micro` = the sum, one `X-Treg-Call-Id`. The parent owns
+  Response: `{output, raw, _stray: {served_by, provider, tier,
+  outcome, tried[], charged_micro, capped?}}`, `X-Stray-Served-By`, `X-Stray-Providers-Tried`,
+  `X-Stray-Route-Outcome`, `X-Stray-Route-Capped?`, `X-Stray-Cost-Micro` = the sum, one `X-Stray-Call-Id`. The parent owns
   the idempotency label (a success replays without touching a provider; a failure now costs
   nothing, so it is not stored and a retry with the same key tries again) and writes one audit row
   (`credential_tier: routed`) beside the children's.
   An async child uses the shared async bridge to submit once and poll through ordinary authenticated
   child calls. The final poll response, not the kickoff response, is passed to the adapter. Routed
   execution waits for up to 60 seconds. If the task is still processing, or a foreground poll
-  cannot prove a declared terminal state, it returns HTTP 202 with `_treg.outcome: pending`, the
+  cannot prove a declared terminal state, it returns HTTP 202 with `_stray.outcome: pending`, the
   provider and endpoint, child call reference, poll descriptor, `reserved_micro`, and
   `charged_micro: null`. A pending attempt stops that waterfall because the child may still complete
   and charge; the existing async worker owns eventual settlement. Only declared terminal misses and
@@ -2024,7 +2024,7 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   A `titles` list filter was tried at the same time and **REVERTED**: paired over the same 30
   queries it cost −0.068 ± 0.022 (95% CI [−0.112, −0.024]). Broader title variants ("Software
   Engineer" for a backend brief) buy recall the metric does not want and lose precision.
-- **min_results, and why it is bounded (2026-08-29)**: `X-Treg-Route-Min-Results: N` records a hit
+- **min_results, and why it is bounded (2026-08-29)**: `X-Stray-Route-Min-Results: N` records a hit
   with fewer than N rows as `weak` and keeps going, returning the fullest answer seen. It is what
   the hand-written bench policy did (`if len(rows) < 3 -> semantic fallback`) and the routed path
   could not express. Unbounded it is ruinous on LOOKUP briefs, whose honest answer IS one person:
@@ -2032,17 +2032,17 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   went **$1.76 → $22.35 over 28 queries, 12.7x**, for answers that were already right. Bounded at
   `MAX_WEAK_FALLBACKS = 2`, mirroring the error fallback, the same set costs ~$0.39 — cheaper than
   the baseline — and recruiting keeps its gain (it never needed more than one fall-through).
-  Pair it with `X-Treg-Route-Max-Cost` on any capability where thin answers are normal.
+  Pair it with `X-Stray-Route-Max-Cost` on any capability where thin answers are normal.
 - **Routed parity with a hand-written policy (2026-08-29)**: after the two changes above, paired
   over the same 30 recruiting briefs against the 08-27 hand-written icypeas policy, the routed path
   is indistinguishable — nDCG@10 −2.40 (95% CI [−7.12, +2.33]), utility −0.80 ([−3.10, +1.51]),
   qualified/query −0.53 ([−1.84, +0.77]) — and ahead of the published Lessie 68.2, Exa 64.7 and
   Claude Code 50.5. The remaining differences are agent-side, not routing: the hand-written policy
   post-filtered rows on location and over-fetched (`size: 20`, trimmed to 15).
-- **The answer says what it ignored (2026-08-29)**: `ignored_filters` was on `_treg.tried[]` only,
-  which no caller reads. It is now also on `_treg` itself for the child that served and on an
-  `X-Treg-Ignored-Filters` response header, so an agent can post-filter, or say why the rows are
-  wrong, without walking the attempt list. **Opt-in refusal (2026-09-04)**: `X-Treg-Route-Strict-Filters: 1`
+- **The answer says what it ignored (2026-08-29)**: `ignored_filters` was on `_stray.tried[]` only,
+  which no caller reads. It is now also on `_stray` itself for the child that served and on an
+  `X-Stray-Ignored-Filters` response header, so an agent can post-filter, or say why the rows are
+  wrong, without walking the attempt list. **Opt-in refusal (2026-09-04)**: `X-Stray-Route-Strict-Filters: 1`
   drops every candidate that cannot express a sent filter at planning time (listed in `dropped`
   with `strict: true` and what the adapter takes instead) and answers `route_no_candidate` 422,
   unbilled, when none is left — a 503 stays reserved for capacity/key drops. Off by default: the
@@ -2068,14 +2068,14 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   is listed on the attempt as `ignored_filters` — silently unapplied was the worst outcome (the bench
   had post-filtered in the agent because of it). Bench re-run, recruiting 30: same icypeas rows as the
   hand-written policy, one automatic fall-through, region briefs rescued by the pass-through.
-- **Routed DISCOVERY is a runtime switch (2026-08-29)**: `TREG_ROUTED_DISCOVERY=off` (default `on`)
-  stops search leading with `treg.<capability>` and stops a routed parent riding in when a child
+- **Routed DISCOVERY is a runtime switch (2026-08-29)**: `STRAY_ROUTED_DISCOVERY=off` (default `on`)
+  stops search leading with `stray.<capability>` and stops a routed parent riding in when a child
   matches — the endpoints stay callable, priced and reachable by id, and `catalog get`/`POST /call/`
   are untouched. Off also HIDES routed rows from search results, not merely ungroups them: a routed
   row matches a keyword query on its own summary, so leaving it in would steer by the back door.
   One choke point (`group_routed`) serves both callers (`mcp.py`, `routers/catalog.py`); MCP also
   narrows its rank band back to `limit` when off, since the widening exists only so groups can
-  collapse. Same dashboard-flip shape as `platform_providers` and `TREG_OVERFLOW_MODE` — no
+  collapse. Same dashboard-flip shape as `platform_providers` and `STRAY_OVERFLOW_MODE` — no
   redeploy. It covers every surface that steers, not just search: the platform BROWSE view
   (`/catalog/platforms/{slug}`, which sorts the routed parent to the top of its capability group)
   drops routed rows too, and `/skill.md` and `/llms.txt` strip their routed section — a deployment
@@ -2106,7 +2106,7 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   That dry-run is ONE identity shape, so its drops are mostly "this adapter takes another identity",
   not "your team cannot reach this provider" — `/access` used to label them "not available here",
   which read as a missing key and sent a reader hunting for one (2026-08-29: aviato, callable on
-  treg's platform key and serving live calls, was listed as unavailable). It now names the shape and
+  stray's platform key and serving live calls, was listed as unavailable). It now names the shape and
   gives each drop its own `why`.
 - **Coverage (2026-08-28)**: 74 routed capabilities = 80.9% of 30-day platform calls (88% was the
   routable ceiling). The per-capability ledger — what shipped with which children, what is 🚫 and
@@ -2114,7 +2114,7 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   rows still open — is `docs/CAPABILITY-EXPANSION.md` (git-excluded, Jason's working doc).
 - **Not built** (plan R4): "prefer routed" in the agent files after a shadow week; a proper
   `kind: filters` / `Location` layer for the DSL/SQL providers (aviato dsl and pdl sql ride `obj`/
-  `fmt` today; crustdata/diffbot/coresignal/apollo do not); own-key-dry → treg-key fallback.
+  `fmt` today; crustdata/diffbot/coresignal/apollo do not); own-key-dry → stray-key fallback.
 
 - **Name-only Leadsforge requests (2026-09-07)**: email and phone adapters accept the derived
   `{first_name, last_name, domain}` variant or a LinkedIn URL. Removed the redundant
@@ -2168,15 +2168,15 @@ before any example is committed, all learned the hard way:
 
 
 Credentials are NEVER written into catalog files, examples, scripts, or docs — the verifier reads
-`TREG_CATALOG_CRED` from the environment only. Captured examples are truncated (arrays → 2 items,
+`STRAY_CATALOG_CRED` from the environment only. Captured examples are truncated (arrays → 2 items,
 long strings clipped, ~10 KB cap) by the verifier, then human-reviewed for PII before commit.
 
 ## Operator-supplied pricing evidence
 
-`catalog_ingest.py` requires `TREG_CATALOG_EVIDENCE_DIR` for AnyAPI and JustOneAPI imports.
+`catalog_ingest.py` requires `STRAY_CATALOG_EVIDENCE_DIR` for AnyAPI and JustOneAPI imports.
 The directory supplies `anyapi_measured_charges.json` (`skus`, `as_of`, `window_days`) and
 `justoneapi_prices.json` (`prices`). Missing files fail before catalog output is written, rather
 than silently replacing measured prices with estimates or dropping dashboard prices. Other
 providers do not require these files. Published catalog prices remain part of the public product;
 private ledger exports and account evidence do not. Hosted operators maintain the inputs in
-`treg-internal/tools/catalog-evidence/`.
+`stray-internal/tools/catalog-evidence/`.

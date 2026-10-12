@@ -1,6 +1,6 @@
 """Milestone 2 — expiry as a first-class signal.
 
-The failure this exists to prevent: a credential treg cannot renew itself (LinkedIn issues no
+The failure this exists to prevent: a credential stray cannot renew itself (LinkedIn issues no
 refresh_token at the non-partner tier) probes perfectly healthy right up until it abruptly stops
 working. `health_status` cannot express that — it answers "does this work", and the honest answer
 is yes, right up to the end. So expiry is swept separately and surfaced as `needs_reconnect`.
@@ -15,16 +15,16 @@ import pytest
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg import crypto, health, oauth
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import Secret
+from stray import crypto, health, oauth
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import Secret
 
 
 @pytest.fixture
-def treg_google_app(monkeypatch):
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_ID", "treg-google-cid")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_SECRET", "treg-google-csec")
+def stray_google_app(monkeypatch):
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_ID", "stray-google-cid")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_SECRET", "stray-google-csec")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -69,7 +69,7 @@ async def test_a_dying_credential_is_flagged_even_though_health_is_not_invalid(c
 
 
 async def test_a_refreshable_credential_never_asks_for_reconnect(clients: AsyncClient):
-    """treg renews these itself; nagging about their 1-hour expiry would be pure noise."""
+    """stray renews these itself; nagging about their 1-hour expiry would be pure noise."""
     sid = await _connect(clients)
     rows = {r["secret_id"]: r for r in (await clients.get("/health")).json()}
     assert rows[sid]["refreshable"] is True
@@ -112,7 +112,7 @@ async def test_connections_carry_needs_reconnect(clients: AsyncClient):
 
 
 # ---- refresh failures are recorded, not swallowed -----------------------------------------
-async def test_a_failed_refresh_records_why(clients: AsyncClient, treg_google_app):
+async def test_a_failed_refresh_records_why(clients: AsyncClient, stray_google_app):
     """A revoked refresh_token used to 401 forever with nothing on the connection explaining it.
 
     Uses a registry connect so the credential is BOUND to an auto-provisioned tool — the health
@@ -143,7 +143,7 @@ _NOW = datetime(2026, 7, 21)
     (_NOW + timedelta(days=oauth.EXPIRING_SOON_DAYS + 1), False, "fresh"),
     (_NOW + timedelta(days=30), False, "fresh"),
     (None, False, "unknown"),
-    # treg mints a new access token on demand, so a past expiry is not the user's problem.
+    # stray mints a new access token on demand, so a past expiry is not the user's problem.
     (_NOW - timedelta(days=1), True, "fresh"),
 ])
 def test_expiry_state_boundaries(expires_at, refreshable, state):

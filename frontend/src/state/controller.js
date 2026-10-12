@@ -47,7 +47,7 @@ export default {
  methods: {...resources, setElement(name, element) { this.elements[name] = element }, ...session, ...team, ...keys, ...agents, ...projects, ...governance, ...activity, ...billing, ...referrals, ...secrets, ...tools, ...skills, ...format, ...onboarding, ...analytics, ...help, ...connections, ...sharing, ...navigation, ...catalog, ...catalogExperiment, ...details, ...admin, ...snippets, ...tryTool, ...find, ...lifecycle, ...hub, ...tickets},
  watch:{
     // Dialog focus (in on open, trapped, back to the trigger on close) and Escape: v-dialog (dialogs/dialog.ts)
-    'welcome.agent'(v){ storageSet('treg-agent', v); },  // see _restoreAgent
+    'welcome.agent'(v){ storageSet('stray-agent', v); },  // see _restoreAgent
     activeOrgId(){ this.resetRenameForm(); },  // team switch or first load: prefill the rename form
     // Editing the box after a find starts a new question: the answer to the old one goes away
     // and the shelves go back to filtering by name.

@@ -9,18 +9,18 @@ import textwrap
 
 
 _LIGHTWEIGHT_MODULES = (
-    "treg.cli",
-    "treg.convert",
-    "treg.skills",
-    "treg.providers",
-    "treg.localrun",
-    "treg.shell",
-    "treg.agents",
-    "treg.egress",
-    "treg.fsjail",
+    "stray.cli",
+    "stray.convert",
+    "stray.skills",
+    "stray.providers",
+    "stray.localrun",
+    "stray.shell",
+    "stray.agents",
+    "stray.egress",
+    "stray.fsjail",
     # The CLI's `--await` reads the async descriptor through the server's own domain module; it
     # stays stdlib-only so the light install never learns what a database is.
-    "treg.domain.asynctasks",
+    "stray.domain.asynctasks",
 )
 _SERVER_DEPENDENCY_ROOTS = (
     "obstore",

@@ -2,11 +2,11 @@
 title: Super-admin — cross-tenant read + control
 status: shipped
 sources:
-  - src/treg/api.py
-  - src/treg/routers/admin.py
-  - src/treg/application/evidence_retention.py
-  - src/treg/domain/identity/access.py
-  - src/treg/config.py
+  - src/stray/api.py
+  - src/stray/routers/admin.py
+  - src/stray/application/evidence_retention.py
+  - src/stray/domain/identity/access.py
+  - src/stray/config.py
 related:
   - architecture/multi-tenancy.md
   - interface/cli.md
@@ -19,8 +19,8 @@ deliberately separate from org roles.
 
 ## Authorization (`require_superadmin` in `domain.identity.access`) — hybrid
 A caller is a super-admin if EITHER:
-- the presented `X-Treg-Token` equals the env `admin_token` (`get_settings().admin_token`, from
-  `TREG_ADMIN_TOKEN`), compared with `hmac.compare_digest` → principal `"env-admin"`; OR
+- the presented `X-Stray-Token` equals the env `admin_token` (`get_settings().admin_token`, from
+  `STRAY_ADMIN_TOKEN`), compared with `hmac.compare_digest` → principal `"env-admin"`; OR
 - the token resolves to a `Membership` whose `User.is_superadmin` is set (and not `suspended`) →
   principal = that user's email.
 
@@ -62,13 +62,13 @@ endpoints are unaffected (they use `require_superadmin`).
   own tools. Superadmin and not org-admin
   because the rows hold customers' request content; `GET /calls` deliberately does **not** expose
   these columns, and it defers them so they are not even fetched. The route is read-only: the
-  14-day retention purge (blanking both columns to `'<expired>'`) is the `treg-worker admin
+  14-day retention purge (blanking both columns to `'<expired>'`) is the `stray-worker admin
   purge-evidence` cron (`application/evidence_retention.py`), in bounded batches. A row past the
   window is listed as `expired` with no evidence even before the cron reaches it.
 - **Reconciliation (Phase 5):** `admin_reconcile_drift|spend|repeats` (`?since_days=30`) — cross-org
   aggregates over platform-tier spend, so super-admin and not org-admin: price drift per endpoint,
   settled spend per provider (the invoice comparison), and the repeat-query rate. Query-time reports
-  over existing rows; no scheduler. Logic in `src/treg/reconcile.py`;
+  over existing rows; no scheduler. Logic in `src/stray/reconcile.py`;
   `scripts/provider_balances.py` is the manual companion that reads the providers' own balances.
   The async-task settlement report follows the same super-admin and dedicated admin-pool boundary.
 - **Mutations (Phase 2):** `admin_set_superadmin`, `admin_suspend_user`, `admin_delete_user` (removes
@@ -90,10 +90,10 @@ endpoints are unaffected (they use `require_superadmin`).
 ## Model + migration
 `User` gains `is_superadmin` + `suspended`; `Org` gains `suspended` (booleans). The columns are part
 of the Alembic baseline schema; a live DB picks up schema changes through the explicit
-`python -m treg upgrade` release phase, never on restart.
+`python -m stray upgrade` release phase, never on restart.
 
 ## CLI (`interface/cli.md`)
-`treg admin login --token` (saves the env key), `admin stats|orgs|org <id>|users|tools|calls|health`,
+`stray admin login --token` (saves the env key), `admin stats|orgs|org <id>|users|tools|calls|health`,
 `admin grant|revoke|suspend-user|rm-user|suspend-org|rm-org`, and
 `admin credit <org_id> --amount-usd <n> --ref <ticket> --reason <text>`. `_admin_client` sends the saved
 `admin_token` if present, else the active org token (works for an `is_superadmin` user).

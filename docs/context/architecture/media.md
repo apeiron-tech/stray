@@ -1,11 +1,11 @@
 ---
-title: Media hosting - reference files a vendor can fetch (`treg host`)
+title: Media hosting - reference files a vendor can fetch (`stray host`)
 status: shipped
 sources:
-  - src/treg/application/media.py
-  - src/treg/routers/media.py
-  - src/treg/models.py
-  - src/treg/alembic/versions/0037_media_hosting.py
+  - src/stray/application/media.py
+  - src/stray/routers/media.py
+  - src/stray/models.py
+  - src/stray/alembic/versions/0037_media_hosting.py
   - tests/test_media.py
 related:
   - architecture/proxy-model.md
@@ -19,14 +19,14 @@ AIGC endpoints (reAPI, PiAPI, OpenRouter video) take reference images, voice cli
 public URLs that the vendor's fetcher downloads. An agent on a laptop has no host, and every paste
 host tried failed a vendor's pre-flight probe at least once: catbox unreachable from reAPI's
 fal-backed probe, tmpfiles answering HTML on its download link, uguu timing out. Five submissions
-to land one 18 s Seedance task was the cost on 2026-09-14. `treg host <file>` removes that class.
+to land one 18 s Seedance task was the cost on 2026-09-14. `stray host <file>` removes that class.
 
 ## Shape
 
 - `POST /media` (member+, raw body, `Content-Type` names the media type) stores the bytes in the
   `media` table and answers `{url, token, content_type, size, expires_at}`. The URL is
   `<public_url>/m/<token>`.
-- `GET /m/{token}` is unauthenticated on purpose: the vendor's fetcher holds no treg token. The
+- `GET /m/{token}` is unauthenticated on purpose: the vendor's fetcher holds no stray token. The
   token is 192 random bits and the row names nothing about the org, so the URL is the only
   capability. Served inline with the stored type, `Cache-Control: public, max-age=3600` and
   `X-Robots-Tag: noindex`. No listing endpoint exists.
@@ -49,7 +49,7 @@ media table's size, not its correctness, becomes the problem.
 
 ## Not built
 
-- A treg-side pre-flight fetch of the URLs an agent passes to a vendor. It would model the
+- A stray-side pre-flight fetch of the URLs an agent passes to a vendor. It would model the
   vendor's probe, which non-negotiable 4 forbids, and it cannot see host blocks that apply only to
   the vendor's fetcher (catbox served us 200 while fal got nothing).
 - An MCP `host` tool. MCP clients that need it can `POST /media` directly; add the tool when an

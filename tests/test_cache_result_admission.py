@@ -4,11 +4,11 @@ import json
 import pytest
 from sqlalchemy import select
 
-from treg import archive
-from treg.application.call import service
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import ArchiveKey, ArchiveSnapshot
+from stray import archive
+from stray.application.call import service
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import ArchiveKey, ArchiveSnapshot
 from tests.test_marketplace_call import _fake_relay
 
 EP = 'hunter.companies.emails'
@@ -16,8 +16,8 @@ URL = f'/call/{EP}?domain=example.com'
 
 @pytest.fixture
 def cache_on(monkeypatch):
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'hunter')
-    monkeypatch.setenv('TREG_PLATFORM_KEY_HUNTER', 'test-platform-key')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'hunter')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_HUNTER', 'test-platform-key')
     get_settings.cache_clear()
     s = get_settings()
     monkeypatch.setattr(s, 'archive_mode', 'serve')
@@ -32,7 +32,7 @@ async def test_empty_results_never_serve_or_extend_ttl(clients, cache_on, monkey
     for _ in range(3):
         r = await clients.get(URL)
         assert r.status_code == 200 and r.content == raw
-        assert r.headers.get('x-treg-cache') != 'hit'
+        assert r.headers.get('x-stray-cache') != 'hit'
         await archive.drain()
     async with session_maker() as s:
         k = (await s.execute(select(ArchiveKey))).scalar_one()
@@ -60,7 +60,7 @@ async def _key():
 
 @pytest.mark.parametrize('read_source', ['db', 'r2', 'db_fallback'])
 async def test_positive_cache_preserves_bytes_billing_and_history(clients, cache_on, monkeypatch, read_source):
-    from treg import archive_bodies, audit
+    from stray import archive_bodies, audit
     from tests.fake_object_store import MemoryObjectStore
     objects = MemoryObjectStore()
     monkeypatch.setattr(archive_bodies, '_store', objects)
@@ -71,7 +71,7 @@ async def test_positive_cache_preserves_bytes_billing_and_history(clients, cache
     if read_source == 'r2':
         objects.objects[archive.content_hash(FOUND)] = FOUND  # Historical copy, original DB marker.
     second = await _call(clients, monkeypatch, EMPTY)
-    assert second.headers['x-treg-cache'] == 'hit'
+    assert second.headers['x-stray-cache'] == 'hit'
     assert first.content == second.content == FOUND
     k = await _key()
     assert k.stable_seen == k.change_seen == 0  # serving is not observation
@@ -81,7 +81,7 @@ async def test_positive_cache_preserves_bytes_billing_and_history(clients, cache
     for row in rows:
         result = (await clients.get(f"/calls/{row['id']}/result")).json()
         assert result['response']['body_text'] == FOUND.decode()
-    from treg.models import CallRecord
+    from stray.models import CallRecord
     async with session_maker() as s:
         records = (await s.execute(select(CallRecord))).scalars().all()
         assert len(records) == 2
@@ -97,7 +97,7 @@ async def test_disappearance_invalidates_once_and_retains_history(clients, cache
     await _call(clients, monkeypatch, EMPTY, live=True)
     for _ in range(2):
         r = await _call(clients, monkeypatch, EMPTY)
-        assert r.content == EMPTY and 'x-treg-cache' not in r.headers
+        assert r.content == EMPTY and 'x-stray-cache' not in r.headers
     k = await _key()
     assert (k.stable_seen, k.change_seen, k.ttl_s, k.result_state) == (0, 1, initial // 2, 'empty')
     async with session_maker() as s:
@@ -124,7 +124,7 @@ async def test_uncertain_result_does_not_replace_or_refresh_positive(clients, ca
     assert (after.result_snapshot_id, after.ttl_s, after.stable_seen, after.change_seen) == (
         before.result_snapshot_id, before.ttl_s, 0, 0)
     r = await _call(clients, monkeypatch, EMPTY)
-    assert r.content == FOUND and r.headers['x-treg-cache'] == 'hit'
+    assert r.content == FOUND and r.headers['x-stray-cache'] == 'hit'
     # The error's fresh timestamp must not renew the retained positive result.
     async with session_maker() as s:
         snap = await s.get(ArchiveSnapshot, before.result_snapshot_id)
@@ -132,7 +132,7 @@ async def test_uncertain_result_does_not_replace_or_refresh_positive(clients, ca
         s.add(snap)
         await s.commit()
     r = await _call(clients, monkeypatch, EMPTY)
-    assert r.content == EMPTY and 'x-treg-cache' not in r.headers
+    assert r.content == EMPTY and 'x-stray-cache' not in r.headers
 
 
 @pytest.mark.parametrize('raw,expected_hit', [(EMPTY, False), (FOUND, True)])
@@ -144,7 +144,7 @@ async def test_legacy_cache_is_classified_before_serving(clients, cache_on, monk
         s.add(k)
         await s.commit()
     r = await _call(clients, monkeypatch, raw)
-    assert (r.headers.get('x-treg-cache') == 'hit') == expected_hit
+    assert (r.headers.get('x-stray-cache') == 'hit') == expected_hit
     k = await _key()
     assert k.stable_seen == k.change_seen == 0
 
@@ -210,7 +210,7 @@ async def test_result_and_admission_telemetry(clients, cache_on, monkeypatch):
     ('findymail.search.name', 200, {'contact': None}, 'empty'),
 ])
 def test_conservative_result_rules(ep, status, body, state):
-    from treg.domain.catalog.results import classify
+    from stray.domain.catalog.results import classify
     result = classify(ep, status, json.dumps(body).encode())
     assert result.state == state
     assert result.hit == {'found': True, 'empty': False}.get(state)
@@ -226,7 +226,7 @@ async def test_old_writer_cannot_leave_a_stale_positive_pointer(clients, cache_o
                               body=EMPTY, size_bytes=len(EMPTY)))
         await s.commit()
     r = await _call(clients, monkeypatch, EMPTY)
-    assert r.content == EMPTY and 'x-treg-cache' not in r.headers
+    assert r.content == EMPTY and 'x-stray-cache' not in r.headers
     key = await _key()
     assert key.result_state == 'empty' and key.result_observed_version == 3
     assert key.stable_seen == key.change_seen == 0  # no backfilled statistical evidence
@@ -267,7 +267,7 @@ async def test_endpoint_without_hit_miss_keeps_original_cache_and_learning(clien
     assert key.stable_seen == 1 and key.change_seen == 0
     assert key.ttl_s == 5400 and key.result_state is None
     r = await clients.get(url)
-    assert r.headers.get('x-treg-cache') == 'hit' and r.content == raw
+    assert r.headers.get('x-stray-cache') == 'hit' and r.content == raw
 
 
 async def test_existing_verified_adapter_also_rejects_misses(clients, cache_on, monkeypatch):
@@ -278,15 +278,15 @@ async def test_existing_verified_adapter_also_rejects_misses(clients, cache_on, 
     for _ in range(2):
         r = await clients.get('/call/' + ep + '?domain=example.com')
         assert r.status_code == 200 and r.content == raw
-        assert 'x-treg-cache' not in r.headers
+        assert 'x-stray-cache' not in r.headers
         await archive.drain()
     assert (await _key()).result_state == 'empty'
 
 
 async def test_unverified_hit_miss_does_not_enable_new_policy(clients, cache_on, monkeypatch):
     from dataclasses import replace
-    from treg.domain.catalog.store import load
-    from treg.domain.catalog.results import has_result_rules
+    from stray.domain.catalog.store import load
+    from stray.domain.catalog.results import has_result_rules
     cat = load()
     monkeypatch.setitem(cat.adapters, EP, replace(cat.adapters[EP], verified=False))
     assert not has_result_rules(EP)
@@ -296,7 +296,7 @@ async def test_unverified_hit_miss_does_not_enable_new_policy(clients, cache_on,
     await _call(clients, monkeypatch, EMPTY)
     r = await _call(clients, monkeypatch, FOUND)
     # Preserves the original behavior for endpoints whose hit/miss is not enabled.
-    assert r.content == EMPTY and r.headers.get('x-treg-cache') == 'hit'
+    assert r.content == EMPTY and r.headers.get('x-stray-cache') == 'hit'
     props = [p for event, p in events if event == 'tool_called']
     assert all(p['cache_result_policy'] == 'legacy' and p['cache_admission'] == 'not_applicable' for p in props)
 
@@ -304,15 +304,15 @@ async def test_unverified_hit_miss_does_not_enable_new_policy(clients, cache_on,
 @pytest.mark.parametrize('ep', ['hunter.companies.enrich', 'tikhub.tiktok.video.comments'])
 def test_verified_adapter_positive_fixture_is_admissible(ep):
     from pathlib import Path
-    from treg.domain.catalog.results import classify, has_result_rules
+    from stray.domain.catalog.results import classify, has_result_rules
     assert has_result_rules(ep)
-    body = (Path(__file__).parents[1] / 'src/treg/catalog/examples' / (ep + '.json')).read_bytes()
+    body = (Path(__file__).parents[1] / 'src/stray/catalog/examples' / (ep + '.json')).read_bytes()
     result = classify(ep, 200, body)
     assert result.state == 'found' and result.reason == 'adapter_hit'
 
 
 async def test_ignore_cannot_mask_result_transitions_and_uses_decisive_baseline(clients, cache_on, monkeypatch):
-    from treg.domain.catalog import store
+    from stray.domain.catalog import store
     monkeypatch.setitem(store.load().by_id[EP], 'cache',
                         {'mode': 'transient', 'ignore_paths': ['meta', 'data']})
     events = []
@@ -337,7 +337,7 @@ async def test_ignore_cannot_mask_result_transitions_and_uses_decisive_baseline(
     await _call(clients, monkeypatch, EMPTY)
     assert (await _key()).change_seen == 1
     response = await _call(clients, monkeypatch, changed)
-    assert response.content == changed and 'x-treg-cache' not in response.headers
+    assert response.content == changed and 'x-stray-cache' not in response.headers
     assert (await _key()).change_seen == 2
 
 
@@ -354,16 +354,16 @@ async def test_operator_cap_bounds_existing_ttl_and_preserves_bypass(clients, ca
         s.add(k)
         s.add(snap)
         await s.commit()
-    assert (await _call(clients, monkeypatch, EMPTY)).headers['x-treg-cache'] == 'hit'
+    assert (await _call(clients, monkeypatch, EMPTY)).headers['x-stray-cache'] == 'hit'
     async with session_maker() as s:
         snap = (await s.execute(select(ArchiveSnapshot))).scalar_one()
         snap.fetched_at -= timedelta(hours=2)
         s.add(snap)
         await s.commit()
     fresh = await _call(clients, monkeypatch, FOUND)
-    assert 'x-treg-cache' not in fresh.headers
+    assert 'x-stray-cache' not in fresh.headers
     bypass = await _call(clients, monkeypatch, EMPTY, live=True)
-    assert bypass.content == EMPTY and 'x-treg-cache' not in bypass.headers
+    assert bypass.content == EMPTY and 'x-stray-cache' not in bypass.headers
 
 
 async def test_default_json_comparison_preserves_call_bytes(clients, cache_on, monkeypatch):
@@ -375,7 +375,7 @@ async def test_default_json_comparison_preserves_call_bytes(clients, cache_on, m
     k = await _key()
     assert (k.stable_seen, k.change_seen) == (1, 0)
     cached = await _call(clients, monkeypatch, EMPTY)
-    assert cached.headers['x-treg-cache'] == 'hit' and cached.content == reordered
+    assert cached.headers['x-stray-cache'] == 'hit' and cached.content == reordered
     for raw in (first, reordered):
         result = await archive.resolve_result(k.key_hash, archive.content_hash(raw))
         assert result['response']['body_text'] == raw.decode()

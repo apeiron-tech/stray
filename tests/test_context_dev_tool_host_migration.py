@@ -9,7 +9,7 @@ from alembic.operations import Operations
 
 
 def test_context_dev_host_migration_updates_only_provider_created_tools():
-    path = (Path(__file__).parents[1] / "src/treg/alembic/versions/0051_context_dev_tool_host.py")
+    path = (Path(__file__).parents[1] / "src/stray/alembic/versions/0051_context_dev_tool_host.py")
     spec = importlib.util.spec_from_file_location("context_dev_host_migration", path)
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)

@@ -7,17 +7,17 @@ from __future__ import annotations
 from sqlmodel import select
 
 from tests.test_catalog_find import _abstain, _fake_v2, _on
-from treg import audit
-from treg import mcp as _mcp
-from treg.application import catalog_find as find
-from treg.application import catalog_search as cs
-from treg.application import search_experiment as se
-from treg.config import get_settings
-from treg.domain.catalog import find_recall as fr
-from treg.domain.catalog import store as catalog_store
-from treg.infra import judge as judge_infra
-from treg.infra.db import session_maker
-from treg.models import SearchLog, SearchMiss
+from stray import audit
+from stray import mcp as _mcp
+from stray.application import catalog_find as find
+from stray.application import catalog_search as cs
+from stray.application import search_experiment as se
+from stray.config import get_settings
+from stray.domain.catalog import find_recall as fr
+from stray.domain.catalog import store as catalog_store
+from stray.infra import judge as judge_infra
+from stray.infra.db import session_maker
+from stray.models import SearchLog, SearchMiss
 
 JOB = "people.email.find"            # 24 vendors, a routed row
 JOB2 = "people.email.verify"         # 13 vendors, a routed row
@@ -66,13 +66,13 @@ def test_a_page_is_dealt_round_robin_across_jobs_and_laid_out_job_by_job():
     # 4 + 4: a routed parent leads each job, then its members in `expand`'s order
     caps = [r["ep"].get("capability") for r in rows]
     assert caps == [JOB] * 4 + [JOB2] * 4
-    assert rows[0]["ep"]["id"] == f"treg.{JOB}" and rows[4]["ep"]["id"] == f"treg.{JOB2}"
+    assert rows[0]["ep"]["id"] == f"stray.{JOB}" and rows[4]["ep"]["id"] == f"stray.{JOB2}"
     assert [r["ep"]["id"] for r in rows[1:4]] == [r["ep"]["id"] for r in g1.rows[:3]]
     assert total == len(g1.rows) + len(g2.rows) + 2
     assert [(j.capability, j.providers, j.shown) for j in jobs] == [(JOB, len(u1.providers), 3), (JOB2, len(u2.providers), 3)]
     # the vendors the page left out, on each job's first row; a routed parent is not a vendor
-    assert hidden[f"treg.{JOB}"] == len(set(u1.providers) - {r["ep"]["provider"] for r in rows[1:4]})
-    assert hidden[f"treg.{JOB2}"] == len(set(u2.providers) - {r["ep"]["provider"] for r in rows[5:8]})
+    assert hidden[f"stray.{JOB}"] == len(set(u1.providers) - {r["ep"]["provider"] for r in rows[1:4]})
+    assert hidden[f"stray.{JOB2}"] == len(set(u2.providers) - {r["ep"]["provider"] for r in rows[5:8]})
     # with routed discovery off, no parent and one more member per job
     rows_off, _, _, hidden_off = cs.agent_page(found, cat, 8, hub=[], steer=False)
     assert all(r["ep"].get("kind") != "routed" for r in rows_off) and len(rows_off) == 8
@@ -132,11 +132,11 @@ async def test_a_strong_answer_lists_the_job_by_vendor_with_a_verdict(clients, m
     assert out["verdict"] == "strong" and "reason" not in out
     assert out["jobs"] == [{"capability": JOB, "providers": 24, "shown": 7}]
     rows = out["results"]
-    assert len(rows) == 8 and rows[0]["endpoint_id"] == f"treg.{JOB}" and "below" not in rows[0]["routed"]
+    assert len(rows) == 8 and rows[0]["endpoint_id"] == f"stray.{JOB}" and "below" not in rows[0]["routed"]
     assert all(r["job"] == JOB and r["score"] is None for r in rows)
     assert rows[0]["more_providers"] == 24 - len({r["provider"] for r in rows[1:]})
     assert "more_providers" not in rows[1]
-    assert out["total_matches"] == 33 and out["hint"].startswith(f"{JOB} does this; catalog_get('treg.{JOB}')")
+    assert out["total_matches"] == 33 and out["hint"].startswith(f"{JOB} does this; catalog_get('stray.{JOB}')")
     assert out["next"].startswith("catalog_get")
     (_, _, kw), = seen
     assert kw["timeout_s"] == get_settings().typesafe_timeout_s        # the agent's budget, not find's

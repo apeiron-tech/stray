@@ -3,7 +3,7 @@
 
     uv run python scripts/provider_balances.py [--days 30] [--json]
 
-The collectors moved to `treg.domain.capacity.collectors` (the worker's `capacity sweep` persists
+The collectors moved to `stray.domain.capacity.collectors` (the worker's `capacity sweep` persists
 them as snapshots); this script is the by-hand reconciliation view: the provider's balance beside
 `/admin/reconcile/spend` for the window. Needs the platform keys in the env, like the sweep.
 """
@@ -20,11 +20,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from sqlalchemy.exc import OperationalError  # noqa: E402
 
-from treg import reconcile  # noqa: E402
-from treg.domain import money as ledger  # noqa: E402
-from treg.config import get_settings  # noqa: E402
-from treg.infra.db import session_maker  # noqa: E402
-from treg.domain.capacity.collectors import (  # noqa: E402,F401 — re-exported for older callers
+from stray import reconcile  # noqa: E402
+from stray.domain import money as ledger  # noqa: E402
+from stray.config import get_settings  # noqa: E402
+from stray.infra.db import session_maker  # noqa: E402
+from stray.domain.capacity.collectors import (  # noqa: E402,F401 — re-exported for older callers
     AUX_SLOTS, BALANCE_ROUTES, NO_BALANCE_API, all_platform_providers, provider_balance,
 )
 
@@ -39,7 +39,7 @@ async def main(days: int, as_json: bool) -> int:
             spend = await reconcile.provider_spend(db, since)
     except OperationalError as exc:  # the ledger tables land in the explicit release upgrade
         print(f"no ledger in {get_settings().database_url}: {exc.orig}\n"
-              "Point TREG_DATABASE_URL at the deployment's database (the balances below still work).",
+              "Point STRAY_DATABASE_URL at the deployment's database (the balances below still work).",
               file=sys.stderr)
         spend = {"margin": float(get_settings().platform_margin or 0.0), "providers": []}
     by_provider = {p["provider"]: p for p in spend["providers"]}

@@ -10,10 +10,10 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from treg import agent_pages
-from treg.domain.catalog import store as catalog_store
-from treg.api import app
-from treg.config import get_settings
+from stray import agent_pages
+from stray.domain.catalog import store as catalog_store
+from stray.api import app
+from stray.config import get_settings
 
 
 def test_every_use_case_capability_exists_in_the_catalog():
@@ -48,7 +48,7 @@ async def test_hosted_only_pages_404_on_a_self_hosted_registry(monkeypatch, path
     """The install copy and worked runs describe treg.to's own hosted listing and grant, true of
     treg.to, false of every self-hosted registry. So off the reference hosts the page 404s and
     leaves the sitemap."""
-    monkeypatch.setenv("TREG_PUBLIC_URL", "https://registry.example.internal")
+    monkeypatch.setenv("STRAY_PUBLIC_URL", "https://registry.example.internal")
     get_settings.cache_clear()
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:
@@ -161,7 +161,7 @@ async def test_workflow_page_csv_carries_no_pii_and_casing_redirects(clients: As
 def test_every_workflow_step_capability_and_endpoint_exist():
     """A step names a capability and the endpoint the worked run used. Both must be in the catalog,
     or the page prices a step from nothing."""
-    from treg.routers import web
+    from stray.routers import web
     cat = catalog_store.load()
     for key, spec in agent_pages.WORKFLOWS.items():
         for name, cap, _asks, ep_id, _why in spec["steps"]:
@@ -170,7 +170,7 @@ def test_every_workflow_step_capability_and_endpoint_exist():
                 dec = agent_pages.DECISION_STEPS[ep_id]
                 assert dec["usd"] and dec["unit"] and dec["link"].startswith("/"), (key, name, ep_id)
                 continue
-            # the same filter the page applies: a routed meta-row would render as provider "treg"
+            # the same filter the page applies: a routed meta-row would render as provider "stray"
             # with no price and drop out of the live total
             eps = [e for e in cat.for_capability(cap) if web._pub(e)]
             assert eps, (key, name, cap)
@@ -180,7 +180,7 @@ def test_every_workflow_step_capability_and_endpoint_exist():
 async def test_pages_off_the_shared_shell_carry_adtrack(clients: AsyncClient):
     """Every page rendered through `_page()` must load `/adtrack.js` exactly once.
 
-    Without it no `treg_ad` cookie is set, so `org.ad_gclid` stays NULL and `adsconv.queue()`
+    Without it no `stray_ad` cookie is set, so `org.ad_gclid` stays NULL and `adsconv.queue()`
     no-ops: a paid click can sign up and make its first call and Google never hears about it,
     silently. `_page()` is the one shell, so one of its callers stands for all of them.
 
@@ -208,19 +208,19 @@ async def test_possessive_slug_redirects_hold_in_every_shape_they_were_live(clie
         assert f"{get_settings().public_url.rstrip("/")}/use-cases/{new}" in sitemap, new
 
 
-async def test_routed_rows_never_surface_a_provider_named_treg(clients: AsyncClient):
+async def test_routed_rows_never_surface_a_provider_named_stray(clients: AsyncClient):
     """PR #242's `kind: routed` meta-rows delegate to children that are already listed, so on any
-    public surface they double-count and print a vendor named "treg" (the brand is treg.to, and
-    treg is not a vendor). `_pub` is the one filter every public page reads, and the provider grid
-    feeds both the sitemap and /catalog's prerender — so /tools/treg must not exist."""
-    from treg.routers.web import _provider_rows, _pub
+    public surface they double-count and print a vendor named "stray" (the brand is treg.to, and
+    stray is not a vendor). `_pub` is the one filter every public page reads, and the provider grid
+    feeds both the sitemap and /catalog's prerender — so /tools/stray must not exist."""
+    from stray.routers.web import _provider_rows, _pub
     cat = catalog_store.load()
     routed = [e for e in cat.endpoints if e.get("kind") == "routed"]
     assert routed, "no routed rows in the catalog — retire this test's premise"
     assert not any(_pub(e) for e in routed)
-    assert "treg" not in {r["service"] for r in _provider_rows()}
-    assert (await clients.get("/tools/treg")).status_code == 404
-    assert "/tools/treg<" not in (await clients.get("/sitemap.xml")).text
+    assert "stray" not in {r["service"] for r in _provider_rows()}
+    assert (await clients.get("/tools/stray")).status_code == 404
+    assert "/tools/stray<" not in (await clients.get("/sitemap.xml")).text
 
 
 async def test_every_workflow_csv_route_serves(clients: AsyncClient):
@@ -271,14 +271,14 @@ async def test_focused_agent_pages_are_not_the_template_with_a_name_swapped(clie
 
 
 async def test_agent_guides_name_real_endpoints_and_live_links(clients: AsyncClient):
-    """A guide is hand-written, so nothing derives it from the catalog. Every `treg call <id>` it
+    """A guide is hand-written, so nothing derives it from the catalog. Every `stray call <id>` it
     prints must exist, and every internal link it carries must answer, or the page teaches a call
     that 404s."""
     import re
     ids = {e["id"] for e in catalog_store.load().endpoints}
     for agent, spec in agent_pages.AGENTS.items():
         for g in spec.get("guide") or ():
-            for eid in re.findall(r"treg call ([\w.\-]+)", g["html"]):
+            for eid in re.findall(r"stray call ([\w.\-]+)", g["html"]):
                 assert eid in ids, (agent, eid)
             for href in re.findall(r'href="(/[^"#]*)', g["html"]):
                 r = await clients.get(href)
@@ -304,12 +304,12 @@ async def test_a_focused_agent_page_still_reaches_every_category(clients: AsyncC
                 assert f"/use-cases#{slug})" in md, (agent, category)
 
 
-def test_the_hermes_page_and_treg_mcp_install_agree_on_the_server(monkeypatch):
-    """`treg mcp install` detects Hermes but only prints a manual hint (the light CLI writes no YAML);
+def test_the_hermes_page_and_stray_mcp_install_agree_on_the_server(monkeypatch):
+    """`stray mcp install` detects Hermes but only prints a manual hint (the light CLI writes no YAML);
     the page shows the full block. Both must name the same MCP URL and the same config shape, and
     the page must use Hermes's registered tool names (mcp__<server>__<tool>, double underscores)."""
     import re
-    from treg import mcp_install
+    from stray import mcp_install
     monkeypatch.setitem(mcp_install.MANUAL_AGENTS["hermes"], "marker", lambda: True)
     # only=["hermes"] skips every auto-written agent, so nothing on this machine is touched
     out = mcp_install.install_mcp(base_url="https://treg.to", token="t", only=["hermes"])
@@ -320,13 +320,13 @@ def test_the_hermes_page_and_treg_mcp_install_agree_on_the_server(monkeypatch):
     block = spec["guide"][0]["html"]
     assert "mcp_servers:" in block and f'url: "{out["mcp_url"]}"' in block and "Bearer" in block
     steps = " ".join(spec["install_steps"])
-    assert re.findall(r"mcp__treg__\w+", steps) and not re.findall(r"mcp_treg_\w+", steps)
+    assert re.findall(r"mcp__stray__\w+", steps) and not re.findall(r"mcp_stray_\w+", steps)
 
 
 def test_agent_titles_fit_a_search_result():
     """A title past ~65 characters is cut in the result page; the census count is formatted in,
     so check with today's numbers."""
-    from treg.routers.web import _catalog_census
+    from stray.routers.web import _catalog_census
     n_eps, n_plats = _catalog_census()
     for agent, spec in agent_pages.AGENTS.items():
         title = spec["title"].format(n=f"{n_eps:,}", p=str(n_plats))
@@ -336,7 +336,7 @@ def test_agent_titles_fit_a_search_result():
 async def test_a_focused_page_keeps_every_category_anchor(clients: AsyncClient):
     """Collapsing a category into the "Everything else" table must not break links to
     /agents/<agent>#<category> that worked when the full table was there."""
-    from treg.routers.web import _anchor
+    from stray.routers.web import _anchor
     for agent, spec in agent_pages.AGENTS.items():
         if not spec.get("focus"):
             continue

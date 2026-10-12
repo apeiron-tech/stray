@@ -1,6 +1,6 @@
-"""`treg mcp install` — registering the treg MCP server into agents, header-authed, user-global.
+"""`stray mcp install` — registering the stray MCP server into agents, header-authed, user-global.
 
-The header path is deliberate: treg 200s a valid Authorization header, so a client never falls back
+The header path is deliberate: stray 200s a valid Authorization header, so a client never falls back
 to OAuth discovery (verified against Claude Code). These tests lock the config each agent actually
 writes and the user-global scope — a project-scoped MCP entry is a per-repo surprise, not a setup.
 """
@@ -15,7 +15,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from treg import mcp_install
+from stray import mcp_install
 
 
 @contextmanager
@@ -44,18 +44,18 @@ def test_json_agents_write_user_global_header_config(tmp_path, monkeypatch):
 
     cursor = json.loads((cur / "mcp.json").read_text())
     assert cursor["mcpServers"]["other"] == {"url": "http://x"}          # untouched
-    treg = cursor["mcpServers"]["treg"]
-    assert treg["url"] == "https://treg.to/mcp/"
-    assert treg["headers"]["Authorization"] == "Bearer TESTKEY"
+    stray = cursor["mcpServers"]["stray"]
+    assert stray["url"] == "https://treg.to/mcp/"
+    assert stray["headers"]["Authorization"] == "Bearer TESTKEY"
 
     oc = json.loads((tmp_path / ".config" / "opencode" / "opencode.json").read_text())
-    assert oc["mcp"]["treg"]["type"] == "remote" and oc["mcp"]["treg"]["enabled"] is True
-    assert oc["mcp"]["treg"]["headers"]["Authorization"] == "Bearer TESTKEY"
+    assert oc["mcp"]["stray"]["type"] == "remote" and oc["mcp"]["stray"]["enabled"] is True
+    assert oc["mcp"]["stray"]["headers"]["Authorization"] == "Bearer TESTKEY"
 
     # idempotent: a second run leaves exactly one entry, still correct
     mcp_install.install_mcp(base_url="https://treg.to", token="TESTKEY", only=["cursor"])
     again = json.loads((cur / "mcp.json").read_text())
-    assert list(again["mcpServers"].keys()) == ["other", "treg"]
+    assert list(again["mcpServers"].keys()) == ["other", "stray"]
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Windows ACLs are not POSIX mode bits")
@@ -80,7 +80,7 @@ def test_json_agent_config_is_0600_for_new_and_existing_files(
 
     with _umask(mask):
         status, _ = mcp_install._write_json_agent(
-            meta, "treg", "https://treg.example/mcp/", "synthetic-token")
+            meta, "stray", "https://stray.example/mcp/", "synthetic-token")
 
     assert status == "ok"
     assert stat.S_IMODE(target.stat().st_mode) == 0o600
@@ -104,7 +104,7 @@ def test_json_agent_ignores_the_old_fixed_tmp_symlink(tmp_path):
     }
 
     status, _ = mcp_install._write_json_agent(
-        meta, "treg", "https://treg.example/mcp/", "synthetic-token")
+        meta, "stray", "https://stray.example/mcp/", "synthetic-token")
 
     assert status == "ok"
     assert old_tmp.is_symlink()
@@ -122,7 +122,7 @@ def test_json_agent_creates_private_config_directory(tmp_path):
 
     with _umask(0o000):
         status, _ = mcp_install._write_json_agent(
-            meta, "treg", "https://treg.example/mcp/", "synthetic-token")
+            meta, "stray", "https://stray.example/mcp/", "synthetic-token")
 
     assert status == "ok"
     assert stat.S_IMODE(target.parent.stat().st_mode) == 0o700
@@ -145,7 +145,7 @@ def test_json_agent_failure_cleans_temp_and_preserves_original(tmp_path, monkeyp
     monkeypatch.setattr(mcp_install.os, "replace", fail_replace)
 
     status, detail = mcp_install._write_json_agent(
-        meta, "treg", "https://treg.example/mcp/", "never-print-this-token")
+        meta, "stray", "https://stray.example/mcp/", "never-print-this-token")
 
     assert status == "error"
     assert "never-print-this-token" not in detail
@@ -175,7 +175,7 @@ def test_json_agent_concurrent_writers_use_distinct_tempfiles(tmp_path, monkeypa
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(
             lambda token: mcp_install._write_json_agent(
-                meta, "treg", "https://treg.example/mcp/", token),
+                meta, "stray", "https://stray.example/mcp/", token),
             ["synthetic-token-one", "synthetic-token-two"],
         ))
 
@@ -192,7 +192,7 @@ def test_actual_mcp_install_cli_writes_restricted_config(tmp_path, monkeypatch):
     """Exercise parsing, token validation, agent detection and the end-user install command."""
     import httpx
 
-    from treg import cli, cli_analytics
+    from stray import cli, cli_analytics
 
     class FakeClient:
         def __enter__(self):
@@ -204,14 +204,14 @@ def test_actual_mcp_install_cli_writes_restricted_config(tmp_path, monkeypatch):
         def get(self, path):
             assert path == "/auth/me"
             return httpx.Response(200, json={"email": "synthetic@example.test"},
-                                  request=httpx.Request("GET", "https://treg.example/auth/me"))
+                                  request=httpx.Request("GET", "https://stray.example/auth/me"))
 
     def fail_external_command(*args, **kwargs):
         raise AssertionError("the isolated CLI test must not run an external command")
 
-    config = tmp_path / "treg-config.json"
+    config = tmp_path / "stray-config.json"
     config.write_text(json.dumps({
-        "base_url": "https://treg.example",
+        "base_url": "https://stray.example",
         "token": "synthetic-cli-token",
     }))
     opencode_dir = tmp_path / ".config" / "opencode"
@@ -229,8 +229,8 @@ def test_actual_mcp_install_cli_writes_restricted_config(tmp_path, monkeypatch):
     monkeypatch.setattr(mcp_install, "MANUAL_AGENTS", {})
     monkeypatch.setattr(mcp_install.subprocess, "run", fail_external_command)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / ".config"))
-    monkeypatch.delenv("TREG_TOKEN", raising=False)
-    monkeypatch.delenv("TREG_URL", raising=False)
+    monkeypatch.delenv("STRAY_TOKEN", raising=False)
+    monkeypatch.delenv("STRAY_URL", raising=False)
 
     with _umask(0o022):
         cli.main(["mcp", "install"])
@@ -238,7 +238,7 @@ def test_actual_mcp_install_cli_writes_restricted_config(tmp_path, monkeypatch):
     assert stat.S_IMODE(target.stat().st_mode) == 0o600
     written = json.loads(target.read_text())
     assert written["mcp"]["other"] == {"url": "https://other.example"}
-    assert written["mcp"]["treg"]["headers"]["Authorization"] == \
+    assert written["mcp"]["stray"]["headers"]["Authorization"] == \
         "Bearer synthetic-cli-token"
 
 
@@ -283,7 +283,7 @@ def test_only_empty_means_NONE_not_all(tmp_path, monkeypatch):
 
 def test_cmd_mcp_install_REFUSES_a_bad_token_before_writing(tmp_path, monkeypatch):
     """The command validates the token against /auth/me before touching any agent config — the same
-    check `treg login --token` runs. Without it a garbage token (stale TREG_TOKEN, mangled paste)
+    check `stray login --token` runs. Without it a garbage token (stale STRAY_TOKEN, mangled paste)
     fans out silently into every agent on the machine and surfaces days later as per-provider
     "invalid token" errors inside whichever agent tries a call."""
     from types import SimpleNamespace
@@ -291,7 +291,7 @@ def test_cmd_mcp_install_REFUSES_a_bad_token_before_writing(tmp_path, monkeypatc
     import httpx
     import pytest
 
-    from treg import cli
+    from stray import cli
 
     class FakeClient:
         def __enter__(self):
@@ -326,7 +326,7 @@ def test_cmd_mcp_install_retries_transient_ssl_errors(tmp_path, monkeypatch):
 
     import httpx
 
-    from treg import cli
+    from stray import cli
 
     attempts = []
 
@@ -357,7 +357,7 @@ def test_is_transient_network_error_detects_ssl_and_connection_errors():
     """_is_transient_network_error classifies errors so mcp install knows what to retry."""
     import ssl
     import httpx
-    from treg import cli
+    from stray import cli
 
     # Create an SSL error the same way Python's ssl module does
     ssl_err = ssl.SSLError(1, "[SSL: WRONG_VERSION_NUMBER] wrong version number")
@@ -385,12 +385,12 @@ def _codex_install(tmp_path, monkeypatch, existing: str | None, token="TESTKEY")
 
 def test_codex_writes_inline_header_table_not_an_env_var(tmp_path, monkeypatch):
     """The whole point: `http_headers` inline, never `bearer_token_env_var` — a token handed to Codex
-    by env-var reference vanishes on the next app restart and Codex silently drops every treg tool."""
+    by env-var reference vanishes on the next app restart and Codex silently drops every stray tool."""
     import tomllib
     out, cfg = _codex_install(tmp_path, monkeypatch, existing=None)
     assert out["results"] == [("Codex", "ok", str(cfg))] and out["manual"] == [], out
     data = tomllib.loads(cfg.read_text())
-    assert data["mcp_servers"]["treg"] == {
+    assert data["mcp_servers"]["stray"] == {
         "url": "https://treg.to/mcp/", "http_headers": {"Authorization": "Bearer TESTKEY"}}
     assert "bearer_token_env_var" not in cfg.read_text()
     if os.name != "nt":
@@ -402,9 +402,9 @@ def test_codex_replaces_a_stale_env_var_table_and_keeps_the_rest(tmp_path, monke
     other table — before and after ours, including the sub-table style — survives byte-for-byte."""
     import tomllib
     before = ('model = "gpt-5"\n\n[mcp_servers.figma]\nurl = "https://mcp.figma.com/mcp"\n\n'
-              '[mcp_servers.treg]\nurl = "https://treg.to/mcp/"\nbearer_token_env_var = "TREG_TOKEN"\n\n'
+              '[mcp_servers.stray]\nurl = "https://treg.to/mcp/"\nbearer_token_env_var = "STRAY_TOKEN"\n\n'
               # a hand-wired twin under another name, token in the env-var-NAME field (seen in the wild)
-              '[mcp_servers.treg-to_mcp]\nurl = "https://treg.to/mcp/"\nbearer_token_env_var = "eyJ.x"\n\n'
+              '[mcp_servers.stray-to_mcp]\nurl = "https://treg.to/mcp/"\nbearer_token_env_var = "eyJ.x"\n\n'
               '[mcp_servers.node_repl]\ncommand = "node_repl"\n\n[mcp_servers.node_repl.env]\nX = "1"\n')
     out, cfg = _codex_install(tmp_path, monkeypatch, existing=before, token="NEWKEY")
     assert out["results"][0][1] == "ok", out
@@ -412,24 +412,24 @@ def test_codex_replaces_a_stale_env_var_table_and_keeps_the_rest(tmp_path, monke
     assert data["model"] == "gpt-5"
     assert data["mcp_servers"]["figma"] == {"url": "https://mcp.figma.com/mcp"}
     assert data["mcp_servers"]["node_repl"] == {"command": "node_repl", "env": {"X": "1"}}
-    assert data["mcp_servers"]["treg"] == {
+    assert data["mcp_servers"]["stray"] == {
         "url": "https://treg.to/mcp/", "http_headers": {"Authorization": "Bearer NEWKEY"}}
-    assert cfg.read_text().count("[mcp_servers.treg]") == 1
-    assert "treg-to_mcp" not in cfg.read_text() and "eyJ.x" not in cfg.read_text()
+    assert cfg.read_text().count("[mcp_servers.stray]") == 1
+    assert "stray-to_mcp" not in cfg.read_text() and "eyJ.x" not in cfg.read_text()
     # idempotent
     mcp_install.install_mcp(base_url="https://treg.to", token="NEWKEY", only=["codex"])
-    assert cfg.read_text().count("[mcp_servers.treg]") == 1
+    assert cfg.read_text().count("[mcp_servers.stray]") == 1
 
 
 def test_codex_refuses_to_touch_a_config_it_cannot_prove_correct(tmp_path, monkeypatch):
-    """Unparseable TOML, or a hand-written `[mcp_servers.treg.http_headers]` sub-table that would
+    """Unparseable TOML, or a hand-written `[mcp_servers.stray.http_headers]` sub-table that would
     collide with our inline map: report an error and leave the file exactly as it was."""
-    broken = 'model = "gpt-5"\n[mcp_servers.treg\nurl = "x"\n'
+    broken = 'model = "gpt-5"\n[mcp_servers.stray\nurl = "x"\n'
     out, cfg = _codex_install(tmp_path, monkeypatch, existing=broken)
     assert out["results"][0][1] == "error" and cfg.read_text() == broken
 
-    subtable = ('[mcp_servers.treg]\nurl = "https://treg.to/mcp/"\n\n'
-                '[mcp_servers.treg.http_headers]\nAuthorization = "Bearer OLD"\n')
+    subtable = ('[mcp_servers.stray]\nurl = "https://treg.to/mcp/"\n\n'
+                '[mcp_servers.stray.http_headers]\nAuthorization = "Bearer OLD"\n')
     (tmp_path / ".codex" / "config.toml").write_text(subtable)
     out = mcp_install.install_mcp(base_url="https://treg.to", token="NEW", only=["codex"])
     assert out["results"][0][1] == "error", out

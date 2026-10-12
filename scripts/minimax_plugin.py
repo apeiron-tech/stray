@@ -31,7 +31,7 @@ SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 PATH_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
 ICON_EXT = {".png", ".jpg", ".jpeg", ".webp"}
 # Things that must never ship. The frontmatter and prose talk ABOUT tokens, so match value shapes.
-SECRET_RE = re.compile(r"(sk-[A-Za-z0-9]{20,}|treg_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|"
+SECRET_RE = re.compile(r"(sk-[A-Za-z0-9]{20,}|stray_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|"
                        r"gh[pousr]_[A-Za-z0-9]{30,}|xox[baprs]-[A-Za-z0-9-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY)")
 INSTALL_SCRIPT_EXT = {".sh", ".bash", ".zsh", ".bat", ".cmd", ".ps1", ".exe", ".dll", ".so", ".dylib"}
 

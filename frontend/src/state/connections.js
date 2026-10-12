@@ -36,7 +36,7 @@ async connectProvider(p, capability, conn){
         const d=await this.api('/oauth/start',{method:'POST',headers:{'content-type':'application/json'},
           // connection_id present = reconnect/widen THAT account; absent = attach another one.
           body:JSON.stringify({provider:p.service, capability, connection_id:conn?conn.id:null})});
-        const w=window.open(d.consent_url,'treg-connect','width=560,height=720');
+        const w=window.open(d.consent_url,'stray-connect','width=560,height=720');
         if(!w){ this.connErr='Popup blocked — allow popups, or open: '+d.consent_url; this.connBusy=false; return; }
         for(let i=0;i<150;i++){
           await new Promise(r=>setTimeout(r,2000));
@@ -168,7 +168,7 @@ connProvider(c){ return this.providerIndex.get(c.provider)||null; },
 // The one thing a connection needs from a person, if anything: the card's status and its action.
     connState(c){
       if(c.expiry_state==='expired') return {key:'reconnect', tone:'bad', label:'Expired', title:'This credential has expired. Reconnect to keep calling.'};
-      if(c.needs_reconnect) return {key:'reconnect', tone:'warn', label:'Expires soon', title:'treg cannot renew this one. Reconnect before '+(c.expires_at||'it expires')+'.'};
+      if(c.needs_reconnect) return {key:'reconnect', tone:'warn', label:'Expires soon', title:'stray cannot renew this one. Reconnect before '+(c.expires_at||'it expires')+'.'};
       if(c.needs_extra_credential) return {key:'second', tone:'warn', label:'Needs a second credential', title:c.extra_credential_note};
       if(c.health==='invalid') return {key:'failing', tone:'bad', label:'Failing', title:c.last_error||'The last call with this credential failed.'};
       if(c.health==='setup_required') return {key:'setup', tone:'warn', label:'Setup required', title:c.health_detail||'The account needs setting up upstream.'};
@@ -177,7 +177,7 @@ connProvider(c){ return this.providerIndex.get(c.provider)||null; },
       return {key:'ok', tone:'ok', label:'Connected', title:'Saved. It is checked on its first call.'};
     },
 // How a provider's credential is obtained, in the words a person uses for it: the key's own name,
-    // or the account they log in with ("Sign in" read as signing in to treg; the card's logo and name
+    // or the account they log in with ("Sign in" read as signing in to stray; the card's logo and name
     // already say whose account, and the catalog calls it "your account" too).
     authLabel(p){ return this.pastedCredential(p) ? (p.token_label || 'API key') : 'Your account'; },
 pastedCredential(p){ return !!p && (p.auth_kind==='key' || p.auth_kind==='token'); },

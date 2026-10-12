@@ -1,7 +1,7 @@
 """The email-domain blocklist, refused at every door.
 
 A new team is created with a promotional balance, which makes bulk registration on throwaway
-addresses worth someone's while. The list is entirely configuration — `TREG_BLOCKED_EMAIL_DOMAINS`,
+addresses worth someone's while. The list is entirely configuration — `STRAY_BLOCKED_EMAIL_DOMAINS`,
 a dashboard edit so a new domain needs no deploy — and unset means nothing is blocked. Each rule is
 pinned here because the obvious implementation gets it wrong: match the DOMAIN only, walk parent
 domains but never the bare TLD, refuse sign-in as well as sign-up, cover BOTH doors that create a
@@ -17,12 +17,12 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
-from treg.api import app
-from treg.application import signup
-from treg.config import get_settings
-from treg.domain.identity.access import _is_blocked_email
-from treg.infra.db import reset_db, session_maker
-from treg.models import Org, User
+from stray.api import app
+from stray.application import signup
+from stray.config import get_settings
+from stray.domain.identity.access import _is_blocked_email
+from stray.infra.db import reset_db, session_maker
+from stray.models import Org, User
 
 # The list under test. `.example` is reserved by RFC 2606 and can never be a real user's domain, so
 # these tests can never collide with a customer.
@@ -109,7 +109,7 @@ def test_a_bare_public_suffix_can_never_be_an_entry(ops):
 
 def test_the_decision_logs_one_countable_line_per_block(ops, caplog):
     ops()
-    with caplog.at_level(logging.WARNING, logger="treg.auth"):
+    with caplog.at_level(logging.WARNING, logger="stray.auth"):
         assert signup.blocked_email("Farm@Mail.Farm-A.example", "otp_start")
         assert not signup.blocked_email("ok@company.dev", "otp_start")
     lines = [r.getMessage() for r in caplog.records if "signup_blocked_domain" in r.getMessage()]
@@ -120,7 +120,7 @@ def test_the_decision_fails_open_on_a_classifier_error(monkeypatch, caplog):
     def boom(email):
         raise RuntimeError("bad blocklist")
     monkeypatch.setattr(signup, "_is_blocked_email", boom)
-    with caplog.at_level(logging.ERROR, logger="treg.auth"):
+    with caplog.at_level(logging.ERROR, logger="stray.auth"):
         assert not signup.blocked_email("a@farm-a.example", "otp_start")   # the door stays open
     assert any("blocklist_error" in r.getMessage() for r in caplog.records)
 
@@ -150,7 +150,7 @@ async def test_otp_verify_refuses_a_code_minted_before_the_domain_was_listed(cli
     ops()
     r = await client.post("/auth/email/verify", json={"email": email, "code": code})
     assert r.status_code == 403 and r.json()["detail"] == REFUSAL
-    assert "treg_session" not in r.headers.get("set-cookie", "")
+    assert "stray_session" not in r.headers.get("set-cookie", "")
     assert await _user_count(email) == 0                      # refused BEFORE the row is created
 
 
@@ -186,7 +186,7 @@ async def test_open_registration_refuses_a_blocked_domain_and_creates_nothing(cl
 async def test_create_org_refuses_an_identity_registered_before_its_domain_was_listed(client, ops):
     tok = await _otp_login(client, "early@farm-a.example")
     ops()
-    r = await client.post("/orgs", json={"name": "Farm 1"}, headers={"X-Treg-Token": tok})
+    r = await client.post("/orgs", json={"name": "Farm 1"}, headers={"X-Stray-Token": tok})
     assert r.status_code == 403 and r.json()["detail"] == REFUSAL
     async with session_maker() as s:
         assert (await s.execute(select(Org))).scalars().all() == []
@@ -226,16 +226,16 @@ def _google_idp(email: str) -> FastAPI:
 async def social(monkeypatch):
     """Both social doors configured against in-process fake identity providers. The blocklist goes
     in through the environment, as an operator would set it."""
-    monkeypatch.setenv("TREG_GITHUB_CLIENT_ID", "cid")
-    monkeypatch.setenv("TREG_GITHUB_CLIENT_SECRET", "csec")
-    monkeypatch.setenv("TREG_GITHUB_TOKEN_URL", "http://idp/login/oauth/access_token")
-    monkeypatch.setenv("TREG_GITHUB_API_URL", "http://idp")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_ID", "gid")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_SECRET", "gsec")
-    monkeypatch.setenv("TREG_GOOGLE_TOKEN_URL", "http://idp/token")
-    monkeypatch.setenv("TREG_GOOGLE_USERINFO_URL", "http://idp/userinfo")
-    monkeypatch.setenv("TREG_SESSION_SECRET", "test-session-secret")
-    monkeypatch.setenv("TREG_BLOCKED_EMAIL_DOMAINS", OPS)
+    monkeypatch.setenv("STRAY_GITHUB_CLIENT_ID", "cid")
+    monkeypatch.setenv("STRAY_GITHUB_CLIENT_SECRET", "csec")
+    monkeypatch.setenv("STRAY_GITHUB_TOKEN_URL", "http://idp/login/oauth/access_token")
+    monkeypatch.setenv("STRAY_GITHUB_API_URL", "http://idp")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_ID", "gid")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_SECRET", "gsec")
+    monkeypatch.setenv("STRAY_GOOGLE_TOKEN_URL", "http://idp/token")
+    monkeypatch.setenv("STRAY_GOOGLE_USERINFO_URL", "http://idp/userinfo")
+    monkeypatch.setenv("STRAY_SESSION_SECRET", "test-session-secret")
+    monkeypatch.setenv("STRAY_BLOCKED_EMAIL_DOMAINS", OPS)
     get_settings.cache_clear()
     await reset_db()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:
@@ -249,7 +249,7 @@ async def _social_callback(c: AsyncClient, door: str, idp: FastAPI):
     app.state.http = AsyncClient(transport=ASGITransport(app=idp), base_url="http://idp")
     r = await c.get(f"/auth/{door}", follow_redirects=False)
     assert r.status_code == 302
-    state = c.cookies.get("treg_oauth_state")
+    state = c.cookies.get("stray_oauth_state")
     return await c.get(f"/auth/{door}/callback?code=abc&state={state}", follow_redirects=False)
 
 
@@ -263,7 +263,7 @@ async def test_social_login_on_a_blocked_domain_gets_a_refusal_page_and_no_sessi
     assert cb.status_code == 403, cb.text
     assert "cannot be used to sign in" in cb.text
     assert "farm-a" not in cb.text and "farm-b" not in cb.text
-    assert "treg_session" not in cb.headers.get("set-cookie", "")
+    assert "stray_session" not in cb.headers.get("set-cookie", "")
     assert (await social.get("/auth/me")).status_code == 401
     assert await _user_count(email) == 0
 
@@ -278,7 +278,7 @@ async def test_social_login_on_an_unlisted_domain_still_signs_in(social):
 
 @pytest.fixture
 def sent_invites(monkeypatch):
-    from treg import email as email_mod
+    from stray import email as email_mod
     sent = []
 
     async def _capture(email, inviter, org_name, role, code, email_token, expires_at="", link_base="",
@@ -292,10 +292,10 @@ def sent_invites(monkeypatch):
 
 async def _team_with_invite(c: AsyncClient, owner: str, invitee: str) -> dict:
     tok = await _otp_login(c, owner)
-    org = (await c.post("/orgs", json={"name": "Real Team"}, headers={"X-Treg-Token": tok})).json()
+    org = (await c.post("/orgs", json={"name": "Real Team"}, headers={"X-Stray-Token": tok})).json()
     tok = org["token"]
     r = await c.post(f"/orgs/{org['org_id']}/invites", json={"email": invitee, "role": "member"},
-                     headers={"X-Treg-Token": tok, "X-Treg-Org": org["org"]})
+                     headers={"X-Stray-Token": tok, "X-Stray-Org": org["org"]})
     assert r.status_code == 200, r.text
     return org
 
@@ -309,7 +309,7 @@ async def test_emailed_invite_link_refuses_a_blocked_domain(client, ops, sent_in
                                headers={"content-type": "application/x-www-form-urlencoded"},
                                follow_redirects=False)
         assert r.status_code == 403 and "cannot be used to sign in" in r.text
-        assert "treg_session" not in r.headers.get("set-cookie", "")
+        assert "stray_session" not in r.headers.get("set-cookie", "")
         assert (await visitor.get("/invites/mine")).status_code == 401
     assert await _user_count("farm@farm-a.example") == 0
 

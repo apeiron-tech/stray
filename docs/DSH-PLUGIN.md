@@ -7,7 +7,7 @@ can ship the connector **and** the CLI path in a single zero-config install.
 ## Install
 
 ```bash
-dsh plugin --profile <name> add github:superdesigndev/treg
+dsh plugin --profile <name> add github:apeiron-tech/stray
 dsh --profile <name>
 ```
 
@@ -23,7 +23,7 @@ we ship from their own profile patch without touching this package
 package.json                  the bundle manifest — `dsh.bundle.patch`
 dsh/cordis.patch.yml          the layer: the skill row + the MCP row
 dsh/index.js                  a ctx.skills provider over the tree below
-dsh/skills/treg/SKILL.md      GENERATED — never edit by hand
+dsh/skills/stray/SKILL.md      GENERATED — never edit by hand
 ```
 
 ## The MCP row is disabled until there is a token
@@ -34,18 +34,18 @@ call ([CLAUDE-PLUGIN.md](CLAUDE-PLUGIN.md)). dsh can express the better version 
 because a row carries a `disabled` expression evaluated at boot:
 
 ```yaml
-- id: treg-mcp
+- id: stray-mcp
   name: '@deepseek-ai/dsh-mcp-client'
-  disabled: !!js !process.env.TREG_TOKEN
+  disabled: !!js !process.env.STRAY_TOKEN
 ```
 
-So a user with `TREG_TOKEN` in their environment gets `mcp__treg__catalog_search` and friends at
-boot, and everyone else gets a clean install and a skill that walks them through `treg login`. The
+So a user with `STRAY_TOKEN` in their environment gets `mcp__stray__catalog_search` and friends at
+boot, and everyone else gets a clean install and a skill that walks them through `stray login`. The
 row is evaluated **at boot**, so a token exported afterwards needs a `dsh` restart — the bootstrap
 says so, because a human waiting for tools that will not appear this session is the failure mode.
 
-`treg mcp install` is deliberately *not* part of that path: it writes Claude Code, Cursor and
-opencode configs (`mcp_install.py`), and a dsh profile is none of those. `treg mcp install` prints
+`stray mcp install` is deliberately *not* part of that path: it writes Claude Code, Cursor and
+opencode configs (`mcp_install.py`), and a dsh profile is none of those. `stray mcp install` prints
 that instruction when it detects `~/.dsh`, and the dsh bootstrap steers away from it.
 
 ## Two constraints on `dsh/index.js`

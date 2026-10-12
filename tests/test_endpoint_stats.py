@@ -1,4 +1,4 @@
-"""Observed reliability per catalog endpoint — the half of "compare providers" only treg can answer.
+"""Observed reliability per catalog endpoint — the half of "compare providers" only stray can answer.
 
 These pin the judgement calls, not the arithmetic: which failures count against a provider, when we
 refuse to publish a rate at all, and that nothing identifying a caller leaks into an aggregate.
@@ -12,11 +12,11 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from httpx import AsyncClient
 
-from treg.domain.catalog import stats as endpoint_stats
-from treg.api import app
-from treg.infra.db import session_maker
-from treg.infra.catalog_observations import CachedEndpointObservationReader
-from treg.models import CallRecord
+from stray.domain.catalog import stats as endpoint_stats
+from stray.api import app
+from stray.infra.db import session_maker
+from stray.infra.catalog_observations import CachedEndpointObservationReader
+from stray.models import CallRecord
 
 EP = "tikhub.tiktok.user.profile"
 
@@ -52,7 +52,7 @@ async def test_a_caller_error_is_not_held_against_the_provider(clients: AsyncCli
     assert got["ok_rate"] == 1.0        # …but the rate is decided only by 2xx vs 5xx
 
 
-async def test_a_treg_refusal_is_not_evidence_about_the_endpoint(clients: AsyncClient):
+async def test_a_stray_refusal_is_not_evidence_about_the_endpoint(clients: AsyncClient):
     """A paywall 402 or a daily-cap 429 never reached the provider — it says the CALLER's account
     ran dry, nothing about the endpoint. Refused rows must not even count as samples: the Hunter
     incident (2026-08-12) put 309 refusals next to 488 real calls, and counting them would have
@@ -195,7 +195,7 @@ async def test_a_failed_refresh_still_answers_200_with_the_stale_value(
     ({"observed": {"last_ok_days": 0}}, "today", None, None),
 ])
 def test_last_ok_cell_prefers_measurement_over_the_stamp(entry, exact, contains, absent):
-    from treg import cli
+    from stray import cli
     cell = cli._last_ok_cell(entry)
     if exact is not None:
         assert cell == exact
@@ -242,7 +242,7 @@ async def test_never_worked_is_read_off_DECIDED_samples_only(clients: AsyncClien
     """"Never worked" has to mean the provider failed the calls that were ITS to answer. Above the
     floor `ok_rate == 0` says exactly that — 4xx is already excluded from the rate — so ranking can
     demote a genuinely broken endpoint without a single caller error being able to trigger it."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
     for _ in range(6):
         await _record(EP, 503)                       # the provider failing, decisively
     assert (await _observed([EP]))[EP]["ok_rate"] == 0.0
@@ -273,7 +273,7 @@ async def test_a_relayed_405_is_the_CATALOGS_failure_not_the_callers(clients: As
     the method THIS CATALOG RECORDED was rejected upstream — a stale contract, which is the single
     thing these numbers exist to surface. Counting it as "the caller sent bad parameters" is what
     let `tikhub.x.tiktok-ads-search-ads` show `WORKS — (7)` while being uncallable by anyone."""
-    from treg import cli
+    from stray import cli
     for _ in range(7):
         await _record(EP, 405)
     got = (await _observed([EP]))[EP]
@@ -291,7 +291,7 @@ async def test_a_relayed_405_is_the_CATALOGS_failure_not_the_callers(clients: As
 
 async def test_a_405_endpoint_sinks_in_the_ranking(clients: AsyncClient):
     """The payoff for report #4: the row that cannot be called stops being offered first."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
     for _ in range(7):
         await _record(EP, 405)
     stats = {EP: (await _observed([EP]))[EP],

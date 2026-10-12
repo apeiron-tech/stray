@@ -4,43 +4,43 @@ status: shipped
 sources:
   - pyproject.toml
   - .github/workflows/ci.yml
-  - src/treg/application/__init__.py
-  - src/treg/application/call/__init__.py
-  - src/treg/application/call/access.py
-  - src/treg/application/call/authorize.py
-  - src/treg/application/call/idempotency.py
-  - src/treg/application/call/overflow.py
-  - src/treg/application/call/route.py
-  - src/treg/domain/catalog/routing/__init__.py
-  - src/treg/application/call/intake.py
-  - src/treg/application/call/resolve.py
-  - src/treg/application/call/reserve.py
-  - src/treg/application/call/settle.py
-  - src/treg/application/call/evidence.py
-  - src/treg/application/call/service.py
-  - src/treg/application/call/types.py
-  - src/treg/client_identity.py
-  - src/treg/domain/__init__.py
-  - src/treg/domain/governance/__init__.py
-  - src/treg/domain/governance/access.py
-  - src/treg/domain/governance/budgets.py
-  - src/treg/domain/governance/publicdemo.py
-  - src/treg/domain/governance/teams.py
-  - src/treg/domain/governance/usage.py
-  - src/treg/domain/identity/__init__.py
-  - src/treg/domain/connections/__init__.py
-  - src/treg/domain/connections/authorization.py
-  - src/treg/domain/connections/oauth_flow.py
-  - src/treg/domain/connections/refresh.py
-  - src/treg/domain/money/__init__.py
-  - src/treg/domain/feedback/__init__.py
-  - src/treg/domain/asynctasks/__init__.py
-  - src/treg/domain/capacity/__init__.py
-  - src/treg/infra/upstream/__init__.py
-  - src/treg/infra/upstream/injectors.py
-  - src/treg/infra/upstream/relay.py
-  - src/treg/infra/upstream/aggregators/__init__.py
-  - src/treg/infra/upstream/limiter.py
+  - src/stray/application/__init__.py
+  - src/stray/application/call/__init__.py
+  - src/stray/application/call/access.py
+  - src/stray/application/call/authorize.py
+  - src/stray/application/call/idempotency.py
+  - src/stray/application/call/overflow.py
+  - src/stray/application/call/route.py
+  - src/stray/domain/catalog/routing/__init__.py
+  - src/stray/application/call/intake.py
+  - src/stray/application/call/resolve.py
+  - src/stray/application/call/reserve.py
+  - src/stray/application/call/settle.py
+  - src/stray/application/call/evidence.py
+  - src/stray/application/call/service.py
+  - src/stray/application/call/types.py
+  - src/stray/client_identity.py
+  - src/stray/domain/__init__.py
+  - src/stray/domain/governance/__init__.py
+  - src/stray/domain/governance/access.py
+  - src/stray/domain/governance/budgets.py
+  - src/stray/domain/governance/publicdemo.py
+  - src/stray/domain/governance/teams.py
+  - src/stray/domain/governance/usage.py
+  - src/stray/domain/identity/__init__.py
+  - src/stray/domain/connections/__init__.py
+  - src/stray/domain/connections/authorization.py
+  - src/stray/domain/connections/oauth_flow.py
+  - src/stray/domain/connections/refresh.py
+  - src/stray/domain/money/__init__.py
+  - src/stray/domain/feedback/__init__.py
+  - src/stray/domain/asynctasks/__init__.py
+  - src/stray/domain/capacity/__init__.py
+  - src/stray/infra/upstream/__init__.py
+  - src/stray/infra/upstream/injectors.py
+  - src/stray/infra/upstream/relay.py
+  - src/stray/infra/upstream/aggregators/__init__.py
+  - src/stray/infra/upstream/limiter.py
   - tests/test_call_architecture.py
   - tests/test_import_lightness.py
 related:
@@ -81,10 +81,10 @@ Stage 1 activated the first two contracts:
   by `TYPE_CHECKING` are excluded globally because they cannot load at runtime. Indirect imports are
   allowed by this contract because optional proxy dependencies may appear in lazily executed internal
   modules; the named CLI modules themselves must remain free of direct server imports.
-- `treg.domain.money` cannot import `treg.audit`. Money correctness never flows through the best-effort audit
+- `stray.domain.money` cannot import `stray.audit`. Money correctness never flows through the best-effort audit
   path, whose writes may be shed under load.
 
-Stage 2 adds a third contract: the complete `treg.routers` package cannot import `treg.api`, directly or
+Stage 2 adds a third contract: the complete `stray.routers` package cannot import `stray.api`, directly or
 indirectly. `as_packages = true` makes the source cover every current and future router submodule.
 `api.py` remains the compatibility exporter and ordered route-table host, so the allowed direction is
 API to routers.
@@ -93,8 +93,8 @@ The async-task domain has the same inward-only boundary as capacity: it may not 
 application orchestration or best-effort audit. `tests/test_call_architecture.py` pins the rule and a
 mutation proving the guard rejects a forbidden edge.
 
-Stage 3 adds domain contracts as packages appear. The complete `treg.domain.identity` package cannot import
-`treg.api`, `treg.routers`, or `treg.application`. Identity now owns session signing and validation,
+Stage 3 adds domain contracts as packages appear. The complete `stray.domain.identity` package cannot import
+`stray.api`, `stray.routers`, or `stray.application`. Identity now owns session signing and validation,
 MCP token and grant-family primitives, and caller/access resolution as a leaf. Sibling-domain
 edges are added when the sibling appears; identity therefore also forbids governance. Governance may
 import identity but cannot import the API, routers, or application layer. Future sibling contracts remain
@@ -107,14 +107,14 @@ orchestration, and finalization. The HTTP adapter captures a `CallInput`, transl
 wraps the returned `UpstreamResponse`. Client-name normalization lives in a neutral leaf so the application path does not
 load the Request-aware caller metadata adapter.
 
-The complete `treg.domain.connections` package is also an inward-facing domain package. It owns
+The complete `stray.domain.connections` package is also an inward-facing domain package. It owns
 provider-neutral authorization-method selection, consent URL construction, and refresh state changes.
 It cannot import the API, bootstrap, routers, application layer, FastAPI, or Starlette. Provider registry
 data can call these rules through the legacy compatibility modules, while HTTP exchange adapters stay in
-`treg.infra` and workflow coordination stays in `treg.application`.
+`stray.infra` and workflow coordination stays in `stray.application`.
 
-Two runtime contracts keep that boundary executable. `treg.application.call` cannot import the legacy
-API, bootstrap, routers, FastAPI, or Starlette. `treg.infra.upstream` cannot import those HTTP adapters
+Two runtime contracts keep that boundary executable. `stray.application.call` cannot import the legacy
+API, bootstrap, routers, FastAPI, or Starlette. `stray.infra.upstream` cannot import those HTTP adapters
 or frameworks. Direct imports of the application-owned request and response DTOs remain the port shared
 by the use case and relay. Mutation tests inject representative forbidden edges and assert detection.
 The same test module also pins the money transaction boundary: all five `domain/money` primitives
@@ -133,20 +133,20 @@ module scope. `tests.test_import_lightness` closes that gap by starting an isola
 importing every lightweight module, and asserting that no server dependency root appears in `sys.modules`.
 Base dependencies such as httpx and questionary remain allowed.
 
-The async task domain (`treg.domain.asynctasks`) is a **stdlib-only leaf shared with the light
+The async task domain (`stray.domain.asynctasks`) is a **stdlib-only leaf shared with the light
 CLI**: `cli.await_async_task` imports its `json_path`, `classify_terminal` and `artifact` so the
 awaiter and the settlement worker can never disagree about what "done" means. Two guards keep it
 light: the module is on `test_import_lightness`'s list, and an import-linter contract forbids it
-every server root (`treg.models`, `treg.infra`, `treg.config`, SQLModel, pydantic, yaml, httpx).
+every server root (`stray.models`, `stray.infra`, `stray.config`, SQLModel, pydantic, yaml, httpx).
 
-The table domain (`treg.domain.table`, [table](table.md)) is the same kind of leaf: a parsed answer
+The table domain (`stray.domain.table`, [table](table.md)) is the same kind of leaf: a parsed answer
 in, rows and columns out. Its contract forbids every outer layer, every sibling domain, and the web,
 database and settings libraries, so the converter stays testable on saved answers alone.
 
-The capacity domain (`treg.domain.capacity`, plan step B) is a leaf like identity: it cannot import
-`treg.api`, `treg.routers`, `treg.application`, `treg.bootstrap`, `treg.audit`, FastAPI or Starlette.
+The capacity domain (`stray.domain.capacity`, plan step B) is a leaf like identity: it cannot import
+`stray.api`, `stray.routers`, `stray.application`, `stray.bootstrap`, `stray.audit`, FastAPI or Starlette.
 It reads config and writes only its own tables and ratestore keys, from worker-profile commands
-(`treg-worker`, a separate console script so the light `treg` CLI never gains a DB import). The call
+(`stray-worker`, a separate console script so the light `stray` CLI never gains a DB import). The call
 application imports the capacity domain inward (`resolve` → `view`, `settle` → `signatures`/`marks`);
 the domain never imports back; `application.call.overflow` composes the capacity domain, the
 aggregator envelopes and the money primitives, and the aggregator adapters stay pure envelope code;
@@ -155,11 +155,11 @@ of the worker-owned table through the same in-process copy the call path uses, n
 `application.call.route` reads both capacity views before planning so an exhausted provider with an
 enabled overflow route reaches the ordinary child ladder, and composes the pure
 `domain.catalog.routing` package (contracts, adapters, ranking) with the call use case itself. The
-aggregator envelopes live under `treg.infra.upstream.aggregators` and inherit the upstream contract
+aggregator envelopes live under `stray.infra.upstream.aggregators` and inherit the upstream contract
 (no HTTP adapters, no routers); the capacity domain's `verify` module may import them because they are
 pure envelope code, not a web framework.
 
-The feedback domain (`treg.domain.feedback`) owns durable report inserts and queries. Its contract
+The feedback domain (`stray.domain.feedback`) owns durable report inserts and queries. Its contract
 forbids direct imports of API, bootstrap, routers, application orchestration, sibling domains,
 best-effort audit, FastAPI, and Starlette. Shared models and SQLAlchemy remain available; transaction
-commits and call-reference verification belong to `treg.application.feedback`.
+commits and call-reference verification belong to `stray.application.feedback`.

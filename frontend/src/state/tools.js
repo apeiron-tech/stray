@@ -75,7 +75,7 @@ async remindCustomizedAccess(toolName){  // a NEW tool auto-applies to 'all-tool
         const n=(members||[]).filter(m=>m.tool_access!==null && m.role!=='owner').length;
         if(n>0) this.accessNote='New tool "'+toolName+'" is available to members who have access to all tools. '+n+' member(s) have a customized selection and won\'t see it until you add it (Team → their Tools).';
       }catch(e){/* non-admin creator can't list members → no reminder */} },
-localRunTitle(t){ const bin=(t.cli&&t.cli.bin)||t.name; return t.cli&&t.cli.enabled ? ('Local runs ON - members can: treg run '+t.name+'. Click to disable.') : ('Local runs OFF - click to let members run '+bin+' locally with this key injected.'); },
+localRunTitle(t){ const bin=(t.cli&&t.cli.bin)||t.name; return t.cli&&t.cli.enabled ? ('Local runs ON - members can: stray run '+t.name+'. Click to disable.') : ('Local runs OFF - click to let members run '+bin+' locally with this key injected.'); },
 async toggleLocalRun(t){ if(!t.cli) return; const turningOn=!t.cli.enabled; const cli=Object.assign({},t.cli,{enabled:turningOn});
       try{ await this.api('/tools/'+t.id,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({cli})}); await this.loadAll();
         this.runNote = turningOn ? t.name : ''; }

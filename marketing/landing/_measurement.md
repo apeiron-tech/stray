@@ -5,5 +5,5 @@ The conversion implementation and first-call semantics are documented in
 [ads-conversions](../../docs/context/architecture/ads-conversions.md).
 
 Hosted campaign hypotheses, bidding decisions and historical verification records live in the
-[private marketing records](https://github.com/superdesigndev/treg-internal/tree/main/docs/marketing).
+[private marketing records](https://github.com/apeiron-tech/stray-internal/tree/main/docs/marketing).
 This public file describes the metric referenced by the shipped page instrumentation only.

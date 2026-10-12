@@ -13,9 +13,9 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from treg.domain.identity import session as sess
-from treg.api import app
-from treg.config import get_settings
+from stray.domain.identity import session as sess
+from stray.api import app
+from stray.config import get_settings
 
 LEGACY = {"host": "treg.superdesign.dev"}
 OFF_HOST_CODES = (301, 302, 303, 307, 308)   # any of these off-host would strand a client
@@ -25,7 +25,7 @@ OFF_HOST_CODES = (301, 302, 303, 307, 308)   # any of these off-host would stran
 async def raw_client(monkeypatch):
     """No auth, no upstream — routing behavior only. Host is set per-request. The test env's
     public_url is not production's; pin it so the Location assertions mean something."""
-    monkeypatch.setenv("TREG_PUBLIC_URL", "https://treg.to")
+    monkeypatch.setenv("STRAY_PUBLIC_URL", "https://treg.to")
     get_settings.cache_clear()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:
         yield c
@@ -105,8 +105,8 @@ async def test_canonical_host_is_untouched(raw_client):
 async def test_legacy_mcp_host_and_oauth_audience_stay_valid():
     # The transport allow-list and the token-audience set must both keep honouring the legacy name —
     # every pre-move .mcp.json and OAuth grant depends on it.
-    from treg import mcp
-    from treg.domain.identity import mcp_oauth
+    from stray import mcp
+    from stray.domain.identity import mcp_oauth
 
     # List MEMBERSHIP (exact strings), not substring checks — .count() keeps CodeQL from reading
     # these as URL-substring sanitization.
@@ -120,10 +120,10 @@ async def test_legacy_mcp_host_and_oauth_audience_stay_valid():
     assert "https://treg.superdesign.dev/mcp/" in mcp_oauth.mcp_resource_audiences()
     # A pre-move access token — audience = the legacy resource URL — must still validate, and so
     # must the canonical one; a token minted for someone else's server must not.
-    old = mcp_oauth.make_access_token(user_id=1, org_id=1, scope="treg:read", token_version=0,
+    old = mcp_oauth.make_access_token(user_id=1, org_id=1, scope="stray:read", token_version=0,
                                       audience="https://treg.superdesign.dev/mcp/")
     assert mcp_oauth.read_access_token_any(old) is not None
-    foreign = mcp_oauth.make_access_token(user_id=1, org_id=1, scope="treg:read", token_version=0,
+    foreign = mcp_oauth.make_access_token(user_id=1, org_id=1, scope="stray:read", token_version=0,
                                           audience="https://evil.example/mcp/")
     assert mcp_oauth.read_access_token_any(foreign) is None
     # Slash-variant spellings of OUR resource normalize onto the canonical member — a grant row
@@ -137,7 +137,7 @@ async def test_canonical_and_legacy_resources_are_the_same_server(raw_client):
     # A grant consented on one name must stay exchangeable/refreshable by a client re-based onto
     # the other — in BOTH directions, and regardless of slash spelling. (Round-2's refactor of
     # this helper silently dropped the cross-name rule; round-3 review caught it.)
-    from treg.routers.auth import _same_mcp_resource
+    from stray.routers.auth import _same_mcp_resource
     canon, legacy = "https://treg.to/mcp/", "https://treg.superdesign.dev/mcp/"
     assert _same_mcp_resource(canon, legacy)
     assert _same_mcp_resource(legacy, canon)
@@ -152,7 +152,7 @@ async def test_login_round_trip_is_anchored_to_the_host_it_started_on(raw_client
     # its callback exchange must keep naming that host, not public_url.
     from starlette.requests import Request as StarletteRequest
 
-    from treg.routers.auth import _login_callback_base
+    from stray.routers.auth import _login_callback_base
 
     def req(host: str) -> StarletteRequest:
         return StarletteRequest({"type": "http", "method": "GET", "path": "/",
@@ -165,21 +165,21 @@ async def test_login_round_trip_is_anchored_to_the_host_it_started_on(raw_client
 
 
 async def test_env_revert_is_a_complete_rollback(monkeypatch):
-    """The staged-rollout contract: with TREG_PUBLIC_URL back on the OLD name, everything minted
+    """The staged-rollout contract: with STRAY_PUBLIC_URL back on the OLD name, everything minted
     while treg.to was canonical keeps working (symmetric aliases), and no redirect can loop —
     treg.to is never a redirect SOURCE, so a browser-cached old→new 301 meets no new→old answer."""
     from httpx import ASGITransport, AsyncClient
 
-    from treg import mcp
-    from treg.domain.identity import mcp_oauth
-    from treg.api import app
-    from treg.routers.auth import _login_callback_base
+    from stray import mcp
+    from stray.domain.identity import mcp_oauth
+    from stray.api import app
+    from stray.routers.auth import _login_callback_base
 
-    monkeypatch.setenv("TREG_PUBLIC_URL", "https://treg.superdesign.dev")
+    monkeypatch.setenv("STRAY_PUBLIC_URL", "https://treg.superdesign.dev")
     get_settings.cache_clear()
     try:
         # Recognition stays symmetric: treg.to tokens/hosts/origins remain valid.
-        tok = mcp_oauth.make_access_token(user_id=1, org_id=1, scope="treg:read", token_version=0,
+        tok = mcp_oauth.make_access_token(user_id=1, org_id=1, scope="stray:read", token_version=0,
                                           audience="https://treg.to/mcp/")
         assert mcp_oauth.read_access_token_any(tok) is not None
         assert mcp._allowed_hosts().count("treg.to") == 1

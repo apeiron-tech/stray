@@ -4,7 +4,7 @@ The first question of every SEO audit, in one call: how much organic traffic a d
 many keywords it ranks for and where, whether it buys ads, and how big its backlink profile is.
 
 Two steps run in parallel: SE Ranking's domain overview (traffic, keyword counts by position band,
-new and lost keywords, paid keywords) and treg's routed backlinks summary (the cheapest provider
+new and lost keywords, paid keywords) and stray's routed backlinks summary (the cheapest provider
 that answers; `backlinks_source` names it). A JSON-steps recipe: no logic, just two tools joined.
 
 `source` picks the Google database (`us` by default). A fixed price of $0.01 a

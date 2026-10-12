@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>treg</title>
+<title>stray</title>
 <!-- The dashboard is an authenticated app: every view needs a session and supports shared deep links. Nothing here is indexable, and a crawler that got in would index a sign-in prompt. -->
 <meta name="robots" content="noindex, follow"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -12,13 +12,13 @@
 <script>
 (function(){
   var h={'ngrok-skip-browser-warning':'1'};
-  window.__tregBoot={
+  window.__strayBoot={
     meta:fetch('/meta',{headers:h}).then(function(r){return r.json()}),
     me:fetch('/auth/me',{credentials:'include',headers:h}).then(function(r){return r.ok?r.json():null})
   };
   // boot.js attaches its own handlers; these only keep an unused promise from logging a rejection.
-  window.__tregBoot.meta.catch(function(){}); window.__tregBoot.me.catch(function(){});
-  try{ document.documentElement.dataset.theme=localStorage.getItem('treg-theme')||'light'; }catch(e){}
+  window.__strayBoot.meta.catch(function(){}); window.__strayBoot.me.catch(function(){});
+  try{ document.documentElement.dataset.theme=localStorage.getItem('stray-theme')||'light'; }catch(e){}
 })();
 </script>
 <!-- Deferred, so neither holds up the first paint, and still run in document order before the app
@@ -32,7 +32,7 @@
      visible for the first moments; a thin bar fades in at the top only if boot is slow
      (base.css, .boot-status). The status line hides itself inline: in development the stylesheet
      arrives with the script, after this markup has painted. -->
-<div id="app"><main class="boot-status" aria-busy="true"><span class="boot-bar" aria-hidden="true"></span><p role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Loading treg…</p></main></div>
+<div id="app"><main class="boot-status" aria-busy="true"><span class="boot-bar" aria-hidden="true"></span><p role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Loading stray…</p></main></div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

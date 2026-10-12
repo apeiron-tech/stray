@@ -12,22 +12,22 @@ import pytest
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg import crypto
-from treg import oauth_providers
-from treg.application import connect as connect_use_cases
-from treg.application.call import resolve as call_resolution
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import Secret, Tool
-from treg.timeutil import utcnow_naive
+from stray import crypto
+from stray import oauth_providers
+from stray.application import connect as connect_use_cases
+from stray.application.call import resolve as call_resolution
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import Secret, Tool
+from stray.timeutil import utcnow_naive
 
 
 @pytest.fixture
 def instagram_apps(monkeypatch):
-    monkeypatch.setenv("TREG_INSTAGRAM_CLIENT_ID", "instagram-cid")
-    monkeypatch.setenv("TREG_INSTAGRAM_CLIENT_SECRET", "instagram-csec")
-    monkeypatch.setenv("TREG_META_CLIENT_ID", "meta-cid")
-    monkeypatch.setenv("TREG_META_CLIENT_SECRET", "meta-csec")
+    monkeypatch.setenv("STRAY_INSTAGRAM_CLIENT_ID", "instagram-cid")
+    monkeypatch.setenv("STRAY_INSTAGRAM_CLIENT_SECRET", "instagram-csec")
+    monkeypatch.setenv("STRAY_META_CLIENT_ID", "meta-cid")
+    monkeypatch.setenv("STRAY_META_CLIENT_SECRET", "meta-csec")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -127,7 +127,7 @@ async def test_review_setting_moves_plain_connect_to_each_approved_experience(
     clients: AsyncClient, instagram_apps, monkeypatch,
     pending, host, scope_separator, required_scope,
 ):
-    monkeypatch.setenv("TREG_OAUTH_REVIEW_PENDING", pending)
+    monkeypatch.setenv("STRAY_OAUTH_REVIEW_PENDING", pending)
     get_settings.cache_clear()
     try:
         started = await clients.post("/oauth/start", json={"provider": "instagram"})
@@ -230,7 +230,7 @@ async def test_catalog_call_explicitly_selects_each_instagram_authorization(
     direct = await clients.get(
         "/call/instagram.x.user-messages",
         params={"ig_user_id": "17841400000000000"},
-        headers={"X-Treg-Authorization-Method": "instagram-login"},
+        headers={"X-Stray-Authorization-Method": "instagram-login"},
     )
     assert direct.status_code == 200, direct.text
     assert direct.json()["raw_path"] == "/v25.0/17841400000000000/conversations"
@@ -239,7 +239,7 @@ async def test_catalog_call_explicitly_selects_each_instagram_authorization(
     page_call = await clients.get(
         "/call/instagram.x.user-messages",
         params={"page_id": "PAGE-DIRECT", "platform": "instagram"},
-        headers={"X-Treg-Authorization-Method": "facebook-page"},
+        headers={"X-Stray-Authorization-Method": "facebook-page"},
     )
     assert page_call.status_code == 200, page_call.text
     assert page_call.json()["data"][0]["page_id"] == "PAGE-DIRECT"
@@ -247,7 +247,7 @@ async def test_catalog_call_explicitly_selects_each_instagram_authorization(
     missing_platform = await clients.get(
         "/call/instagram.x.user-messages",
         params={"page_id": "PAGE-DIRECT"},
-        headers={"X-Treg-Authorization-Method": "facebook-page"},
+        headers={"X-Stray-Authorization-Method": "facebook-page"},
     )
     assert missing_platform.status_code == 400, missing_platform.text
     assert "platform=<value>" in missing_platform.json()["detail"]
@@ -297,7 +297,7 @@ async def test_instagram_method_rejects_the_other_methods_identifier(
     response = await clients.get(
         "/call/instagram.x.user-messages",
         params={"ig_user_id": "17841400000000000", "page_id": "PAGE-DIRECT"},
-        headers={"X-Treg-Authorization-Method": "instagram-login"},
+        headers={"X-Stray-Authorization-Method": "instagram-login"},
     )
     assert response.status_code == 400, response.text
     assert "does not accept page_id with instagram-login" in response.json()["detail"]
@@ -332,7 +332,7 @@ async def test_required_identity_lookup_runs_after_database_session_closes(
 async def test_page_discovery_runs_after_database_session_closes(
     clients: AsyncClient, instagram_apps, monkeypatch,
 ):
-    from treg.api import app
+    from stray.api import app
 
     page = await _complete(
         clients, {"provider": "instagram", "capability": "page-tools"},
@@ -424,7 +424,7 @@ async def test_direct_connection_does_not_satisfy_a_page_only_tool(
     assert detail["required_authorization_method"] == "facebook-page"
     assert detail["required_capability"] == "page-tools"
     assert detail["cli_command"] == (
-        "treg connections connect --provider instagram --capability page-tools"
+        "stray connections connect --provider instagram --capability page-tools"
     )
     assert detail["message"] == (
         "This tool requires Facebook Page authorization and an Instagram Professional account "

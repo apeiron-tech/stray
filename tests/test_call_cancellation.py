@@ -15,13 +15,13 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from treg.domain import money as ledger
-from treg.application.call import service as call_service
-from treg.application.call.types import GatewayFailed
-from treg.routers import call as call_routes
-from treg.api import app
-from treg.infra.db import session_maker
-from treg.models import Hold, IdempotentCall, LedgerEntry
+from stray.domain import money as ledger
+from stray.application.call import service as call_service
+from stray.application.call.types import GatewayFailed
+from stray.routers import call as call_routes
+from stray.api import app
+from stray.infra.db import session_maker
+from stray.models import Hold, IdempotentCall, LedgerEntry
 
 from test_marketplace_call import EP, platform_on  # noqa: F401 - shared tier-4 fixture
 
@@ -162,7 +162,7 @@ async def test_cancelling_a_funded_metered_call_releases_every_resource(
 
     retry = await clients.get(f"/call/{EP}?aweme_id=cancel-me", headers=headers)
     assert retry.status_code == 200, retry.text
-    assert retry.headers.get("X-Treg-Idempotent-Replay") is None
+    assert retry.headers.get("X-Stray-Idempotent-Replay") is None
 
 
 @pytest.mark.parametrize("reserve_committed", [True, False], ids=["committed", "rolled-back"])
@@ -300,7 +300,7 @@ async def test_repeated_cancellation_cannot_interrupt_compensation(
     retry = await clients.get(
         f"/call/{EP}?aweme_id=cancel-three-times", headers=headers)
     assert retry.status_code == 200, retry.text
-    assert retry.headers.get("X-Treg-Idempotent-Replay") is None
+    assert retry.headers.get("X-Stray-Idempotent-Replay") is None
 
 
 async def test_cancellation_after_claim_before_reserve_releases_the_label(

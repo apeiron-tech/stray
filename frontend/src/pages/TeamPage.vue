@@ -41,11 +41,11 @@ export default {
               <button v-if="!newAgent" class="btn sm" style="margin-left:auto" @click="snipAgent=null">Close</button>
             </div>
             <p v-if="newAgent && newAgent.rotated" class="tut-notice" style="margin:2px 0 10px"><b>The previous key stopped working immediately.</b> Update <b>{{newAgent.name}}</b> everywhere it runs before closing this card.</p>
-            <p v-if="newAgent" class="sub" style="margin:2px 0 10px">This is the only time it is shown. Put it in the agent's <code>TREG_TOKEN</code>. Anyone holding it can act as {{newAgent.name}}, so keep it in an environment variable or secret manager — never commit or share it.
+            <p v-if="newAgent" class="sub" style="margin:2px 0 10px">This is the only time it is shown. Put it in the agent's <code>STRAY_TOKEN</code>. Anyone holding it can act as {{newAgent.name}}, so keep it in an environment variable or secret manager — never commit or share it.
               <span v-if="agentConnected" class="chip ok" style="margin-left:8px">✓ connected — {{newAgent.name}} called in as itself</span>
               <span v-else class="muted" style="margin-left:8px">waiting for its first check-in…</span></p>
             <p v-else-if="agentTokens[snipAgent.user_id]" class="sub" style="margin:2px 0 10px">Snippets carry the real token (minted this page-load — the server only keeps a hash).</p>
-            <p v-else class="sub" style="margin:2px 0 10px">The server stores only a hash of the token, so it can't be shown again — these snippets use <span class="mono">$TREG_TOKEN</span>. <button class="btn sm" @click="rotateAgent(snipAgent,true)">⟳ Rotate &amp; fill real token</button> <span class="muted">(the old token stops working)</span></p>
+            <p v-else class="sub" style="margin:2px 0 10px">The server stores only a hash of the token, so it can't be shown again — these snippets use <span class="mono">$STRAY_TOKEN</span>. <button class="btn sm" @click="rotateAgent(snipAgent,true)">⟳ Rotate &amp; fill real token</button> <span class="muted">(the old token stops working)</span></p>
             <div v-if="newAgent" class="field">
               <input :value="newAgent.token" readonly style="font-family:var(--mono)" @focus="$event.target.select()"/>
               <button class="btn primary" @click="copy(newAgent.token,'agenttok')">{{copied==='agenttok'?'Copied':'Copy'}}</button>
@@ -228,13 +228,13 @@ export default {
                 <div class="lbl"><template v-if="newApiKey.kind==='default_human'">Default key rotated — copy the new key</template><template v-else-if="newApiKey.assigned_type==='agent'">New key for {{newApiKey.assigned_name}}</template><template v-else>{{newApiKey.name}} — copy it now</template></div>
                 <p v-if="newApiKey.kind==='default_human'" class="tut-notice" style="margin:2px 0 10px"><b>The previous key stopped working immediately.</b> Update every CLI, MCP installation, or other client using this team's Default key.</p>
                 <p v-if="newApiKey.assigned_type==='agent' && newApiKey.rotated" class="tut-notice" style="margin:2px 0 10px"><b>The previous key stopped working immediately and is now hidden from this list.</b> Update {{newApiKey.assigned_name}} everywhere it runs before closing this card.</p>
-                <p class="sub" style="margin:2px 0 10px"><template v-if="newApiKey.kind==='default_human'">This team-specific key remains revealable on Getting Started.</template><template v-else>This is the only time treg shows the full key. The server stores only its hash.<template v-if="newApiKey.assigned_type==='agent'"> Anyone holding it can act as {{newApiKey.assigned_name}}, so keep it in an environment variable or secret manager — never commit or share it.</template></template></p>
+                <p class="sub" style="margin:2px 0 10px"><template v-if="newApiKey.kind==='default_human'">This team-specific key remains revealable on Getting Started.</template><template v-else>This is the only time stray shows the full key. The server stores only its hash.<template v-if="newApiKey.assigned_type==='agent'"> Anyone holding it can act as {{newApiKey.assigned_name}}, so keep it in an environment variable or secret manager — never commit or share it.</template></template></p>
                 <div class="field"><input :value="newApiKey.secret" readonly class="mono" @focus="$event.target.select()"/><button class="btn primary" @click="copy(newApiKey.secret,'managedkey')">{{copied==='managedkey'?'Copied':'Copy'}}</button><button class="btn" @click="newApiKey=null">{{newApiKey.assigned_type==='agent'?'I’ve updated '+newApiKey.assigned_name:'Done'}}</button></div>
-                <p v-if="newApiKey.kind==='default_human'" class="sub" style="margin:6px 0 0;font-size:11.5px">CLI users can run <code>treg login</code> again to save the new key. Update MCP and other clients manually.</p>
+                <p v-if="newApiKey.kind==='default_human'" class="sub" style="margin:6px 0 0;font-size:11.5px">CLI users can run <code>stray login</code> again to save the new key. Update MCP and other clients manually.</p>
                 <template v-if="newApiKey.assigned_type==='agent'">
                   <div class="tabs" style="margin:14px 0 8px"><button :class="{active:agentSnip==='prompt'}" @click="agentSnip='prompt'">Give it to your agent</button><button :class="{active:agentSnip==='env'}" @click="agentSnip='env'">Environment</button></div>
                   <div class="lc-codewrap"><button class="lc-cp" @click="copy(agentSnippet,'agentsnip')">{{copied==='agentsnip'?'✓ copied':'copy'}}</button><pre style="max-height:220px;overflow:auto">{{agentSnippet}}</pre></div>
-                  <p class="sub" style="margin:6px 0 0;font-size:11.5px">Replace <code>TREG_TOKEN</code> in every environment, CI secret, secret manager, or agent config where {{newApiKey.assigned_name}} runs.</p>
+                  <p class="sub" style="margin:6px 0 0;font-size:11.5px">Replace <code>STRAY_TOKEN</code> in every environment, CI secret, secret manager, or agent config where {{newApiKey.assigned_name}} runs.</p>
                 </template>
               </div>
               <div v-if="activeRole!=='viewer'" class="field" style="max-width:620px;margin-bottom:18px"><input v-model="keyName" :class="{'field-invalid':keyNameInvalid}" :aria-invalid="keyNameInvalid" placeholder="New key name" maxlength="80" @input="keyNameInvalid=false" @keyup.enter="createApiKey"/><button class="btn primary" :disabled="keyBusy" @click="createApiKey">{{keyBusy?'…':'Create key'}}</button></div>
@@ -287,11 +287,11 @@ export default {
                         <!-- The referrer is MASKED (`j•••@domain`): a referral link is public, so
                              the full address would be published to every stranger who signs up
                              through an influencer's link. The domain is what a real friend
-                             recognises. Falls back to "to treg" if we somehow have no address. -->
+                             recognises. Falls back to "to stray" if we somehow have no address. -->
                         You were invited
                         <template v-if="billing.referral_offer.referrer_masked">by
                           <b>{{billing.referral_offer.referrer_masked}}</b></template>
-                        <template v-else>to treg</template>
+                        <template v-else>to stray</template>
                         — add
                         <!-- Once they have paid something, ask for the REMAINDER. Repeating the
                              full amount reads as though the money they already added did not
@@ -349,7 +349,7 @@ export default {
                           <input type="checkbox" v-model="autoConsent" style="margin-top:3px"/>
                           <!-- The mandate text. Not decoration: an off-session charge with no recorded
                                agreement to THESE numbers is an unauthorized charge under PSD2/SCA. -->
-                          <span class="sub" style="margin:0">I authorize treg to charge my saved card ${{autoAmount}} automatically whenever my balance drops below ${{autoThreshold}}, up to {{autoPerHour}} times per hour. Cancel any time.</span>
+                          <span class="sub" style="margin:0">I authorize stray to charge my saved card ${{autoAmount}} automatically whenever my balance drops below ${{autoThreshold}}, up to {{autoPerHour}} times per hour. Cancel any time.</span>
                         </label>
                         <div style="margin-top:12px">
                           <button class="btn primary" :disabled="!autoConsent||billingBusy" @click="setAuto(true)">{{billingBusy?'…':(billing.autotopup.enabled?'Save':'Turn on auto top-up')}}</button>
@@ -466,12 +466,12 @@ export default {
                    "what is blocked" picture lives on one screen. -->
               <template v-if="cliDeny.length">
                 <div class="lbl" style="margin-top:22px">Per-tool CLI blocks <span class="chip" style="margin-left:6px">read-only</span></div>
-                <p class="sub" style="margin:-2px 0 8px;font-size:12px">treg blocks at three layers: the rules above (HTTP host/path/method, this team's policy), these per-tool argument patterns (from the skill's <span class="mono">treg.json</span> or the treg catalog — edit them there), and the OS sandbox around isolated local runs.</p>
+                <p class="sub" style="margin:-2px 0 8px;font-size:12px">stray blocks at three layers: the rules above (HTTP host/path/method, this team's policy), these per-tool argument patterns (from the skill's <span class="mono">stray.json</span> or the stray catalog — edit them there), and the OS sandbox around isolated local runs.</p>
                 <table>
                   <tr><th>Tool</th><th>Blocked argument patterns</th></tr>
                   <tr v-for="t in cliDeny" :key="t.tool">
                     <td><b>{{t.tool}}</b><span v-if="!t.enabled" class="chip" style="margin-left:6px" title="local runs for this tool are not enabled">off</span></td>
-                    <td><span v-for="pat in t.patterns" :key="pat.pattern" class="chip" style="margin:2px 6px 2px 0;font-family:var(--mono);font-size:11px" :title="pat.source==='skill'?'from this skill\'s treg.json':'from the treg catalog defaults'">{{pat.pattern}}<span class="muted" style="margin-left:4px">· {{pat.source}}</span></span></td>
+                    <td><span v-for="pat in t.patterns" :key="pat.pattern" class="chip" style="margin:2px 6px 2px 0;font-family:var(--mono);font-size:11px" :title="pat.source==='skill'?'from this skill\'s stray.json':'from the stray catalog defaults'">{{pat.pattern}}<span class="muted" style="margin-left:4px">· {{pat.source}}</span></span></td>
                   </tr>
                 </table>
               </template>
@@ -491,7 +491,7 @@ export default {
             <div v-if="capCfg" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
                   <span class="lbl" style="margin:0">Daily spend limit</span>
                   <p class="sub" style="margin:4px 0 8px;font-size:12px">
-                    The most this team can spend per day on treg's keys. Resets at 00:00 UTC. None by
+                    The most this team can spend per day on stray's keys. Resets at 00:00 UTC. None by
                     default. Worth setting if agents run unattended with auto top-up on, since a
                     balance that refills itself can't stop a runaway one.
                   </p>
@@ -508,7 +508,7 @@ export default {
                   </p>
                 </div>
 
-                <!-- PER-TAG BUDGETS. What a team reselling treg sets on ITS OWN customers. Only
+                <!-- PER-TAG BUDGETS. What a team reselling stray sets on ITS OWN customers. Only
                      DECLARED dimensions are enforced on the call path, so the key is a picker over
                      those rather than a free-text box — the API refuses a limit on anything else
                      precisely because a stored-but-unenforced budget looks like protection and isn't. -->
@@ -516,7 +516,7 @@ export default {
                   <span class="lbl" style="margin:0">Per-customer limits</span>
                   <p class="sub" style="margin:4px 0 8px;font-size:12px">
                     Cap or block one of your own customers by the tags your calls carry
-                    (<code>X-Treg-Meta</code>). Limits <b>stack</b> — a workspace ceiling and a
+                    (<code>X-Stray-Meta</code>). Limits <b>stack</b> — a workspace ceiling and a
                     per-customer ceiling both apply, and a refusal names which one hit. They are
                     <b>advisory</b>: concurrent calls can overshoot slightly, and your balance is the
                     hard limit.
@@ -564,12 +564,12 @@ export default {
 
 
             <!-- TEAM NAME + SLUG. Admin+. The old slug stays an alias server-side, so copied keys,
-                 ~/.treg and MCP pins keep working; the CLI just needs `treg org use <new-slug>`. -->
+                 ~/.stray and MCP pins keep working; the CLI just needs `stray org use <new-slug>`. -->
             <div v-if="canAdmin && !isPersonal(activeOrg)" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
               <span class="lbl" style="margin:0">Team name and slug</span>
               <p class="sub" style="margin:4px 0 8px;font-size:12px">
-                The slug is the team's id in <code>X-Treg-Org</code>, <code>treg org use</code> and MCP. Changing it
-                keeps existing keys working; run <code>treg org use {{renameSlug.trim()||activeSlugNow}}</code> to re-pin the CLI.
+                The slug is the team's id in <code>X-Stray-Org</code>, <code>stray org use</code> and MCP. Changing it
+                keeps existing keys working; run <code>stray org use {{renameSlug.trim()||activeSlugNow}}</code> to re-pin the CLI.
               </p>
               <div class="field" style="max-width:560px">
                 <input v-model="renameName" placeholder="team name" maxlength="80" style="max-width:220px"/>

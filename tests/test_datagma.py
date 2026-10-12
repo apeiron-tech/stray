@@ -5,10 +5,10 @@ import json
 import httpx
 import pytest
 
-from treg import api as A
-from treg.application.call import settle as call_settle
-from treg.application.call.resolve import MarketplaceCall
-from treg.domain.capacity import collectors, policy
+from stray import api as A
+from stray.application.call import settle as call_settle
+from stray.application.call.resolve import MarketplaceCall
+from stray.domain.capacity import collectors, policy
 
 
 def _mk(unit_micro=22_580, endpoint_id="datagma.people.email.find"):
@@ -37,7 +37,7 @@ def test_datagma_phone_converts_credit_burn_at_one_credit_not_the_call_price():
 
 
 async def test_datagma_internal_balance_exposes_only_credit_count(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_DATAGMA", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_DATAGMA", "private-test-key")
     collectors.get_settings.cache_clear()
 
     def reply(request):
@@ -61,7 +61,7 @@ async def test_datagma_internal_balance_exposes_only_credit_count(monkeypatch):
 
 
 async def test_datagma_balance_failure_does_not_expose_query_key(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_DATAGMA", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_DATAGMA", "private-test-key")
     collectors.get_settings.cache_clear()
     try:
         async with httpx.AsyncClient(transport=httpx.MockTransport(

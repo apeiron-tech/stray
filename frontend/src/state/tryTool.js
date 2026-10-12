@@ -36,7 +36,7 @@ export default {
       if(e.provider==='fishaudio') this.loadFishVoices(); else this.fishVoices=[];
       // Voice listing has a first-party unified read. The raw /call endpoint stays a faithful Fish
       // relay, while this action selects BYOK or organization-owned platform resources server-side.
-      if(e.id==='fishaudio.voices.list') this.epTryAccess={tier:'platform',detail:'Uses your connected Fish Audio account when present; otherwise lists voices owned by this treg team. No BYOK key is required for team voices.'};
+      if(e.id==='fishaudio.voices.list') this.epTryAccess={tier:'platform',detail:'Uses your connected Fish Audio account when present; otherwise lists voices owned by this stray team. No BYOK key is required for team voices.'};
       else this.loadEpTryAccessPolicy();
     },
 epTryParamAllowed(p){ return !p.authorization_methods || !p.authorization_methods.length
@@ -80,15 +80,15 @@ async runEpTry(){
           if(!r.ok) throw new Error(text||('HTTP '+r.status));
           const payload=text?JSON.parse(text):[]; this.epTryResp=JSON.stringify(payload,null,2);
           this.fishVoices=this.fishVoiceRows(payload);
-          this.fishVoicesSource=r.headers.get('X-Treg-Resource-Source')||'platform';
+          this.fishVoicesSource=r.headers.get('X-Stray-Resource-Source')||'platform';
           this.fishVoiceNote=this.fishVoicesSource==='byok'
             ?'These voices come from your connected Fish Audio account.'
-            :'These voices belong only to this treg team.';
+            :'These voices belong only to this stray team.';
           return;
         }
         const qs=this.epTryVisibleParams.filter(p=>['query','path'].includes(p.location)&&String(p.value)!=='').map(p=>encodeURIComponent(p.name)+'='+encodeURIComponent(p.value)).join('&');
         const opts={method:e.method||'GET', credentials:'include', headers:{...this.headers()}};
-        if(this.epTryAuthMethod) opts.headers['X-Treg-Authorization-Method']=this.epTryAuthMethod;
+        if(this.epTryAuthMethod) opts.headers['X-Stray-Authorization-Method']=this.epTryAuthMethod;
         for(const p of this.epTryVisibleParams.filter(p=>p.location==='header'&&String(p.value)!=='')) opts.headers[p.name]=String(p.value);
         if(this.epTryBodyType==='multipart'){
           const form=new FormData();

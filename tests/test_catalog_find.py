@@ -10,11 +10,11 @@ import json
 
 from sqlmodel import select
 
-from treg import audit
-from treg.config import get_settings
-from treg.infra import judge as judge_infra
-from treg.infra.db import session_maker
-from treg.models import SearchLog, SearchMiss
+from stray import audit
+from stray.config import get_settings
+from stray.infra import judge as judge_infra
+from stray.infra.db import session_maker
+from stray.models import SearchLog, SearchMiss
 
 JOB = "apple stock closing prices for last year"
 
@@ -40,7 +40,7 @@ async def _abstain(query, cands, **kw):
 
 
 async def _find(clients, q):
-    clients.headers.pop("X-Treg-Token", None)              # open route: no identity needed
+    clients.headers.pop("X-Stray-Token", None)              # open route: no identity needed
     r = await clients.get("/catalog/find", params={"q": q})
     return r, [json.loads(line) for line in r.text.splitlines() if line.strip()]
 
@@ -162,7 +162,7 @@ async def test_refuses_empty_unconfigured_and_over_the_limit(clients, monkeypatc
 
 
 async def test_search_page_is_served_to_signed_out_visitors(clients):
-    clients.headers.pop("X-Treg-Token", None)
+    clients.headers.pop("X-Stray-Token", None)
     clients.cookies.clear()
     r = await clients.get("/search")
     assert r.status_code == 200 and "/app/ui/assets/" in r.text
@@ -171,7 +171,7 @@ async def test_search_page_is_served_to_signed_out_visitors(clients):
 
 
 async def _find_on(clients, q, platform):
-    clients.headers.pop("X-Treg-Token", None)
+    clients.headers.pop("X-Stray-Token", None)
     r = await clients.get("/catalog/find", params={"q": q, "platform": platform})
     return r, [json.loads(line) for line in r.text.splitlines() if line.strip()]
 
@@ -208,9 +208,9 @@ async def test_an_unknown_shelf_is_a_404(clients, monkeypatch):
 
 
 # ==== v2: recall by job (find_engine v2 | shadow) =================================================
-from treg.application import catalog_find as F  # noqa: E402
-from treg.domain.catalog import find_recall as fr  # noqa: E402
-from treg.domain.catalog import store as catalog_store  # noqa: E402
+from stray.application import catalog_find as F  # noqa: E402
+from stray.domain.catalog import find_recall as fr  # noqa: E402
+from stray.domain.catalog import store as catalog_store  # noqa: E402
 from tests.test_find_recall import _cat  # noqa: E402
 
 
@@ -447,8 +447,8 @@ async def test_shadow_serves_v1_and_logs_both_engines(clients, monkeypatch):
 
 
 async def test_v2_with_the_semantic_channel_reports_it_on_the_event_and_the_log(clients, monkeypatch):
-    from treg.application import find_index
-    from treg.infra import embed as embed_infra
+    from stray.application import find_index
+    from stray.infra import embed as embed_infra
 
     _on(monkeypatch, find_engine="v2", find_embed_api_key="embed-key", find_embed_model="test/fake")
 
@@ -491,8 +491,8 @@ async def test_shadow_files_one_miss_from_the_engine_it_serves(clients, monkeypa
 
 
 async def test_v2_first_event_does_not_wait_for_the_query_vector(clients, monkeypatch):
-    from treg.application import find_index
-    from treg.infra import embed as embed_infra
+    from stray.application import find_index
+    from stray.infra import embed as embed_infra
 
     _on(monkeypatch, find_engine="v2", find_embed_api_key="embed-key", find_embed_model="test/fake")
     asked = []

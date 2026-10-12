@@ -56,7 +56,7 @@ async def test_by_name_404s(clients: AsyncClient):
 async def test_by_name_is_org_scoped(clients: AsyncClient):
     await clients.post("/skills", json=SKILL)
     r = await clients.post("/users", json={"email": "stranger@elsewhere.dev"})
-    other = {"X-Treg-Token": r.json()["token"]}
+    other = {"X-Stray-Token": r.json()["token"]}
     assert (await clients.get("/bundles/by-name/intercom", headers=other)).status_code == 404
     assert (await clients.get("/tools/by-name/intercom", headers=other)).status_code == 404
 

@@ -18,7 +18,7 @@ export default {
       if (!t) return { label: 'Skill', tone: 'quiet', title: 'A knowledge skill: an agent installs it with the CLI' }
       if (!t.cli) return { label: 'API', tone: 'quiet', title: 'Called through the proxy, the key injected server-side' }
       if (t.server_runnable) return { label: 'Server', tone: 'ok', title: 'Runs on the server: the key is injected there, never on a member\'s machine' }
-      return { label: 'Local only', tone: 'warn', title: 'This CLI authenticates from the member\'s own machine (treg run --local)' }
+      return { label: 'Local only', tone: 'warn', title: 'This CLI authenticates from the member\'s own machine (stray run --local)' }
     },
     creds() { return this.t ? this.credChips(this.t).map(w => w.label).join(', ') : '' },
   },
@@ -35,7 +35,7 @@ export default {
     <span class="pl-logo lg gen" :style="{background:platTileBg(name)}" aria-hidden="true"><span class="pt-i">{{platInitial({label:name})}}</span></span>
     <span class="cn-id">
       <a :href="href" @click.prevent.stop="open"><b>{{name}}</b></a>
-      <span class="pl-meta" :title="t ? t.base_url : ''">{{t ? t.host : 'treg skill install '+name}}</span>
+      <span class="pl-meta" :title="t ? t.base_url : ''">{{t ? t.host : 'stray skill install '+name}}</span>
     </span>
     <span class="cn-st" :title="where.title">{{where.label}}</span>
   </div>

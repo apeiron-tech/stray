@@ -1,7 +1,7 @@
 """The endpoint catalog served over HTTP (`/catalog/*`) + stamped onto provisioned tools.
 
-The data lives in src/treg/catalog/*.yaml (see docs/context/architecture/catalog.md). These tests
-assert the API CONTRACT the dashboard and `treg catalog` are written against, plus the two things
+The data lives in src/stray/catalog/*.yaml (see docs/context/architecture/catalog.md). These tests
+assert the API CONTRACT the dashboard and `stray catalog` are written against, plus the two things
 the loader has to get right on its own: merging a provider's `<service>.extended.yaml` into the same
 provider, and never letting a caller-supplied id reach the filesystem.
 """
@@ -17,8 +17,8 @@ from pathlib import Path
 import pytest
 from httpx import AsyncClient
 
-from treg import oauth_providers as P
-from treg.domain.catalog import store as cs
+from stray import oauth_providers as P
+from stray.domain.catalog import store as cs
 
 
 def test_loaded_rows_are_plain_json(tmp_path):
@@ -49,9 +49,9 @@ async def test_platforms_lists_the_curated_shelves_busiest_first(clients: AsyncC
 
     counts = [p["endpoints"] for p in body["platforms"]]
     assert counts == sorted(counts, reverse=True)
-    # every vendor on a shelf is named once, for the /search pile; treg's routed rows are not a vendor
+    # every vendor on a shelf is named once, for the /search pile; stray's routed rows are not a vendor
     assert set(body["providers"]) == {s for p in body["platforms"] for s in p["providers"]}
-    assert body["providers"]["dataforseo"] == "DataForSEO" and "treg" not in body["providers"]
+    assert body["providers"]["dataforseo"] == "DataForSEO" and "stray" not in body["providers"]
 
 
 async def test_platform_listing_hides_taxonomy_entries_nobody_implements(clients: AsyncClient):
@@ -216,7 +216,7 @@ def test_short_job_title_is_searchable_without_changing_the_full_description(tmp
     matches, total = cs.search("archive", cat, platform="web")
     assert total == 2
     assert {ep["id"] for ep, _ in matches} == {"one.read", "two.read"}
-    from treg.domain.catalog import find_recall
+    from stray.domain.catalog import find_recall
     candidates = find_recall.recall("archive", find_recall.index(cat), cat.aliases, platform="web")
     assert any(candidate.unit.id == "web.extract" for candidate in candidates)
 
@@ -229,7 +229,7 @@ def test_a_title_for_no_capability_fails_the_load(tmp_path):
 
 
 async def test_every_endpoint_carries_a_domain_and_a_call_line(clients: AsyncClient):
-    """The domain decides which section a row files under, and the `treg call` line is the reason
+    """The domain decides which section a row files under, and the `stray call` line is the reason
     the row exists — both ride on the row rather than costing a second request."""
     for slug in ("tiktok", "web"):
         body = (await clients.get(f"/catalog/platforms/{slug}")).json()
@@ -238,7 +238,7 @@ async def test_every_endpoint_carries_a_domain_and_a_call_line(clients: AsyncCli
         for e in eps:
             assert e["domain"] and e["domain"] == e["domain"].lower().strip()
             # The endpoint-ID form: callable with no registered tool (marketplace credential ladder).
-            assert e["call_template"].startswith(f"treg call {e['id']}")
+            assert e["call_template"].startswith(f"stray call {e['id']}")
 
 
 async def test_the_ledger_ships_the_provider_wide_facts_once(clients: AsyncClient):
@@ -349,7 +349,7 @@ async def test_search_finds_the_job_across_providers_best_first(clients: AsyncCl
     assert body["count"] == len(rows) <= body["total"]
 
     top = [e["id"] for e in rows[:5]]
-    assert top[0] == "treg.tiktok.video.comments", "the routed endpoint for the job comes first"
+    assert top[0] == "stray.tiktok.video.comments", "the routed endpoint for the job comes first"
     assert set(top[1:]) == {
         "anyapi.tiktok.video.comments",
         "justoneapi.tiktok.video.comments",
@@ -373,12 +373,12 @@ async def test_search_finds_the_job_across_providers_best_first(clients: AsyncCl
         group = [e["tier"] for e in loose if e["score"] == score]
         assert group == sorted(group, key=lambda t: t != "core")
 
-    first = rows[1]  # the first CHILD; rows[0] is the generated treg.* row, whose provider is treg itself
+    first = rows[1]  # the first CHILD; rows[0] is the generated stray.* row, whose provider is stray itself
     assert first["capability"] == "tiktok.video.comments" and first["capability_description"]
     assert first["platform"] == "tiktok" and first["platform_label"] == "TikTok"
     assert first["provider_display"] == P.get(first["provider"]).display_name
     assert first["cost"]["usd"] is not None, "a search row prices in one currency or comparison is fiction"
-    assert any(h.startswith(f"treg catalog get {rows[0]['id']}") or h.startswith(f"treg catalog get {first['id']}") for h in body["hints"])
+    assert any(h.startswith(f"stray catalog get {rows[0]['id']}") or h.startswith(f"stray catalog get {first['id']}") for h in body["hints"])
 
 
 async def test_search_requires_every_token_to_match(clients: AsyncClient):
@@ -424,7 +424,7 @@ async def test_endpoint_detail_answers_everything_in_one_call(clients: AsyncClie
     assert e["id"] not in sibs, "an endpoint is not its own sibling"
 
     tmpl = body["call_template"]
-    assert tmpl.startswith("treg call justoneapi.tiktok.video.comments")
+    assert tmpl.startswith("stray call justoneapi.tiktok.video.comments")
     assert "--query awemeId=" in tmpl, "the verifier's proven request is what makes it paste-ready"
     assert isinstance(body["example_response"], (dict, list)), "inline, so parsing needs no second call"
 
@@ -474,7 +474,7 @@ async def test_retired_rows_leave_discovery_but_keep_an_actionable_direct_lookup
 async def test_call_template_carries_method_and_body_for_a_post(clients: AsyncClient):
     body = (await clients.get("/catalog/endpoints/dataforseo.web.backlinks.summary")).json()
     tmpl = body["call_template"]
-    assert tmpl.startswith("treg call dataforseo.web.backlinks.summary --method POST")
+    assert tmpl.startswith("stray call dataforseo.web.backlinks.summary --method POST")
     assert "--data '[{\"target\":\"moz.com\"" in tmpl, "single-quoted JSON survives a shell paste"
 
 
@@ -555,7 +555,7 @@ async def test_an_observed_price_is_provenanced_without_a_url():
 
 
 async def test_platform_eligibility_refuses_everything_it_cannot_prove():
-    """The predicate behind spending treg's own key. Asymmetric on purpose: an unknown price must
+    """The predicate behind spending stray's own key. Asymmetric on purpose: an unknown price must
     read as "refuse", never as free — so every axis is checked independently."""
     cat = cs.load()
     ok = cat.by_id["tikhub.tiktok.user.profile"]
@@ -576,10 +576,10 @@ async def test_platform_eligibility_refuses_everything_it_cannot_prove():
     assert not cat.platform_eligible({**ok, "cost": None}), "no price block ⇒ refuse, not free"
     # `ok` is fully priced, so status is the ONLY axis left to explain a refusal here. A marked row
     # keeps its historical price — it is retained to explain a cached id, not to be sold — and an
-    # eligible one would put treg's own key behind a route the provider has already removed.
+    # eligible one would put stray's own key behind a route the provider has already removed.
     assert not cat.platform_eligible({**ok, "status": "retired"}), "a retired route is not an offer"
     assert not cat.platform_eligible({**ok, "status": "broken"}), "a broken route is not an offer"
-    # A plan-gated route works upstream but treg's own subscription cannot serve it — a customer
+    # A plan-gated route works upstream but stray's own subscription cannot serve it — a customer
     # discovered exactly this the hard way, via a run of 403s on akta's alternative-data family.
     # It stays discoverable (a team's OWN key on a bigger plan serves it) but is never an offer.
     assert not cat.platform_eligible({**ok, "platform_blocked": "plan gate"}), \
@@ -647,7 +647,7 @@ def test_call_template_falls_back_to_documented_examples(tmp_path):
         "        offset: {type: integer, required: false}\n")
     ep = cs.load(directory=tmp_path).by_id["moz.web.thing"]
     # Path params ride as --query (the server folds them into the path), required query after.
-    assert cs.call_template(ep) == "treg call moz.web.thing --query site=moz.com --query 'limit=<integer>'"
+    assert cs.call_template(ep) == "stray call moz.web.thing --query site=moz.com --query 'limit=<integer>'"
 
 
 def test_call_templates_share_wire_encoding_and_quote_complete_query_arguments():
@@ -675,7 +675,7 @@ def test_gtm_catalog_paths_and_declared_parameters_are_the_same_contract():
     """Every GTM catalog command must ask for the atomic ids its path actually substitutes.
 
     Google Discovery describes these as one semantic parent/path resource, but passing
-    ``accounts/…/containers/…`` through one treg placeholder encodes the hierarchy as ``%2F``.
+    ``accounts/…/containers/…`` through one stray placeholder encodes the hierarchy as ``%2F``.
     The curated and generated tiers therefore expose the flattened path segments instead.
     """
     cat = cs.load()
@@ -888,7 +888,7 @@ def test_a_provider_with_no_catalog_entry_stamps_nothing():
     ("hunter", {"type": "per_call", "value": 0.05, "currency": "USD", "unit": "call"}, False),
     ("hunter", {"type": "per_call", "value": 0.05, "currency": "USD", "unit": "call",
                 "confidence": "documented"}, True),
-    # No usd at all: refuse, so treg never pays a provider and charges $0.
+    # No usd at all: refuse, so stray never pays a provider and charges $0.
     ("pdl", {"type": "per_call", "currency": "credit", "unit": "credit"}, False),
 ])
 def test_platform_eligibility_needs_a_price_and_provenance_unless_free(provider, cost, eligible):
@@ -897,7 +897,7 @@ def test_platform_eligibility_needs_a_price_and_provenance_unless_free(provider,
     assert cat.platform_eligible(ep) is eligible
 
 
-# ---- shared-plan rates: a price treg SET must say so, everywhere ----------------------------
+# ---- shared-plan rates: a price stray SET must say so, everywhere ----------------------------
 
 def _load_validator():
     """The actual validator module, so these tests exercise the real check rather than a copy that
@@ -912,7 +912,7 @@ def _load_validator():
 
 
 def test_every_shared_plan_rate_prints_its_fee_and_break_even():
-    """A `kind: treg_shared_plan` entry is the catalog asserting OUR OWN price for a flat-fee
+    """A `kind: stray_shared_plan` entry is the catalog asserting OUR OWN price for a flat-fee
     provider. The honesty of that lives in the basis string, because the basis is what every surface
     shows as provenance: it must say whose price it is, the vendor fee, and the break-even volume.
     This runs the validator's own check against the real fx.yaml."""
@@ -929,12 +929,12 @@ def test_the_shared_plan_check_actually_BITES(tmp_path):
     cv = _load_validator()
     bad = """
 credit_rates_usd:
-  no_price:   {usd: null, kind: treg_shared_plan, basis: "treg shared-plan rate. $10/mo. break-even at 1,000 calls/mo", source: "x", checked: "2026-08-14"}
-  no_fee:     {usd: 0.001, kind: treg_shared_plan, basis: "treg shared-plan rate. break-even at 1,000 calls/mo", source: "x", checked: "2026-08-14"}
-  no_breakeven: {usd: 0.001, kind: treg_shared_plan, basis: "treg shared-plan rate. Vendor sells flat $10/mo", source: "x", checked: "2026-08-14"}
-  wrong_start: {usd: 0.001, kind: treg_shared_plan, basis: "Vendor sells flat $10/mo; break-even at 1,000 calls/mo", source: "x", checked: "2026-08-14"}
-  typo_kind:  {usd: 0.001, kind: treg_shared_pla, basis: "whatever", source: "x", checked: "2026-08-14"}
-  prose_only: {usd: 0.001, basis: "treg shared-plan rate without the marker", source: "x", checked: "2026-08-14"}
+  no_price:   {usd: null, kind: stray_shared_plan, basis: "stray shared-plan rate. $10/mo. break-even at 1,000 calls/mo", source: "x", checked: "2026-08-14"}
+  no_fee:     {usd: 0.001, kind: stray_shared_plan, basis: "stray shared-plan rate. break-even at 1,000 calls/mo", source: "x", checked: "2026-08-14"}
+  no_breakeven: {usd: 0.001, kind: stray_shared_plan, basis: "stray shared-plan rate. Vendor sells flat $10/mo", source: "x", checked: "2026-08-14"}
+  wrong_start: {usd: 0.001, kind: stray_shared_plan, basis: "Vendor sells flat $10/mo; break-even at 1,000 calls/mo", source: "x", checked: "2026-08-14"}
+  typo_kind:  {usd: 0.001, kind: stray_shared_pla, basis: "whatever", source: "x", checked: "2026-08-14"}
+  prose_only: {usd: 0.001, basis: "stray shared-plan rate without the marker", source: "x", checked: "2026-08-14"}
   fine_vendor: {usd: 0.02, basis: "Starter $49/mo / 2,000 credits", source: "x", checked: "2026-08-14"}
 """
     (tmp_path / "fx.yaml").write_text(bad)
@@ -952,17 +952,17 @@ credit_rates_usd:
 
 
 def test_the_trial_kind_check_actually_BITES(tmp_path):
-    """Every dishonest treg_trial shape refused by the REAL check: a non-zero 'trial', a zero with
+    """Every dishonest stray_trial shape refused by the REAL check: a non-zero 'trial', a zero with
     no allowance (the congestion-control gap), a basis that does not say whose $0 it is, and prose
     claiming a trial without the marker."""
     cv = _load_validator()
     bad = """
 credit_rates_usd:
-  nonzero:  {usd: 0.001, kind: treg_trial, trial_calls_per_team_day: 20, basis: "treg trial rate. x", source: "x", checked: "2026-08-15"}
-  no_cap:   {usd: 0, kind: treg_trial, basis: "treg trial rate. x", source: "x", checked: "2026-08-15"}
-  bad_cap:  {usd: 0, kind: treg_trial, trial_calls_per_team_day: 0, basis: "treg trial rate. x", source: "x", checked: "2026-08-15"}
-  wrong_basis: {usd: 0, kind: treg_trial, trial_calls_per_team_day: 20, basis: "free on our key", source: "x", checked: "2026-08-15"}
-  fine_trial: {usd: 0, kind: treg_trial, trial_calls_per_team_day: 20, basis: "treg trial rate. Served at $0 on treg's free key", source: "x", checked: "2026-08-15"}
+  nonzero:  {usd: 0.001, kind: stray_trial, trial_calls_per_team_day: 20, basis: "stray trial rate. x", source: "x", checked: "2026-08-15"}
+  no_cap:   {usd: 0, kind: stray_trial, basis: "stray trial rate. x", source: "x", checked: "2026-08-15"}
+  bad_cap:  {usd: 0, kind: stray_trial, trial_calls_per_team_day: 0, basis: "stray trial rate. x", source: "x", checked: "2026-08-15"}
+  wrong_basis: {usd: 0, kind: stray_trial, trial_calls_per_team_day: 20, basis: "free on our key", source: "x", checked: "2026-08-15"}
+  fine_trial: {usd: 0, kind: stray_trial, trial_calls_per_team_day: 20, basis: "stray trial rate. Served at $0 on stray's free key", source: "x", checked: "2026-08-15"}
 """
     (tmp_path / "fx.yaml").write_text(bad)
     original = cv.CATALOG
@@ -982,7 +982,7 @@ def test_trial_pools_flow_from_fx_to_eligibility_and_display():
     """The real file's three pools, end to end through the loader: a $0 price that is platform
     eligible AND carries its allowance wherever the cost is shown — a bare $0.00 would read as
     unlimited."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
 
     c = cs.load()
     assert c.trial_pools == {"finnhub": 50, "twelvedata": 20, "tiingo": 20,
@@ -1110,26 +1110,26 @@ async def test_search_pulls_the_routed_parent_in_when_a_child_matches(clients: A
     along. And `find leads` lands on the lead-search job itself (people.search says "leads")."""
     rows = (await clients.get("/catalog/search", params={"q": "leadsforge email"})).json()["results"]
     ids = [r["id"] for r in rows]
-    assert "treg.people.email.find" in ids, ids
-    assert ids.index("treg.people.email.find") < ids.index("leadsforge.people.email.find")
+    assert "stray.people.email.find" in ids, ids
+    assert ids.index("stray.people.email.find") < ids.index("leadsforge.people.email.find")
     rows = (await clients.get("/catalog/search", params={"q": "find leads"})).json()["results"]
-    assert rows[0]["id"] == "treg.people.search", [r["id"] for r in rows[:3]]
+    assert rows[0]["id"] == "stray.people.search", [r["id"] for r in rows[:3]]
 
 
 async def test_search_caps_a_routed_group_at_a_few_children(clients: AsyncClient):
     """A search page is a list of JOBS: one capability's two dozen providers must not eat the
     budget. The parent says how many were cut; `catalog get` ranks them all."""
     rows = (await clients.get("/catalog/search", params={"q": "find leads"})).json()["results"]
-    parent = next(r for r in rows if r["id"] == "treg.people.search")
+    parent = next(r for r in rows if r["id"] == "stray.people.search")
     kids = [r for r in rows if r["capability"] == "people.search" and r.get("kind") != "routed"]
     assert len(kids) <= 5 and parent["children_hidden"] >= 1
-    assert "treg.people.email.find" in {r["id"] for r in rows}, "the next job fits on the page now"
+    assert "stray.people.email.find" in {r["id"] for r in rows}, "the next job fits on the page now"
 
 
 def test_generic_display_prices_match_web_and_cli():
-    from treg.domain.catalog import store
-    from treg.routers.web import _price_label
-    from treg.cli import _cost_usd, _cost_label
+    from stray.domain.catalog import store
+    from stray.routers.web import _price_label
+    from stray.cli import _cost_usd, _cost_label
     cat = store.load()
     for quantity, rate in [(25, 2.0), (100, 1.0)]:
         raw = {'type': 'per_result', 'currency': 'USD', 'value': rate, 'per': quantity,
@@ -1161,7 +1161,7 @@ async def test_every_comparison_page_in_the_sitemap_serves(clients):
     assert (await clients.get("/catalog/companies/not-a-capability")).status_code == 404
     assert (await clients.get("/catalog/platforms/companies")).headers["content-type"].startswith("application/json")
     # A capability only one provider serves has nothing to compare: no page of its own.
-    from treg.domain.catalog import store as catalog_store
+    from stray.domain.catalog import store as catalog_store
     cat = catalog_store.load()
     solo = next((e["platform"], e["capability"]) for e in cat.endpoints
                 if e.get("capability") and catalog_store.browsable(e) and (e["platform"], e["capability"]) not in cat.compared())

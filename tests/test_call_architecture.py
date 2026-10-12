@@ -9,15 +9,15 @@ from pathlib import Path
 
 import pytest
 
-from treg import archive, archive_bodies, bootstrap
-from treg.application import billing
-from treg.application.call import authorize, overflow, reserve, service, settle
-from treg.domain import money
-from treg.domain.capacity import marks as capacity_marks
-from treg.domain.governance import usage as usage_policy
+from stray import archive, archive_bodies, bootstrap
+from stray.application import billing
+from stray.application.call import authorize, overflow, reserve, service, settle
+from stray.domain import money
+from stray.domain.capacity import marks as capacity_marks
+from stray.domain.governance import usage as usage_policy
 
 
-_SRC = Path(__file__).parents[1] / "src" / "treg"
+_SRC = Path(__file__).parents[1] / "src" / "stray"
 
 _DATAPLANE_DERIVED_WRITES = {
     # Body objects preserve the paid response. Upload completes before the archive DB transaction
@@ -45,7 +45,7 @@ _DATAPLANE_DERIVED_WRITES = {
         (money.reap_stale_holds, "release"),
     ),
     # Plan §4.1 / refactor plan §1.6 "platform-account capacity marks": a confirmed balance/quota
-    # signature on treg's own key marks the provider exhausted in ratestore (the shared Ephemeral
+    # signature on stray's own key marks the provider exhausted in ratestore (the shared Ephemeral
     # table) AFTER the settle, so the next call is refused before a hold exists.
     "capacity_exhausted_mark": (
         (settle._note_capacity_signal, "capacity_marks.strike"),
@@ -256,11 +256,11 @@ def _derived_write_sites(overrides: dict[Path, str] | None = None) -> set[tuple[
 
 
 def test_call_runtime_import_edges_point_inward() -> None:
-    call_forbidden = ("treg.api", "treg.bootstrap", "treg.routers", "fastapi", "starlette")
+    call_forbidden = ("stray.api", "stray.bootstrap", "stray.routers", "fastapi", "starlette")
     upstream_forbidden = call_forbidden
     assert _package_forbidden_imports(_SRC / "application" / "call", call_forbidden) == set()
     assert _package_forbidden_imports(_SRC / "infra" / "upstream", upstream_forbidden) == set()
-    async_forbidden = ("treg.api", "treg.routers", "treg.application", "treg.audit")
+    async_forbidden = ("stray.api", "stray.routers", "stray.application", "stray.audit")
     assert _package_forbidden_imports(_SRC / "domain" / "asynctasks", async_forbidden) == set()
 
 
@@ -279,15 +279,15 @@ def test_catalog_access_router_only_translates_the_application_result() -> None:
 
 def test_startup_manifests_keep_dataplane_and_control_work_separate() -> None:
     assert bootstrap.ROLE_BACKGROUND_TASKS == {
-        "all": ("treg.adsconv.worker",),
+        "all": ("stray.adsconv.worker",),
         "dataplane": (),
-        "control": ("treg.adsconv.worker",),
+        "control": ("stray.adsconv.worker",),
     }
     for checks in bootstrap.ROLE_STARTUP_CHECKS.values():
-        assert "treg.api._backfill_provider_extra_tools" not in checks
-        assert "treg.api._bootstrap_single_user" not in checks
-    assert "treg.mcp.mcp_lifespan" in bootstrap.ROLE_STARTUP_CHECKS["dataplane"]
-    assert "treg.mcp.mcp_lifespan" not in bootstrap.ROLE_STARTUP_CHECKS["control"]
+        assert "stray.api._backfill_provider_extra_tools" not in checks
+        assert "stray.api._bootstrap_single_user" not in checks
+    assert "stray.mcp.mcp_lifespan" in bootstrap.ROLE_STARTUP_CHECKS["dataplane"]
+    assert "stray.mcp.mcp_lifespan" not in bootstrap.ROLE_STARTUP_CHECKS["control"]
 
 
 def test_dataplane_derived_write_allowlist_is_explicit_and_live() -> None:

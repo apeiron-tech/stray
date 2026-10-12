@@ -9,8 +9,8 @@ import pytest
 from fastapi.routing import APIRoute
 from starlette.routing import Mount
 
-from treg import api
-from treg.bootstrap import ROLE_STARTUP_CHECKS, create_app
+from stray import api
+from stray.bootstrap import ROLE_STARTUP_CHECKS, create_app
 
 
 _SNAPSHOT = Path(__file__).parent / "snapshots" / "routes.json"
@@ -48,23 +48,23 @@ _EXPECTED_ROUTES = {
     "control": [route for route in _ALL_ROUTES if route not in _DATAPLANE_ONLY],
 }
 _EXPECTED_BACKGROUND_TASKS = {
-    "all": ["treg.adsconv.worker"],
+    "all": ["stray.adsconv.worker"],
     "dataplane": [],
-    "control": ["treg.adsconv.worker"],
+    "control": ["stray.adsconv.worker"],
 }
 _READ_ONLY_STARTUP_CHECKS = {
     "all": (
-        "treg.infra.db.verify_db",
+        "stray.infra.db.verify_db",
         "app.state.http",
-        "treg.mcp.mcp_lifespan",
+        "stray.mcp.mcp_lifespan",
     ),
     "dataplane": (
-        "treg.infra.db.verify_db",
+        "stray.infra.db.verify_db",
         "app.state.http",
-        "treg.mcp.mcp_lifespan",
+        "stray.mcp.mcp_lifespan",
     ),
     "control": (
-        "treg.infra.db.verify_db",
+        "stray.infra.db.verify_db",
         "app.state.http",
     ),
 }

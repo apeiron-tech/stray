@@ -1,12 +1,12 @@
-"""The pool gauge is the reading behind `TREG_DB_POOL_OVERRIDES`: per-minute peak checked-out
+"""The pool gauge is the reading behind `STRAY_DB_POOL_OVERRIDES`: per-minute peak checked-out
 connections per pool, next to capacity. Sizing by arithmetic got both minor pools wrong once each
 (ops/deploy.md § Database pools); this is what settles the number."""
 import asyncio
 
 import pytest
 
-from treg import analytics, bootstrap
-from treg.infra import db as infra_db
+from stray import analytics, bootstrap
+from stray.infra import db as infra_db
 
 
 def test_snapshot_reports_nothing_on_sqlite_and_a_pool_row_per_engine_otherwise():

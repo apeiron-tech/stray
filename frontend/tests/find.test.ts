@@ -45,7 +45,7 @@ test('a group knows where its fit came from and how many vendors were folded awa
   expect(find.findFitTitle.call({}, { p: 0.55, fitFrom: 'job' })).toBe('Fit for this job: 55%')
 })
 
-test('an empty answer says whether treg lacks it or the text is not a job', () => {
+test('an empty answer says whether stray lacks it or the text is not a job', () => {
   expect(findNoneText('gap')).toMatch(/does not have this kind of data or action yet/)
   expect(findNoneText('not_task')).toMatch(/does not read as a job/)
   expect(findNoneText('')).toMatch(/does not read as a job/)

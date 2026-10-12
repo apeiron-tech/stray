@@ -1,14 +1,14 @@
 """cmd_call must not lose an inline `?query` written into the path.
 
 httpx drops a URL's existing query string whenever params= is passed (even []), so before the fix
-`treg call meta-ads "act_1?fields=name"` reached the proxy with NO query — the upstream returned
+`stray call meta-ads "act_1?fields=name"` reached the proxy with NO query — the upstream returned
 default/wrong data with no error. These tests capture the request cmd_call actually builds.
 """
 from types import SimpleNamespace
 
 import httpx
 
-from treg import cli
+from stray import cli
 
 
 def _capture(monkeypatch):

@@ -8,7 +8,7 @@ import { storageGet, storageSet, storageRemove } from './storage.js'
 // `reason` says why a `none` is empty (gap: the catalog lacks it; not_task; v2 only).
 export const FIND_EMPTY = {q:'', scope:'', phase:'idle', candidates:[], rows:[], verdict:'', named:'', read:0, high:1, error:'', auto:false,
   reason:''}
-const FIND_OPEN = 'treg-find-open'
+const FIND_OPEN = 'stray-find-open'
 // The Catalog box searches by itself once typing pauses this long: people did not discover Enter.
 const FIND_DEBOUNCE_MS = 700
 const FIND_MIN_CHARS = 2
@@ -48,11 +48,11 @@ export function jobGroups(rows){
     });
 }
 
-// Why an answer came back empty, in the person's terms: a gap is something treg does not carry yet;
+// Why an answer came back empty, in the person's terms: a gap is something stray does not carry yet;
 // anything else did not read as a job.
 export function findNoneText(reason){
   return reason==='gap'
-    ? 'treg does not have this kind of data or action yet. We have noted it.'
+    ? 'stray does not have this kind of data or action yet. We have noted it.'
     : 'This does not read as a job. Try describing the data you want or the action to take.';
 }
 
@@ -150,14 +150,14 @@ export default {
   },
 
   // What an agent needs to act on the answer: the job in the person's words, the endpoint ids that
-  // fit (best first, one per capability unless asked for a whole group), and where treg starts.
+  // fit (best first, one per capability unless asked for a whole group), and where stray starts.
   findAgentPrompt(groups){
     const lines=groups.flatMap(g=>g.rows.slice(0,3).map(r=>{
       const price=this.capCheapest([r])?.label;
       return '- '+r.id+' ('+(r.provider_display||r.provider)+(price ? ', '+price : '')+'): '+(r.capability_description||r.name);
     }));
-    return 'Use treg to do this: '+this.find.q+'\n\nTools in the treg catalog that fit the job:\n'+lines.join('\n')
-      +'\n\nIf treg is not set up yet, read '+(this.proxy||location.origin)+'/llms.txt first. Check each tool with `treg catalog get <id>` before calling it.';
+    return 'Use stray to do this: '+this.find.q+'\n\nTools in the stray catalog that fit the job:\n'+lines.join('\n')
+      +'\n\nIf stray is not set up yet, read '+(this.proxy||location.origin)+'/llms.txt first. Check each tool with `stray catalog get <id>` before calling it.';
   },
 
   // What "Copy for your agent" hands over for the whole answer: every strong fit, topped up to

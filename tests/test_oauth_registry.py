@@ -1,7 +1,7 @@
 """The curated OAuth provider registry (oauth_providers.py).
 
 BYO mode stays exactly as it was: the caller brings client_id/secret/URIs. REGISTRY mode is the
-other half — name a provider and treg's own approved app supplies the credentials, requesting
+other half — name a provider and stray's own approved app supplies the credentials, requesting
 only the scopes the chosen capability actually needs.
 """
 
@@ -13,14 +13,14 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 from httpx import AsyncClient
 
-from treg.config import get_settings
+from stray.config import get_settings
 
 
 @pytest.fixture
-def treg_google_app(monkeypatch):
-    """treg's own Google client — what a deployment sets to offer registry connects."""
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_ID", "treg-google-cid")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_SECRET", "treg-google-csec")
+def stray_google_app(monkeypatch):
+    """stray's own Google client — what a deployment sets to offer registry connects."""
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_ID", "stray-google-cid")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_SECRET", "stray-google-csec")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -30,16 +30,16 @@ def _consent_query(payload: dict) -> dict:
     return parse_qs(urlsplit(payload["consent_url"]).query)
 
 
-async def test_registry_connect_uses_tregs_own_app(clients: AsyncClient, treg_google_app):
+async def test_registry_connect_uses_strays_own_app(clients: AsyncClient, stray_google_app):
     """The caller supplies no credentials at all — that is the whole point."""
     d = (await clients.post("/oauth/start", json={"provider": "google-search-console"})).json()
     q = _consent_query(d)
-    assert q["client_id"] == ["treg-google-cid"]
+    assert q["client_id"] == ["stray-google-cid"]
     assert q["redirect_uri"][0].endswith("/oauth/callback")
     assert q["state"] == [d["state"]]
 
 
-async def test_the_broadest_capability_is_the_default(clients: AsyncClient, treg_google_app):
+async def test_the_broadest_capability_is_the_default(clients: AsyncClient, stray_google_app):
     """A plain Connect asks for write. Least-privilege-by-default meant most users had to connect
     twice — once for read, then again to widen it — which is worse than one honest consent screen."""
     d = (await clients.post("/oauth/start", json={"provider": "google-search-console"})).json()
@@ -47,7 +47,7 @@ async def test_the_broadest_capability_is_the_default(clients: AsyncClient, treg
     assert "webmasters" in scope and "webmasters.readonly" in scope
 
 
-async def test_choosing_read_narrows_the_request(clients: AsyncClient, treg_google_app):
+async def test_choosing_read_narrows_the_request(clients: AsyncClient, stray_google_app):
     """The choice is made BEFORE consent — a user who only wants read says so up front."""
     d = (await clients.post(
         "/oauth/start", json={"provider": "google-search-console", "capability": "read"}
@@ -55,9 +55,9 @@ async def test_choosing_read_narrows_the_request(clients: AsyncClient, treg_goog
     assert _consent_query(d)["scope"] == ["https://www.googleapis.com/auth/webmasters.readonly"]
 
 
-async def test_capabilities_are_cumulative(clients: AsyncClient, treg_google_app):
+async def test_capabilities_are_cumulative(clients: AsyncClient, stray_google_app):
     """write CONTAINS read. Otherwise picking write would silently cost you read access."""
-    from treg import oauth_providers as P
+    from stray import oauth_providers as P
     g = P.GOOGLE_SEARCH_CONSOLE
     assert set(g.scopes_for("read")) < set(g.scopes_for("write"))
     assert g.satisfied_capabilities(g.scopes_for("write")) == ["read", "write"]
@@ -68,7 +68,7 @@ async def test_capabilities_are_cumulative(clients: AsyncClient, treg_google_app
     ("my-gsc", "my-gsc"),              # an explicit name still wins
 ])
 async def test_secret_name_defaults_to_the_service(
-    clients: AsyncClient, treg_google_app, name, expected
+    clients: AsyncClient, stray_google_app, name, expected
 ):
     body = {"provider": "google-search-console"} | ({"name": name} if name else {})
     d = (await clients.post("/oauth/start", json=body)).json()
@@ -76,16 +76,16 @@ async def test_secret_name_defaults_to_the_service(
     assert st["name"] == expected
 
 
-async def test_unknown_provider_is_404(clients: AsyncClient, treg_google_app):
+async def test_unknown_provider_is_404(clients: AsyncClient, stray_google_app):
     r = await clients.post("/oauth/start", json={"provider": "nope"})
     assert r.status_code == 404
     assert "google-search-console" in r.text  # the error lists what IS known
 
 
 async def test_unconfigured_provider_is_a_clear_422(clients: AsyncClient, monkeypatch):
-    """A deployment that never set treg's Google client should say so, not fail mid-consent."""
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_ID", "")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_SECRET", "")
+    """A deployment that never set stray's Google client should say so, not fail mid-consent."""
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_ID", "")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_SECRET", "")
     get_settings.cache_clear()
     try:
         r = await clients.post("/oauth/start", json={"provider": "google-search-console"})
@@ -99,12 +99,12 @@ async def test_unconfigured_provider_is_a_clear_422(clients: AsyncClient, monkey
 
 def test_multi_method_provider_is_configured_when_any_method_is_available(monkeypatch):
     """The registry gives every client one correct provider-level availability value."""
-    from treg import oauth_providers as P
+    from stray import oauth_providers as P
 
-    monkeypatch.setenv("TREG_INSTAGRAM_CLIENT_ID", "")
-    monkeypatch.setenv("TREG_INSTAGRAM_CLIENT_SECRET", "")
-    monkeypatch.setenv("TREG_META_CLIENT_ID", "meta-cid")
-    monkeypatch.setenv("TREG_META_CLIENT_SECRET", "meta-secret")
+    monkeypatch.setenv("STRAY_INSTAGRAM_CLIENT_ID", "")
+    monkeypatch.setenv("STRAY_INSTAGRAM_CLIENT_SECRET", "")
+    monkeypatch.setenv("STRAY_META_CLIENT_ID", "meta-cid")
+    monkeypatch.setenv("STRAY_META_CLIENT_SECRET", "meta-secret")
     get_settings.cache_clear()
     try:
         row = next(item for item in P.listing() if item["service"] == "instagram")
@@ -134,9 +134,9 @@ def test_one_review_setting_controls_the_instagram_connect_experience(
     monkeypatch, pending, default_capability, page_capabilities, page_default,
     direct_warning, page_warning,
 ):
-    from treg import oauth_providers as P
+    from stray import oauth_providers as P
 
-    monkeypatch.setenv("TREG_OAUTH_REVIEW_PENDING", pending)
+    monkeypatch.setenv("STRAY_OAUTH_REVIEW_PENDING", pending)
     get_settings.cache_clear()
     try:
         row = next(item for item in P.listing() if item["service"] == "instagram")
@@ -161,7 +161,7 @@ def test_one_review_setting_controls_the_instagram_connect_experience(
         get_settings.cache_clear()
 
 
-async def test_unknown_capability_is_422(clients: AsyncClient, treg_google_app):
+async def test_unknown_capability_is_422(clients: AsyncClient, stray_google_app):
     r = await clients.post(
         "/oauth/start", json={"provider": "google-search-console", "capability": "nope"}
     )
@@ -178,20 +178,20 @@ async def test_neither_provider_nor_credentials_is_422(clients: AsyncClient):
 def test_scope_label_falls_back_rather_than_raising():
     """Slack grants implied scopes we never asked for. Showing one raw string beats 500ing the
     whole connection page over unfamiliar copy."""
-    from treg import oauth_providers as P
+    from stray import oauth_providers as P
     assert P.scope_label("some:unknown:scope") == "some:unknown:scope"
 
 
 # ---- consent-time disclosure -----------------------------------------------------------------
 # The Meta app all three Meta providers share is registered as "Crewlet", a sibling product, and
-# Facebook's consent screen shows only that bare app name. Without a notice on the treg side, the
+# Facebook's consent screen shows only that bare app name. Without a notice on the stray side, the
 # popup asks the user to authorize a product they have never heard of.
 
 def test_a_notice_provider_always_reaches_a_pre_consent_modal():
     """A provider-level notice needs a modal before redirect. Traditional providers reach the
     capability modal; a provider with separate authorization methods reaches the method picker,
     whose listing entries carry the profile-specific notice."""
-    from treg import oauth_providers as P
+    from stray import oauth_providers as P
 
     for p in P.REGISTRY.values():
         if not p.consent_notice:
@@ -206,7 +206,7 @@ def test_a_notice_provider_always_reaches_a_pre_consent_modal():
 
 
 def test_catalog_targets_are_exact_provider_approved_https_roots():
-    from treg import oauth_providers as P
+    from stray import oauth_providers as P
 
     assert P.DIFFBOT.profile_for_catalog_host("api.diffbot.com").base_url == "https://api.diffbot.com"
 

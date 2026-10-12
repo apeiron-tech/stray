@@ -6,7 +6,7 @@ status: settled 2026-09-07, no code written yet
 # Recipes — the decisions
 
 A **recipe** is a tool made of tools. It calls tool one, calls tool two, merges the two answers,
-calls tool three on the merged result, and sends an email. treg runs the whole pipeline for the
+calls tool three on the merged result, and sends an email. stray runs the whole pipeline for the
 caller, on the caller's account.
 
 This file is the record of a question-and-answer session with the owner on 2026-09-07, before any
@@ -23,14 +23,14 @@ The purpose: no design decision below rests on a guess.
 - The team writes many recipes first. Then outside people are invited to submit their own.
 - The contribution road is a pull request: create, submit, checked, verified, approved, added to
   the catalog.
-- The catalog page shows every recipe with its state: built by treg, verified, submitted and not
+- The catalog page shows every recipe with its state: built by stray, verified, submitted and not
   yet verified.
 - The script language is JavaScript. One language everybody knows. Interpreted or compiled is an
   implementation choice.
 - Some recipes are only steps and need no script. Those need no sandbox.
-- treg's own sandbox runs the recipes treg built or verified. A team that wants its own sandbox is
+- stray's own sandbox runs the recipes stray built or verified. A team that wants its own sandbox is
   a later, paid thing.
-- The script never holds a key. It names a tool and gives inputs; treg injects the credential.
+- The script never holds a key. It names a tool and gives inputs; stray injects the credential.
 - Every metered step deducts from the caller's balance, exactly as a direct call does today. There
   is no extra fee for the recipe itself.
 - Version one runs inside the request, start to finish.
@@ -49,7 +49,7 @@ Refuse before any step runs, and name exactly what to connect, so nothing is cha
 cannot finish.
 
 The owner added: the caller reads the message, adds the key, and continues. When the tool needs no
-key from the caller, the call is served on treg's key and deducted from the caller's balance.
+key from the caller, the call is served on stray's key and deducted from the caller's balance.
 
 **3. Does a recipe declare its inputs and its output fields, the way a catalog endpoint declares its
 parameters?**
@@ -61,7 +61,7 @@ code.
 ## Round 2 — how it reaches a caller
 
 **1. How does an agent call a recipe?**
-treg has one call road today. A recipe could ride it with its own id, or get a new road of its own.
+stray has one call road today. A recipe could ride it with its own id, or get a new road of its own.
 The same road, `/call/<recipe id>`. Then the CLI, the MCP tools and every plugin serve recipes on
 day one with no change.
 
@@ -133,7 +133,7 @@ Inside the web server's own process, or in a separate short-lived process.
 A separate process, with no network of its own, a memory cap and a time cap. A bad script then
 cannot touch the server or another run.
 
-The owner added: the script has no network at all. Every tool call goes out through the treg context
+The owner added: the script has no network at all. Every tool call goes out through the stray context
 object the script is given. There is no other road to the network.
 
 **6. What may the script see?**
@@ -150,7 +150,7 @@ The owner added: this visibility is important. A person watching sees the cascad
 it is running. An API caller sees the same as data.
 
 **8. A recipe that sends an email, retried after a timeout. Does it send twice?**
-treg already has a retry label for single calls.
+stray already has a retry label for single calls.
 The same label covers the whole run. A retry with the same label returns the stored result and runs
 nothing again.
 
@@ -169,7 +169,7 @@ Anything more needs the script.
 
 The owner added, and this shapes the design: a step names an earlier step and a field of it, nested
 fields included, as `$0.field.subfield`. Those references make the dependency graph. A step that
-names nobody has no dependency and starts at once. treg runs every ready step together, then the
+names nobody has no dependency and starts at once. stray runs every ready step together, then the
 next ready set, until the end. Nothing is declared by hand. Example: four steps, where three needs
 two and two needs one, and four needs nobody. Then four and one start together, two follows one,
 three follows two. Another example: three needs one and two separately, and four needs nobody. Then
@@ -179,8 +179,8 @@ must stay simple and readable.
 **2. When a recipe names a tool, does it name a catalog id or a team's own tool name?**
 A team names its own tools itself. One team calls its Stripe tool "stripe", another calls it
 "billing". A shared recipe cannot know that.
-A catalog id only. treg's ladder then uses the team's own key for that provider when they have one,
-and treg's key when they do not.
+A catalog id only. stray's ladder then uses the team's own key for that provider when they have one,
+and stray's key when they do not.
 
 **3. Does every run get an id and a page that shows the cascade?**
 You want the caller to watch the pipeline as it goes.
@@ -197,7 +197,7 @@ A team blocks a host. A member is limited to three tools.
 Yes. Every step passes the same gates as a direct call. A blocked step stops the run and names the
 rule that stopped it.
 
-**6. May a recipe ask the caller for a secret that treg does not store?**
+**6. May a recipe ask the caller for a secret that stray does not store?**
 Some sites need the person's own cookie, not an API key. That is what we hit in Crawl4AI.
 Yes, an input marked secret. Never logged, never stored, never in the trace, and the run is never
 cached.
@@ -213,13 +213,13 @@ waits for the team sandbox.
 
 **9. What does a recipe id look like, and who owns the name?**
 The catalog uses dotted ids made of a provider and a job. Recipes come from many authors.
-The author's handle plus the recipe name, as one id. treg's own recipes use treg's handle. A name
+The author's handle plus the recipe name, as one id. stray's own recipes use stray's handle. A name
 belongs to its author and cannot be taken.
 
 **10. Can an author run a recipe from their own folder before the pull request?**
 Waiting for a review to find a typo is slow.
 Yes. One command runs the recipe from the folder with the author's own token. Every step goes to the
-real treg and is charged as usual.
+real stray and is charged as usual.
 
 ---
 
@@ -265,8 +265,8 @@ The recipe promises field names. Something must fill them.
 The output block maps each field to a reference, with the same syntax as the steps. A script recipe
 returns the object itself.
 
-**9. Does treg retry a step that fails?**
-treg does not retry a single call today, by design.
+**9. Does stray retry a step that fails?**
+stray does not retry a single call today, by design.
 No retry in version one. The run stops and the trace says which step failed and why.
 
 **10. A step returns zero rows. Is that a failure?**

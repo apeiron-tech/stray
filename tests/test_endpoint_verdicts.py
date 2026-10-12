@@ -1,10 +1,10 @@
 """Agent verdicts on catalog endpoints: one vote per team, a threshold, quotes in proportion."""
 from datetime import datetime, timedelta
 
-from treg.application import feedback
-from treg.domain.feedback.verdicts import Review, quotable, summarize
-from treg.infra.db import session_maker
-from treg.models import CallReview
+from stray.application import feedback
+from stray.domain.feedback.verdicts import Review, quotable, summarize
+from stray.infra.db import session_maker
+from stray.models import CallReview
 
 T0 = datetime(2026, 9, 1)
 LONG = "Returned the requested records with the fields the task needed, nothing missing."

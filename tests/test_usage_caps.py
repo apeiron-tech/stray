@@ -11,11 +11,11 @@ from datetime import date, timedelta
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg import audit
-from treg.routers.orgs import count_today
-from treg.timeutil import utcnow_naive as _utcnow_naive
-from treg.infra.db import session_maker
-from treg.models import CallRecord, Membership, RunRecord, User
+from stray import audit
+from stray.routers.orgs import count_today
+from stray.timeutil import utcnow_naive as _utcnow_naive
+from stray.infra.db import session_maker
+from stray.models import CallRecord, Membership, RunRecord, User
 
 
 async def _set_cap(cap: int, email: str = "tim@superdesign.dev") -> int:
@@ -87,7 +87,7 @@ async def test_cap_is_per_member_not_global(clients: AsyncClient):
     btok = (await clients.post("/invites/accept", json={"code": code, "email": "bob@x.io"})).json()["token"]
 
     assert (await clients.get("/call/echo/anything")).status_code == 429  # tim blocked
-    bob = await clients.get("/call/echo/anything", headers={"X-Treg-Token": btok})
+    bob = await clients.get("/call/echo/anything", headers={"X-Stray-Token": btok})
     assert bob.status_code == 200  # bob unaffected
 
 
@@ -157,7 +157,7 @@ async def test_usage_endpoint_rolls_up_by_user_tool_and_day(clients: AsyncClient
 async def test_usage_endpoint_is_admin_only(clients: AsyncClient):
     org_id = await _get_org_id()
     vtok = await _invite(clients, org_id, "v@x.io", "viewer")
-    assert (await clients.get(f"/orgs/{org_id}/usage", headers={"X-Treg-Token": vtok})).status_code == 403
+    assert (await clients.get(f"/orgs/{org_id}/usage", headers={"X-Stray-Token": vtok})).status_code == 403
 
 
 async def test_set_cap_is_admin_only_and_validated(clients: AsyncClient):
@@ -171,7 +171,7 @@ async def test_set_cap_is_admin_only_and_validated(clients: AsyncClient):
     assert (await clients.patch(f"/orgs/{org_id}/members/{mid}/cap", json={"daily_call_cap": -5})).status_code == 422  # invalid
     # the member cannot set caps (not an admin)
     assert (await clients.patch(f"/orgs/{org_id}/members/{mid}/cap", json={"daily_call_cap": 1},
-                                headers={"X-Treg-Token": mtok})).status_code == 403
+                                headers={"X-Stray-Token": mtok})).status_code == 403
 
 
 async def test_list_members_shows_cap_and_used_today(clients: AsyncClient):

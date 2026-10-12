@@ -11,12 +11,12 @@ test('a new account goes from setup to a first call to the dashboard', async ({ 
   await page.getByPlaceholder('6-digit code').fill(code.match(/\d{6}/)![0])
   await page.getByRole('dialog', { name: 'Sign in' }).getByRole('button', { name: 'Sign in', exact: true }).click()
 
-  const flow = page.getByRole('dialog', { name: 'Set up treg' })
+  const flow = page.getByRole('dialog', { name: 'Set up stray' })
   const setup = flow.getByRole('heading', { name: "Here's what we found" })
   await expect(setup).toBeVisible({ timeout: 30000 })
   await flow.getByRole('button', { name: /Continue/ }).click({ timeout: 45000 })
 
-  const tasks = flow.getByRole('heading', { name: 'A task treg could help your agent with' })
+  const tasks = flow.getByRole('heading', { name: 'A task stray could help your agent with' })
   await expect(tasks).toBeVisible()
   await expect(setup).toBeHidden()
   await flow.getByRole('radio').first().click()
@@ -24,11 +24,11 @@ test('a new account goes from setup to a first call to the dashboard', async ({ 
 
   await expect(flow.getByRole('heading', { name: "Try your agent's first call" })).toBeVisible()
   await expect(tasks).toBeHidden()
-  await expect(flow.getByText(/treg call treg\./)).toBeVisible()
+  await expect(flow.getByText(/stray call stray\./)).toBeVisible()
 
   await flow.getByRole('button', { name: /Open the dashboard/ }).click()
   await expect(flow).toBeHidden()
   await page.reload()
   await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible()
-  await expect(page.getByRole('dialog', { name: 'Set up treg' })).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'Set up stray' })).toBeHidden()
 })

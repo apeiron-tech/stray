@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from treg.domain.catalog.routing.contracts import load_routing
+from stray.domain.catalog.routing.contracts import load_routing
 
 
 @pytest.mark.parametrize('extra,expected', [

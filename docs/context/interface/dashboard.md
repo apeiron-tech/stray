@@ -8,10 +8,10 @@ sources:
   - frontend/src/state/catalog.js
   - frontend/src/styles/base.css
   - frontend/e2e/layout.spec.ts
-  - src/treg/web/media/redesign/dashboard.css
-  - src/treg/routers/web.py
-  - src/treg/web/tutorial.js
-  - src/treg/web/tour/tour.js
+  - src/stray/web/media/redesign/dashboard.css
+  - src/stray/routers/web.py
+  - src/stray/web/tutorial.js
+  - src/stray/web/tour/tour.js
 related:
   - interface/api.md
   - interface/seo.md
@@ -28,7 +28,7 @@ this page keeps what no single file shows. The look follows the root `design.md`
 
 ## Build and serving
 
-- `bash scripts/build-dashboard.sh` builds into the gitignored `src/treg/web/dashboard/`, which the
+- `bash scripts/build-dashboard.sh` builds into the gitignored `src/stray/web/dashboard/`, which the
   wheel ships and refuses to build without. `scripts/dev-local.sh up` runs Python and Vite.
 - `_dashboard_index` (`routers/web.py`) serves one entry for `/app`, shared links and `/catalog`,
   signed in or not, `no-store` with `Vary: Cookie`; hashed assets are immutable under `/app/ui/assets/`.
@@ -99,7 +99,7 @@ this page keeps what no single file shows. The look follows the root `design.md`
   tools for a job is [find](../architecture/find.md): the answer's events carry `engine`, `reason`
   and `platform`, and `search_answered` sends `engine`, `reason` and `platform_choice` to PostHog. A
   job's fit says whether it is the job's or one vendor's (`fit_from`), a folded job reads "4 of 30
-  providers", and an empty answer says whether treg lacks it (`gap`, with a request link) or the text
+  providers", and an empty answer says whether stray lacks it (`gap`, with a request link) or the text
   did not read as a job.
 - The Catalog box (`CatalogSearch.vue`) asks the finder when typing pauses (700 ms) on two
   characters or more. That auto answer is a section above the still-filtered shelves (a platform

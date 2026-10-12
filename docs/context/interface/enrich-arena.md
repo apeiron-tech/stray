@@ -2,41 +2,41 @@
 title: Enrich Arena — paid comparisons, one-click feedback, and visible waterfalls
 status: shipped
 sources:
-  - src/treg/domain/arena.py
-  - src/treg/application/arena.py
-  - src/treg/routers/arena.py
-  - src/treg/models.py
-  - src/treg/alembic/versions/0027_enrich_arena.py
-  - src/treg/domain/governance/teams.py
-  - src/treg/routers/auth.py
-  - src/treg/bootstrap.py
-  - src/treg/web/enrich-arena.html
-  - src/treg/web/enrich-arena/arena.js
-  - src/treg/web/enrich-arena/bench.js
-  - src/treg/web/enrich-arena/arena.css
+  - src/stray/domain/arena.py
+  - src/stray/application/arena.py
+  - src/stray/routers/arena.py
+  - src/stray/models.py
+  - src/stray/alembic/versions/0027_enrich_arena.py
+  - src/stray/domain/governance/teams.py
+  - src/stray/routers/auth.py
+  - src/stray/bootstrap.py
+  - src/stray/web/enrich-arena.html
+  - src/stray/web/enrich-arena/arena.js
+  - src/stray/web/enrich-arena/bench.js
+  - src/stray/web/enrich-arena/arena.css
   - frontend/src/agent-setup/index.ts
-  - src/treg/application/arena_verification_insights.py
-  - src/treg/alembic/versions/0029_arena_verification_snapshot.py
+  - src/stray/application/arena_verification_insights.py
+  - src/stray/alembic/versions/0029_arena_verification_snapshot.py
   - scripts/import_arena_verification.py
   - tests/test_arena_verification_insights.py
-  - src/treg/application/arena_insights.py
-  - src/treg/domain/arena_insights.py
-  - src/treg/alembic/versions/0028_arena_insights.py
+  - src/stray/application/arena_insights.py
+  - src/stray/domain/arena_insights.py
+  - src/stray/alembic/versions/0028_arena_insights.py
   - tests/test_arena_insights.py
-  - src/treg/web/logos/apollo.svg
-  - src/treg/web/logos/branddev.svg
-  - src/treg/web/logos/companyenrich.svg
-  - src/treg/web/logos/findymail.svg
-  - src/treg/web/logos/hunter.svg
-  - src/treg/web/logos/icypeas.svg
-  - src/treg/web/logos/leadmagic.svg
-  - src/treg/web/logos/leadsforge.svg
-  - src/treg/web/logos/lusha.svg
-  - src/treg/web/logos/pdl.svg
-  - src/treg/web/logos/predictleads.svg
-  - src/treg/web/logos/thecompaniesapi.svg
-  - src/treg/web/logos/tomba.svg
-  - src/treg/web/sitetrack.js
+  - src/stray/web/logos/apollo.svg
+  - src/stray/web/logos/branddev.svg
+  - src/stray/web/logos/companyenrich.svg
+  - src/stray/web/logos/findymail.svg
+  - src/stray/web/logos/hunter.svg
+  - src/stray/web/logos/icypeas.svg
+  - src/stray/web/logos/leadmagic.svg
+  - src/stray/web/logos/leadsforge.svg
+  - src/stray/web/logos/lusha.svg
+  - src/stray/web/logos/pdl.svg
+  - src/stray/web/logos/predictleads.svg
+  - src/stray/web/logos/thecompaniesapi.svg
+  - src/stray/web/logos/tomba.svg
+  - src/stray/web/sitetrack.js
   - tests/test_enrich_arena.py
 related:
   - architecture/catalog.md
@@ -65,11 +65,11 @@ on team switches or saved-run restoration, and follows `/app` identity verificat
 company are sent only with `intercom_user_hash`; without the hash, chat remains anonymous.
 Logout, an expired session, or an account change shuts down the previous Intercom session.
 Guests and deployments without an Intercom app ID load no widget; widget failures do not block Arena.
-Its visual system follows the treg redesign reference (`https://treg-design.vercel.app/#start`):
+Its visual system follows the stray redesign reference (`https://stray-design.vercel.app/#start`):
 Geist Pixel headings, Google Sans Flex body text, DM Mono for technical values, a cool gray canvas,
 white rounded cards with fine borders, black actions and restrained teal status accents. A static
 pixel texture echoes the reference background, while the standalone account header stays compact.
-The entry screen leads with “Enrich Arena” and a small “Powered by [treg logo] Treg” label beneath the title. The composer keeps its compact, single-column layout and repeatable input rows.
+The entry screen leads with “Enrich Arena” and a small “Powered by [stray logo] Stray” label beneath the title. The composer keeps its compact, single-column layout and repeatable input rows.
 `ArenaTaskTabs` sits above the inputs in a single compact row with icons and readable action
 labels such as “Find work email” and “Enrich person”. A subtle filled state marks the active tab.
 The row starts with Find work email, Find phone number, Enrich person and Enrich company, followed
@@ -161,7 +161,7 @@ reopen it. OAuth returns allow only Arena, Leaderboard and Benchmark paths with 
 parameters, validated both before redirect and at callback. The return cookie holds a Fernet-encrypted
 target; callbacks authenticate and decrypt it before repeating the allowlist check. Missing or tampered
 cookies fall back to the dashboard. A ten-minute session-storage draft
-preserves the query through signup. The top navigation also links to `https://treg.to` via Treg.
+preserves the query through signup. The top navigation also links to `https://treg.to` via Stray.
 New users can create a team here. Valid inputs for signed-in
 users fetch a quote after an 800 ms pause. The compact Run button displays the estimated cost
 (waterfall: “Run from” the cheapest selected vendor’s quoted price); per-service prices appear below the input. The page
@@ -170,7 +170,7 @@ An absent or expired quote is first refreshed on the button; login never automat
 Changes to identity, mode, team, budget or services invalidate the displayed quote and discard
 late responses. A completed run consumes its quote; a fresh run gets a new quote.
 Insufficient-credit buttons open `/app#billing` with the Arena team selected via the dashboard's
-`treg-active` preference, preserving an unsubmitted draft. A 402 at start uses the same path.
+`stray-active` preference, preserving an unsubmitted draft. A 402 at start uses the same path.
 The navigation shows a labeled Team switcher only for users with multiple teams; a single team
 is selected automatically without an extra dropdown.
 
@@ -243,7 +243,7 @@ Fewer than 20 unique lookups withhold a rate; small-sample labels are hidden.
 Verification shows the share returning a verdict, not an accuracy percentage. Response time
 is the median of successful calls (including repeats), displayed only with at least 20 hits and
 a known timing aggregate. Current prices remain estimates for the selected entries, and own-key
-prices retain their no-treg-charge label. Historical stats do not alter dispatch or result awards.
+prices retain their no-stray-charge label. Historical stats do not alter dispatch or result awards.
 
 `GET /arena/insights` first reads the current version's persisted database aggregate by primary key, with
 `updated_at`, source window, actual first/last observation dates, collection status and only public aggregate fields. The disclosure shows recorded dates when observations exist, so a sparse or historical sample does not appear to span the whole rolling window. No production
@@ -255,7 +255,7 @@ publishes, including a completed snapshot with no rows. A fresh database returns
 every two minutes while visible, preserves the last successful values after a refresh error, and
 shows the last update time. Prices still come from the catalog and team quote.
 
-`application.arena_insights.drain` is the collector, run by the `treg-worker arena insights` cron
+`application.arena_insights.drain` is the collector, run by the `stray-worker arena insights` cron
 (every two minutes; `--max-seconds` bounds a pass and the next run resumes from the cursor). Once
 caught up it re-aggregates the 30-day window at most every `REFRESH_SECONDS` (30 minutes): each
 aggregate scans the whole window on the primary, so the cron cadence is not the refresh cadence. It no
@@ -290,7 +290,7 @@ window remains unresolved until a version-triggered rebuild; lossy audit cannot 
 The source window is 30 days, with old facts pruned. Rule, adapter or contract changes produce a new
 version/cursor and rebuild from available evidence. PostgreSQL computes medians and unique-request
 counts in SQL; local SQLite uses an exact Python median. The collector owns writes to the two new
-tables, created by Alembic revision `0028`. Run `python -m treg upgrade` before restarting the app.
+tables, created by Alembic revision `0028`. Run `python -m stray upgrade` before restarting the app.
 A refresh failure retains the last aggregate and its original timestamp; partial collection is never
 presented as a complete window. The API does not expose identities, hashes, organization IDs or bodies.
 
@@ -304,16 +304,16 @@ prevent controlled rankings, and returned fields are not independently verified.
 
 ## Multiple entries in the same composer
 
-The heading's “Setup treg in” button shows Claude Code, Codex, OpenClaw and Hermes logos plus
+The heading's “Setup stray in” button shows Claude Code, Codex, OpenClaw and Hermes logos plus
 the count of other choices. It opens a native dialog using the same `AgentPicker` and
 `SetupInstructions` components as the dashboard welcome modal: their source is
-`frontend/src/agent-setup/`, compiled for this page into `/agent-setup.js` (`window.TregAgentSetup`).
+`frontend/src/agent-setup/`, compiled for this page into `/agent-setup.js` (`window.StrayAgentSetup`).
 The instruction
 heading sits above the prompt card; the card is a flat panel with Copy floating in a right gutter
 on desktop and above the command on phones. Both stylesheets style that one shape, and the
 component carries no layout of its own, so a change to its markup is checked on both surfaces
 (the dashboard defines `.agent-setup-instructions .text-button` for "Show key"). The remembered
-`treg-agent` choice, expanded agent list and Grok Bot plugin step are shared. The setup text points
+`stray-agent` choice, expanded agent list and Grok Bot plugin step are shared. The setup text points
 to this deployment's `/llms.txt`. Continuing as a signed-in team member fetches `/auth/cli-token`
 for the active team; the token is masked by default, copied only on click, never persisted by the
 modal, and cleared when it closes. Stale responses cannot restore a closed or wrong-team token.
@@ -378,7 +378,7 @@ Average per result divides that total by distinct input entries with a found, no
 multiple vendors finding the same entry count once. Discovery labels this average per matched query,
 not per returned contact. Pending charges withhold the average, and runs with no found entries show a dash.
 The summary is independent of the entry filter and is the completion auto-scroll target.
-A repeated Setup treg in agents button sits to its right and wraps beneath on narrow screens,
+A repeated Setup stray in agents button sits to its right and wraps beneath on narrow screens,
 opening the same onboarding modal as the page header.
 
 When a newly started or resumed running battle/waterfall finishes, Arena scrolls once to the
@@ -462,7 +462,7 @@ the exact adapter requests, endpoint/adapter hashes, identity, ordering, estimat
 an encrypted `ArenaRun`. A quote expires after five minutes. Creating it does not reserve credits.
 Battle requires credit for the sum of estimates. Waterfall sorts selected vendors by their exact
 quoted price, starts with credit for only the cheapest vendor (including an exact balance match),
-and displays “Run from” that price. Own-key calls have a zero treg price. Each subsequent attempt
+and displays “Run from” that price. Own-key calls have a zero stray price. Each subsequent attempt
 still passes the normal runtime balance check and the remaining run-budget check. These are admission limits at quoted prices, not a guarantee
 against a higher provider-reported final charge. The UI discloses that difference.
 
@@ -472,7 +472,7 @@ Execution is owned by an in-process task: compare has four concurrent legs per r
 executes serially. Each leg captures current membership/policy and calls the existing
 `application.call.service.execute_call` against the direct endpoint. The ordinary call runtime
 owns pricing, credential priority, authorization, reserves, settlement and cancellation cleanup.
-Arena never writes balances or holds. Own keys remain unmetered by treg. Aggregator overflow is
+Arena never writes balances or holds. Own keys remain unmetered by stray. Aggregator overflow is
 disabled for these comparisons, and archive lookup is bypassed so runs measure fresh calls.
 
 Database sessions are short and closed before upstream requests. Attempt state and call references
@@ -596,13 +596,13 @@ The page opts out of PostHog autocapture and session recording through `sitetrac
 guard. All Arena routes belong to the control role (and default all role), including interactive
 paid execution; the dataplane's `/call/` contract is unchanged.
 
-Alembic revision `0027` creates `arenarun` and `arenaevaluation`. Run `python -m treg upgrade`
+Alembic revision `0027` creates `arenarun` and `arenaevaluation`. Run `python -m stray upgrade`
 before serving the new release. Tests cover auth/private access, aggregate admission, direct billing,
 own keys, cancellation, duplicate start/vote, attributed progress/results and pre-charge name validation, waterfall progression and OAuth return.
 
 ### Conversion tracking
 
-`TregTracking` in `sitetrack.js` connects anonymous pageviews to the authenticated email and
+`StrayTracking` in `sitetrack.js` connects anonymous pageviews to the authenticated email and
 active `team` group after `loadIdentity`, including OAuth returns and team creation. Team switches
 clear the previous group; account changes clear the previous identified analytics session. The
 page still disables autocapture and recording. Explicit events contain product metadata only:
@@ -645,7 +645,7 @@ identity/group switching and exclusion of enrichment inputs from event propertie
 
 Find work email and Find phone number enable verification by default for new queries. The switch choice is persisted in the draft and bound into the server quote.
 Restoring an explicit draft opt-out or historical run preserves its recorded setting. New email checks,
-automatic and table-triggered, call `treg.people.email.verify` through the ordinary routed runtime.
+automatic and table-triggered, call `stray.people.email.verify` through the ordinary routed runtime.
 The quoted ceiling sums accessible verifier estimates (own keys cost zero), with candidates preferred
 in price order. The frozen provider set, catalog hashes and route max-cost header bound execution;
 newly added providers cannot silently enter an existing quote. The router falls back on unavailable
@@ -697,7 +697,7 @@ including nested result tables and the existing mobile card layout.
 
 Arena migrations are ordered after main’s 0026 (call reviews): 0027 (runs and evaluations), 0028 (rolling insights), and 0029
 (published verification aggregates). Public snapshot reads use the API pool; the incremental
-collector runs in the `treg-worker` process and draws on no web-process pool. Email verification adapters join the existing
+collector runs in the `stray-worker` process and draws on no web-process pool. Email verification adapters join the existing
 task through catalog-driven discovery.
 
 Email-verification result rows use `emailVerdict` and `outcomeClass` to show “Verdict: Valid”
@@ -763,7 +763,7 @@ for older consumers and adds explicit `checked_n` and `validity_rate` fields; th
 accidentally display the lookup projection as validity.
 
 Publication data stays outside the checkout. To populate a migrated deployment, pass the private
-aggregate JSON to `scripts/import_arena_verification.py` with its configured `TREG_DATABASE_URL`;
+aggregate JSON to `scripts/import_arena_verification.py` with its configured `STRAY_DATABASE_URL`;
 `--check` validates without writing. The importer accepts only schema-whitelisted aggregates,
 source dates, endpoint/input identifiers, verifier names and counts; raw contact fields are rejected.
 It does not import private evidence or run paid verification. The same aggregate file can seed local

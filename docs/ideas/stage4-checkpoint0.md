@@ -6,9 +6,9 @@ Basis for this note:
 
 - current `refactor/phase3-identity` HEAD `b924ced`
 - `docs/REFACTOR-PLAN.md` sections 1.2, 1.6, 4, and 5
-- current `src/treg/api.py` at 4,676 lines
+- current `src/stray/api.py` at 4,676 lines
 - the shipped context fragments for API, proxy, money, auth/secrets, multi-tenancy, and landing sandbox
-- `src/treg/bootstrap.py`, `proxy.py`, `injectors.py`, `ledger.py`, `oauth.py`, `health.py`
+- `src/stray/bootstrap.py`, `proxy.py`, `injectors.py`, `ledger.py`, `oauth.py`, `health.py`
 - the 31 tests under `tests/callmatrix/` and the current pool-discipline tests
 
 Line numbers below are against `b924ced`. Code work must start only after PR #210 is merged, on a new
@@ -82,7 +82,7 @@ Failure types are keyed by mechanism. A separate `blame` field is assigned at on
 these values:
 
 - `caller`
-- `treg`
+- `stray`
 - `upstream`
 - `org_connection`
 
@@ -153,7 +153,7 @@ mixture:
 - `application/billing.py` owns top-up, auto-top-up, portal/history composition, webhook sequencing, and its
   transaction boundaries.
 - `domain/money` remains the only writer of money tables.
-- `treg.billing` remains a temporary compatibility facade for existing imports and tests until a separately
+- `stray.billing` remains a temporary compatibility facade for existing imports and tests until a separately
   approved deletion stage. New runtime code imports the owner directly.
 
 Moving the old module wholesale into `application.billing` may be used as an A commit, but the very next billing
@@ -169,7 +169,7 @@ shape at the end of 4a.
 | 633-650 | `_pool_saturated` | app-wide HTTP handler owned by bootstrap; delegates call bookkeeping through the call service or a narrow callback |
 | 653-678 | `_stamp_call_exit` | call-owned finalization and exit metadata in `application.call`; bootstrap's handler adapter applies HTTP headers |
 | 681-691 | `_refusal_kind` | `application.call` refusal classification, called by the bootstrap adapter |
-| 694-711 | `_mark_treg_own_errors` | app-wide HTTP handler owned by bootstrap; call-specific stamping is injected from `application.call` |
+| 694-711 | `_mark_stray_own_errors` | app-wide HTTP handler owned by bootstrap; call-specific stamping is injected from `application.call` |
 | 888-931 | `_tool_allowed`, `_require_tool_access`, `_project_allowed`, `_tool_usable`, `_require_tool_use` | A: `domain/governance/access.py`; B: semantic denial instead of `HTTPException` |
 | 983-986 | `_now_ms` | call clock helper, preferably injected monotonic clock in `application.call` |
 | 1045-1061 | `PUBLIC_DEMO_HIT_NS`, `PUBLIC_DEMO_RATE_MAX`, `PUBLIC_DEMO_RATE_WINDOW_S`, `_enforce_public_demo_ip_cap` | `domain/governance/publicdemo.py`, consumed by call authorize/caps |
@@ -258,9 +258,9 @@ All three middleware implementations should move out of `api.py` in 4a and be ow
 `bootstrap.create_app` already owns their concrete registration and exact order. These are app-wide ASGI
 policies, not route handlers or use cases. Keeping the implementation beside the composition root removes the
 factory's dependency on `api.py` for assembly details. If converting `bootstrap.py` into a package creates more
-compatibility churn than value, use `bootstrap_http.py`; `treg.bootstrap:create_app` must remain unchanged.
+compatibility churn than value, use `bootstrap_http.py`; `stray.bootstrap:create_app` must remain unchanged.
 
-The app-wide exception handlers follow the same ownership rule. `_pool_saturated` and `_mark_treg_own_errors`
+The app-wide exception handlers follow the same ownership rule. `_pool_saturated` and `_mark_stray_own_errors`
 are registered by bootstrap at `bootstrap.py:443-445`, so their HTTP adapter implementations live beside the
 composition root. `_stamp_call_exit` and `_refusal_kind` are call-specific behavior owned by
 `application.call`. Bootstrap wires them into the handlers through the constructed call service or a narrow
@@ -273,7 +273,7 @@ framework-neutral callback. Neither direction requires `application.call` to imp
 Recommended final package:
 
 ```text
-src/treg/application/call/
+src/stray/application/call/
   __init__.py       execute_call and public contract
   types.py          CallInput, CallContext, UpstreamResponse, failures
   intake.py         metadata, tag preflight, idempotency
@@ -464,41 +464,41 @@ shielding eliminates the DB/network and process-death cases.
 ### 2.7 Framework-neutral failures
 
 Application and domain code raise typed semantic failures keyed by mechanism, carrying stable HTTP translation
-data and a late-bound `blame: caller | treg | upstream | org_connection`. The contract has six pins:
+data and a late-bound `blame: caller | stray | upstream | org_connection`. The contract has six pins:
 
 1. **Provider responses are data.** Every provider response, including 4xx and 5xx, is faithfully forwarded and
-   is never represented as an exception. Typed failures exist only when treg refuses the call or a provider does
+   is never represented as an exception. Typed failures exist only when stray refuses the call or a provider does
    not produce a complete response.
 2. **Blame is a field, not an inheritance root.** One mapping point assigns it. OAuth refresh failure is
    `org_connection`; idempotency waiting 409 and mismatch 422 share a mechanism but map to different blame.
 3. **502 mechanisms are explicit.** Their stable kinds and compatibility mappings are defined together:
 
-   | Kind | Blame | Ledger release reason | HTTP status | `X-Treg-Error` during B commits |
+   | Kind | Blame | Ledger release reason | HTTP status | `X-Stray-Error` during B commits |
    |---|---|---|---:|---|
    | `refresh_failed` | `org_connection` | `call_failed_502` | 502 | literal `1` |
-   | `injection_failed` | `treg` or `org_connection`, assigned by the single mapping point | `call_failed_502` | 502 | literal `1` |
-   | `ssrf_refused` | `treg` | `call_failed_502` | 502 | literal `1` |
+   | `injection_failed` | `stray` or `org_connection`, assigned by the single mapping point | `call_failed_502` | 502 | literal `1` |
+   | `ssrf_refused` | `stray` | `call_failed_502` | 502 | literal `1` |
    | `connect_failed` | `upstream` | `call_failed_502` | 502 | literal `1` |
    | `read_timeout` | `upstream` | `call_failed_502` | 502 | literal `1` |
    | `stream_interrupted` | `upstream` | `call_failed_502` | 502 | literal `1` |
 
    This table is the single source used to derive ledger reason, HTTP status, and error headers so the three
    surfaces cannot drift.
-4. **SSRF is its own kind.** It is a post-reserve treg refusal, always releases the hold, never charges, and
+4. **SSRF is its own kind.** It is a post-reserve stray refusal, always releases the hold, never charges, and
    never reaches the provider.
 5. **Billability and blame remain independent.** `_platform_billable` plus
    `_NOT_THE_CALLERS_FAULT` answers who is charged; blame answers who must repair the failure. Once a provider
    has responded, no caller-visible money error may replace that response. Settlement overage is absorbed by
    ledger policy and must never become a 402 after relay.
-6. **Compatibility headers remain literal.** During B commits `X-Treg-Error` remains the literal `1`.
-   Enriching it with a kind or adding `X-Treg-Refused-By` changes a client-parsed API surface and requires a
+6. **Compatibility headers remain literal.** During B commits `X-Stray-Error` remains the literal `1`.
+   Enriching it with a kind or adding `X-Stray-Refused-By` changes a client-parsed API surface and requires a
    separate ruling. `refused_by` is derived from the typed failure and must remain identical for every existing
    status.
 
 Example mechanism types include `ResolutionFailed`, `AuthorizationFailed`, `CapacityExceeded`,
 `InsufficientFunds`, `IdempotencyFailed`, `GatewayFailed(kind, ...)`, and
 `CallPoolSaturated(retry_after=2)`. The router maps them to the existing status, detail, JSON key order,
-`Retry-After`, `X-Treg-Call-Id`, and `X-Treg-Cost-Micro`. Domain packages do not import `HTTPException`.
+`Retry-After`, `X-Stray-Call-Id`, and `X-Stray-Cost-Micro`. Domain packages do not import `HTTPException`.
 
 ## 3. Section 5 destination-map reconciliation
 
@@ -516,7 +516,7 @@ Target:
   and returns `UpstreamResponse`.
 - HTTP adaptation and Starlette wrapping live in `routers/call.py`.
 - The SSRF dependency points to `infra/upstream/ssrf.py`, not root `health`.
-- `treg.proxy` may remain a direct re-export facade during compatibility, but no new runtime owner imports it.
+- `stray.proxy` may remain a direct re-export facade during compatibility, but no new runtime owner imports it.
 
 This is an A pure move followed by a B contract conversion. Do not combine the framework removal with the file
 move.
@@ -530,7 +530,7 @@ and `localrun.py`.
 The destination map omits one important packaging constraint: `localrun.py` is a lightweight CLI module and
 imports `_token_from_json` at module import time. Therefore `infra.upstream.__init__` must not eagerly import the
 relay, FastAPI, SQLAlchemy, SQLModel, or server models. `httpx` itself is an allowed base dependency. Either
-`localrun.py` imports the leaf `infra.upstream.injectors` module directly, or the existing `treg.injectors`
+`localrun.py` imports the leaf `infra.upstream.injectors` module directly, or the existing `stray.injectors`
 facade remains lightweight. The runtime light-import subprocess test and import-linter contract must prove this.
 
 ### 3.3 `ledger.py -> domain/money`
@@ -543,7 +543,7 @@ The map is directionally correct. Current mismatches are:
 
 Recommendation: move `ledger.py` in 4b, but as a dedicated early commit before call-stage extraction. Use a
 `domain/money` package and preserve every money symbol byte-for-byte in the A commit, with only module/import
-adjustments and a thin `treg.ledger` compatibility facade. Update the import-linter money contract to target the
+adjustments and a thin `stray.ledger` compatibility facade. Update the import-linter money contract to target the
 real owner.
 
 Do not combine this move with removing commits. The 4b transaction B commit converts the call-facing reserve,
@@ -581,7 +581,7 @@ Target split:
 - sequencing in `application.call`, `application.connect`, and later `application.run`
 
 The section 5 map omits the concrete token-endpoint adapter destination and the run/health consumers. Record
-those in context updates when code ships. Keep `treg.oauth` compatibility exports because tests and lazy
+those in context updates when code ships. Keep `stray.oauth` compatibility exports because tests and lazy
 `localrun` imports use that path.
 
 ### 3.5 `health.py` SSRF portion -> upstream
@@ -739,7 +739,7 @@ cut, and all line anchors below are re-resolved afterward.
    - A move of `call_tool`, `catalog_endpoint_access`, and their attachment block to `routers/call.py`.
      Bootstrap owns the app-wide handlers and wires call-specific exit classification from `application.call`.
      Temporary collaborators may be injected from owners, never imported from `api.py`.
-   - Verify moved text/decorators, all four snapshots, `treg.api` re-export identity, monkeypatch scan.
+   - Verify moved text/decorators, all four snapshots, `stray.api` re-export identity, monkeypatch scan.
 6. `refactor(call): move intake and idempotency helpers`
    - A-only byte move, preserving tag-row creation, claim order, and compatibility exports.
    - Verify helper text/identity, malformed metadata precedence, replay/claim races, and snapshots.
@@ -765,7 +765,7 @@ cut, and all line anchors below are re-resolved afterward.
    - B transaction change limited to call reserve. The application commits reserve and closes the session before
      external work. Each lazy stale-hold release remains an independent committed phase before the balance gate;
      grant/top-up transaction conversion remains the named debt in section 3.3.
-   - Run pool-discipline and the full callmatrix on SQLite and Postgres. Retarget every moved `treg.api`
+   - Run pool-discipline and the full callmatrix on SQLite and Postgres. Retarget every moved `stray.api`
      monkeypatch or assert old/new collaborator identity so the pool tests cannot guard an unused object.
    - Also verify exact concurrent balance gate, rollback behavior, 402 payload, and unchanged auto-top-up task.
      Seed an expired hold, force the following reserve to return 402, and assert the stale-hold refund remains
@@ -782,7 +782,7 @@ cut, and all line anchors below are re-resolved afterward.
 17. `refactor(call): return framework-neutral upstream responses`
     - B conversion of infra relay and router wrapping. Preserve raw header order/duplicates, cookies, HEAD/bodyless
       content length, streaming, CSP/nosniff, body framing, and close semantics.
-    - Run pool-discipline and the full callmatrix on SQLite and Postgres. Retarget the moved `treg.api` relay
+    - Run pool-discipline and the full callmatrix on SQLite and Postgres. Retarget the moved `stray.api` relay
       monkeypatches or assert old/new object identity before accepting green tests.
 18. `refactor(call): move settlement and evidence helpers`
     - A-only byte move of observed cost, billability, buffering, evidence, and finalization helpers.
@@ -791,7 +791,7 @@ cut, and all line anchors below are re-resolved afterward.
     - B one-owner finalizer and application-owned settle/release commits. Cancellation behavior is already frozen
       by the prerequisite fix PR and is not changed here.
     - Run pool-discipline and the full callmatrix on SQLite and Postgres. Retarget settlement monkeypatches from
-      `treg.api` or prove compatibility exports are the same objects.
+      `stray.api` or prove compatibility exports are the same objects.
     - Also verify every billability class, timeout/connect/stream errors, cancellation, double-finalize race,
       DB-outage response behavior, and no holds while the DB is available.
 20. `refactor(call): complete the staged use case`
@@ -858,7 +858,7 @@ Stop and ask for a ruling if any of these occurs:
     or if a router starts owning money, retry, compensation, or pricing decisions.
 14. **Light CLI.** Stop if moving injectors/oauth compatibility paths makes importing any lightweight CLI module
     load Pydantic, FastAPI, SQLAlchemy, SQLModel, Alembic, or crypto implementations. `httpx` remains allowed.
-15. **Compatibility surface.** Stop on any required route key/function-name change, `treg.api:app` change,
+15. **Compatibility surface.** Stop on any required route key/function-name change, `stray.api:app` change,
     snapshot change, monkeypatch target that cannot be redirected safely, or old public import deletion.
 16. **Refactor-time fixes.** Stop if a discovered issue exceeds the section 0.2 guards, would become a fourth fix
     commit in one PR, or touches concurrency/money without an independent PR and a Postgres E2E regression.
@@ -889,7 +889,7 @@ Existing coverage is useful but insufficient:
 
 - `test_call_pool_discipline` samples `pool.checkedout()` when `relay` is entered for metered and own-key calls.
 - the 20-call barrier test proves the current pool does not deadlock.
-- `tests/test_call_pool_discipline.py` currently patches collaborators through `treg.api` at lines 65, 129,
+- `tests/test_call_pool_discipline.py` currently patches collaborators through `stray.api` at lines 65, 129,
   and 151. After each relevant move, retarget those patches or assert the compatibility export is the same
   object. A green test aimed at an unused old object is not evidence.
 
@@ -961,7 +961,7 @@ The revised checkpoint freezes or requests owner approval for these implementati
 - dataplane-derived write enumeration: auto-top-up task, public-demo/sandbox ratestore hits, and first-call
   AdConversion outbox insertion
 - eleven Stage 3 bridge debts: eight org bindings, two resource ACL bindings, and the sandbox-cap bridge
-- app-wide middleware and `_pool_saturated`/`_mark_treg_own_errors` handlers under bootstrap, with call-specific
+- app-wide middleware and `_pool_saturated`/`_mark_stray_own_errors` handlers under bootstrap, with call-specific
   `_stamp_call_exit`/`_refusal_kind` supplied by the call owner
 - ledger dedicated A move in 4b; no-commit enforcement limited to call reserve/settle/release; named
   `money-funding-transactions` repayment after 4b and before Stage 5

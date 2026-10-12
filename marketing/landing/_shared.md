@@ -51,7 +51,7 @@ to the token that made it. `F-04`
 
 ## `S-OBJ-CHOOSE` Can I choose a specific provider?
 Yes. Every endpoint has an id, and calling it by id calls that provider. If you want the choice made once
-for the whole team, `treg org pin <capability> --provider <provider>` refuses calls to any other provider
+for the whole team, `stray org pin <capability> --provider <provider>` refuses calls to any other provider
 of that capability. `F-13`
 
 ## `S-OBJ-OWN-KEY` Can I use my existing provider key?
@@ -67,7 +67,7 @@ without paying twice. `F-06` `F-07`
 ## `S-OBJ-AGENTS` Which agents does it work with?
 The installer registers treg.to's MCP server into Claude Code, Cursor and opencode automatically. Any MCP
 client that supports the authorization spec can connect with OAuth. Anything that can run a shell command,
-Codex included, can use the `treg` CLI or plain HTTP. `F-09`
+Codex included, can use the `stray` CLI or plain HTTP. `F-09`
 
 ## `S-OBJ-DIRECT` Why not call the providers directly?
 *(Per page: the vertical's own version of the arithmetic. The fixed part below closes it.)*
@@ -83,7 +83,7 @@ $1.00 of free credit once per new verified account. No credit card, no provider 
 
 ## `S-INSTALL`
 ```text
-set up treg — https://treg.to/llms.txt
+set up stray — https://treg.to/llms.txt
 ```
 Paste that into your agent, or run `curl -fsSL https://treg.to/install.sh | sh`.
 
@@ -91,7 +91,7 @@ Paste that into your agent, or run `curl -fsSL https://treg.to/install.sh | sh`.
 
 ## Wording rules for anyone editing these pages
 
-- **`treg.to`, never bare `treg`,** in every title, meta description, heading and link anchor. Inside body
+- **`treg.to`, never bare `stray`,** in every title, meta description, heading and link anchor. Inside body
   copy, `treg.to` on first mention and wherever it could be read as the immunology term.
 - One concept, one word: **a tool** (what an agent calls) · **the catalog** (the public half) · **your own
   tools** (the team's keys and skills). Never *vault*, *marketplace*, or *the registry*.

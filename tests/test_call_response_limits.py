@@ -1,7 +1,7 @@
 """Complete free result downloads and bounded settlement evidence over real HTTP.
 
 Both HTTP hops use loopback sockets. No customer data or upstream credentials are used.
-Run with a unique TREG_TEST_DB_URL; conftest resets that database.
+Run with a unique STRAY_TEST_DB_URL; conftest resets that database.
 """
 
 import asyncio
@@ -18,15 +18,15 @@ import pytest
 import uvicorn
 from sqlmodel import select
 
-from treg.api import app
-from treg import audit, archive
-from treg.config import get_settings
-from treg.domain.catalog import store
-from treg.infra.db import session_maker
-from treg.models import (
+from stray.api import app
+from stray import audit, archive
+from stray.config import get_settings
+from stray.domain.catalog import store
+from stray.infra.db import session_maker
+from stray.models import (
     ArchiveSnapshot, AsyncResourceRecord, AsyncTaskRecord, CallRecord, Hold, IdempotentCall, LedgerEntry, Org,
 )
-from treg.timeutil import utcnow_naive
+from stray.timeutil import utcnow_naive
 
 LIMIT = 8 * 1024 * 1024
 BINARY = bytes(range(256)) * (10 * 1024 * 1024 // 256)
@@ -105,10 +105,10 @@ async def wire(clients, monkeypatch):
 
     original = app.state.http
     app.state.http = httpx.AsyncClient(transport=LoopbackOnly(), trust_env=False)
-    monkeypatch.setenv('TREG_PLATFORM_KEY_OPENROUTER', 'synthetic-key')
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TIKHUB', 'synthetic-key')
-    monkeypatch.setenv('TREG_PLATFORM_KEY_DATAFORSEO', 'synthetic-key')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'openrouter,tikhub,dataforseo')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_OPENROUTER', 'synthetic-key')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TIKHUB', 'synthetic-key')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_DATAFORSEO', 'synthetic-key')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'openrouter,tikhub,dataforseo')
     get_settings.cache_clear()
     monkeypatch.setattr(get_settings(), 'archive_mode', 'off')
     async with session_maker() as db:
@@ -162,18 +162,18 @@ async def test_free_result_streams_complete_bytes_and_retries_live(wire, status,
         assert response.status_code == status
         assert hashlib.sha256(response.content).digest() == hashlib.sha256(BINARY).digest()
         assert response.headers['etag'] == '"synthetic-full-body"'
-        assert response.headers['x-treg-cost-micro'] == '0'
-        assert 'x-treg-idempotent-replay' not in response.headers
+        assert response.headers['x-stray-cost-micro'] == '0'
+        assert 'x-stray-idempotent-replay' not in response.headers
         if status == 206:
             assert response.headers['content-range'] == f'bytes 0-{len(BINARY)-1}/{len(BINARY)}'
         await audit.drain()
         async with session_maker() as db:
             entries = (await db.execute(select(LedgerEntry).where(
-                LedgerEntry.call_id == response.headers['x-treg-call-id']))).scalars().all()
+                LedgerEntry.call_id == response.headers['x-stray-call-id']))).scalars().all()
             assert sorted(e.kind for e in entries) == ['reserve', 'settle']
             assert all(e.amount_micro == 0 for e in entries)
             row = (await db.execute(select(CallRecord).where(
-                CallRecord.call_ref == response.headers['x-treg-call-id']))).scalar_one()
+                CallRecord.call_ref == response.headers['x-stray-call-id']))).scalar_one()
             assert row.response_bytes is None
             assert not (await db.execute(select(Hold))).scalars().all()
             assert not (await db.execute(select(IdempotentCall))).scalars().all()
@@ -200,10 +200,10 @@ async def test_oversized_evidence_fails_without_charge_archive_or_replay(wire, p
         response = await client.get('/call/' + path, headers={'Idempotency-Key': 'synthetic-retry'})
         assert response.status_code == 502
         assert response.json()['detail']['error'] == 'response_buffer_limit'
-        assert response.headers['x-treg-cost-micro'] == '0'
+        assert response.headers['x-stray-cost-micro'] == '0'
         async with session_maker() as db:
             entries = (await db.execute(select(LedgerEntry).where(
-                LedgerEntry.call_id == response.headers['x-treg-call-id']))).scalars().all()
+                LedgerEntry.call_id == response.headers['x-stray-call-id']))).scalars().all()
             assert sorted(e.kind for e in entries) == ([] if free_poll else ['release', 'reserve'])
             assert (await db.get(Org, 1)).balance_micro == balance
             assert not (await db.execute(select(Hold))).scalars().all()
@@ -216,8 +216,8 @@ async def test_oversized_evidence_fails_without_charge_archive_or_replay(wire, p
 
 @pytest.mark.parametrize('sizes', [[LIMIT], [LIMIT, 1], [LIMIT - 1, 2], [LIMIT + 1]])
 async def test_buffer_boundaries_close_once_and_never_return_a_prefix(sizes):
-    from treg.application.call.settle import _buffer_response
-    from treg.application.call.types import GatewayFailed, UpstreamResponse
+    from stray.application.call.settle import _buffer_response
+    from stray.application.call.types import GatewayFailed, UpstreamResponse
     closed = 0
 
     async def stream():
@@ -250,7 +250,7 @@ async def test_short_read_closes_response_and_releases_hold(wire):
     assert state['closes'] == 1
     async with session_maker() as db:
         entries = (await db.execute(select(LedgerEntry).where(
-            LedgerEntry.call_id == response.headers['x-treg-call-id']))).scalars().all()
+            LedgerEntry.call_id == response.headers['x-stray-call-id']))).scalars().all()
         assert sorted(e.kind for e in entries) == ['release', 'reserve']
         assert not (await db.execute(select(Hold))).scalars().all()
         assert not (await db.execute(select(IdempotentCall))).scalars().all()
@@ -293,17 +293,17 @@ async def test_own_credentials_keep_large_streams(wire, clients, own_tool):
     assert created.status_code == 200
     response = await client.get('/call/' + target)
     assert response.status_code == 200 and response.content == BINARY
-    assert 'x-treg-cost-micro' not in response.headers
+    assert 'x-stray-cost-micro' not in response.headers
     assert state['closes'] == 1
 
 
 async def test_cli_download_is_exact_binary(wire):
     client, state = wire
-    env = {**os.environ, 'TREG_URL': str(client.base_url).rstrip('/'),
-           'TREG_TOKEN': client.headers['x-treg-token'], 'TREG_TELEMETRY': '0',
-           'TREG_ORG': '', 'TREG_CONFIG': '/dev/null'}
+    env = {**os.environ, 'STRAY_URL': str(client.base_url).rstrip('/'),
+           'STRAY_TOKEN': client.headers['x-stray-token'], 'STRAY_TELEMETRY': '0',
+           'STRAY_ORG': '', 'STRAY_CONFIG': '/dev/null'}
     process = await asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'treg.cli', 'call', FETCH, '-p', 'id=synthetic-task',
+        sys.executable, '-m', 'stray.cli', 'call', FETCH, '-p', 'id=synthetic-task',
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env)
     stdout, stderr = await asyncio.wait_for(process.communicate(), 30)
     assert process.returncode == 0, stderr.decode(errors='replace')
@@ -321,7 +321,7 @@ async def test_large_json_is_never_charged_from_missing_evidence(wire, large):
     await audit.drain()
     async with session_maker() as db:
         row = (await db.execute(select(CallRecord).where(
-            CallRecord.call_ref == response.headers['x-treg-call-id']))).scalar_one()
+            CallRecord.call_ref == response.headers['x-stray-call-id']))).scalar_one()
     assert row.cost_estimated_micro == 150
     assert row.cost_observed_micro == (None if large else 1)
     assert row.cost_charged_micro == (0 if large else 1)
@@ -337,8 +337,8 @@ async def test_large_json_is_never_charged_from_missing_evidence(wire, large):
                             'produces': [{'kind': 'fetch:next', 'path': 'id'}]}},
 ])
 def test_only_final_free_fetches_can_skip_evidence(overrides):
-    from treg.application.call.resolve import MarketplaceCall
-    from treg.models import Tool
+    from stray.application.call.resolve import MarketplaceCall
+    from stray.models import Tool
     fields = dict(tool=Tool(org_id=1, name='synthetic', owner='test@example.invalid',
                             base_url='https://synthetic.example', host='synthetic.example'),
                   upstream='https://synthetic.example/file', consumed=set(),
@@ -363,10 +363,10 @@ GEMINI_REQUEST = {'contents': [{'parts': [{'text': 'synthetic prompt'}]}],
 
 @pytest.fixture
 def gemini(wire, monkeypatch):
-    from treg.application.call import settle
+    from stray.application.call import settle
     client, state = wire
-    monkeypatch.setenv('TREG_PLATFORM_KEY_GOOGLE_AI', 'synthetic-key')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'google-ai')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_GOOGLE_AI', 'synthetic-key')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'google-ai')
     get_settings.cache_clear()
     monkeypatch.setattr(get_settings(), 'archive_mode', 'shadow')
     state.update(type='application/json', body=GEMINI_BODY)
@@ -380,7 +380,7 @@ async def _gemini_call(client, **headers):
 
 
 async def test_inline_media_answer_relays_whole_and_settles_on_token_meters(gemini):
-    from treg.domain import money
+    from stray.domain import money
     client, state = gemini
     async with session_maker() as db:
         balance = (await db.get(Org, 1)).balance_micro
@@ -389,13 +389,13 @@ async def test_inline_media_answer_relays_whole_and_settles_on_token_meters(gemi
     assert hashlib.sha256(response.content).digest() == hashlib.sha256(GEMINI_BODY).digest()
     # 17*2 + (2098+159)*12 + 2000*108 = 243,118 micro-USD: exactly Google's token bill.
     charged = money.with_margin(243_118)
-    assert response.headers['x-treg-cost-micro'] == str(charged)
+    assert response.headers['x-stray-cost-micro'] == str(charged)
     await audit.drain()
     await archive.drain()
     async with session_maker() as db:
         assert (await db.get(Org, 1)).balance_micro == balance - charged
         row = (await db.execute(select(CallRecord).where(
-            CallRecord.call_ref == response.headers['x-treg-call-id']))).scalar_one()
+            CallRecord.call_ref == response.headers['x-stray-call-id']))).scalar_one()
         assert row.credential_tier == 'platform' and row.cost_charged_micro == charged
         assert row.cost_estimated_micro == 260_000  # the 4K row held
         assert row.response_bytes == len(GEMINI_BODY)
@@ -407,13 +407,13 @@ async def test_inline_media_answer_relays_whole_and_settles_on_token_meters(gemi
 
 
 async def test_inline_media_answer_without_usage_settles_at_the_hold(gemini):
-    from treg.domain import money
+    from stray.domain import money
     client, state = gemini
     state['body'] = GEMINI_BODY.replace(b'"usageMetadata"', b'"somethingElse"')
     response = await _gemini_call(client)
     assert response.status_code == 200 and response.content == state['body']
     # Google answered, so the image exists: with no meters to read, the caller pays the hold.
-    assert response.headers['x-treg-cost-micro'] == str(money.with_margin(260_000))
+    assert response.headers['x-stray-cost-micro'] == str(money.with_margin(260_000))
 
 
 async def test_inline_media_error_stays_buffered_and_uncharged(gemini):
@@ -422,7 +422,7 @@ async def test_inline_media_error_stays_buffered_and_uncharged(gemini):
                                   b'"status":"INVALID_ARGUMENT"}}')
     response = await _gemini_call(client)
     assert response.status_code == 400
-    assert response.headers['x-treg-cost-micro'] == '0'
+    assert response.headers['x-stray-cost-micro'] == '0'
 
 
 async def test_inline_media_answer_over_the_spool_cap_fails_uncharged(gemini, monkeypatch):
@@ -433,7 +433,7 @@ async def test_inline_media_answer_over_the_spool_cap_fails_uncharged(gemini, mo
     response = await _gemini_call(client)
     assert response.status_code == 502
     assert response.json()['detail']['error'] == 'response_buffer_limit'
-    assert response.headers['x-treg-cost-micro'] == '0'
+    assert response.headers['x-stray-cost-micro'] == '0'
     async with session_maker() as db:
         assert (await db.get(Org, 1)).balance_micro == balance
         assert not (await db.execute(select(Hold))).scalars().all()
@@ -441,7 +441,7 @@ async def test_inline_media_answer_over_the_spool_cap_fails_uncharged(gemini, mo
 
 
 async def test_the_shared_key_serves_only_the_declared_models(gemini):
-    """`model` is a path parameter: on treg's key it must be one the row prices, or another
+    """`model` is a path parameter: on stray's key it must be one the row prices, or another
     Gemini model would run on the image model's rates."""
     client, state = gemini
     response = await client.post(f'/call/{GEMINI}?model=gemini-2.5-pro', json=GEMINI_REQUEST)

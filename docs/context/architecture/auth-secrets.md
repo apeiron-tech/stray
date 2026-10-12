@@ -2,36 +2,36 @@
 title: Auth & secrets — injectors, encryption, OAuth freshness, health
 status: shipped
 sources:
-  - src/treg/infra/upstream/injectors.py
-  - src/treg/infra/upstream/ssrf.py
-  - src/treg/crypto.py
-  - src/treg/oauth.py
-  - src/treg/domain/connections/__init__.py
-  - src/treg/domain/connections/authorization.py
-  - src/treg/domain/connections/oauth_flow.py
-  - src/treg/domain/connections/refresh.py
-  - src/treg/infra/oauth_exchange.py
-  - src/treg/infra/oauth_refresh.py
-  - src/treg/oauth_providers.py
+  - src/stray/infra/upstream/injectors.py
+  - src/stray/infra/upstream/ssrf.py
+  - src/stray/crypto.py
+  - src/stray/oauth.py
+  - src/stray/domain/connections/__init__.py
+  - src/stray/domain/connections/authorization.py
+  - src/stray/domain/connections/oauth_flow.py
+  - src/stray/domain/connections/refresh.py
+  - src/stray/infra/oauth_exchange.py
+  - src/stray/infra/oauth_refresh.py
+  - src/stray/oauth_providers.py
   - frontend/src/state/session.js
   - frontend/src/state/keys.js
   - frontend/src/pages/TeamPage.vue
-  - src/treg/health.py
-  - src/treg/application/connect.py
-  - src/treg/alembic/versions/0051_context_dev_tool_host.py
-  - src/treg/routers/connections.py
-  - src/treg/routers/resources.py
-  - src/treg/domain/tools/__init__.py
-  - src/treg/domain/tools/bindings.py
-  - src/treg/domain/tools/bundles.py
-  - src/treg/domain/identity/api_keys.py
-  - src/treg/domain/identity/access.py
-  - src/treg/routers/api_keys.py
+  - src/stray/health.py
+  - src/stray/application/connect.py
+  - src/stray/alembic/versions/0051_context_dev_tool_host.py
+  - src/stray/routers/connections.py
+  - src/stray/routers/resources.py
+  - src/stray/domain/tools/__init__.py
+  - src/stray/domain/tools/bindings.py
+  - src/stray/domain/tools/bundles.py
+  - src/stray/domain/identity/api_keys.py
+  - src/stray/domain/identity/access.py
+  - src/stray/routers/api_keys.py
   - tests/test_api_keys.py
   - tests/test_oauth_refresh.py
   - tests/test_financialdatasets.py
   - tests/test_key_providers.py
-  - src/treg/config.py
+  - src/stray/config.py
 related:
   - architecture/proxy-model.md
   - architecture/data-model.md
@@ -42,46 +42,46 @@ related:
 
 Fetchin uses a pasted `X-API-Key` at `https://api.fetchin.io`. Its free internal
 `GET /api/v1/subscription` probe rejects invalid credentials and accepts a valid account even when
-its credit balance is zero. `TREG_PLATFORM_KEY_FETCHINIO` supplies the optional shared binding;
+its credit balance is zero. `STRAY_PLATFORM_KEY_FETCHINIO` supplies the optional shared binding;
 the own-key-first ladder keeps a team's credential unmetered. The same free route supplies capacity
 data and is not exposed as a catalog tool.
 
 Tavily uses a pasted Bearer key at `https://api.tavily.com`. Its free internal `GET /usage` probe
 rejects invalid credentials and validates both team-owned and optional platform credentials without
-exposing usage as a catalog tool. `TREG_PLATFORM_KEY_TAVILY` supplies the server-held fallback; the
+exposing usage as a catalog tool. `STRAY_PLATFORM_KEY_TAVILY` supplies the server-held fallback; the
 existing own-key-first ladder means a team's key always wins and remains unmetered. The public
 surface is limited to Search, Extract, Map, and Crawl.
 
 Linkup uses a pasted Bearer key at `https://api.linkup.so`. Its free internal
 `GET /v1/credits/balance` probe validates a connected key and supplies capacity evidence without
-exposing the account balance as a catalog tool. `TREG_PLATFORM_KEY_LINKUP` supplies the optional
-shared binding; a team's own key wins and remains unmetered by treg.
+exposing the account balance as a catalog tool. `STRAY_PLATFORM_KEY_LINKUP` supplies the optional
+shared binding; a team's own key wins and remains unmetered by stray.
 
 Crawl4AI uses a pasted Bearer key (`sk_live_…`) at `https://api.crawl4ai.com`. The free
 `GET /v1/billing/balance` validates a connected key (a bogus key answers 401) and supplies capacity
-evidence; it trails the per-call `x-c4-balance` header by about a minute. `TREG_PLATFORM_KEY_CRAWL4AI`
-supplies the optional shared binding; a team's own key wins and remains unmetered by treg.
+evidence; it trails the per-call `x-c4-balance` header by about a minute. `STRAY_PLATFORM_KEY_CRAWL4AI`
+supplies the optional shared binding; a team's own key wins and remains unmetered by stray.
 
 Spider uses a pasted Bearer key at `https://api.spider.cloud`. The free internal
 `GET /data/credits` probe validates connected keys and supplies capacity evidence.
-`TREG_PLATFORM_KEY_SPIDERCLOUD` supplies the optional shared binding; the own-key-first ladder
+`STRAY_PLATFORM_KEY_SPIDERCLOUD` supplies the optional shared binding; the own-key-first ladder
 keeps a team's credential unmetered. Only the priced Search listing is shared-key eligible.
 
 ScrapeGraphAI uses a pasted raw `SGAI-APIKEY` header at `https://v2-api.scrapegraphai.com`. Its free
 internal `GET /api/credits` probe rejects invalid credentials and validates team-owned and optional
-platform credentials while also supplying capacity data. `TREG_PLATFORM_KEY_SCRAPEGRAPHAI` supplies
+platform credentials while also supplying capacity data. `STRAY_PLATFORM_KEY_SCRAPEGRAPHAI` supplies
 the server-held fallback; the existing own-key-first ladder keeps a team's credential unmetered.
 
 Serper uses a pasted raw `X-API-KEY` header at `https://google.serper.dev`. Its free internal
 `GET /account` probe validates team-owned and optional platform credentials while also supplying
 balance and rate-limit evidence. `CatalogTarget` approves `https://scrape.serper.dev` for the same
-credential without broadening the primary host. `TREG_PLATFORM_KEY_SERPER` supplies the server-held
+credential without broadening the primary host. `STRAY_PLATFORM_KEY_SERPER` supplies the server-held
 fallback; the existing own-key-first ladder keeps a team's credential unmetered.
 
 `ADYNTEL` is the first pasted-key provider whose two credentials ride in the JSON request body.
 The primary `api_key` and second `email` are ordinary declarative bindings with `location: json`;
-the relay contains no Adyntel branch. Tier 4 reads `TREG_PLATFORM_KEY_ADYNTEL` and
-`TREG_PLATFORM_EMAIL_ADYNTEL`, while a team connection stores its own pair and remains unmetered.
+the relay contains no Adyntel branch. Tier 4 reads `STRAY_PLATFORM_KEY_ADYNTEL` and
+`STRAY_PLATFORM_EMAIL_ADYNTEL`, while a team connection stores its own pair and remains unmetered.
 The first connect step can only receive the key, so the provider's declared HTTP 422 probe outcome
 leaves it explicitly unchecked until the email is added; it is never labelled verified from that
 partial probe. JSON injection requires a JSON object, overwrites only the named top-level fields,
@@ -93,23 +93,23 @@ body bytes. Providers without a JSON binding retain the existing streamed-body p
 invalid-number sandbox fixture. The typed `probe_cost_micro=15000` marks the first paid key probe;
 the connect dialog renders the warning from that field, and provisioning deliberately omits it from
 the tool health check so later health runs cannot spend the team's provider wallet.
-`TREG_PLATFORM_KEY_TRESTLEIQ` supplies the optional shared binding; a team's own key still wins.
+`STRAY_PLATFORM_KEY_TRESTLEIQ` supplies the optional shared binding; a team's own key still wins.
 
 `LIMADATA` uses a pasted raw `x-api-key` header. Its free connection probe sends an invalid empty
 web-search body: the assigned key returns HTTP 400 and a bogus key returns 401. The real local
-connection flow accepted the former and rejected the latter. `TREG_PLATFORM_KEY_LIMADATA` is the
+connection flow accepted the former and rejected the latter. `STRAY_PLATFORM_KEY_LIMADATA` is the
 separate optional shared binding; a team's key still wins and remains unmetered.
 
 BounceBan uses a pasted raw `Authorization` header with no `Bearer` prefix. The free
 `GET /v1/account` probe rejected a bogus key with HTTP 401 and accepted the supplied key with HTTP
-200 through the real connection flow. `TREG_PLATFORM_KEY_BOUNCEBAN` supplies the optional shared
+200 through the real connection flow. `STRAY_PLATFORM_KEY_BOUNCEBAN` supplies the optional shared
 binding; a team's key still wins and remains unmetered. Provisioning includes the standard API tool
 and its explicit waterfall-host companion without exposing the credential.
 
 ZeroBounce uses the standard pasted-key flow with an `api_key` query parameter. Its free usage
 probe rejects bad keys with HTTP 403 and accepts the supplied key with HTTP 200. The probe does not
 use the balance route because that route can answer a bad key with HTTP 200 and `Credits=-1`.
-`TREG_PLATFORM_KEY_ZEROBOUNCE` supplies the optional shared binding; a team's key still wins and
+`STRAY_PLATFORM_KEY_ZEROBOUNCE` supplies the optional shared binding; a team's key still wins and
 remains unmetered.
 
 `MOLTSETS` is a pasted Bearer-key provider whose free `POST /get_account` probe validates both team
@@ -131,7 +131,7 @@ empty, while unrelated failures such as `429` and `500` cannot validate a key. T
 only during connection validation: an ordinary data call still relays a `402` as a failure. No
 shared connection logic, health schema, or Financial-Datasets-only health branch is added.
 Its 13 discovery helpers declare the generic `platform_auth: anonymous` mode. When no team tool or
-stored provider key exists, treg calls those verified public routes with no injected credential.
+stored provider key exists, stray calls those verified public routes with no injected credential.
 If a caller supplies `X-API-KEY` directly, the faithful relay preserves it and Financial Datasets
 can charge that key.
 
@@ -142,17 +142,17 @@ No OAuth app or special injector is needed. See the QuickEnrich section in [cata
 
 TinyFish uses a pasted `X-API-Key`. Its primary Agent host supplies the free `/v1/wallet` probe,
 while `CatalogTarget` approves the separate Search and Fetch hosts for the same credential. The
-wallet remains connection/capacity evidence rather than a public tool. `TREG_PLATFORM_KEY_TINYFISH`
+wallet remains connection/capacity evidence rather than a public tool. `STRAY_PLATFORM_KEY_TINYFISH`
 supplies the optional shared binding; a team's own key retains priority and is never metered.
 
 Tier 4 has explicit platform-key slots for MiniMax, OpenRouter, Replicate, reAPI, PiAPI and TinyFish. The web and async cron
 receive them as environment secrets, and the worker constructs the same platform bindings as the call
 path. Key values are never copied into task records, logs or archive evidence.
 
-## Managed treg API keys
+## Managed stray API keys
 
-Treg API keys authenticate callers; provider secrets authorize upstream services. These stores are
-separate. New additional human and agent keys start with `treg_`, are returned once, and are stored
+Stray API keys authenticate callers; provider secrets authorize upstream services. These stores are
+separate. New additional human and agent keys start with `stray_`, are returned once, and are stored
 only as SHA-256 hashes plus a safe prefix. A signed identity key has no stored hash. Its stable
 `default_human` row controls that team membership. New human memberships leave the legacy
 `Membership.token_hash` compatibility field empty and return a team-pinned signed default token, so
@@ -172,7 +172,7 @@ same row and returns the newly derived token, so the prior token fails as `revok
 keys for the user's other teams, random additional keys, agent keys, and browser sessions are unchanged.
 Default keys cannot be revoked: disable/enable is the temporary stop, and rotate is the replacement.
 Newly minted Default keys also carry `scp=team`; their signed `org` is authoritative for resource
-access, so a conflicting `X-Treg-Org` cannot redirect one team's key to another team. Org-less
+access, so a conflicting `X-Stray-Org` cannot redirect one team's key to another team. Org-less
 `scp=bootstrap` login tokens are seven-day onboarding credentials, not managed API keys.
 
 `last_used_at` is approximate display metadata. Authentication commits its read transaction before
@@ -189,7 +189,7 @@ rotate, revoke, and hide agent keys.
 `api` into the query at `https://api.millionverifier.com`. Its free `/api/v3/credits` probe returns
 HTTP 200 with `error: apikey_not_found` for a garbage key; `token_reject_field="error"` rejects
 that body while allowing valid zero-credit accounts. `platform_key_millionverifier` reads
-`TREG_PLATFORM_KEY_MILLIONVERIFIER`; platform access also requires the existing allow-list.
+`STRAY_PLATFORM_KEY_MILLIONVERIFIER`; platform access also requires the existing allow-list.
 
 ## Instagram grant methods (2026-09-01)
 
@@ -235,7 +235,7 @@ Adding a shape is one function; the proxy never changes.
 
 ## Encryption + tokens (`crypto.py`)
 Secret values are **Fernet-encrypted at rest**: `encrypt()`/`decrypt()` use the key from
-`TREG_SECRET_KEY`, falling back to an ephemeral `_EPHEMERAL` key if unset (so secrets don't survive a
+`STRAY_SECRET_KEY`, falling back to an ephemeral `_EPHEMERAL` key if unset (so secrets don't survive a
 restart — a loud signal to set the key). `new_key()` mints one. Caller tokens: `new_token()`
 (urlsafe random) + `hash_token()` (SHA-256); the DB stores only the hash. Values are never returned to
 clients.
@@ -253,7 +253,7 @@ Two modes, detected by `is_refreshable(blob)` (has `refresh_token` + `client_id`
   The HTTP adapter updates both `access_token` and `token` keys so either binding `secret_field` stays fresh.
 - **manual:** a bare uploaded token (not refreshable) is injected as-is; the user re-uploads on expiry.
 
-`treg.oauth` re-exports the refresh family for compatibility with connect, health, call, and lazy local-run
+`stray.oauth` re-exports the refresh family for compatibility with connect, health, call, and lazy local-run
 consumers. `ensure_fresh` is called by `call_tool()` before injecting, and by the health runner. The injector
 stays dumb; one refresh function serves both. Its write-back is **conditional on the prior ciphertext**
 (`UPDATE … WHERE value = old`) then reloads the row — so under multiple workers a second refresh can't
@@ -290,14 +290,14 @@ this credential work"; expiry answers "how long will it keep working" — differ
 **non-refreshable** token (a LinkedIn non-partner token reads healthy right up until it silently dies at
 ~60 days). `secret_is_refreshable(secret)` decrypts server-side (blob never leaves the function) to tell
 auto from manual; `expiry_state(expires_at, refreshable)` returns `fresh|expiring|expired|unknown` — a
-refreshable credential is **always** `fresh` (treg mints on demand, so the user is never nagged), only an
+refreshable credential is **always** `fresh` (stray mints on demand, so the user is never nagged), only an
 unrenewable one earns a warning (`EXPIRING_SOON_DAYS=7`). `connection_view()` is the metadata-only shape
 (no token material) the dashboard/CLI read, with a single actionable `needs_reconnect` flag.
 
 ## Curated OAuth provider registry (`oauth_providers.py`)
 Octen is an API-key provider with an `x-api-key` binding. Its connection probe sends an empty
 Search query: a valid key receives an unbilled 400 validation response, while an invalid key
-receives 401. `TREG_PLATFORM_KEY_OCTEN` supplies the optional shared binding through the
+receives 401. `STRAY_PLATFORM_KEY_OCTEN` supplies the optional shared binding through the
 typed setting; a team's own key remains first and unmetered. No account balance endpoint is
 documented for this credential.
 
@@ -309,18 +309,18 @@ manually registered tools at their caller-chosen URL.
 
 Two ways to connect a provider. **Bring-your-own (BYO):** `POST /oauth/start` takes a caller-supplied
 `client_id`/`client_secret`/URIs — works for any OAuth2 provider. **Curated:** for the providers where
-**treg itself holds the approved app** (Google Search Console/Analytics/Business Profile/Tag Manager/Ads, YouTube,
+**stray itself holds the approved app** (Google Search Console/Analytics/Business Profile/Tag Manager/Ads, YouTube,
 LinkedIn, X, TikTok, Facebook, Instagram, Meta Ads — added PRs #20/#21), the user picks a provider and
 consents, supplying nothing. The asymmetry is the point of a hosted registry: the gating cost on these
-platforms is the *approval* (a Google Ads developer token, Meta App Review), not the OAuth dance — treg
-has already cleared it. treg's own client id/secret load from `Settings` (named by
+platforms is the *approval* (a Google Ads developer token, Meta App Review), not the OAuth dance — stray
+has already cleared it. stray's own client id/secret load from `Settings` (named by
 `client_id_setting`/`client_secret_setting`, so they come from `.env` like every other setting).
 The Meta pair carries three tiers — read / post / **manage** (comments + DMs on Instagram; engagement,
 visitor content, metadata/webhooks, Messenger, Page video, leads_retrieval + its required
 pages_manage_ads rider, and catalog_management on Facebook Pages) — sized for the 2026-08 App Review
 bundle; Instagram manage includes both `instagram_manage_messages` and its Page-side
 `pages_messaging` rider. `default_capability` remains the broadest tier by design.
-`TREG_OAUTH_REVIEW_PENDING` is the one operational source for incomplete provider reviews. Generic
+`STRAY_OAUTH_REVIEW_PENDING` is the one operational source for incomplete provider reviews. Generic
 registry metadata maps each key to its fallback, conditional warning, effective new-connect choices,
 and default method. With both Instagram keys pending, plain Connect uses Page `page-tools`; reviewers
 and app roles can still select `page-messages` or direct Instagram Login explicitly. Removing a key
@@ -356,7 +356,7 @@ again a property identifier returned by the sites list.
 Google Tag Manager shares the standard Google client credentials and exposes three cumulative tiers:
 `read` grants `tagmanager.readonly`; `write` adds `tagmanager.edit.containers`; `manage` adds
 `tagmanager.edit.containerversions` and `tagmanager.publish`. The account list is both the health probe
-and resource picker, with the selected `accounts/{id}` path stamped into the tool example. treg
+and resource picker, with the selected `accounts/{id}` path stamped into the tool example. stray
 deliberately does **not** request `tagmanager.delete.containers`, `tagmanager.manage.users`, or
 `tagmanager.manage.accounts`: agents can audit configuration, prepare workspace changes, create
 versions, and publish (including rollback by publishing an earlier version), but cannot delete whole
@@ -364,9 +364,9 @@ containers or administer access.
 
 Each entry is a frozen `OAuthProvider` dataclass; `REGISTRY` is the `{service: provider}` map. Key
 module symbols:
-- `get(service)` — look up one provider. `credentials(provider)` — treg's own id/secret (raises if this
+- `get(service)` — look up one provider. `credentials(provider)` — stray's own id/secret (raises if this
   deployment hasn't set them). `is_configured(provider)` — whether this deployment can offer it (a
-  `token`-kind provider needs nothing from treg, so always offerable).
+  `token`-kind provider needs nothing from stray, so always offerable).
 - `listing()` — the catalog payload (`GET /oauth/providers`): every provider, grouped by
   `CATEGORY_ORDER`, each flagged `configured`, with per-capability scopes already in plain English via
   `scope_label()`/`SCOPE_LABELS` (a lookup keyed by the raw scope string;
@@ -381,10 +381,10 @@ module symbols:
   opted-in provider's resolution rejects an unapproved host before any secret reaches relay or
   money is reserved. Providers without targets retain their prior primary-base behavior.
 - `consent_notice` — one line the dashboard shows **before** the consent popup opens, for a provider
-  whose consent screen names something the user has not seen on treg. Only the Meta family carries one:
+  whose consent screen names something the user has not seen on stray. Only the Meta family carries one:
   the shared Meta app is registered as **Crewlet**, a sibling product of the same company (Superdesign
   Dev Inc), and Facebook renders only that bare app name with no parent business, so without the notice
-  a treg user is asked to authorize a stranger. It rides `listing()` like any other provider field, so
+  a stray user is asked to authorize a stranger. It rides `listing()` like any other provider field, so
   the UI never hard-codes which services get one; `test_only_the_meta_family_carries_a_consent_notice`
   derives the set from `auth_uri == _META_AUTH` rather than a service list. Meta Developer Policy 1.6
   wants the relationship disclosed at the point of consent, which is why this is not a docs link.
@@ -395,9 +395,9 @@ module symbols:
 - `platform_billed` + `billed_read_usd`/`billed_write_usd`/`billed_write_link_usd` — providers whose
   UPSTREAM bills the app owner per use, whoever's token made the call. X is the one entry: it dropped
   plan tiers for prepaid pay-per-use (per resource read / per post written, checked 2026-08-12), so a
-  registry X connect spends treg's credits and the proxy meters those calls against the org's balance
+  registry X connect spends stray's credits and the proxy meters those calls against the org's balance
   (`api.py` `_billed_marketplace` → the tier-4 reserve→settle path; [money](money.md)). Gated on the
-  deploy opting in via `TREG_OAUTH_BILLED_PROVIDERS` (`config.oauth_billed_set` — empty means free,
+  deploy opting in via `STRAY_OAUTH_BILLED_PROVIDERS` (`config.oauth_billed_set` — empty means free,
   the kill-switch shape `platform_providers` uses). The rates here are the fallback for uncatalogued
   routes; a priced catalog entry wins — and since a `free` block has a falsy `usd`, "priced" has to be
   read as *not free*, or a catalog that says $0 quietly bills the fallback instead. **Every X entry
@@ -410,7 +410,7 @@ module symbols:
   `billed_rates` so the dashboard can show the price BEFORE consent — and so the catalog's own price
   display can stop calling a connected account free (`catMetered`, [dashboard](../interface/dashboard.md)). A **BYO connect is never metered** — the callback
   stamps `secret.provider` only in registry mode, and that attribution is the whole detection.
-- `auth_kind` = `"oauth"` (treg's app), `"token"` (a user-pasted Bearer token: Slack plus the
+- `auth_kind` = `"oauth"` (stray's app), `"token"` (a user-pasted Bearer token: Slack plus the
   MiniMax, OpenRouter, Replicate and reAPI AI-generation providers; PiAPI pastes an `X-API-Key`
   and is a `"key"` provider),
   or `"key"` (an **API-key provider** connected by pasting a key: Apollo, PDL,
@@ -423,7 +423,7 @@ module symbols:
   placeholder: its non-standard app_id/auth_code/Access-Token flow needs oauth.py work before it runs)). A
   `token` and a `key` share ONE connect/verify/auto-provision path, so `uses_pasted_secret` (`token | key`)
   gates it while `is_token_kind` stays narrow for Slack's bot-only copy; a key provider needs nothing from
-  treg, so `is_configured` is always true for it. The pasted credential rides in a header
+  stray, so `is_configured` is always true for it. The pasted credential rides in a header
   (`token_header`/`token_format`, default `Authorization: Bearer {secret}`) or a **query param**
   (`token_location="query"` + `token_param` — Semrush spells its key `?key=`); the connect probe hits
   `base_url`+`probe_path`, or an absolute `probe_url` when the cheapest key-check lives on another host
@@ -434,10 +434,10 @@ module symbols:
   `probe_json` body (Serpstat's JSON-RPC), and `token_encode="base64"` turns a pasted `login:password` into
   the Basic blob for `Basic {secret}` (DataForSEO, Moz). The binding carries `token_encode` too, and the
   injector's `ensure_base64` re-applies the same already-encoded check at call time, so a raw pair stored by
-  `treg secret add <provider>` (which never runs the connect probe) renders the same header. `can_autoprovision` (has a `base_url` and either needs no
-  second credential or treg holds it) drives auto-building a callable tool on a successful connect;
+  `stray secret add <provider>` (which never runs the connect probe) renders the same header. `can_autoprovision` (has a `base_url` and either needs no
+  second credential or stray holds it) drives auto-building a callable tool on a successful connect;
   `needs_extra_credential` covers a second header the primary slot can't carry: Google Ads'
-  `developer-token` (treg-held, via `extra_credential_setting`) and Tomba's per-user `X-Tomba-Secret`
+  `developer-token` (stray-held, via `extra_credential_setting`) and Tomba's per-user `X-Tomba-Secret`
   (setting left empty → the user supplies it through `POST /connections/{id}/extra-credential`, which
   rebuilds the tool with BOTH bindings — the primary half comes from `_provider_bindings`, so it follows
   the provider's own auth shape rather than assuming OAuth). Tomba's probe (`/v1/usage`) deliberately
@@ -456,13 +456,13 @@ module symbols:
   **Split-host vendors get one extra Tool per host** (`extra_tools`): GA4 runs reports on
   `analyticsdata` but lists the property ids those reports need on `analyticsadmin` — one scope covers
   both, but `/call/` resolution is per-HOST, so without a second row the agent is walled off (admin
-  path on the data host → Google 404; admin host → treg "no registered tool"; 13 calls/7 orgs observed
+  path on the data host → Google 404; admin host → stray "no registered tool"; 13 calls/7 orgs observed
   stuck there). The extra (`<connection>-admin`) binds the SAME secret, upserts idempotently on
   connect/reconnect, and `_backfill_provider_extra_tools` runs after the schema phase in the ordered
   release upgrade to heal older connections automatically. The schema phase uses Alembic directly for
   empty or stamped databases and refuses a non-empty unstamped database with the 0.14.x adoption remedy.
-  The default `python -m treg` serve command runs
-  that phase before Uvicorn; raw ASGI deployments run `python -m treg upgrade` once per release. The
+  The default `python -m stray` serve command runs
+  that phase before Uvicorn; raw ASGI deployments run `python -m stray upgrade` once per release. The
   backfill is registry-generic: it scans provider-attributed
   Secrets, requires the corresponding main Tool to be bound to that Secret, then calls the same extra
   upsert, so adding a future `extra_tools` entry needs no one-off migration. Revoke already sweeps the
@@ -543,7 +543,7 @@ rest and never returned by `_secret_view`. The **only** sanctioned path that ret
 **grant** ([local-run](local-run.md)): member+ only, owner-opt-in per tool, audited, and for oauth it
 releases only the short-lived leaf (the access token) — `refresh_token`/`client_secret` never leave the
 server (an oauth `secret_field` allow-list enforces this). Even then the value is not handed to the
-member: on Linux the CLI runs as a dedicated `treg-run` user, so the credential lives under that user
+member: on Linux the CLI runs as a dedicated `stray-run` user, so the credential lives under that user
 (unreadable by the member's uid), not on the member's own account. A deliberate, narrow exception.
 
 **Ownership boundary (who may use which secret).** A member may only **bind/inject a secret they own**
@@ -555,20 +555,20 @@ member laundering a teammate's key into a tool they control (then exfiltrating i
 `base_url` or via `/grant`). Editing a tool **grandfathers** the secrets already on it — only a
 newly-added binding/inject is ownership-checked — so re-saving an admin-wired shared-key tool doesn't lock
 its owner out. And a `/grant` that would return a secret the caller does **not** own (a
-shared-key tool they may run but not read) requires the **runner proof** (`X-Treg-Run-Proof` ==
-`TREG_RUN_PROOF`, held only by the root-installed `treg-run` runner) — so a direct member call can't read
+shared-key tool they may run but not read) requires the **runner proof** (`X-Stray-Run-Proof` ==
+`STRAY_RUN_PROOF`, held only by the root-installed `stray-run` runner) — so a direct member call can't read
 someone else's key value. A tool's `base_url` is validated against the internal-address block-list (loopback/private/link-local/
 metadata, incl. numeric IP encodings) at registration AND the proxy re-resolves the host at call time
 (`infra.upstream.ssrf.host_is_public`, also re-exported by `health`, gated by `proxy_ssrf_check`) — no
 SSRF, even via DNS rebinding. `routers.resources._require_public_base_url` also rejects a `base_url`
-that points back at treg itself (`application.hub.points_at_treg`), so a team cannot register a tool
-that calls treg's own API through the proxy instead of using treg's tools by their ids directly.
+that points back at stray itself (`application.hub.points_at_stray`), so a team cannot register a tool
+that calls stray's own API through the proxy instead of using stray's tools by their ids directly.
 
 ## Kitt AI key connection
 
 `TRYKITT` registers Kitt AI under `trykitt`, with `x-api-key` header injection at
 `https://api.trykitt.ai`. `/credit` returns 200 even with a valid zero balance and 401
-for a bogus key. `platform_key_trykitt` loads `TREG_PLATFORM_KEY_TRYKITT`; the normal
+for a bogus key. `platform_key_trykitt` loads `STRAY_PLATFORM_KEY_TRYKITT`; the normal
 platform-provider allow-list is also required. Own keys always take precedence.
 
 
@@ -591,7 +591,7 @@ connection creation were tested live.
 zero balance. One connection provisions the primary `dropleads` tool and the `dropleads-contact`
 companion tool; both bind the same secret. `CatalogTarget` separately permits catalog calls to the
 companion host. `platform_key_dropleads` supplies the optional shared key, and the platform-provider
-allow-list remains required. An organization's own key has priority and is never metered by treg.
+allow-list remains required. An organization's own key has priority and is never metered by stray.
 
 
 ## Prospeo key connection
@@ -600,4 +600,4 @@ allow-list remains required. An organization's own key has priority and is never
 `https://api.prospeo.io`. Its explicit `GET /account-information` probe accepts a valid Starter
 account and rejects a garbage key with `INVALID_API_KEY`; the account route remains internal rather
 than becoming a catalog tool. `platform_key_prospeo` supplies the optional shared key, gated by the
-platform-provider allow-list. An organization's own key keeps priority and is never metered by treg.
+platform-provider allow-list. An organization's own key keeps priority and is never metered by stray.

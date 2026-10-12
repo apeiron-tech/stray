@@ -15,9 +15,9 @@ import time
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from treg.domain.identity import session as sess
-from treg.api import app
-from treg.infra.db import reset_db
+from stray.domain.identity import session as sess
+from stray.api import app
+from stray.infra.db import reset_db
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ async def client():
     await reset_db()
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://registry",
-        headers={"ngrok-skip-browser-warning": "1", "X-Treg-Key-Protocol": "1"},
+        headers={"ngrok-skip-browser-warning": "1", "X-Stray-Key-Protocol": "1"},
     ) as c:
         yield c
 
@@ -37,7 +37,7 @@ async def _otp_login(c: AsyncClient, email: str) -> str:
 
 async def test_revoke_kills_old_identity_token_and_issues_a_fresh_one(client):
     tok = await _otp_login(client, "leaky@x.io")
-    h = {"X-Treg-Token": tok}
+    h = {"X-Stray-Token": tok}
     assert (await client.get("/invites/mine", headers=h)).status_code == 200  # works before revoke
 
     r = await client.post("/auth/revoke-tokens", headers=h)
@@ -45,18 +45,18 @@ async def test_revoke_kills_old_identity_token_and_issues_a_fresh_one(client):
     fresh = r.json()["token"]
 
     assert (await client.get("/invites/mine", headers=h)).status_code == 401  # old token now dead
-    assert (await client.get("/invites/mine", headers={"X-Treg-Token": fresh})).status_code == 200  # fresh works
+    assert (await client.get("/invites/mine", headers={"X-Stray-Token": fresh})).status_code == 200  # fresh works
 
 
 async def test_revoke_signs_out_other_browser_sessions_but_keeps_the_caller(client):
     code = (await client.post("/auth/email/start", json={"email": "multi@x.io"})).json()["dev_code"]
     verify = await client.post("/auth/email/verify", json={"email": "multi@x.io", "code": code})
-    old_cookie = verify.cookies.get("treg_session")
+    old_cookie = verify.cookies.get("stray_session")
     assert old_cookie
 
     # A second device holding the SAME (now-to-be-leaked) session cookie.
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry",
-                           cookies={"treg_session": old_cookie}) as device_b:
+                           cookies={"stray_session": old_cookie}) as device_b:
         assert (await device_b.get("/invites/mine")).status_code == 200  # both devices valid
 
         # Device A revokes (cookie-authed); the endpoint re-issues A a fresh cookie in the same response.
@@ -93,7 +93,7 @@ async def test_typed_credentials_and_safe_legacy_boundary_end_to_end(client):
     expired_session = sess.make_session(uid, ttl=-1)
     for cookie in (live_session, expired_session):
         assert (await client.get(
-            "/invites/mine", headers={"X-Treg-Token": cookie},
+            "/invites/mine", headers={"X-Stray-Token": cookie},
         )).status_code == 401
 
     # A new identity token is not a browser session in the opposite direction either.
@@ -104,26 +104,26 @@ async def test_typed_credentials_and_safe_legacy_boundary_end_to_end(client):
     # the old 30-day exp and still resolves the team as a bare bearer. The org-less shape is
     # indistinguishable from an expired legacy cookie and is deliberately refused.
     created = (await client.post(
-        "/orgs", json={"name": "Legacy Team"}, headers={"X-Treg-Token": tok},
+        "/orgs", json={"name": "Legacy Team"}, headers={"X-Stray-Token": tok},
     )).json()
     stale_pinned = _legacy_token(
         uid=uid, tv=0, exp=int(time.time()) - 1, org=created["org"],
     )
     stale_orgless = _legacy_token(uid=uid, tv=0, exp=int(time.time()) - 1)
     assert (await client.get(
-        "/tools", headers={"X-Treg-Token": stale_pinned},
+        "/tools", headers={"X-Stray-Token": stale_pinned},
     )).status_code == 200
     assert (await client.get(
-        "/invites/mine", headers={"X-Treg-Token": stale_orgless},
+        "/invites/mine", headers={"X-Stray-Token": stale_orgless},
     )).status_code == 401
     assert (await client.get(
-        "/invites/mine", headers={"X-Treg-Token": stale_pinned + "x"},
+        "/invites/mine", headers={"X-Stray-Token": stale_pinned + "x"},
     )).status_code == 401
 
     # token_version remains the kill switch for permanent and supported legacy identity keys.
     assert (await client.post(
-        "/auth/revoke-tokens", headers={"X-Treg-Token": stale_pinned},
+        "/auth/revoke-tokens", headers={"X-Stray-Token": stale_pinned},
     )).status_code == 200
     assert (await client.get(
-        "/invites/mine", headers={"X-Treg-Token": stale_pinned},
+        "/invites/mine", headers={"X-Stray-Token": stale_pinned},
     )).status_code == 401

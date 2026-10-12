@@ -2,8 +2,8 @@
 title: Import — scan a .env AND/OR a skills dir, auto-register as tools + bundles
 status: in-progress
 sources:
-  - src/treg/providers.py
-  - src/treg/skills.py
+  - src/stray/providers.py
+  - src/stray/skills.py
 related:
   - interface/cli.md
   - interface/skill.md
@@ -11,10 +11,10 @@ related:
   - architecture/data-model.md
 ---
 
-# Import (`treg upload`; read-only preview = `treg scan`)
+# Import (`stray upload`; read-only preview = `stray scan`)
 
-Instead of adding tools one by one, `treg upload` scans a directory and registers what it finds.
-Bare `treg upload` does **both** sides of the dir; `treg upload env` / `treg upload skills` restrict it
+Instead of adding tools one by one, `stray upload` scans a directory and registers what it finds.
+Bare `stray upload` does **both** sides of the dir; `stray upload env` / `stray upload skills` restrict it
 (`--dir` sets the location, default cwd). `cmd_import` in `cli.py` is the dispatcher.
 
 - **env side** (`providers.py`): scans a `.env`, detects third-party **provider API keys**, and
@@ -32,10 +32,10 @@ providers Google Cloud, Azure, and Supabase, and per-CLI `deny` rules for leaky 
 block below),
 each `{provider, tokens, base_url, auth}`. `tokens` are
 distinctive name components (OPENAI, RESEND…) matched against the **underscore-split** var name, so an
-app prefix (`TREG_RESEND_API_KEY`) still resolves via its `RESEND` component. `_match_provider` prefers
+app prefix (`STRAY_RESEND_API_KEY`) still resolves via its `RESEND` component. `_match_provider` prefers
 the **longest** matching token (HUGGINGFACE over HF). `auth` is the provider's default **shape** — the
 recipe for turning the stored secret into an authenticated request, which is the crux (a base_url alone
-isn't enough), and `build_binding` maps each shape to a treg binding:
+isn't enough), and `build_binding` maps each shape to a stray binding:
 - `bearer` → header `Authorization: Bearer {secret}`
 - `api_key_header` → header `<header>: {secret}` (or a custom `format`, e.g. Discord `Bot {secret}`,
   PagerDuty `Token token={secret}`, Unsplash `Client-ID {secret}`)
@@ -51,7 +51,7 @@ never mis-detects them as a simple bearer key: e.g. **Google Ads** (`googleads.g
 **Google Search Console** (`searchconsole.googleapis.com`), whose real auth is OAuth + an extra header.
 A skill-name match is authoritative for the tool's `base_url` (a curated host beats a heuristic guess).
 
-An entry may also carry a **`cli` block** — the run profile for `treg run`
+An entry may also carry a **`cli` block** — the run profile for `stray run`
 ([local-run](../architecture/local-run.md)): `{bin, install, inject:[…], deny:[…], errors:[…],
 noninteractive, warnings, verified, auth_mechanism, detect, login_cmd, beta}`. `verified` holds the date of a
 real machine test (docs lie — Vercel ships an env var it ignores, so it injects via `--token`; documented ≠
@@ -63,16 +63,16 @@ WHY and what to do instead (e.g. **Azure** — device-login only → register a 
 The catalog can never ENABLE a local run — only the owner's `tool.cli.enabled` does.
 
 **`auth_mechanism`** (`env|argv|config_file|device`, validated in `localrun.validate_cli_profile`) is the
-field the CLI auto-importer (below) routes on: `env`/`argv` are **server-injectable** (treg holds + injects
+field the CLI auto-importer (below) routes on: `env`/`argv` are **server-injectable** (stray holds + injects
 the key → either run tier works); `config_file` is **local-only** (the credential lives in the CLI's own
 config — e.g. `aws`, `gcloud`); `device` is report-only. **`detect: {config_paths}`** is a login-state hint
 (a path present ⇒ the CLI is logged in), **`login_cmd`** the exact login command for the gap report
 (`gh auth login`, …). `server_runnable` (in `_tool_view`) now requires `auth_mechanism in (env, argv)`, so a
 config_file/device tool is honestly surfaced as local-only.
 
-## CLI auto-import (`treg scan clis` / `treg upload clis`) — scan the machine, register, report
-The machine that runs `treg scan`/`treg upload` is the only place that knows which CLIs are **installed**
-and logged in. (`import` was renamed: `treg scan` = read-only preview, `treg upload` = register; `treg
+## CLI auto-import (`stray scan clis` / `stray upload clis`) — scan the machine, register, report
+The machine that runs `stray scan`/`stray upload` is the only place that knows which CLIs are **installed**
+and logged in. (`import` was renamed: `stray scan` = read-only preview, `stray upload` = register; `stray
 import` is a hidden back-compat alias of upload.) `_import_clis` (`cli.py`, dispatched for the `clis` mode
 of `scan`/`upload`) walks the catalog's `cli`
 entries: `shutil.which(bin)` (installed?), the credential env var present (`providers.cli_env_var`), and any
@@ -116,7 +116,7 @@ plan with a `tool_name` (`_slug(provider)`), `base_url`, a `binding` from `build
 `{path: provider.probe, expect_status: 200}` when the catalog carries a `probe`. `cmd_import` then:
 select (interactive `questionary` checkbox, or `--select a,b` / `--all` / `--dry-run`) → for each
 chosen action `env_values` reads **only** that var's value → `POST /secrets {name,value,kind:"env"}` →
-`POST /tools {name,base_url,bindings:[{…,secret_id}],health_check}`. That probe means `treg health --run`
+`POST /tools {name,base_url,bindings:[{…,secret_id}],health_check}`. That probe means `stray health --run`
 actually validates env-imported keys (else they'd be `unknown`) and onboarding's test call
 (`cli._testable_path`) hits a REAL endpoint (render→`services`, vercel→`v2/user`) instead of the base-URL
 root, which 404s and looks like a bad credential. `--dry-run` prints the plan with **no network
@@ -137,7 +137,7 @@ skipped with a hint); `--no-oauth` opts out. Catalog entries carry an `oauth` bl
 GitLab, Notion, Discord, Linear. Basic pairs (Twilio) are still deferred.
 
 > **Safety:** detection never reads a value; only `env_values` does, and only for the vars being
-> registered. The binding is the standard treg shape — see [auth-secrets](../architecture/auth-secrets.md)
+> registered. The binding is the standard stray shape — see [auth-secrets](../architecture/auth-secrets.md)
 > for how `{secret}` is injected on the `/call` path, and [data-model](../architecture/data-model.md)
 > for `Tool.bindings`.
 
@@ -145,8 +145,8 @@ GitLab, Notion, Discord, Linear. Basic pairs (Twilio) are still deferred.
 The catalog is served at **`GET /providers.json`** (`api.py`, open, `{version, providers}` from
 `CATALOG_VERSION`/`CATALOG`) so it can grow **centrally** — add a provider server-side and every CLI
 picks it up, no new release. `cli._load_catalog` refreshes from `<base_url>/providers.json`, caches to
-`~/.treg/providers-cache.json`, and falls back to the cache then the **bundled `CATALOG`** when offline
-(so `treg upload` always works). `scan_env(path, catalog=…)` takes the resolved catalog; `--dry-run`
+`~/.stray/providers-cache.json`, and falls back to the cache then the **bundled `CATALOG`** when offline
+(so `stray upload` always works). `scan_env(path, catalog=…)` takes the resolved catalog; `--dry-run`
 uses the bundled one to honor its no-network promise.
 
 **Why not a blind mega-ingest:** a probe of APIs.guru (2,529 APIs) showed the auto-extracted metadata
@@ -155,9 +155,9 @@ URL, Stripe's auth reads as `basic`, several (OpenAI/Notion) don't expose a pars
 *misses* modern providers we hand-curate (Anthropic, Cloudflare). So the catalog stays **curated +
 hand-verified**; an ingest can only feed *suggestions* a human/LLM confirms.
 
-## LLM fallback for unknowns (`treg upload --llm`)
+## LLM fallback for unknowns (`stray upload --llm`)
 `unknown_secret` vars (a credential with no catalog match) can be resolved by an LLM: `--llm` (with
-`--llm-token` or `TREG_LLM_TOKEN`) sends the **names only** to an **OpenAI-compatible** endpoint
+`--llm-token` or `STRAY_LLM_TOKEN`) sends the **names only** to an **OpenAI-compatible** endpoint
 (`_llm_chat`; default `--llm-model gemini-2.5-flash` via Gemini's compat `--llm-base-url`). The pure
 `providers.llm_prompt`/`llm_parse` build the request + parse the JSON reply (tolerating prose, dropping
 entries without a var/base_url/known shape). Each resolution is shown and **confirmed by the user**
@@ -165,12 +165,12 @@ entries without a var/base_url/known shape). Each resolution is shown and **conf
 a catalog match. The LLM only runs on a real run (not `--dry-run`), and app-internal secrets never reach
 it (they're excluded before this step).
 
-## Skill directories (`treg upload skills`, `skills.py`)
+## Skill directories (`stray upload skills`, `skills.py`)
 `scan_skills(dir, catalog, env_names)` classifies every skill subdir into a `SkillDetection`:
-- **contract** — already has a `treg.json` (`convert.load_contract`); used verbatim (google-ads, gsc).
+- **contract** — already has a `stray.json` (`convert.load_contract`); used verbatim (google-ads, gsc).
   A contract `file:` path is resolved via `convert.resolve_secret_path`, which tolerates the
   `.secret`/`.secrets` spelling drift (both are gitignored, so the spelling differs per machine): the
-  exact path wins, else the leading secret-dir segment is swapped — so a treg.json written against
+  exact path wins, else the leading secret-dir segment is swapped — so a stray.json written against
   `.secret/token.json` still finds `.secrets/token.json`. Used on both the readiness check and `build_payload`.
 - **generated** — an API-tool skill with no contract: base_url from a **catalog match on the skill name**
   (`providers.match_skill`, authoritative) → the script's `API="…"` (`_BASE_RE`) → `convert._guess_base_url`;
@@ -181,14 +181,14 @@ it (they're excluded before this step).
   see the RIGHT `.env`: `cmd_import` resolves it via `_find_env_upwards(skills_dir)` (a skills dir like
   `./.claude/skills` sits UNDER a project whose `.env` is at the root), else a skill whose credential is a
   shared-`.env` var (render/vercel, no local `.secrets/`) would gap "needs env var … not found" and be
-  skipped. `treg upload` also merges `os.environ` into `env_names`, so a credential already exported in
+  skipped. `stray upload` also merges `os.environ` into `env_names`, so a credential already exported in
   your shell is found without a gap. The scan line prints which `.env` was used.
 - **catalog CLI recipe** — a secret-less skill (SKILL.md only) whose NAME matches a catalog `cli` entry
   (e.g. `stripe-cli`). Instead of a plain recipe, `_catalog_cli_detection` turns it into a **runnable cli
   tool**: it attaches the catalog cli profile (enabled), sets `base_url`, and makes each injectable env
   credential an **env-sourced secret** discovered from the machine at import (and **asks once**, hidden
-  `getpass`, for any still missing). Registered, it runs via `treg run --local <name>` (not the proxy). A
-  hand-written `treg.json` in the folder still wins over this (the contract path is checked first).
+  `getpass`, for any still missing). Registered, it runs via `stray run --local <name>` (not the proxy). A
+  hand-written `stray.json` in the folder still wins over this (the contract path is checked first).
 - **recipe_only** — a knowledge/workflow skill (SKILL.md, no external authed API, not a catalog CLI):
   published as a recipe-only **bundle** (the SKILL.md text, no tool/secret) so the whole team library
   lives in one installable place. `POST /skills` already accepts `tools:[]`/`secrets:[]` — no server change.
@@ -196,8 +196,8 @@ it (they're excluded before this step).
 `build_payload` turns a detection into a `POST /skills` body (file secrets read from disk — **`.strip()`ed**
 so a trailing `\n` in a token file can't become an illegal header value — env secrets from `env_values`,
 recipe_only ships just the recipe; **`skills.collect_files` always adds the folder's companion files**
-`{relpath: content}` so the whole skill travels, minus `.secret*`/`SKILL.md`/`treg.json`/junk/binaries);
-`write_contract` persists the generated `treg.json` back into the skill
+`{relpath: content}` so the whole skill travels, minus `.secret*`/`SKILL.md`/`stray.json`/junk/binaries);
+`write_contract` persists the generated `stray.json` back into the skill
 dir. `cmd_import` → `_import_skills` scans → multi-select (same questionary/`--select`/`--all` UX as env;
 an **env-var gap is checkable by default** — `_only_resolvable_gaps` — since it's fixable) →
 `_prompt_missing_skill_creds` **asks (hidden `getpass`) for any credential a chosen skill needs but the
@@ -214,8 +214,8 @@ via the shared `convert.auto_bindings`: the **primary token** (the oauth/bearer 
 (`developer_token` → `developer-token`, value injected as-is); and OAuth **app config** (`client_secret.json`
 / `credentials.json`, matched by `_is_app_config`) is skipped entirely (never a request credential — its
 client_id/secret already live inside the token blob). So multi-credential skills import cleanly with no
-hand-written `treg.json`. (The base_url may still guess wrong — a correct upstream host + any bespoke
-placement remain reasons to commit a `treg.json`, which overrides the generator.) `_flag_header_collisions`
+hand-written `stray.json`. (The base_url may still guess wrong — a correct upstream host + any bespoke
+placement remain reasons to commit a `stray.json`, which overrides the generator.) `_flag_header_collisions`
 stays as a guard for a hand-written contract that still collides.
 
 **Dashboard folder importer** reuses this SAME classifier server-side: `POST /skills/analyze` writes the
@@ -235,7 +235,7 @@ failure (bad binding, IntegrityError) can't poison the shared session for the re
   hosts before a resolved unknown is registered (SSRF/hallucination guard); resolutions de-dup by var.
 - **Skill detection** keys on `SKILL.md` (a README-only dir isn't a phantom skill), skips dot-dirs,
   reads `.sh`/`.js`/`.ts` scripts (+ `$VAR` reads) at any depth, and can target a single skill dir.
-  A `treg.json` contract's `health`/`examples` carry into the tool, and its readiness is validated
+  A `stray.json` contract's `health`/`examples` carry into the tool, and its readiness is validated
   (missing file / absent env var → a gap, so it can't silently push a broken tool).
 
 ## Re-running (idempotency)
@@ -243,7 +243,7 @@ Import is safe to re-run (the dev loop is wipe-and-rerun). Both sides look up wh
 and **skip by name** — a re-run reports "already registered" and creates nothing new (a recipe-only
 bundle has no tool, so the server's tool-name 409 wouldn't catch it; the CLI check does). `--replace`
 deletes-then-recreates the matching tool/bundle/secret so nothing duplicates; env-import also checks the
-tool name **before** POSTing the secret, so a clash never leaves an orphan secret. `treg skill install`
+tool name **before** POSTing the secret, so a clash never leaves an orphan secret. `stray skill install`
 skips an existing local `SKILL.md` unless `--force`, de-dups by name, and rejects unsafe path segments.
 
 ## Planned (not yet built)

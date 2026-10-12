@@ -6,7 +6,7 @@ import ast
 from pathlib import Path
 
 
-VERSIONS = Path(__file__).parents[1] / "src" / "treg" / "alembic" / "versions"
+VERSIONS = Path(__file__).parents[1] / "src" / "stray" / "alembic" / "versions"
 ADDITIVE_OPERATIONS = frozenset({
     "add_column",
     "bulk_insert",

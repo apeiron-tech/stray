@@ -1,37 +1,37 @@
 ---
-title: Provider capacity — knowing what treg's own vendor accounts have left
+title: Provider capacity — knowing what stray's own vendor accounts have left
 status: shipped
 sources:
-  - src/treg/domain/capacity/__init__.py
-  - src/treg/domain/capacity/collectors.py
-  - src/treg/domain/capacity/policy.py
-  - src/treg/domain/capacity/sweep.py
-  - src/treg/domain/capacity/view.py
-  - src/treg/domain/capacity/routes.py
-  - src/treg/domain/capacity/signatures.py
-  - src/treg/domain/capacity/verify.py
-  - src/treg/domain/capacity/marks.py
+  - src/stray/domain/capacity/__init__.py
+  - src/stray/domain/capacity/collectors.py
+  - src/stray/domain/capacity/policy.py
+  - src/stray/domain/capacity/sweep.py
+  - src/stray/domain/capacity/view.py
+  - src/stray/domain/capacity/routes.py
+  - src/stray/domain/capacity/signatures.py
+  - src/stray/domain/capacity/verify.py
+  - src/stray/domain/capacity/marks.py
   - tests/test_capacity_protect.py
-  - src/treg/infra/upstream/limiter.py
-  - src/treg/domain/capacity/overflow_spend.py
-  - src/treg/domain/capacity/routes_view.py
-  - src/treg/application/call/overflow.py
-  - src/treg/alembic/versions/0007_overflow_spend.py
+  - src/stray/infra/upstream/limiter.py
+  - src/stray/domain/capacity/overflow_spend.py
+  - src/stray/domain/capacity/routes_view.py
+  - src/stray/application/call/overflow.py
+  - src/stray/alembic/versions/0007_overflow_spend.py
   - tests/test_capacity_overflow.py
   - tests/test_capacity_overflow_spend.py
-  - src/treg/alembic/versions/0008_org_platform_overflow_disabled.py
+  - src/stray/alembic/versions/0008_org_platform_overflow_disabled.py
   - tests/test_capacity_smoothing.py
-  - src/treg/domain/capacity/overflow_seed.json
-  - src/treg/infra/upstream/aggregators/__init__.py
-  - src/treg/infra/upstream/aggregators/orthogonal.py
-  - src/treg/infra/upstream/aggregators/monid.py
-  - src/treg/infra/upstream/aggregators/catalogs.py
-  - src/treg/alembic/versions/0006_overflow_route.py
+  - src/stray/domain/capacity/overflow_seed.json
+  - src/stray/infra/upstream/aggregators/__init__.py
+  - src/stray/infra/upstream/aggregators/orthogonal.py
+  - src/stray/infra/upstream/aggregators/monid.py
+  - src/stray/infra/upstream/aggregators/catalogs.py
+  - src/stray/alembic/versions/0006_overflow_route.py
   - tests/test_capacity_overflow_routes.py
   - tests/test_influencersclub_overflow.py
-  - src/treg/worker.py
+  - src/stray/worker.py
   - scripts/provider_balances.py
-  - src/treg/alembic/versions/0005_capacity_policy_snapshot.py
+  - src/stray/alembic/versions/0005_capacity_policy_snapshot.py
   - tests/test_capacity_know.py
   - tests/test_capacity_collectors.py
   - tests/test_financialdatasets.py
@@ -85,15 +85,15 @@ misrepresented as request-token limits. An Agent run reserves its documented wor
 $2.40 for the default 150-step ceiling, or the $8.00 500-step fallback when the request cannot be
 matched to that ceiling. TinyFish currently beta-gates a caller-supplied `max_steps`, so low-balance
 teams can be refused even when the eventual run would be cheap; unused hold is released when the
-terminal `num_of_steps` is settled. BYOK calls bypass shared-key smoothing and treg metering.
+terminal `num_of_steps` is settled. BYOK calls bypass shared-key smoothing and stray metering.
 
 Fish Audio capacity is `cash / manual / api`. `collectors._fishaudio` calls the free
 `GET /wallet/self/api-credit` route with the platform Bearer key and the workspace selected through
-its `team_id` query parameter. `TREG_PLATFORM_FISHAUDIO_WORKSPACE_ID` supplies that selector. When
+its `team_id` query parameter. `STRAY_PLATFORM_FISHAUDIO_WORKSPACE_ID` supplies that selector. When
 it is absent, the collector reports unknown and makes no request: the unscoped route returns the
 API-key user's separate personal wallet and can falsely look empty while the shared workspace is
 funded. The response's finite nonnegative `credit` value is the remaining USD workspace balance.
-treg never enables or performs vendor top-ups. Shared-key planning uses the documented Starter
+stray never enables or performs vendor top-ups. Shared-key planning uses the documented Starter
 baseline of 5 concurrent requests, corroborated by a live six-request burst where five succeeded
 and one received Fish's concurrency-limit 429. That is a concurrency allowance, not QPS, so it is
 not encoded in the token-bucket rate smoother; Fish refuses excess work at its account boundary.
@@ -108,7 +108,7 @@ finite limit); absent or malformed pools remain unknown rather than becoming zer
 limit of 100 requests per minute. HTTP 432 is a documented plan-cap quota signal and HTTP 433 is a
 PAYGO-cap quota signal. `/usage` is capacity evidence only: it is not a catalog tool and may lag the
 per-response `usage.credits` used for settlement. The included plan allowance renews monthly;
-raising or enabling the separate PAYGO ceiling is an operator action, and treg assumes no automatic
+raising or enabling the separate PAYGO ceiling is an operator action, and stray assumes no automatic
 top-up. A controlled `/usage` burst did not reproduce its documented 10-per-10-minute 429, so the
 rate policy remains documentation-derived. The funded account was not deliberately exhausted;
 432/433 signatures are documentation-derived rather than live-observed.
@@ -126,13 +126,13 @@ You.com's internal collector reads `GET /v1/billing/account_balance` with the pl
 connected keys and stays out of the catalog. The shared-key policy is `cash / auto_recharge / api`;
 `_RATE_LIMITS` uses the documented Finance Research pace of five requests per second as a
 provider-wide ceiling, including Search, Contents, Answer and Research calls whose documented
-endpoint limits are higher. BYOK calls bypass shared-key smoothing and treg metering. The API
+endpoint limits are higher. BYOK calls bypass shared-key smoothing and stray metering. The API
 balance can lag recent calls, so capacity snapshots are not a per-call charge record.
 
 Spider's internal collector calls the free `GET /data/credits` route with the platform Bearer key,
 accepts only finite nonnegative `data.credits`, and converts the API's 10,000 credits per USD to a
 cash balance. The policy is `cash / auto_recharge / api`: the account's auto-refill was confirmed
-in its billing dashboard, while treg only reads the balance. Spider documents 10,000 core API
+in its billing dashboard, while stray only reads the balance. Spider documents 10,000 core API
 requests/minute by default; shared-key smoothing uses a conservative 100/minute. The balance route
 is capacity evidence and a connection probe, never a catalog tool.
 
@@ -155,11 +155,11 @@ so no provider-specific empty-balance signature or overflow route is claimed.
 TrestleIQ publishes no free balance or usage API. Capacity reports the wallet as Developer
 Portal-only and does not spend a validation query to read it. The policy records cash with vendor
 auto recharge, manually verified as enabled in the portal, and a documented 10 requests/second
-shared-key pace. treg does not read or change the vendor's auto-top-up setting.
+shared-key pace. stray does not read or change the vendor's auto-top-up setting.
 
 Adyntel publishes no free balance or usage API. `NO_BALANCE_API` therefore reports PAYG credits as
 dashboard-only instead of the ambiguous "no fetcher written yet" state. `_KNOWN` classifies the
-wallet as manually funded credits, and `_RATE_LIMITS` smooths treg's shared key at the documented
+wallet as manually funded credits, and `_RATE_LIMITS` smooths stray's shared key at the documented
 5 requests/second; BYOK remains outside capacity policy. An eight-request concurrent live burst
 returned eight HTTP 200 responses without `Retry-After`, so the pace is documentation-derived rather
 than a reproduced 429 limit. Top-up remains a manual provider-dashboard operation.
@@ -185,7 +185,7 @@ second shared-key limit. No empty-account signature was forced and no overflow r
 ZeroBounce's collector calls the free `GET /v2/getcredits` route with the query-bound key and reads
 `Credits`. Nonnegative integers and decimal strings are exact balances. Boolean, missing,
 malformed, and negative values are unknown; this includes the provider's invalid-key `-1` sentinel.
-Its policy is `credits / auto_recharge / api` for vendor-managed Auto-Pay, but treg does not read or
+Its policy is `credits / auto_recharge / api` for vendor-managed Auto-Pay, but stray does not read or
 change that setting. Shared-key pacing starts at 25 requests per second. No empty-account
 response was forced and no overflow route is claimed.
 
@@ -210,26 +210,26 @@ Financial Datasets uses the existing capacity path with `_KNOWN` policy
 so `NO_BALANCE_API` reports its upstream remainder as `no API`; the dashboard is not scraped and a
 paid data request is not scheduled as a meter. Its typed platform-key setting makes it appear in
 `all_platform_providers()` and therefore in `scripts/provider_balances.py` without provider-specific
-script logic. treg continues to report its own ledger-estimated spend, billed amount, and call count.
+script logic. stray continues to report its own ledger-estimated spend, billed amount, and call count.
 The shared bare HTTP 402 balance-exhaustion signature and strike/lock lifecycle apply to platform
 calls; own-key calls remain outside capacity decisions.
 
-Its `platform_auth: anonymous` discovery calls are authenticated treg team calls, not a public
+Its `platform_auth: anonymous` discovery calls are authenticated stray team calls, not a public
 internet proxy. The normal tool ACL, deny rules, and a configured member `daily_call_cap` apply, but
 the default member cap is unlimited and the shared-key provider spacer applies only to the
 `platform` tier. An anonymous upstream 429 or edge block is therefore relayed without marking the
 platform account. Heavy anonymous traffic can still harm the shared egress address and disrupt paid
 calls to the same provider. The immediate kill switch is removal of `financialdatasets` from
-`TREG_PLATFORM_PROVIDERS`, which stops anonymous and platform-key offers while leaving team BYOK
+`STRAY_PLATFORM_PROVIDERS`, which stops anonymous and platform-key offers while leaving team BYOK
 credentials first and usable. A default anonymous-provider throttle is not shipped in this change.
 
 **Problem.** When a registry-owned vendor account runs dry, callers receive an upstream refusal they
 cannot fix themselves. Capacity handling has three layers: **know** the runway, **fund** before it
 dies, and **protect** the call when it dies anyway through refusal before reserve, same-endpoint
 overflow, and a typed 503. Live account state and production observations belong in the private
-[provider-capacity runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/production/provider-capacity.md).
+[provider-capacity runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/production/provider-capacity.md).
 
-Scope: treg-owned platform credentials only. Tiers 1/2 (a caller's own tool or key) are never
+Scope: stray-owned platform credentials only. Tiers 1/2 (a caller's own tool or key) are never
 consulted or affected by anything here.
 
 MillionVerifier's platform slot has an acknowledged exhaustion-signature gap in
@@ -252,7 +252,7 @@ Free, Starter and Growth use the API-reported remaining allowance. No manual pla
 can override that value. A reported zero means exhausted; missing, negative or non-numeric
 balance data means unknown, not unlimited. The unlimited-plan API response has not been
 verified. Inspect its actual status and balance fields before adding common unlimited-plan
-support. Per-call billing remains separate: use `meta.credits_used` at the treg list rate.
+support. Per-call billing remains separate: use `meta.credits_used` at the stray list rate.
 
 Exhaustion behavior is acknowledged as unrecorded in the existing shared signature guard;
 we did not exhaust the trial to manufacture evidence. No overflow route is claimed.
@@ -316,7 +316,7 @@ documented self-serve minute allowance. Its separate 1,000-request daily allowan
 daily quota. Like other provider-wide smoothing, this bounded process-local wait is not a strict
 quota gate. BYOK calls bypass it.
 
-## Pieces (`src/treg/domain/capacity/`)
+## Pieces (`src/stray/domain/capacity/`)
 
 - **`collectors.py`** — the providers' *free* balance/quota calls (`coroutine(client, key) →
   {value, unit, note}`), shared with `scripts/provider_balances.py`. Providers such as DataForSEO,
@@ -354,10 +354,10 @@ quota gate. BYOK calls bypass it.
   and friends are sync and I/O-free so `resolve` can read them without breaking its rule. A
   writer calls `invalidate()`; other replicas see the change within one TTL.
 
-## Where it runs — `treg-worker`
+## Where it runs — `stray-worker`
 
-`treg-worker capacity sweep [--only a,b] [--json]` (`src/treg/worker.py`, console script in the
-`[server]` extra). It is deliberately **not** a `treg` subcommand: the light CLI may not import the
+`stray-worker capacity sweep [--only a,b] [--json]` (`src/stray/worker.py`, console script in the
+`[server]` extra). It is deliberately **not** a `stray` subcommand: the light CLI may not import the
 DB stack (import-linter contract), and the sweep needs the platform keys in the env plus outbound
 third-party calls, which are worker-profile work and never dataplane lifespan work. Operators schedule
 it in a worker environment containing the required provider keys. Startup calls read-only
@@ -377,13 +377,13 @@ Numbers only - no key or payment detail.
 
 ## Boundaries
 
-`treg.domain.capacity` may not import `treg.api`, `treg.routers`, `treg.application`,
-`treg.bootstrap`, `treg.audit`, FastAPI or Starlette (contract "Capacity domain does not depend on
+`stray.domain.capacity` may not import `stray.api`, `stray.routers`, `stray.application`,
+`stray.bootstrap`, `stray.audit`, FastAPI or Starlette (contract "Capacity domain does not depend on
 outer layers"). Money is never touched: capacity marks are ratestore rows, never balances.
 
 ## Overflow routes (step B′) — derived, never hand-written
 
-**Overflow** = the *same* vendor endpoint served through a treg-owned **aggregator** account
+**Overflow** = the *same* vendor endpoint served through a stray-owned **aggregator** account
 (Orthogonal first, Monid second) when our direct account is out. It is a credential rung
 (`platform-overflow`), not a vendor: not in the catalog, not searchable, no BYO key. The caller
 pays the aggregator's real price, 0% markup, disclosed in-band when it ships (step E).
@@ -408,14 +408,14 @@ pays the aggregator's real price, 0% markup, disclosed in-band when it ships (st
   compared the flat fee against the request's direct estimate ($0.00598 per creator), so a
   one-creator request was refused with the typed 503 telling the caller to bring their own key
   while a two-creator request was served: a customer's agent read that as "your plan no longer
-  allows discovery". Three cents, disclosed through `X-Treg-Cost-Micro` and `X-Treg-Served-Via`,
+  allows discovery". Three cents, disclosed through `X-Stray-Cost-Micro` and `X-Stray-Served-Via`,
   beats a refusal. **Icypeas people search** (`icypeas.people.search`, 0.02 credit per row direct)
   is the third contract: Orthogonal lists `/api/find-people` at $0.01 per request and charged
   1 cent live for pages of 50 and 200 leads. Other unit mismatches remain disabled. A fallback charges the aggregator's
   actual flat fee, including an empty page, rather than multiplying by results.
 - **The seed** - `overflow_seed.json` contains candidate mappings and recorded verification evidence.
   Tests pin its historical baseline and expiry behavior. Enabled routes decay after seven days
-  without `treg-worker overflow verify`. The Influencers Club verification record is
+  without `stray-worker overflow verify`. The Influencers Club verification record is
   `tests/fixtures/aggregators/verification/influencersclub.json`; a redacted discovery envelope is
   `tests/fixtures/aggregators/orthogonal_influencersclub_search.json`. Email enrichment remains
   unverified because its catalog entry has no test request; profile/analytics enrichment and
@@ -481,7 +481,7 @@ pays the aggregator's real price, 0% markup, disclosed in-band when it ships (st
   `contract` = its stricter schema, no vendor call, no charge; `pending` = a Monid async run to
   poll). Fixtures are recorded bodies (PII hashed) in `tests/fixtures/aggregators/`; every fixture
   round-trips. Keys are passed in by the caller and never read, logged or stored here.
-- **`verify.py`** + `treg-worker overflow verify` — the weekly re-verify: one cheap call per
+- **`verify.py`** + `stray-worker overflow verify` — the weekly re-verify: one cheap call per
   route through the aggregator (and, when we hold the vendor key, directly), compare the shape
   fingerprint (keys and list/leaf markers, values ignored), stamp `last_verified_at` or disable
   with the reason. A mismatch prints a bounded key-only structural diff, never response values;
@@ -532,7 +532,7 @@ balance classification. An Arena team top-up cannot replenish this vendor-side a
 The call path reads the view and runs the breaker (`marks.py`); the mechanics and the typed
 `provider_capacity` 503 are documented in `architecture/proxy-model.md` § Platform capacity and
 `interface/api.md`. In one line: locked provider or endpoint → 503 before any hold, with
-alternatives named, one probe a minute excepted; two balance/quota signatures in a row on treg's
+alternatives named, one probe a minute excepted; two balance/quota signatures in a row on stray's
 key → lock; the probe's 2xx → open, whether the lock or the sweep's reading refused it. Burst 429s are smoothed (D′). Tiers 1/2 untouched.
 
 The breaker is deliberately slow to open and quick to close: a false lock costs every caller a
@@ -552,21 +552,21 @@ the policy table. `rate_pressure` alerting is step C.
 ## Overflow, the child cycle (step E) — off by default
 
 `application/call/overflow.py` is documented in `architecture/proxy-model.md` § Overflow. Operating
-it: `TREG_OVERFLOW_MODE` = `off` (default) | `shadow` | `on`; `TREG_OVERFLOW_DAILY_BUDGET_USD`
+it: `STRAY_OVERFLOW_MODE` = `off` (default) | `shadow` | `on`; `STRAY_OVERFLOW_DAILY_BUDGET_USD`
 per aggregator per UTC day is a hard admission cap backed by `OverflowSpend`. Before either an
 `on` call or a `shadow` probe goes to the network, a conditional atomic upsert reserves the route's
 estimated micro-USD only if the resulting daily total fits under the cap. Completion reconciles the
 estimate to actual aggregator cost and increments `calls` once, including a vendor 5xx that the
-aggregator charged but treg cannot charge to the caller. Known no-charge failures return the whole
+aggregator charged but stray cannot charge to the caller. Known no-charge failures return the whole
 estimate. Once network I/O has started, a timeout, disconnect, parser crash, cancellation, or any
 other outcome without a known actual fee keeps the estimate reserved. A process crash after the
 reservation commit can do the same; that bias is deliberately conservative because it reduces later
 service instead of allowing excess prepaid spend.
-The aggregator keys `TREG_OVERFLOW_KEY_*` live only in the service or worker secret environment. The
+The aggregator keys `STRAY_OVERFLOW_KEY_*` live only in the service or worker secret environment. The
 route view (`routes_view.py`) is the call path's
 60 s copy of the enabled `OverflowRoute` rows; `overflow sync` / `overflow verify` are the only
 writers. Shadow probes log their route and shape and write a child audit row with
-`credential_tier=platform-overflow` and `error_response="treg overflow: shadow"`. Production
+`credential_tier=platform-overflow` and `error_response="stray overflow: shadow"`. Production
 rollout duration, monitoring and mode changes belong in the private runbook.
 Overflow remains advisory across its full attempt: an unexpected budget, adapter, capacity-mark,
 or settlement-path failure is logged, any reserved child hold is released, and the caller falls
@@ -584,14 +584,14 @@ reservation guard.
 
 `Org.platform_overflow_disabled` (Alembic `0008`; last column in the class on purpose — alembic
 appends, keeping create_all test schemas aligned with the migrated shape) is the team opt-out:
-`GET/PATCH /orgs/{id}/settings` carries `platform_overflow` (default true), `treg org overflow
+`GET/PATCH /orgs/{id}/settings` carries `platform_overflow` (default true), `stray org overflow
 [on|off]` sets it. Honoured before any aggregator is contacted, on both entry points (the
 post-failure child cycle and the resolver's skip-direct rung); an opted-out team gets the typed 503.
 Own keys are never relayed regardless. The charter's "not built" row, `llms.txt`, `skill.md` (+
-plugin), `README.md` and `USAGE.md` now say what treg may do and how it discloses it.
+plugin), `README.md` and `USAGE.md` now say what stray may do and how it discloses it.
 
 The production rollout, account balances, verification schedule and rollback procedure are in the
-private [provider-capacity runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/production/provider-capacity.md).
+private [provider-capacity runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/production/provider-capacity.md).
 Not built: the `overflow_masking` alert, gated on the money-funding-transactions debt. Until it is
 built, operators must monitor `OverflowSpend` directly.
 
@@ -599,7 +599,7 @@ built, operators must monitor `OverflowSpend` directly.
 
 Forecasts, recharge verification and every alert (`quota_exhausted`, `rate_pressure`, `overflow_masking`,
 …) — step C, gated on the `money-funding-transactions` debt. Until the rollout above flips the mode,
-`TREG_OVERFLOW_MODE` is `off` and treg still relays a vendor's 402 unchanged (or answers the typed 503
+`STRAY_OVERFLOW_MODE` is `off` and stray still relays a vendor's 402 unchanged (or answers the typed 503
 when the account is marked exhausted).
 
 ## Kitt AI capacity
@@ -622,7 +622,7 @@ results varied, so no numeric free-plan concurrency/rate limit is configured.
 `collectors._contactout` exposes the three raw credit pools through an informational observation,
 not a scalar balance. `snapshot_from` and `latest_state` preserve it without marking the provider
 exhausted. Prepaid quotas are already remaining credits. The pools are independent and require
-separate operator monitoring and top-ups. Stats freshness remains unconfirmed; treg
+separate operator monitoring and top-ups. Stats freshness remains unconfirmed; stray
 keeps the existing sweep cadence and does not assume behavior at zero credits.
 
 ContactOut overflow now has verified routes on Orthogonal and Monid, using the same price gates,

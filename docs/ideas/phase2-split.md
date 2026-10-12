@@ -6,12 +6,12 @@ Source of truth read for this design:
 
 - `docs/REFACTOR-PLAN.md` Stage 2
 - `docs/REFACTOR-PLAN.md` section 1.1
-- the current `src/treg/api.py`, `src/treg/bootstrap.py`, role manifests, and four surface snapshots
+- the current `src/stray/api.py`, `src/stray/bootstrap.py`, role manifests, and four surface snapshots
 - the relevant `docs/context/` fragments for API, dashboard, SEO, landing, composition, Catalog, and super-admin
 
 The intended change is definition movement only. Handler bodies, dependency order, response types,
 error handling, route names, route paths, methods, OpenAPI visibility, and registration order stay
-unchanged. `treg.api:app` and the three role manifests stay unchanged.
+unchanged. `stray.api:app` and the three role manifests stay unchanged.
 
 ## 1. Route inventory
 
@@ -47,7 +47,7 @@ One path-shaped exception needs explicit review approval:
   10372 to 10424 and snapshot position 203, stays in `api.py` for Stage 4. Despite its URL and GET
   method, its body executes the call credential ladder through `_resolve_call`,
   `_marketplace_secret`, `_platform_offer`, `_platform_estimate_micro`, and
-  `_enforce_catalog_status`. Moving it without importing `treg.api` would require either moving call
+  `_enforce_catalog_status`. Moving it without importing `stray.api` would require either moving call
   business helpers early or adding mutable callback wiring. Both expand this pure presentation move
   into the call boundary. The proposed classification is therefore "call access preflight", not the
   open Catalog API. If Stage 2 is intended to include this route solely because of its prefix, stop
@@ -56,7 +56,7 @@ One path-shaped exception needs explicit review approval:
 Also not part of the endpoint-Catalog API:
 
 - `GET /providers.json` stays in `api.py`. It is the credential/provider registry consumed by
-  `treg upload`, not the endpoint Catalog described by `catalog_store`.
+  `stray upload`, not the endpoint Catalog described by `catalog_store`.
 - `POST /tool-requests` stays in `api.py`. It is a mutation and a later Catalog onboarding use case.
 
 ### 1.2 `routers/web.py`
@@ -133,7 +133,7 @@ after `GET /.well-known/openai-apps-challenge` and before `GET /auth/cli-token`,
 | Snapshot | Route | Handler |
 |---:|---|---|
 | 72 | `GET /.well-known/skills/index.json` | `well_known_skills_index` |
-| 73 | `GET /.well-known/skills/treg/SKILL.md` | `well_known_skill_md` |
+| 73 | `GET /.well-known/skills/stray/SKILL.md` | `well_known_skill_md` |
 | 74 | `GET /connect-demo` | `connect_demo_page` |
 | 75 | `GET /connect-demo/callback` | `connect_demo_callback` |
 | 76 | `GET /help` | `support_page` |
@@ -201,7 +201,7 @@ The read-specific helpers and constants `_tally`, `_ERROR_EVIDENCE_TTL_DAYS`,
 
 These concerns are explicitly out of Stage 2, even when an individual route uses GET:
 
-- auth and identity: GitHub, Google, email OTP, CLI pairing/tokens, invite sign-in, treg OAuth
+- auth and identity: GitHub, Google, email OTP, CLI pairing/tokens, invite sign-in, stray OAuth
   authorization server, grants, and token revocation
 - orgs and governance: org CRUD, invites, members, roles, agents, projects, pins, deny rules, settings,
   budgets, usage, and public tokens
@@ -264,8 +264,8 @@ No snapshot regeneration command is part of this stage.
 
 `routers/admin.py` needs `require_superadmin`; the excluded Catalog access route is the only selected
 Catalog-shaped route that would need `require_member`. Web pages need session identity lookup. Importing
-these from `treg.api` is forbidden, so the first commit extracts the existing dependency family, with
-unchanged bodies, into `src/treg/routers/dependencies.py`:
+these from `stray.api` is forbidden, so the first commit extracts the existing dependency family, with
+unchanged bodies, into `src/stray/routers/dependencies.py`:
 
 - `Caller`
 - `_membership_by_token`
@@ -294,7 +294,7 @@ The following helpers are used by both moved web handlers and handlers that rema
 | `_user_from_session` | `routers/dependencies.py`, re-exported by `api.py` | shared auth dependency used by web and auth routes |
 | `_local_owner` | `routers/web.py` | used only by dashboard rendering; `_bootstrap_single_user` remains in `api.py` |
 | OAuth-return cookie read/write helpers and referral cookie helpers used by landing/dashboard | `routers/dependencies.py`, re-exported by `api.py` | avoids web importing auth implementation and keeps paired cookie validation in one place |
-| `_utcnow_naive`, `_as_naive` | a small neutral `src/treg/timeutil.py`, re-exported by `api.py` | admin reads and many remaining handlers share the exact timestamp convention |
+| `_utcnow_naive`, `_as_naive` | a small neutral `src/stray/timeutil.py`, re-exported by `api.py` | admin reads and many remaining handlers share the exact timestamp convention |
 | `get_session`, `session_maker` | remain in `db.py`, imported directly | already cycle-free infrastructure helpers |
 
 The extraction commit must preserve compatibility for the currently exercised names
@@ -305,7 +305,7 @@ route definitions back in `api.py`.
 ### 3.3 Catalog and rendering helpers
 
 - `_provider_display`, `_platform_rows`, and `_observed_or_empty` live in `routers/catalog.py`.
-- `routers/web.py` imports those helpers from its sibling `routers.catalog`, never from `treg.api`.
+- `routers/web.py` imports those helpers from its sibling `routers.catalog`, never from `stray.api`.
 - All helpers from `_CATALOG_RESERVED` through the server-rendered Catalog, agent, use-case, sitemap,
   and docs rendering blocks move to `routers/web.py` with their handlers. This includes `_page`,
   `_spa_catalog_page`, `_usd_short`, `_price_label`, `_catalog_mtime`, `_USE_CASES`, and
@@ -321,8 +321,8 @@ retention helper move unchanged. Mutation-only helpers such as `_is_last_active_
 
 ## 4. Circular-import avoidance
 
-The invariant is stronger than "no module-level import": no module anywhere under `treg.routers` may
-import `treg.api`, directly or indirectly through an adapter that merely hides the edge.
+The invariant is stronger than "no module-level import": no module anywhere under `stray.routers` may
+import `stray.api`, directly or indirectly through an adapter that merely hides the edge.
 
 The import direction after this stage is:
 
@@ -355,12 +355,12 @@ to API edges:
 [[tool.importlinter.contracts]]
 name = "Routers do not depend on the legacy API module"
 type = "forbidden"
-source_modules = ["treg.routers"]
-forbidden_modules = ["treg.api"]
+source_modules = ["stray.routers"]
+forbidden_modules = ["stray.api"]
 ```
 
 The exact `as_packages` setting will be verified against import-linter 2.13 before editing the config so
-the contract covers every current and future module under `treg.routers`. The contract must catch direct
+the contract covers every current and future module under `stray.routers`. The contract must catch direct
 and indirect edges. No ignore is planned. `unmatched_ignore_imports_alerting = "error"` remains enabled.
 
 This stage does not add the future routers to application to domain layering contract because the
@@ -396,7 +396,7 @@ After each commit:
 - verify `git diff -- tests/snapshots/` is empty;
 - run `uv run --frozen pytest -q`;
 - run `uv run --frozen lint-imports` once router modules exist;
-- run `bash .agents/skills/tools-registry-context/scripts/drift.sh`;
+- run `bash .agents/skills/stray-context/scripts/drift.sh`;
 - update the applicable `docs/context/` fragments and regenerate their map in the same commit;
 - stop for review before starting the next commit.
 

@@ -1,22 +1,22 @@
 ---
 name: google-ads
-description: Traps when running Google Ads through treg — the API requirements and cleanup semantics that cost round-trips or money. Use whenever asked to analyse ad performance, audit spend, create or change campaigns, adjust budgets or bids, or do media buying.
+description: Traps when running Google Ads through stray — the API requirements and cleanup semantics that cost round-trips or money. Use whenever asked to analyse ad performance, audit spend, create or change campaigns, adjust budgets or bids, or do media buying.
 ---
 
-# Google Ads via treg — the traps
+# Google Ads via stray — the traps
 
-Verified live on 2026-07-22 against a live account, via `treg call google-ads`.
+Verified live on 2026-07-22 against a live account, via `stray call google-ads`.
 Each trap is tagged with how many independent agents hit it when working **without** this file, so
 you know which are real and which are here for insurance.
 
-Account id: `treg connections ls` → the `google-ads` row; `treg connections resources <id>` to list.
+Account id: `stray connections ls` → the `google-ads` row; `stray connections resources <id>` to list.
 Never guess an account id — you may be spending someone else's money.
 
 ## 1. Pin the API version — there is no discovery  ⚠️ 2/2 agents hit this
 
 Paths are versioned and a wrong guess returns a **Google HTML 404**, not JSON. Nothing in the API
-or in `treg tool ls` reports the current version — one agent burned **five** calls walking v14→v18
-before recovering the answer from the `treg calls` audit log.
+or in `stray tool ls` reports the current version — one agent burned **five** calls walking v14→v18
+before recovering the answer from the `stray calls` audit log.
 
 **Use `v25`** (released 2026-07-22, live-verified through the proxy 2026-08-17; sunsets ~Aug 2027).
 Do not guess downward.
@@ -86,7 +86,7 @@ Only listed fields change; a field you set but don't list is ignored, one you li
 Acting on a client account under a manager needs the header:
 
 ```bash
-treg call google-ads "<path>" --method POST --header 'login-customer-id: 9876543210' --data '...'
+stray call google-ads "<path>" --method POST --header 'login-customer-id: 9876543210' --data '...'
 ```
 
 A wrong or unauthorised value returns **`401 UNAUTHENTICATED`**, not a targeting error. Check the
@@ -106,7 +106,7 @@ which no error will catch. Use it whenever the operation spends money or you can
 ## Reading performance
 
 ```bash
-treg call google-ads "v25/customers/<CID>/googleAds:search" --method POST --data '{
+stray call google-ads "v25/customers/<CID>/googleAds:search" --method POST --data '{
   "query":"SELECT campaign.name, campaign.status, campaign_budget.amount_micros,
            metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions
            FROM campaign WHERE segments.date DURING LAST_30_DAYS

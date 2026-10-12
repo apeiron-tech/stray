@@ -1,4 +1,4 @@
-# The treg MCP server, and the plugin that ships it
+# The stray MCP server, and the plugin that ships it
 
 **Status:** spike COMPLETE and thrown away; implementation approved and not yet started.
 
@@ -6,7 +6,7 @@ The goal is the plugin directory's traffic. A skill-only plugin gets that traffi
 visitor to install a CLI — the dead end is the conversion. An MCP connector **works the moment it is
 installed**, and it is the only shape that reaches ChatGPT, where there is no terminal at all.
 
-Not one tool per provider. The catalog stays *data*; the MCP server exposes **treg's own operations**
+Not one tool per provider. The catalog stays *data*; the MCP server exposes **stray's own operations**
 — the same handful the CLI has. Five tools, not 2,600.
 
 ## What I verified first, on this machine (codex-cli 0.145.0)
@@ -27,9 +27,9 @@ path is gated on review in a way the Codex path is not.
 
 Throwaway code, deleted. What it proved:
 
-**1. It mounts inside treg's FastAPI app — but there is a trap.** `app.mount()` does **not** run the
+**1. It mounts inside stray's FastAPI app — but there is a trap.** `app.mount()` does **not** run the
 mounted app's lifespan, and the streamable-HTTP session manager initialises its task group there.
-Every request 500s with `Task group is not initialized`. treg's `api.py` already has a lifespan
+Every request 500s with `Task group is not initialized`. stray's `api.py` already has a lifespan
 (database setup), so the real implementation must **compose** the two:
 
 ```python
@@ -37,7 +37,7 @@ mcp_app = mcp.streamable_http_app(streamable_http_path="/", stateless_http=True,
 
 @asynccontextmanager
 async def lifespan(app):
-    async with mcp_app.router.lifespan_context(mcp_app):   # treg's own lifespan wraps this
+    async with mcp_app.router.lifespan_context(mcp_app):   # stray's own lifespan wraps this
         yield
 ```
 
@@ -79,21 +79,21 @@ Five tools, each mirroring a CLI command that already exists and is tested:
 
 | Tool | Does | Mirrors |
 |---|---|---|
-| `catalog_search(query, limit)` | find endpoints by what you want to DO, with price, provider, and measured reliability | `treg catalog search` |
-| `catalog_get(endpoint_id)` | one endpoint: parameters, price, auth tier, capability siblings, observed stats | `treg catalog get` |
-| `call(endpoint_id, params)` | the metered call — treg injects the credential, relays the response | `treg call` |
-| `balance()` | the team's prepaid balance and in-flight holds | `treg balance` |
-| `my_tools()` | what the team registered: keys, OAuth connections, skills | `treg tool list` |
+| `catalog_search(query, limit)` | find endpoints by what you want to DO, with price, provider, and measured reliability | `stray catalog search` |
+| `catalog_get(endpoint_id)` | one endpoint: parameters, price, auth tier, capability siblings, observed stats | `stray catalog get` |
+| `call(endpoint_id, params)` | the metered call — stray injects the credential, relays the response | `stray call` |
+| `balance()` | the team's prepaid balance and in-flight holds | `stray balance` |
+| `my_tools()` | what the team registered: keys, OAuth connections, skills | `stray tool list` |
 
-**The tool descriptions are the product.** They are what the model reads when deciding whether treg
+**The tool descriptions are the product.** They are what the model reads when deciding whether stray
 is relevant, exactly as `skill.md`'s frontmatter is today. They get the same care.
 
 `call` returns the upstream response **verbatim**, plus what it cost. The founding rule is unchanged:
-treg relays, never models.
+stray relays, never models.
 
 ## Where it lives, and the rule it must not break
 
-A new module, `src/treg/mcp.py`, mounted on the existing FastAPI app at `/mcp`. One deployment, one
+A new module, `src/stray/mcp.py`, mounted on the existing FastAPI app at `/mcp`. One deployment, one
 database, one set of rules.
 
 **It must route through `_resolve_marketplace_call`, not around it.** Org isolation, the balance
@@ -105,12 +105,12 @@ reservation and settle.
 ## Authentication, in two phases
 
 **Phase 1 — Codex, works today.** The plugin's `.mcp.json` declares the URL and
-`bearer_token_env_var: TREG_TOKEN`. The user exports a per-org token. That is one environment
+`bearer_token_env_var: STRAY_TOKEN`. The user exports a per-org token. That is one environment
 variable instead of installing a CLI and signing in — and per-org tokens already exist, with roles
 and audit.
 
 **Phase 2 — ChatGPT, needs OAuth.** `codex mcp login` shows OAuth is supported, and MCP's spec uses
-OAuth 2.1. treg already runs OAuth for GitHub and Google sign-in and has a hosted connect flow, so
+OAuth 2.1. stray already runs OAuth for GitHub and Google sign-in and has a hosted connect flow, so
 there is a foundation — but this is genuine new work, and it is what the ChatGPT connector requires.
 
 Phase 1 ships and can be tested end to end. Phase 2 is what the public submission needs.
@@ -120,21 +120,21 @@ Phase 1 ships and can be tested end to end. Phase 2 is what the public submissio
     plugin/
     ├── .codex-plugin/plugin.json     manifest + listing copy (reuse from the archived branch)
     ├── .mcp.json                     the remote server declaration
-    ├── skills/treg/                  KEEP — generated from src/treg/web/skill.md
+    ├── skills/stray/                  KEEP — generated from src/stray/web/skill.md
     └── assets/                       icon + logo (already made)
 
 **Both**, exactly as OpenAI's `github` plugin ships `"skills"` and `"apps"` together. The connector
-gives the model the operations; the skill gives it the judgement — when treg is the right move, how
+gives the model the operations; the skill gives it the judgement — when stray is the right move, how
 to choose between providers, to state a price before spending. Tools alone would lose all of that.
 
 ## Risks and open decisions
 
-- **`mcp` 2.0.0 depends on `httpx2`**, while treg's CLI uses `httpx`. It belongs in the `[server]`
+- **`mcp` 2.0.0 depends on `httpx2`**, while stray's CLI uses `httpx`. It belongs in the `[server]`
   extra only — the base install must stay the light CLI. Needs checking for conflict before committing
   to the SDK.
 - **A public MCP endpoint is new attack surface.** Unauthenticated requests must be refused before
   any work is done, and it needs its own rate limit — the existing per-user caps assume the HTTP API.
-- **Streamable HTTP is session-based**, which is a different lifecycle from treg's stateless
+- **Streamable HTTP is session-based**, which is a different lifecycle from stray's stateless
   request/response. Worth a spike before committing.
 - **Token in an environment variable** is weaker than OAuth: it sits in the user's shell profile. It
   is the pragmatic phase-1 answer, not the destination.
@@ -144,7 +144,7 @@ to choose between providers, to state a price before spending. Tools alone would
 ## Build order
 
 1. **Spike** the MCP SDK against FastAPI — transport, session, dependency conflict. Throwaway.
-2. **`src/treg/mcp.py`** with the five tools, routed through the existing enforcement path.
+2. **`src/stray/mcp.py`** with the five tools, routed through the existing enforcement path.
 3. **Tests** — the enforcement ones matter most: a wrong-org token sees nothing, an over-cap call is
    refused, an unpriced endpoint is refused, a pinned capability rejects the wrong provider.
 4. **Deploy** to the dev box, point Codex at it, exercise all five tools for real.

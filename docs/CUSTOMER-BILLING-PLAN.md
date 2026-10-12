@@ -1,18 +1,18 @@
-# Customer-level billing — builders reselling treg to their own customers
+# Customer-level billing — builders reselling stray to their own customers
 
 **Status:** planned, awaiting review. Nothing built. Written to be handed to a maintainer cold; no
 context from the design conversation is assumed.
 
 ## Who is asking, and for what
 
-Builders are integrating treg into their own agent products. Their end-customers use the product;
-the product calls treg underneath. The builder needs to know and limit what each of THEIR customers
+Builders are integrating stray into their own agent products. Their end-customers use the product;
+the product calls stray underneath. The builder needs to know and limit what each of THEIR customers
 consumed, and to bill those customers themselves.
 
 ## The boundary decision everything follows from
 
-**treg meters and enforces; the builder monetizes.** treg never bills a builder's end-customer, never
-holds their card, never sets their price. What treg owes the builder is exactly three things:
+**stray meters and enforces; the builder monetizes.** stray never bills a builder's end-customer, never
+holds their card, never sets their price. What stray owes the builder is exactly three things:
 
 1. **Attribution** — what did customer X consume this month
 2. **Enforcement** — refuse customer X at the limit the builder set
@@ -23,12 +23,12 @@ invoicing are the builder's own Stripe and their own business.
 
 ## Two models, one already shipped
 
-| Model | Who pays treg | Status |
+| Model | Who pays stray | Status |
 |---|---|---|
-| **Customer-pays** | each end-customer, their own team + balance | **Shipped.** The builder's product connects through treg's OAuth server (consent screen, team picker). Built for ChatGPT, deliberately client-agnostic |
+| **Customer-pays** | each end-customer, their own team + balance | **Shipped.** The builder's product connects through stray's OAuth server (consent screen, team picker). Built for ChatGPT, deliberately client-agnostic |
 | **Builder-pays** | the builder, one org, one balance | **This plan** |
 
-Customer-pays suits developer-tool products whose users would want their own treg anyway. Builder-pays
+Customer-pays suits developer-tool products whose users would want their own stray anyway. Builder-pays
 is what most builders mean, and is the gap.
 
 ## Builder-pays: the design
@@ -39,8 +39,8 @@ ONE mechanism, deliberately — not a dedicated header per special concept. Ever
 small tag bag, and `customer` is a reserved key inside it:
 
     POST /call/hunter.people.email.find
-    X-Treg-Token: <builder org token>
-    X-Treg-Meta: customer=cust_8123, feature=email-finder, env=prod
+    X-Stray-Token: <builder org token>
+    X-Stray-Meta: customer=cust_8123, feature=email-finder, env=prod
 
 Over MCP, the same thing as an optional `meta` dict argument on the `call` tool.
 
@@ -83,7 +83,7 @@ way the daily cap reads per-user spend.
 
 The refusal must be its own error, `customer_budget_exceeded`, with the cap and the period in the
 body. The builder's product needs to show THEIR user a clean "you have reached your plan limit"
-message, not a treg error about someone else's balance. Never include the org's overall balance in
+message, not a stray error about someone else's balance. Never include the org's overall balance in
 this response: that is the builder's private number, and the response may be shown to their customer.
 
 A `status: blocked` customer is refused outright — the soft version of revocation, no token
@@ -136,7 +136,7 @@ report.
 
 ## Order, with a stop after each step
 
-1. The bag: accept the `X-Treg-Meta` header + the MCP `meta` arg, record into audit telemetry +
+1. The bag: accept the `X-Stray-Meta` header + the MCP `meta` arg, record into audit telemetry +
    ledger meta. Attribution only, nothing enforced. Tests: tagged call lands in both records with all
    keys; untagged call byte-identical to today; a 6th key refused with a clear error.
 2. The usage endpoint. Tests: grouping, date range, tags with zero spend absent, and org isolation

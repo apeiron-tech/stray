@@ -1,6 +1,6 @@
 # Dashboard
 
-This app lives in the public treg repository and is served by the existing Python Web service.
+This app lives in the public stray repository and is served by the existing Python Web service.
 There is no separate production frontend server.
 
 - `src/App.vue`: application shell and conditional page/dialog mounts.
@@ -10,7 +10,7 @@ There is no separate production frontend server.
 - `src/agent-setup/`: onboarding widgets shared with the standalone Enrich Arena page.
 - `src/state/`: existing Options API use cases, grouped by feature, plus initial state and boot.
 - `src/api.ts`: same-origin JSON transport, session expiry and edge-encoding behavior.
-- `src/styles/`: base styling. Redesign styles and shell artwork are shared from `src/treg/web/media/redesign/`.
+- `src/styles/`: base styling. Redesign styles and shell artwork are shared from `src/stray/web/media/redesign/`.
 - `src/assets/`: artwork imported by components, hashed by Vite and served from `/app/ui/assets`.
 
 This is an incremental extraction. The old use cases still share per-application state through
@@ -25,9 +25,9 @@ modules; this change does not replace their URL contract.
 
 Install Node 22.12+ and npm, then run `scripts/dev-local.sh up` from the repository root.
 Open `http://localhost:18790/app`; the Python response loads Vite modules from :5173 for hot updates.
-The local-only `TREG_FRONTEND_DEV` switch cannot be used with PostgreSQL or a public hostname.
+The local-only `STRAY_FRONTEND_DEV` switch cannot be used with PostgreSQL or a public hostname.
 For preview from another device on the LAN, build first with `bash scripts/build-dashboard.sh`,
-then run `TREG_FRONTEND_DEV=false scripts/dev-local.sh restart` (or `up` for a stopped stack).
+then run `STRAY_FRONTEND_DEV=false scripts/dev-local.sh restart` (or `up` for a stopped stack).
 Open the server on port 18790 using the host machine's LAN IP. This serves compiled assets from
 the same origin; rerun the build after frontend changes. Loopback Vite hot updates are for
 browsers on the development machine.
@@ -61,13 +61,13 @@ value paints over its neighbour. A real table grows the column instead. The shee
 other text, text past its row, or a page that scrolls sideways (`textCollisions`, `sidewaysCulprits`
 in `e2e/helpers.ts`). Add a page with a table or cards to it.
 
-Browser tests run against the **built** dashboard (`TREG_FRONTEND_DEV=false`), not the source: run
+Browser tests run against the **built** dashboard (`STRAY_FRONTEND_DEV=false`), not the source: run
 `bash scripts/build-dashboard.sh` after every frontend change, or the browser tests pass or fail on the
 previous build. A regression test only counts once it has failed against a build without the fix.
 
 Browser tests start their own server with a disposable database and no dotenv file, on a port
 the OS reports free when the run starts, so parallel runs in other worktrees never collide
-(`TREG_E2E_PORT` pins one).
+(`STRAY_E2E_PORT` pins one).
 They use full Chromium in headless mode so back/forward cache restoration is exercised.
 `PLAYWRIGHT_CHANNEL=chrome` can use an installed Chrome for local checks.
 
@@ -78,7 +78,7 @@ compiles the same source into the generated `/agent-setup.js` classic script for
 bundles Vue's runtime only; do not add runtime `template:` strings or alias `vue` to its compiler build. Page runtime versions
 must match the npm lockfile. Three.js and Lenis on the landing page use pinned CDN URLs.
 
-Builds generate `src/treg/web/dashboard/`, which is ignored by Git and included in wheels/sdists.
+Builds generate `src/stray/web/dashboard/`, which is ignored by Git and included in wheels/sdists.
 Do not edit generated files. Distributable package builds fail if these assets are absent; editable
 Python installs and background workers do not require Node. The Web build script is
 `scripts/build-web.sh`, which compiles the app and retains the locked Python installation.

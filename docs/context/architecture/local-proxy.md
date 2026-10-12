@@ -1,8 +1,8 @@
 ---
-title: Local proxy — catch a program's own outgoing calls (`treg <command>`)
+title: Local proxy — catch a program's own outgoing calls (`stray <command>`)
 status: shipped
 sources:
-  - src/treg/localproxy.py
+  - src/stray/localproxy.py
   - examples/proxy-demo/server.js
 related:
   - architecture/proxy-model.md
@@ -13,8 +13,8 @@ related:
 
 # The local proxy
 
-Every other way into treg requires the caller to **know about treg** — `treg call`, `treg run`, the
-`/call/` URL. The moment a program writes its own request to `api.stripe.com`, treg is invisible to it
+Every other way into stray requires the caller to **know about stray** — `stray call`, `stray run`, the
+`/call/` URL. The moment a program writes its own request to `api.stripe.com`, stray is invisible to it
 and it has no key. The local proxy closes that gap: catch the call on the way out, and let the **server**
 add the credential.
 
@@ -25,10 +25,10 @@ catcher that feeds it — two ends of one call. The module is named for `localru
 ## The whole thing in one picture
 
 ```
-  a program that has never heard of treg
-        │  HTTPS_PROXY=http://treg:<session-token>@127.0.0.1:<port>
+  a program that has never heard of stray
+        │  HTTPS_PROXY=http://stray:<session-token>@127.0.0.1:<port>
         ▼
-  local proxy  (src/treg/localproxy.py — this fragment)
+  local proxy  (src/stray/localproxy.py — this fragment)
         │
         ├─ host NOT registered  ──►  blind tunnel. Bytes copied, never decrypted,
         │                            no certificate ever signed for it.
@@ -38,8 +38,8 @@ catcher that feeds it — two ends of one call. The module is named for `localru
                                      re-address it, keeping method/path/query/body
                                           │
                                           ▼
-                       treg server   POST /call/https://api.stripe.com/v1/charges
-                                     + X-Treg-Token / X-Treg-Org / X-Treg-Client
+                       stray server   POST /call/https://api.stripe.com/v1/charges
+                                     + X-Stray-Token / X-Stray-Org / X-Stray-Client
                                           │  relay() injects the credential  ← proxy-model.md
                                           ▼
                                      api.stripe.com
@@ -47,7 +47,7 @@ catcher that feeds it — two ends of one call. The module is named for `localru
         ◄─────────────── response streamed back, unchanged ──────────────────┘
 ```
 
-The proxy carries the member's **treg token** and nothing else. No vendor key ever reaches the machine.
+The proxy carries the member's **stray token** and nothing else. No vendor key ever reaches the machine.
 
 Because the call lands on the ordinary `/call/` path, everything already built applies with no second
 copy: the per-member tool list, project scope, deny rules, daily caps, the audit record, OAuth refresh.
@@ -57,32 +57,32 @@ see [proxy-model](proxy-model.md).
 ## What we took from oneCLI, and what we refused
 Their design has two separable halves. We keep the capture mechanism (`HTTPS_PROXY` + own CA) and throw
 away the injection half: their gateway holds `SECRET_ENCRYPTION_KEY` and decrypts secrets **on the
-laptop** (`crypto.rs`, `connect.rs`). That is the exact situation treg exists to prevent. A future
-"inject locally under `treg run`" mode is deliberately out of scope — deciding it later costs nothing,
+laptop** (`crypto.rs`, `connect.rs`). That is the exact situation stray exists to prevent. A future
+"inject locally under `stray run`" mode is deliberately out of scope — deciding it later costs nothing,
 getting it wrong now costs the product's promise.
 
 ## Three front doors, one engine
 
 | Door | Scope of the change | Use it when |
 |---|---|---|
-| **`treg <command>`** (`cmd_with`) | that one process and its children | the normal case — `treg claude`, `treg node app.js` |
-| **`treg shell start --proxy`** | one subshell | you want a session where the team's CLIs *and* raw calls both work |
-| **`treg serve`** | any terminal that opts in with `eval "$(treg serve env)"` | you want it running across terminals |
+| **`stray <command>`** (`cmd_with`) | that one process and its children | the normal case — `stray claude`, `stray node app.js` |
+| **`stray shell start --proxy`** | one subshell | you want a session where the team's CLIs *and* raw calls both work |
+| **`stray serve`** | any terminal that opts in with `eval "$(stray serve env)"` | you want it running across terminals |
 
-**`treg <command>` is the headline.** treg is the PARENT of what it launches, so the environment reaches
-that process only: `treg claude` uses team access, plain `claude` is untouched and uses the member's own
+**`stray <command>` is the headline.** stray is the PARENT of what it launches, so the environment reaches
+that process only: `stray claude` uses team access, plain `claude` is untouched and uses the member's own
 keys. Nothing is written to any config file, so there is nothing to undo. `main()` falls through to it
-via `_looks_like_a_program()` when the first word (after `with`'s own flags) is **not** a treg subcommand
+via `_looks_like_a_program()` when the first word (after `with`'s own flags) is **not** a stray subcommand
 **and** exists on `PATH`. Both conditions matter: without the first, a stray `call` binary would shadow
-`treg call`; without the second, `treg toool ls` would become an exec attempt instead of an ordinary
+`stray call`; without the second, `stray toool ls` would become an exec attempt instead of an ordinary
 argparse error. It attaches to a running `serve` daemon and leaves it up, or starts a private proxy on
 **port 0** — the operating system picks, so parallel sessions never collide — and stops it in a
 `finally`. The child runs via `shell._run_subshell`, which ignores SIGINT/SIGQUIT so an interactive agent
-owns the terminal, and the child's exit code becomes treg's.
+owns the terminal, and the child's exit code becomes stray's.
 
-**Deleted on purpose: the global hook.** A `treg serve hook` that wrote `BASH_ENV` into
+**Deleted on purpose: the global hook.** A `stray serve hook` that wrote `BASH_ENV` into
 `~/.claude/settings.json` (as oneCLI's Claude plugin does) was built and removed the same day. It
-captured every session of that agent on the machine, forever, whether or not the member wanted treg that
+captured every session of that agent on the machine, forever, whether or not the member wanted stray that
 day, and left no easy way to use a personal key instead. Per-launch gives the same "no eval ever" result
 with none of the reach. **Do not re-add it.**
 
@@ -91,21 +91,21 @@ with none of the reach. **Do not re-add it.**
 | Symbol | Job |
 |---|---|
 | `handle_client` | one connection: read head, authenticate, then intercept / tunnel / forward |
-| `authorized` | `Proxy-Authorization: Basic treg:<token>`, `compare_digest` |
+| `authorized` | `Proxy-Authorization: Basic stray:<token>`, `compare_digest` |
 | `_blind_tunnel` | CONNECT for a non-registered host — copy bytes, decrypt nothing |
-| `_intercept` | CONNECT for a registered host — TLS terminate, then relay each request to treg |
+| `_intercept` | CONNECT for a registered host — TLS terminate, then relay each request to stray |
 | `_forward_plain` | absolute-form `http://` (we set `HTTP_PROXY` too, so http callers must not break) |
-| `_treg_url` | `https://host/path` → `{base}/call/https://host/path` (the URL-passthrough shape) |
-| `_forward_headers` | drop transport + caller `x-treg-*`; add our token/org/client |
-| `_send_to_treg` | the outbound request, including the edge-WAF base64 retry |
+| `_stray_url` | `https://host/path` → `{base}/call/https://host/path` (the URL-passthrough shape) |
+| `_forward_headers` | drop transport + caller `x-stray-*`; add our token/org/client |
+| `_send_to_stray` | the outbound request, including the edge-WAF base64 retry |
 | `_write_response` / `_body_chunks` | stream the answer back, re-deriving the framing |
-| `_explain_treg_error` / `treg_error_message` | turn treg's own refusal into an instruction |
+| `_explain_stray_error` / `stray_error_message` | turn stray's own refusal into an instruction |
 | `CertAuthority` / `ensure_ca` / `build_bundle` | the machine's CA, its leaves, the trust bundle |
 | `proxy_env` | the variables that point a process at us and make it trust us |
 | `fetch_hosts` / `refresh_hosts_forever` | the allow-list, from `GET /tools` |
 | `serve` / `start` / `ProxyHandle` | bind on this loop / in a thread; `.env()`, `.stop()` |
-| `write_state` / `running` / `pid_alive` | the `treg serve` daemon's `proxy.json` |
-| `treg_client` | the proxy's own httpx client — **`trust_env=False`** |
+| `write_state` / `running` / `pid_alive` | the `stray serve` daemon's `proxy.json` |
+| `stray_client` | the proxy's own httpx client — **`trust_env=False`** |
 
 ## The request lifecycle, in order
 
@@ -114,16 +114,16 @@ with none of the reach. **Do not re-add it.**
    token itself.
 3. `CONNECT` → `split_hostport`. `_is_self` refuses our own address (a loop that would eat a connection
    per attempt).
-4. `cfg.intercepts(host)` decides. It requires the host to be allow-listed **and** a CA **and** a treg
+4. `cfg.intercepts(host)` decides. It requires the host to be allow-listed **and** a CA **and** a stray
    token: terminating TLS and then having no way to finish the call is worse than not intercepting,
    because the caller breaks for a reason it cannot see.
 5. Intercept: `200 Connection established`, then `StreamWriter.start_tls(ca.context_for(host))`.
 6. Per request on that connection (keep-alive is honoured): parse head, read body
    (`_request_body` — chunked decoded, ≤1 MiB buffered so a WAF retry is possible, larger streams),
-   build the treg URL and headers, `_send_to_treg`, then `_explain_treg_error` if the answer carries
-   `X-Treg-Error`, else `_write_response`.
-7. Response framing is **re-derived, not copied**: `Content-Length` when treg gave one, chunked when it
-   did not, because our hop must be self-consistent even if the hop into treg was framed differently.
+   build the stray URL and headers, `_send_to_stray`, then `_explain_stray_error` if the answer carries
+   `X-Stray-Error`, else `_write_response`.
+7. Response framing is **re-derived, not copied**: `Content-Length` when stray gave one, chunked when it
+   did not, because our hop must be self-consistent even if the hop into stray was framed differently.
    `Accept-Encoding` is normalised to `identity` when the caller asked for nothing — the same rule
    `relay()` applies — or httpx would request gzip on its own and hand the caller compressed bytes it
    never asked for.
@@ -169,14 +169,14 @@ never even decrypted. Two failure modes are handled deliberately: a failed fetch
 a working list, which would silently stop injecting while calls kept going out. Both front doors seed it
 from the tool listing they already fetched, so turning the proxy on costs no extra request.
 
-## Errors a caller can act on (`treg_error_message`, `_explain_treg_error`)
-A raw 404 from treg reads as "the vendor has no such endpoint", and an agent "fixes" it by rewriting a
-perfectly good URL. treg's own refusals are therefore replaced with a message naming treg and the next
-action (register the tool / ask an admin / `treg login` / the cap is used up).
+## Errors a caller can act on (`stray_error_message`, `_explain_stray_error`)
+A raw 404 from stray reads as "the vendor has no such endpoint", and an agent "fixes" it by rewriting a
+perfectly good URL. stray's own refusals are therefore replaced with a message naming stray and the next
+action (register the tool / ask an admin / `stray login` / the cap is used up).
 
-This fires **only** on `X-Treg-Error`, the header `api.py`'s `_mark_treg_own_errors` puts on treg's own
+This fires **only** on `X-Stray-Error`, the header `api.py`'s `_mark_stray_own_errors` puts on stray's own
 `/call/` refusals — otherwise a genuine vendor 404 would be rewritten too. Against an older registry that
-does not send it, replies pass through untouched. treg being unreachable answers `502` naming treg and
+does not send it, replies pass through untouched. stray being unreachable answers `502` naming stray and
 saying the vendor call was **not** made, so a caller does not blame a healthy vendor and retry forever.
 
 ## Security invariants — each with the thing that would go wrong
@@ -188,26 +188,26 @@ saying the vendor call was **not** made, so a caller does not blame a healthy ve
 | 3 | Allow-list only | reading the caller's own `api.anthropic.com` / `api.openai.com` traffic |
 | 4 | Bind `127.0.0.1` (`LISTEN_HOST`) | anyone on the network spending the member's quota |
 | 5 | Random session token (`mint_token`) + `_CALLER_MUST_NOT_SET` | another local process, or the caller's own headers, speaking as someone else |
-| 6 | `trust_env=False` on `treg_client` | httpx reads `HTTPS_PROXY` from its own environment — the first call would loop back into us |
+| 6 | `trust_env=False` on `stray_client` | httpx reads `HTTPS_PROXY` from its own environment — the first call would loop back into us |
 | 7 | Log host and status only (`_log`) | a body, a header or the token in a log file |
 
-## The daemon's state (`treg serve` only)
+## The daemon's state (`stray serve` only)
 A service must be findable by other terminals, so `write_state` records port, pid, token, registry and
-captured hosts in `~/.treg/proxy/proxy.json` at mode **0600**, created before any bytes go in. That file
+captured hosts in `~/.stray/proxy/proxy.json` at mode **0600**, created before any bytes go in. That file
 is the whole extra risk of `serve` versus the other two doors: it holds the session's proxy token — never
 a vendor key — but it is on disk. `running()` treats a state file whose pid is gone as *not running* and
 deletes it, or `status` would insist forever and `start` would refuse to replace a dead daemon.
 `pid_alive` rejects a non-positive pid **before** calling `os.kill`, because `os.kill(0, …)` signals the
 caller's whole process group — a truncated pid would read as alive and `stop` would signal the terminal.
 
-The detached child is launched as `sys.executable -c "from treg.cli import main; main()" serve start
---foreground`, never the `treg` on `PATH`: a Homebrew copy one version behind would be started instead
-and would not have the command at all. Output goes to `~/.treg/proxy/serve.log`, and the parent prints
+The detached child is launched as `sys.executable -c "from stray.cli import main; main()" serve start
+--foreground`, never the `stray` on `PATH`: a Homebrew copy one version behind would be started instead
+and would not have the command at all. Output goes to `~/.stray/proxy/serve.log`, and the parent prints
 that log's last line when the child fails to appear rather than telling the user to go read a file.
 
 ## Packaging
 Certificate generation needs `cryptography`, which is compiled, so it sits in a **`[proxy]` extra** and
-not the base install — `pip install tools-registry` must stay the light CLI (`httpx` + `questionary`).
+not the base install — `pip install stray` must stay the light CLI (`httpx` + `questionary`).
 `_require_cryptography` raises `ProxyDependencyError` with the exact install line. `[server]` already
 includes it, so a self-hoster gets it free.
 
@@ -215,9 +215,9 @@ includes it, so a self-hoster gets it free.
 `tests/test_localproxy.py` (unit + integration, no network) and the proxy sections of
 `tests/test_shell.py` (the front doors). The ones worth knowing: a real TLS handshake against a leaf we
 signed **and** its rejection by a client trusting only the system roots (invariant 2); no leaf is ever
-generated for a tunnelled host (invariant 3); the caller cannot spoof `x-treg-*`; `trust_env` is off;
+generated for a tunnelled host (invariant 3); the caller cannot spoof `x-stray-*`; `trust_env` is off;
 a vendor's own error is never rewritten; and the end-to-end
-`test_the_agent_calls_the_vendor_and_treg_injects_the_key`, which drives a plain `httpx.Client` through
+`test_the_agent_calls_the_vendor_and_stray_injects_the_key`, which drives a plain `httpx.Client` through
 the proxy against the **real** FastAPI app.
 
 ## Known limits — say these out loud
@@ -225,6 +225,6 @@ Certificate **pinning**: a client that accepts only its own certificate refuses 
 would need a per-host never-intercept list (not built). **Remote MCP servers** are not covered — a hosted
 one calls from someone else's machine; a local stdio one inherits the environment and is captured. Not
 HTTPS, not covered: SSH and database wire protocols; WebSockets are tunnelled, not intercepted. Every
-intercepted call adds a hop to treg and back and **fails if treg is down** — the price of the key never
-landing. Large uploads flow through us. Some vendor CLIs still need `treg run`: `gh` refuses before it
+intercepted call adds a hop to stray and back and **fails if stray is down** — the price of the key never
+landing. Large uploads flow through us. Some vendor CLIs still need `stray run`: `gh` refuses before it
 makes any network call, so there is nothing to intercept.

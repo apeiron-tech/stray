@@ -15,12 +15,12 @@ from sqlalchemy import text
 
 from conftest import make_upstream
 
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 @pytest.fixture

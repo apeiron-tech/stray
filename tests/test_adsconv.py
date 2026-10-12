@@ -11,16 +11,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from conftest import make_upstream
-from treg import adsconv
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import AdConversion, Org
-from treg.timeutil import utcnow_naive
+from stray import adsconv
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import AdConversion, Org
+from stray.timeutil import utcnow_naive
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 class FakeAdsResponse:
@@ -192,7 +192,7 @@ async def test_queue_is_a_noop_when_disabled(clients, ads_disabled):
 ])
 async def test_signup_persists_the_ad_click_cookie(clients, ads_enabled, email, cookie, click_id,
                                                    click_type, landing):
-    r = await clients.post("/users", json={"email": email}, cookies={"treg_ad": cookie})
+    r = await clients.post("/users", json={"email": email}, cookies={"stray_ad": cookie})
     assert r.status_code == 200, r.text
     async with session_maker() as db:
         org = await db.get(Org, r.json()["org_id"])
@@ -218,7 +218,7 @@ async def test_disabled_signup_ignores_ad_cookie(clients, ads_disabled):
     r = await clients.post(
         "/users",
         json={"email": "disabled-click@example.com"},
-        cookies={"treg_ad": "gclid|CLICK_DISABLED|p1"},
+        cookies={"stray_ad": "gclid|CLICK_DISABLED|p1"},
     )
     assert r.status_code == 200, r.text
     async with session_maker() as db:
@@ -236,7 +236,7 @@ async def test_tracking_script_is_empty_when_disabled(clients, ads_disabled, pat
 
 async def test_signup_queues_a_conversion_when_attributed(clients, ads_enabled):
     r = await clients.post("/users", json={"email": "conv@example.com"},
-                              cookies={"treg_ad": "CLICK_SIGNUP|p1"})
+                              cookies={"stray_ad": "CLICK_SIGNUP|p1"})
     assert r.status_code == 200, r.text
     async with session_maker() as db:
         rows = (await db.execute(select(AdConversion).where(
@@ -246,12 +246,12 @@ async def test_signup_queues_a_conversion_when_attributed(clients, ads_enabled):
 
 async def test_org_creation_persists_the_gclid_cookie(clients, ads_enabled):
     # The OTHER signup door: a signed-in user creating their first team via /orgs (the browser
-    # sign-in path). `clients` is already authenticated (X-Treg-Token from /users registration
+    # sign-in path). `clients` is already authenticated (X-Stray-Token from /users registration
     # in the fixture) — this only adds the ad-click cookie on top, same shape as the /users test.
     r = await clients.post(
         "/orgs",
         json={"name": "ad team"},
-        cookies={"treg_ad": "CLICK_XYZ|p3"},
+        cookies={"stray_ad": "CLICK_XYZ|p3"},
     )
     assert r.status_code == 200, r.text
     async with session_maker() as db:
@@ -307,7 +307,7 @@ def test_build_payload_converts_currency_and_formats_time():
     assert event["destinationReferences"] == [adsconv.ACTION_PAID]
     # NOT bare "1": Data Manager 400s on a purely numeric transactionId (verified live
     # 2026-08-18). validateOnly does not catch it, so this assertion is the guard.
-    assert event["transactionId"] == "treg-1"
+    assert event["transactionId"] == "stray-1"
     # US$20.00 at the fixed rate -> A$28.571428
     assert event["conversionValue"] == pytest.approx(28.571428, rel=1e-6)
     assert event["currency"] == "AUD"
@@ -357,7 +357,7 @@ def test_build_payload_batches_every_action_into_one_request_with_deduped_destin
     assert len(references) == len(set(references))  # deduped: 4 rows, only 3 actions
     for event, row in zip(payload["events"], rows):
         assert event["destinationReferences"] == [row.action]
-        assert event["transactionId"] == f"treg-{row.id}"
+        assert event["transactionId"] == f"stray-{row.id}"
 
 
 def test_build_payload_sets_manager_account_per_destination(monkeypatch, ads_enabled):
@@ -379,7 +379,7 @@ def test_build_payload_sets_manager_account_per_destination(monkeypatch, ads_ena
 async def test_drain_sends_every_pending_row_in_one_batch(clients, ads_enabled):
     """Rows are sent as soon as they exist, regardless of age, and a mixed batch goes in one call.
 
-    `_auth_headers` exchanges treg's OWN platform `ads_conv_refresh_token` against Google's token
+    `_auth_headers` exchanges stray's OWN platform `ads_conv_refresh_token` against Google's token
     endpoint, which `FakeAdsClient` fakes alongside the Data Manager ingest call.
     """
     client = FakeAdsClient(FakeAdsResponse({"requestId": "req-drain-1"}))
@@ -414,7 +414,7 @@ async def test_drain_sends_every_pending_row_in_one_batch(clients, ads_enabled):
 
 async def _seed_upload_rows(db, *, actions, attempts=0):
     """Create an ad-attributed org and old, upload-due outbox rows. No OAuth Secret is needed
-    anymore — the uploader authenticates with treg's own platform refresh token, not a per-org
+    anymore — the uploader authenticates with stray's own platform refresh token, not a per-org
     connection (see `ads_enabled`, which sets it)."""
     org = Org(name="t", slug="t-upload-batch", ad_gclid="CLICK_BATCH",
               ad_click_at=utcnow_naive() - timedelta(days=1))
@@ -560,7 +560,7 @@ async def test_token_exchange_uses_the_platform_refresh_token_and_ads_client(ads
     """The exchange must be a `grant_type=refresh_token` POST redeemed with the SAME OAuth client
     the refresh token was issued against (`google_ads_client_id`/`_secret`) — never the shared
     Google login client, and never anything derived from a customer's own OAuth connection. This is
-    the crux of the option-A rework: treg's marketing uploader and a customer's Ads connection are
+    the crux of the option-A rework: stray's marketing uploader and a customer's Ads connection are
     two different credentials for two different purposes."""
     client = FakeAdsClient(FakeAdsResponse({"requestId": "unused"}))
     headers = await adsconv._auth_headers(client)

@@ -2,15 +2,15 @@
 title: Find tools for a job - /catalog/find, recall by job and one judge request
 status: building
 sources:
-  - src/treg/application/catalog_find.py
-  - src/treg/domain/catalog/find_recall.py
-  - src/treg/application/find_index.py
-  - src/treg/infra/embed.py
-  - src/treg/bootstrap.py
+  - src/stray/application/catalog_find.py
+  - src/stray/domain/catalog/find_recall.py
+  - src/stray/application/find_index.py
+  - src/stray/infra/embed.py
+  - src/stray/bootstrap.py
   - tests/test_find_index.py
   - tests/test_embed.py
-  - src/treg/alembic/versions/0055_find_v2_log.py
-  - src/treg/alembic/versions/0056_searchlog_verdict.py
+  - src/stray/alembic/versions/0055_find_v2_log.py
+  - src/stray/alembic/versions/0056_searchlog_verdict.py
   - scripts/find_bench.py
   - tests/fixtures/find_bench.yaml
   - tests/test_find_bench.py
@@ -143,7 +143,7 @@ did not finish, with the first v2 find on a catalog; a find answers lexically un
 from the archive's object store under
 `find-vectors/<model slug>/<sha256 of the card>`, only the missing cards are embedded (batches of
 96), and those are written back. The store is content-addressed everywhere else; these named
-objects are the one exception, their names built by treg from a validated slug and a digest, and
+objects are the one exception, their names built by stray from a validated slug and a digest, and
 each body carries its own card hash and size (`MAGIC`, `dim`, hash, floats) instead of a content
 check. A batch that fails transiently (timeout, 429, 5xx) is tried twice more with a short backoff
 before the build gives up; a refused key or a wrong-size vector is not retried. Without a store the
@@ -152,7 +152,7 @@ retried after five minutes. A new model is a new prefix, so vectors of two
 models never mix, and a cached vector of another size is not used. No lock: two instances building
 the same new cards both embed them. The build holds no database connection.
 
-The key is `find_embed_api_key`; left empty with the OpenRouter URL, treg's own OpenRouter key
+The key is `find_embed_api_key`; left empty with the OpenRouter URL, stray's own OpenRouter key
 (`platform_key_openrouter`) is used. numpy (the `[server]` extra) does the matrix product.
 
 ## v2: the verdict
@@ -214,7 +214,7 @@ SearchLog row only, so a find never counts twice in the misses. Migrations 0055 
 `platform_choice` with `search_answered`. A job group's fit says where it came from
 (`findFitTitle`), its vendor count says "4 of 30" when the server folded the rest
 (`findProvidersText`), and `/search`, which lays vendors out as cards, adds a line for each folded
-job with a way to the whole list on its shelf. An empty answer says which kind it is: a gap ("treg
+job with a way to the whole list on its shelf. An empty answer says which kind it is: a gap ("stray
 does not have this kind of data or action yet"), with a request link, or not a job ("try describing
 the data you want"), without one. On a shelf an empty answer is one line, "Nothing in <platform> for …", with
 "Search all tools" (`findEverywhere`): the Catalog page, its box holding the same words, asked

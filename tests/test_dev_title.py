@@ -4,8 +4,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.testclient import TestClient
 
-from treg.bootstrap_http import _DevTitleMiddleware
-from treg.config import Settings
+from stray.bootstrap_http import _DevTitleMiddleware
+from stray.config import Settings
 
 
 def _client() -> TestClient:
@@ -27,7 +27,7 @@ def test_other_responses_pass_through_untouched():
 
 
 def test_only_a_local_sqlite_server_on_a_loopback_url_is_dev():
-    local = "sqlite+aiosqlite:///./treg.db"
+    local = "sqlite+aiosqlite:///./stray.db"
     assert Settings(database_url=local, public_url="http://127.0.0.1:18790").local_dev
     assert not Settings(database_url=local, public_url="https://treg.to").local_dev
-    assert not Settings(database_url="postgresql+asyncpg://db/treg", public_url="http://localhost:8000").local_dev
+    assert not Settings(database_url="postgresql+asyncpg://db/stray", public_url="http://localhost:8000").local_dev

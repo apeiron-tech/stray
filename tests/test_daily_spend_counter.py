@@ -11,11 +11,11 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import update
 
-from treg.api import app
-from treg.domain import money as ledger
-from treg.infra.db import reset_db, session_maker
-from treg.models import Hold, Org
-from treg.timeutil import utcnow_naive
+from stray.api import app
+from stray.domain import money as ledger
+from stray.infra.db import reset_db, session_maker
+from stray.models import Hold, Org
+from stray.timeutil import utcnow_naive
 from conftest import make_upstream, verified_signup
 
 EP = "acme.thing.get"

@@ -2,27 +2,27 @@
 title: The proxy — faithful credential-injecting relay + tool resolution
 status: shipped
 sources:
-  - src/treg/infra/upstream/relay.py
-  - src/treg/infra/upstream/ssrf.py
-  - src/treg/api.py
-  - src/treg/application/call/authorize.py
-  - src/treg/application/call/idempotency.py
-  - src/treg/application/call/intake.py
-  - src/treg/application/call/resolve.py
-  - src/treg/application/call/reserve.py
-  - src/treg/application/call/settle.py
-  - src/treg/application/call/evidence.py
-  - src/treg/application/call/service.py
-  - src/treg/application/call/types.py
-  - src/treg/application/asynctasks.py
-  - src/treg/client_identity.py
-  - src/treg/call_surface.py
-  - src/treg/sandbox_identity.py
-  - src/treg/domain/governance/access.py
-  - src/treg/domain/governance/publicdemo.py
-  - src/treg/domain/governance/usage.py
-  - src/treg/routers/call.py
-  - src/treg/application/hub/limits.py
+  - src/stray/infra/upstream/relay.py
+  - src/stray/infra/upstream/ssrf.py
+  - src/stray/api.py
+  - src/stray/application/call/authorize.py
+  - src/stray/application/call/idempotency.py
+  - src/stray/application/call/intake.py
+  - src/stray/application/call/resolve.py
+  - src/stray/application/call/reserve.py
+  - src/stray/application/call/settle.py
+  - src/stray/application/call/evidence.py
+  - src/stray/application/call/service.py
+  - src/stray/application/call/types.py
+  - src/stray/application/asynctasks.py
+  - src/stray/client_identity.py
+  - src/stray/call_surface.py
+  - src/stray/sandbox_identity.py
+  - src/stray/domain/governance/access.py
+  - src/stray/domain/governance/publicdemo.py
+  - src/stray/domain/governance/usage.py
+  - src/stray/routers/call.py
+  - src/stray/application/hub/limits.py
   - tests/test_ssrf_public_addresses.py
   - tests/test_call_application_contract.py
   - tests/test_call_cancellation.py
@@ -83,10 +83,10 @@ incl. duplicates, headers, cookies, body bytes):
    which Meta's Graph API edge does not read (every POST body vanished; an ad creative failed
    "Ad incomplete" until the spec was moved into the query string). A caller who streamed chunked
    stays chunked.
-2. **treg's control/infra + edge forwarding headers** - `_CONTROL` (`x-treg-token`, `x-treg-org`,
+2. **stray's control/infra + edge forwarding headers** - `_CONTROL` (`x-stray-token`, `x-stray-org`,
    `ngrok-skip-browser-warning`, `x-forwarded-*`, `x-real-ip`, `forwarded`, `via`), dropped via
-   `_DROP_REQUEST = _HOP_BY_HOP | _CONTROL`, so none leaks upstream. `_scrub_treg_cookies` also strips
-   treg's own cookies (`treg_session`, `treg_oauth_state`) from the Cookie header - the dashboard's
+   `_DROP_REQUEST = _HOP_BY_HOP | _CONTROL`, so none leaks upstream. `_scrub_stray_cookies` also strips
+   stray's own cookies (`stray_session`, `stray_oauth_state`) from the Cookie header - the dashboard's
    `credentials:'include'` Try-it would otherwise leak our session token - while keeping other cookies.
 3. **the injected credential(s)** - each binding overwrites only its target header, query parameter,
    or top-level JSON field. A JSON binding is an explicit provider contract and is the only case
@@ -95,10 +95,10 @@ incl. duplicates, headers, cookies, body bytes):
    emitted as UTF-8, and duplicate keys fail closed. Never use a JSON binding where the upstream
    signs or hashes the caller's raw body bytes.
 
-> **What treg keeps from a call.** Successes retain no content: the relay forwards bytes and the audit
+> **What stray keeps from a call.** Successes retain no content: the relay forwards bytes and the audit
 > row records status, size and timing. A **failed relayed call** - platform, own-key, or plain own-tool
 > - is the exception: `CallRecord.error_request` / `error_response` retain a redacted, truncated copy
-> of what the caller sent and what the provider (or treg-side 502) answered. Without it a failure is a
+> of what the caller sent and what the provider (or stray-side 502) answered. Without it a failure is a
 > bare status code: `path` holds the catalog URL rather than the caller's parameters and `params_hash`
 > is one-way. `application.call.settle` buffers metered responses with `_buffer_response`, while
 > `_peek_stream_head` reads
@@ -113,17 +113,17 @@ Faithfulness mechanics inside `relay()`:
   duplicate headers / cookies); injection (`headers[name] = v`) overwrites only the named one.
 - on the platform tier only, `service` first passes the raw headers through
   `relay.scope_shared_idempotency_key`, which replaces the caller's `Idempotency-Key` with a digest of
-  (org, label). Every org shares one provider account on treg's key, and a provider that honors the
+  (org, label). Every org shares one provider account on stray's key, and a provider that honors the
   header (LeadsForge does) would otherwise return org A's job to org B under the same label — and
-  `resource_ownership.produces` would then record A's job id as B's. Treg's own idempotency table
+  `resource_ownership.produces` would then record A's job id as B's. Stray's own idempotency table
   already replays a caller's answer for the same label, so the caller loses nothing. A team's own key
   relays the header verbatim: that account is theirs.
-- on the platform tier only, `relay.identify_as_treg` then replaces the caller's `User-Agent` with
-  `config.TREG_USER_AGENT`. The provider sees treg's account there, and library defaults read as bot
+- on the platform tier only, `relay.identify_as_stray` then replaces the caller's `User-Agent` with
+  `config.STRAY_USER_AGENT`. The provider sees stray's account there, and library defaults read as bot
   traffic: LimaData's Cloudflare answered 403 (error 1010) to every `Python-urllib` call, and Wiza's
   to its phone reveals for a day. A team's own key relays the caller's header verbatim. The
   shared client (`app.state.http`), the async-task poller and the capacity collectors send the same
-  header by default, so treg's own requests never go out as `python-httpx`.
+  header by default, so stray's own requests never go out as `python-httpx`.
 - query as the router-captured ordered pairs in `UpstreamRequest.query_items` (keeps duplicate keys
   like `?tag=a&tag=b`), merged onto the upstream URL with `copy_add_param` rather than passed as
   `params=`: httpx replaces a URL's existing query whenever `params` is given, even empty, which
@@ -133,7 +133,7 @@ Faithfulness mechanics inside `relay()`:
   param - percent-encoding survives to the upstream (npm's scoped publish `PUT /@scope%2fname` 404s
   if `%2f` is decoded to a literal slash).
 - body streamed via `content=request.stream()` (stream, never buffer). The caller's `Content-Length`, when declared, rides along so the stream is not re-framed chunked (see the contract above). Exception: a caller may
-  base64/gzip-encode the body with `X-Treg-Body-Encoding` to slip SQL/HTML past a hosting-edge WAF;
+  base64/gzip-encode the body with `X-Stray-Body-Encoding` to slip SQL/HTML past a hosting-edge WAF;
   `_BodyDecodeMiddleware` (in api.py) then buffers + decodes it *before* `relay()` runs, so the relay
   still forwards the real plaintext bytes verbatim upstream. See [api](../interface/api.md).
 - upstream call uses the **shared** `client` (the long-lived `httpx.AsyncClient` at `app.state.http`,
@@ -151,20 +151,20 @@ Bindings can also stamp provider protocol constants: a format with no `{secret}`
 reference for binding validation and lifecycle, and the assignment overwrites a caller-supplied value.
 This is generic binding behavior, not an upstream-specific branch in the relay.
 An anonymous catalog fallback uses the same relay with an empty binding list. It does not strip
-caller headers or rewrite the request; it only omits a credential that treg would otherwise inject.
+caller headers or rewrite the request; it only omits a credential that stray would otherwise inject.
 The catalog price is free only when the caller does not supply a provider credential header.
 
-**Platform bindings - injecting treg's OWN credential.** A binding with a `platform_setting` key (instead
-of a `secret_id`) injects one of treg's own credentials read from `get_settings()` - the Google Ads
+**Platform bindings - injecting stray's OWN credential.** A binding with a `platform_setting` key (instead
+of a `secret_id`) injects one of stray's own credentials read from `get_settings()` - the Google Ads
 developer token is the case that exists. The value never lives in the org's secret store, so a tenant
 can't read it or extract it through a local run; a missing setting is a clean `502`
 (`this server has no <setting> configured`). Used by the OAuth-marketplace auto-provisioner for a provider
-that needs a second credential treg holds centrally, and by tier-4 catalog calls. Tier 4 also copies
+that needs a second credential stray holds centrally, and by tier-4 catalog calls. Tier 4 also copies
 the provider's constant `required_headers` bindings, so Crustdata's `x-api-version: 2025-11-01` pin is
 identical on BYOK and platform-key calls (see [api](../interface/api.md)).
 
 A separate case that looks similar but is NOT a platform binding: the Google Ads **conversion**
-uploader (`adsconv.py`) also spends treg's own platform connection, but it is not a caller-issued
+uploader (`adsconv.py`) also spends stray's own platform connection, but it is not a caller-issued
 `/call/` request at all, so it never reaches `relay()` or `infra/upstream/injectors.py` - it reads the platform org's
 stored OAuth secret directly and builds its own headers. See [ads-conversions](ads-conversions.md).
 
@@ -247,7 +247,7 @@ on a provider that opted in to `catalog_targets` must resolve through
 that opt-in keep resolving catalog paths against their primary base URL.
 The approved root keeps its path prefix when `_marketplace_upstream` appends the endpoint path, and
 the selected provider profile supplies the correct credential binding. An unapproved or malformed
-target fails as a treg-owned 502 before reserve and relay; catalog data cannot redirect an injected
+target fails as a stray-owned 502 before reserve and relay; catalog data cannot redirect an injected
 credential to a host of its choice. A `retired`/`broken` tombstone is
 instead refused with 410, its `status_note`, and its optional `superseded_by`, before credentials are
 selected or the relay can run; the refusal is audited as `refused_by=retired`. This ordering is
@@ -256,7 +256,7 @@ shadowed, while URL passthrough has no catalog-id shape to catch accidentally.
 
 **Capability alternatives.** A 410 tombstone without `superseded_by`, or a credential-ladder
 404, includes `_capability_alternatives(ep)`: curated same-capability endpoints, cheapest first,
-marked as callable on treg's key or requiring an own credential. Marked catalog rows are excluded.
+marked as callable on stray's key or requiring an own credential. Marked catalog rows are excluded.
 The helper is synchronous and performs no DB reads; measured reliability belongs to catalog
 inspection. It suggests alternatives without substituting one. Endpoints with no capability
 cannot participate.
@@ -289,8 +289,8 @@ each is NULL-means-any.
 
 ## Responses and diagnostic evidence
 
-Treg refusals on both call surfaces carry `X-Treg-Error: 1`. Mechanism-keyed application
-failures map to `caller | treg | upstream | org_connection` blame; the HTTP adapter preserves
+Stray refusals on both call surfaces carry `X-Stray-Error: 1`. Mechanism-keyed application
+failures map to `caller | stray | upstream | org_connection` blame; the HTTP adapter preserves
 status and detail. Provider failures remain response data. Header contracts are documented in
 [the API fragment](../interface/api.md).
 
@@ -345,10 +345,10 @@ duplicate target names are rejected independently for `location:"header"`, `"que
 (they would silently overwrite each other).
 `health._probe` skips a dangling binding rather than `KeyError`-ing the whole run.
 
-**Relay security + faithfulness (bug-hunt):** the response side strips a `Set-Cookie` for treg's own
-cookie names (an upstream must not overwrite `treg_session`/`treg_oauth_state` - fixation) and adds
+**Relay security + faithfulness (bug-hunt):** the response side strips a `Set-Cookie` for stray's own
+cookie names (an upstream must not overwrite `stray_session`/`stray_oauth_state` - fixation) and adds
 `X-Content-Type-Options: nosniff` + `Content-Security-Policy: sandbox` (a browser navigating to `/call/…`
-must not execute upstream HTML/JS under treg's authenticated origin). It keeps `Content-Length` on a
+must not execute upstream HTML/JS under stray's authenticated origin). It keeps `Content-Length` on a
 bodyless reply (HEAD/204/304), only carries a request body when the caller sent one (no bogus chunked
 frame on a GET), and honors headers a peer marks hop-by-hop via its `Connection` header (RFC 7230).
 `injectors._token_from_json` rejects a non-string field value instead of injecting garbage.
@@ -374,7 +374,7 @@ mapping non-global IPv4 addresses do not make those targets public; `64:ff9b::/9
 
 ## Routed endpoints - the resolve stage short-circuit
 
-A catalog row with `kind: routed` (`treg.<capability>`, generated - `architecture/catalog.md`
+A catalog row with `kind: routed` (`stray.<capability>`, generated - `architecture/catalog.md`
 § Routing) never reaches the credential ladder itself. `service._execute_call` hands it to
 `application/call/route.py`, which builds the plan and runs each child endpoint through **this same
 use case** as a child `CallContext` (`call_ref` `{parent}:r{n}`), so every rule below - ladder,
@@ -387,10 +387,10 @@ closes every child's hold exactly once with `settle.close_deferred(charge=…)`:
 each billable child as its own settle would have, `charge=False` releases all of them, because a
 routed call that fails charges the caller nothing. A crash before `close_deferred` runs leaves the
 holds to the reaper, which releases in the caller's favour. The parent only assembles
-`{output, raw, _treg}` and owns the idempotency label.
+`{output, raw, _stray}` and owns the idempotency label.
 
-A routed call whose outcome is still pending (`202` with `X-Treg-Route-Outcome: pending`) leaves
-`request.state.call_cost_micro` as `None` and skips the `X-Treg-Cost-Micro` response header rather
+A routed call whose outcome is still pending (`202` with `X-Stray-Route-Outcome: pending`) leaves
+`request.state.call_cost_micro` as `None` and skips the `X-Stray-Cost-Micro` response header rather
 than reporting a charge that has not happened yet.
 
 ## Platform capacity: refuse before reserve (plan step D)
@@ -399,17 +399,17 @@ Catalog `platform_request` checks and provider-specific request guards run only 
 offer is selected and before reserve. Exact selectors require evidence such as Tavily Search's
 caller-supplied `include_usage: true`. Openmart requires its explicit bounded record count; Tavily
 Map and Crawl require an integer `limit` from 1 to 20. Missing, Boolean and out-of-range values are
-caller errors. BYOK is unchanged because the provider, not treg, bears that account's exposure.
+caller errors. BYOK is unchanged because the provider, not stray, bears that account's exposure.
 
-Tier 4 spends treg's own vendor account, and that account can be empty. `_resolve_marketplace_call`
+Tier 4 spends stray's own vendor account, and that account can be empty. `_resolve_marketplace_call`
 asks, after `_platform_offer` says yes: is this call **exhausted** in the in-process capacity view
 (`domain.capacity.view`, loaded from ratestore on a 60 s TTL by `resolve_marketplace_target` before
 its session opens)? Two sources say so: the sweep's `capacity:state:<provider>` (a balance API that
 read zero) and the call path's own lock `capacity:lock:<key>` (below). If so it raises
-`CallFailure("provider_capacity", 503, blame="treg")` - **before any hold exists** - whose body carries
-`resets_at` when known and the same-capability alternatives from `_capability_alternatives`. treg still
+`CallFailure("provider_capacity", 503, blame="stray")` - **before any hold exists** - whose body carries
+`resets_at` when known and the same-capability alternatives from `_capability_alternatives`. stray still
 does not choose for the caller (charter): it names the options. The audit row is `refused_by="capacity"`,
-`X-Treg-Error: 1`, cost 0. A stale, empty or "ok" view never refuses; only a confirmed signal does.
+`X-Stray-Error: 1`, cost 0. A stale, empty or "ok" view never refuses; only a confirmed signal does.
 
 The call path's breaker (`domain.capacity.marks`) opens slowly and closes fast. After a tier-4
 answer ≥ 400, `settle._note_capacity_signal` runs `domain.capacity.signatures.classify` on the
@@ -438,7 +438,7 @@ is neither a strike nor a mark: it logs `unrecorded capacity-looking …` with t
 `tool_called` as `capacity_signal=unrecorded`, the tripwire for a vendor whose out-of-credit answer is
 not in the table yet (how Apollo's 422 went unseen on 2026-09-01).
 
-## Burst smoothing on treg's own keys (plan step D′)
+## Burst smoothing on stray's own keys (plan step D′)
 
 Many callers share one platform key, so tier 4 makes its own bursts: leadsforge 429'd 27% of its
 calls, crustdata 34%, with `retry-after` headers nobody downstream could act on. Two bounded
@@ -461,14 +461,14 @@ refusal:
    second answer. A quota-429 (lusha "Daily", hunter "per billing period", any `retry-after` > 60 s), an
    unknown 429, a POST, or a second 429 are relayed as is. The "no retries" rule for 401/402/5xx stands.
 
-Both are visible: `X-Treg-Smoothed: wait=<ms>` and/or `retry=1` on the response (metered exit only).
+Both are visible: `X-Stray-Smoothed: wait=<ms>` and/or `retry=1` on the response (metered exit only).
 No audit column yet - `smoothed_ms` would be an ALTER on the hot `callrecord` table, a migration-class
 change kept out of this behaviour PR.
 
 ## Overflow - the child cycle (plan step E; off by default)
 
-**Overflow = the same vendor endpoint, another account of ours.** When a tier-4 call fails on treg's
-own key for a treg-side reason - a balance/quota signature, a burst-429 smoothing could not absorb -
+**Overflow = the same vendor endpoint, another account of ours.** When a tier-4 call fails on stray's
+own key for a stray-side reason - a balance/quota signature, a burst-429 smoothing could not absorb -
 and the worker has an enabled `OverflowRoute` for the endpoint, `application.call.overflow.
 maybe_overflow` runs a **child cycle** after the primary's settle released its hold:
 
@@ -483,11 +483,11 @@ maybe_overflow` runs a **child cycle** after the primary's settle released its h
    caller's original query + buffered body; the key comes from `Settings.overflow_key_<name>` and is
    never logged. Monid's async runs are polled (bounded).
 4. `parse` → vendor status + body + the real in-band cost. `_platform_settle(child,
-   observed_override=cost, overflow_spend=(aggregator, cost − treg's direct price))` charges **exactly
+   observed_override=cost, overflow_spend=(aggregator, cost − stray's direct price))` charges **exactly
    the aggregator's price, 0% markup**, and folds the day's spend delta into the same transaction -
    the one allowlisted overflow write (`overflow_spend_in_settle`).
-5. The vendor's body goes back as the answer, `X-Treg-Served-Via: overflow:<name>`, `X-Treg-Cost-Micro`
-   the child's charge, `X-Treg-Call-Id` the parent's. Two audit rows share the `call_ref`: the primary
+5. The vendor's body goes back as the answer, `X-Stray-Served-Via: overflow:<name>`, `X-Stray-Cost-Micro`
+   the child's charge, `X-Stray-Call-Id` the parent's. Two audit rows share the `call_ref`: the primary
    attempt with its real status and the child with `credential_tier="platform-overflow"`. The MCP
    `call` result carries the same disclosure as `served_via` plus a hint (an MCP client never sees
    headers), and `/catalog/endpoints/{id}` / `catalog_get` show the route's price up front as
@@ -517,17 +517,17 @@ gets the typed 503 naming the refusal rather than the aggregator's envelope dres
 answer. `malformed` is reserved for what is not an envelope at all (non-JSON, a 5xx, a transport
 error); one validation 400 read as `malformed` once took Orthogonal offline for every org for 15 minutes.
 
-**Shadow mode** (`TREG_OVERFLOW_MODE=shadow`): the aggregator is called, status / shape / cost logged
-and the probe's cost recorded in `OverflowSpend` (treg pays, budget-bounded) - the caller still gets
+**Shadow mode** (`STRAY_OVERFLOW_MODE=shadow`): the aggregator is called, status / shape / cost logged
+and the probe's cost recorded in `OverflowSpend` (stray pays, budget-bounded) - the caller still gets
 the vendor's own error and is charged nothing. This is the week the plan requires before routes serve.
 
 Never on tiers 1/2, a caller-caused 4xx, a 401, a timeout, PUT/PATCH/DELETE, a route the worker has
-not enabled, or a team that opted out (`Org.platform_overflow_disabled`, `treg org overflow off`) -
+not enabled, or a team that opted out (`Org.platform_overflow_disabled`, `stray org overflow off`) -
 checked before any aggregator is contacted, on both entry points.
 
 ## Control-header isolation
 
-`proxy._is_dropped_request_header` strips every request header beginning with `x-treg-`,
+`proxy._is_dropped_request_header` strips every request header beginning with `x-stray-`,
 including future control headers. `_CONTROL` lists the non-prefixed infrastructure headers.
 This prevents caller metadata, runtime identity and routing controls from reaching providers;
 tests include an invented prefix-matching header so the guarantee cannot regress to an enumeration.
@@ -540,7 +540,7 @@ A catalog endpoint carrying an `async` descriptor resolves like any other (`reso
 (`application.asynctasks.defer_submission` writes the pending row and leaves the hold open) unless
 `_submission_rejected` says the body is not an accepted submission (not JSON, `expect` rule failed,
 no task id), in which case it settles at zero at once; a persistence failure releases the hold with
-an alert. `routers/call._attach_async_descriptor` adds `X-Treg-Async` (the effective descriptor) to
+an alert. `routers/call._attach_async_descriptor` adds `X-Stray-Async` (the effective descriptor) to
 the response, also on an idempotent replay, so a retried `--await` polls the task already running.
 The settlement itself is the money fragment's subject.
 
@@ -563,7 +563,7 @@ faithful-relay semantics because those ids belong to the caller's own provider a
 Durable shared-account objects use the separate catalog `managed_resource` contract and
 `ProviderResource` table. Create relays with no DB connection held, then commits ownership before the
 provider id is returned; persistence failure triggers best-effort provider deletion and returns a
-treg 502 without exposing the id. Update changes local display state only after upstream success.
+stray 502 without exposing the id. Update changes local display state only after upstream success.
 Delete authorizes active or tombstoned ownership, treats an owned upstream 404 as deleted, then
 tombstones locally, making retries safe. These rules run only on the platform-key tier; own keys keep
 the ordinary faithful relay. A managed `use` declaration may permit provider-public ids through a
@@ -598,7 +598,7 @@ Other responses needing settlement or ownership evidence have a hard 8 MiB compl
 before any success headers, and closes the upstream in `finally` on EOF, exception or cancellation.
 The application releases the hold/claim and returns 502 with zero cost; no partial response reaches
 settlement, archive or replay. This is an explicit size limitation, not support for arbitrarily large
-metered JSON. The fault is attributed to treg's buffer limit, not to the provider. Own-key streams
+metered JSON. The fault is attributed to stray's buffer limit, not to the provider. Own-key streams
 remain outside this limit. `tests/test_call_response_limits.py` exercises both real HTTP hops,
 CLI output, boundaries, Range, disconnects, settlement evidence, archive and replay behavior.
 
@@ -607,7 +607,7 @@ CLI output, boundaries, Range, disconnects, settlement evidence, archive and rep
 Some providers return generated media inside their JSON answer: Gemini's `generateContent` puts
 a base64 image and a multi-megabyte `thoughtSignature` in the body, about 9 MB at 2K and 23 MB at
 4K, with its token meters (`usageMetadata`) after them. Streaming that answer would mean settling
-after the response is sent (no exact `X-Treg-Cost-Micro`, a second close-once path for disconnects,
+after the response is sent (no exact `X-Stray-Cost-Micro`, a second close-once path for disconnects,
 routed children and overflow rebuilt); raising the buffer would put tens of megabytes per call in
 a web process. The endpoint instead declares `spooled_response: true` and
 `_read_evidence` hands its metered 2xx to `_spool_response`:
@@ -658,5 +658,5 @@ queries. All pins must match the submission snapshot; a pinned unknown/foreign i
 relay. BYOK and raw own-tool access keep their existing credential ACLs. The shared-provider
 `Idempotency-Key` rewrite additionally includes the complete enforced pin, so different customers
 cannot receive one upstream job through provider deduplication. Unpinned digests are unchanged.
-`intake.prepare_call_intake` includes the same full pin in Treg's membership replay namespace. See
+`intake.prepare_call_intake` includes the same full pin in Stray's membership replay namespace. See
 [multi-tenancy](multi-tenancy.md#caller-tags-and-pinned-read-scopes) for the history and ledger scopes.

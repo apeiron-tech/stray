@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from scripts import find_bench as fb
-from treg.domain.catalog import store
-from treg.infra import judge as judge_infra
+from stray.domain.catalog import store
+from stray.infra import judge as judge_infra
 
 FIXTURE = Path(__file__).parent / "fixtures" / "find_bench.yaml"
 

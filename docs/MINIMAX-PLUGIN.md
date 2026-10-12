@@ -1,9 +1,9 @@
 # The MiniMax plugin, and how to submit it
 
-treg's fifth shop window: the **MiniMax Plugin Marketplace**, which serves both **MiniMax Code**
+stray's fifth shop window: the **MiniMax Plugin Marketplace**, which serves both **MiniMax Code**
 (desktop) and **MiniMax Agent** (cloud). Like the Claude Code and Cursor plugins it is
 **skills-only**, and for a harder reason than convenience: MiniMax rejects any package holding a
-credential, and treg's MCP is bearer-authed per user. An authenticated MCP would have to go through
+credential, and stray's MCP is bearer-authed per user. An authenticated MCP would have to go through
 their **App/Connector** program (OAuth MCP server, PKCE, MiniMax-registered client) — see
 "Later: an App" below.
 
@@ -16,16 +16,16 @@ login; the rules that matter are encoded in `scripts/minimax_plugin.py`.
 ```
 plugins/minimax/
 ├── .minimax-plugin/plugin.json   the manifest (schemaVersion 1)
-├── icon.png                      512×512, the ▚ mark — same file as plugin/assets/icon.png
-└── skills/treg/SKILL.md          GENERATED — never edit by hand
+├── icon.png                      512×512, the ▛ mark — same file as plugin/assets/icon.png
+└── skills/stray/SKILL.md          GENERATED — never edit by hand
 scripts/minimax_plugin.py         validator (--check) and ZIP builder (--zip OUT)
 ```
 
-`plugins/minimax/` is the **plugin root** (a sibling of the Cursor root `plugins/treg/`; each store needs its own root because the manifests and generated bootstraps differ): `.minimax-plugin/plugin.json` sits directly inside it, which is
-what MiniMax requires of a ZIP root or a GitHub subdirectory. Manifest `name` is `treg`; the skill is
-exposed at runtime as `treg:treg`.
+`plugins/minimax/` is the **plugin root** (a sibling of the Cursor root `plugins/stray/`; each store needs its own root because the manifests and generated bootstraps differ): `.minimax-plugin/plugin.json` sits directly inside it, which is
+what MiniMax requires of a ZIP root or a GitHub subdirectory. Manifest `name` is `stray`; the skill is
+exposed at runtime as `stray:stray`.
 
-**Never edit `plugins/minimax/skills/treg/SKILL.md`.** Change `src/treg/web/skill.md` and regenerate:
+**Never edit `plugins/minimax/skills/stray/SKILL.md`.** Change `src/stray/web/skill.md` and regenerate:
 
 ```bash
 uv run python scripts/build_plugin.py            # regenerate ALL plugins
@@ -35,8 +35,8 @@ python3 scripts/minimax_plugin.py --check  # MiniMax package rules (also a test)
 
 ### Why the bootstrap differs from Claude Code's
 
-The Claude/Cursor bootstrap is three steps: install CLI → `treg login` → `treg mcp install`. The
-MiniMax one has **two** and says explicitly not to run step 3. `treg mcp install` writes configs for
+The Claude/Cursor bootstrap is three steps: install CLI → `stray login` → `stray mcp install`. The
+MiniMax one has **two** and says explicitly not to run step 3. `stray mcp install` writes configs for
 Claude Code, Cursor and opencode; there is no MiniMax target, so on MiniMax Code it is a silent
 no-op an agent would walk straight past. Everything in the skill works through the CLI.
 
@@ -77,7 +77,7 @@ use one the team keeps, the *same* account must query status later):
 | Region | **US** (and CN if wanted — separate dimension; treg.to is reachable from CN but billing is Stripe) |
 | Delivery target | **Desktop (MiniMax Code) + Cloud (MiniMax Agent)** — the skill is CLI-driven, so cloud only helps if the Agent sandbox can run `install.sh`; pick both, they can disable one |
 | Source | GitHub |
-| Repo | `https://github.com/superdesigndev/treg` |
+| Repo | `https://github.com/apeiron-tech/stray` |
 | Ref | `main` (or the release tag, e.g. `v0.12.1`) |
 | Plugin subdirectory | `plugins/minimax` |
 | Email | jason@superdesign.dev |
@@ -85,7 +85,7 @@ use one the team keeps, the *same* account must query status later):
 ZIP alternative — built deterministically, no wrapper directory:
 
 ```bash
-python3 scripts/minimax_plugin.py --zip treg-minimax-$(python3 -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])').zip
+python3 scripts/minimax_plugin.py --zip stray-minimax-$(python3 -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])').zip
 ```
 
 **After submitting:** save the `submission_id`. Pipeline: source freeze → script validation
@@ -94,7 +94,7 @@ review of the MR diff, Markdown report, icon, CI → owner merges → pipeline p
 "Publishing" / "Published" / "Publishing failed" by Feishu message. Status query needs the
 submitting Feishu account + `submission_id` + email.
 
-**Updating:** `name` stays `treg`, bump `version` (the release bump does this), provide proof of
+**Updating:** `name` stays `stray`, bump `version` (the release bump does this), provide proof of
 maintenance (the GitHub repo is the proof), resubmit with the new Ref. No change summary — they
 diff the MR.
 
@@ -102,10 +102,10 @@ diff the MR.
 
 1. **`curl … | sh` in the skill.** The package contains no install script, but the skill *tells the
    agent to run one*. ClawHub's LLM review flagged the same line (`SQP-2`, see
-   `docs/CLAUDE-PLUGIN.md`). If a reviewer objects, the fallback is `pip install treg` /
-   `uv tool install treg` — the CLI is on PyPI — and a one-line swap in `MINIMAX_BOOTSTRAP`.
+   `docs/CLAUDE-PLUGIN.md`). If a reviewer objects, the fallback is `pip install stray` /
+   `uv tool install stray` — the CLI is on PyPI — and a one-line swap in `MINIMAX_BOOTSTRAP`.
 2. **Cloud target.** On MiniMax Agent the skill only works if the sandbox has a shell with network
-   egress and can open a browser for `treg login` (device-code login is what to point them at if
+   egress and can open a browser for `stray login` (device-code login is what to point them at if
    not). If cloud fails their verification, resubmit desktop-only — that is a catalog-metadata change,
    no version bump.
 3. **Description vs implementation.** Their rule: say what problem it solves, not how. The manifest
@@ -113,11 +113,11 @@ diff the MR.
 
 ## Later: an App
 
-To get the five MCP tools into MiniMax natively, treg would enter their **App/Connector** track:
+To get the five MCP tools into MiniMax natively, stray would enter their **App/Connector** track:
 contact MiniMax *before* building, provide test + prod Streamable-HTTP MCP endpoints, an OAuth
 issuer with discovery metadata, authorization/token/registration/revocation endpoints, scopes,
 DCR/PKCE (S256) support, refresh tokens, callback allowlist needs, a test account, rate limits and
-error codes. MiniMax then assigns a `provider` and the plugin gains `treg.app.json`
-(`{"schemaVersion":1,"provider":"treg"}`). treg's MCP currently authenticates with a static bearer
+error codes. MiniMax then assigns a `provider` and the plugin gains `stray.app.json`
+(`{"schemaVersion":1,"provider":"stray"}`). stray's MCP currently authenticates with a static bearer
 token, which their guide says to raise with them *before* development — so this is a product
 decision (an OAuth AS in front of `/mcp/`), not a packaging one.

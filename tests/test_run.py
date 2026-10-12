@@ -1,4 +1,4 @@
-"""Tier 0 server-side CLI execution (`treg run --server`).
+"""Tier 0 server-side CLI execution (`stray run --server`).
 
 Runs a real CLI (`sh`) on the server with the tool's `cli.inject` secrets injected via env, never
 onto the caller. The tool-side unification: one `Tool.cli` profile drives BOTH run tiers —
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from httpx import AsyncClient
 
-from treg import audit
+from stray import audit
 
 
 async def _register_runnable(c: AsyncClient, *, name="sh-skill", value="s3cr3t-value", bin="sh"):
@@ -57,14 +57,14 @@ async def test_server_run_applies_resource_limits(clients: AsyncClient):
 
 
 def test_spawn_preexec_toggles_with_the_setting(monkeypatch):
-    # The rlimit preexec is applied only when TREG_RUN_RLIMITS is on (default). Off → no preexec.
-    from treg import runner
-    from treg.config import get_settings
+    # The rlimit preexec is applied only when STRAY_RUN_RLIMITS is on (default). Off → no preexec.
+    from stray import runner
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_RUN_RLIMITS", "false")
+    monkeypatch.setenv("STRAY_RUN_RLIMITS", "false")
     get_settings.cache_clear()
     assert runner._spawn_preexec() is None
-    monkeypatch.setenv("TREG_RUN_RLIMITS", "true")
+    monkeypatch.setenv("STRAY_RUN_RLIMITS", "true")
     get_settings.cache_clear()
     assert callable(runner._spawn_preexec())
     get_settings.cache_clear()  # restore for the next test (env reverts via monkeypatch)
@@ -132,7 +132,7 @@ async def test_run_resolves_from_binding_and_sole_secret_injects(clients: AsyncC
 
 
 async def test_run_scrubs_server_env(clients: AsyncClient, monkeypatch):
-    # A var set on the treg process must NOT reach the child (the env is built fresh, not copied).
+    # A var set on the stray process must NOT reach the child (the env is built fresh, not copied).
     monkeypatch.setenv("SERVER_ONLY_ENV", "leaky")
     await _register_runnable(clients)
     r = await clients.post("/run", json={"tool": "sh-skill", "args": ["-c", "echo v=${SERVER_ONLY_ENV:-absent}"]})
@@ -157,7 +157,7 @@ async def test_run_plain_http_tool_rejected(clients: AsyncClient):
 
 
 async def test_run_missing_cli_rejected(clients: AsyncClient):
-    await _register_runnable(clients, name="ghost", bin="treg-nonexistent-bin-xyz")
+    await _register_runnable(clients, name="ghost", bin="stray-nonexistent-bin-xyz")
     r = await clients.post("/run", json={"tool": "ghost", "args": []})
     assert r.status_code == 422
     assert "not installed" in r.json()["detail"]
@@ -227,5 +227,5 @@ async def test_run_cross_org_isolation(clients: AsyncClient):
     # a second user (their own personal org) cannot see or run org A's tool
     r = await clients.post("/users", json={"email": "other@superdesign.dev"})
     tok2 = r.json()["token"]
-    r = await clients.post("/run", json={"tool": "sh-skill", "args": []}, headers={"X-Treg-Token": tok2})
+    r = await clients.post("/run", json={"tool": "sh-skill", "args": []}, headers={"X-Stray-Token": tok2})
     assert r.status_code == 404

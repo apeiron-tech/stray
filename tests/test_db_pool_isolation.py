@@ -20,10 +20,10 @@ import pathlib
 import pytest
 from fastapi import routing as fastapi_routing
 
-from treg import bootstrap
-from treg.infra import db as infra_db
+from stray import bootstrap
+from stray.infra import db as infra_db
 
-SRC = pathlib.Path(infra_db.__file__).parent.parent   # src/treg/
+SRC = pathlib.Path(infra_db.__file__).parent.parent   # src/stray/
 
 API, ADMIN, BACKGROUND = "session_maker", "admin_session_maker", "background_session_maker"
 
@@ -45,14 +45,14 @@ EXPECTED_MAKERS: dict[str, set[str]] = {
     "application/web_arena_calls.py": {API},
     # `/table/`: one short read of a hub tool's manifest, after the call's answer is fully read.
     "application/table.py": {API},
-    # Snapshot read on the request path; the collector runs in the `treg-worker` process (see
+    # Snapshot read on the request path; the collector runs in the `stray-worker` process (see
     # `worker.py` below), where the API pool is the only one in use.
     "application/arena_insights.py": {API},
     "application/arena_verification_insights.py": {API},  # explicit aggregate publication, no worker
 
     # Synchronous intake, and the catalog's five-minute verdict fold; admin reads use get_admin_session.
     "application/feedback.py": {API},
-    "application/media.py": {API},  # `treg host`: one short write, one short read, no upstream wait
+    "application/media.py": {API},  # `stray host`: one short write, one short read, no upstream wait
     "application/catalog_find.py": {API},  # one rate-limit write, committed before the judge call
     "application/catalog_search.py": {API},  # the hub read and the per-caller judge cap, each closed before the judge
 
@@ -70,11 +70,11 @@ EXPECTED_MAKERS: dict[str, set[str]] = {
     "domain/capacity/marks.py": {API}, "domain/capacity/routes_view.py": {API},
     "domain/capacity/view.py": {API},
     "domain/identity/api_keys.py": {BACKGROUND},
-    # `treg-worker` is its own process; it shares the API pool because nothing else is running in it.
+    # `stray-worker` is its own process; it shares the API pool because nothing else is running in it.
     "worker.py": {API},
-    # Runs only inside `treg-worker catalog stats`; same reasoning as `worker.py`.
+    # Runs only inside `stray-worker catalog stats`; same reasoning as `worker.py`.
     "application/catalog_stats.py": {API},
-    # Runs only inside `treg-worker admin purge-evidence`; same reasoning as `worker.py`.
+    # Runs only inside `stray-worker admin purge-evidence`; same reasoning as `worker.py`.
     "application/evidence_retention.py": {API},
     # Off-request writers.
     "audit.py": {BACKGROUND},
@@ -146,7 +146,7 @@ def test_the_background_pool_fits_every_consumer_not_just_the_throttled_ones():
     while four more consumers — including `adsconv`, which holds a slot across two Google round
     trips — drew on the same slots. A guard that names a property it does not check is worse than
     no guard, so this walks `BACKGROUND_CONSUMERS` and the two semaphores must match their entries."""
-    from treg import archive, audit
+    from stray import archive, audit
 
     consumers = infra_db.BACKGROUND_CONSUMERS
     assert consumers["audit._flush"] == audit._MAX_CONCURRENT_WRITES

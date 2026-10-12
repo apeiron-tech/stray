@@ -6,13 +6,13 @@ from datetime import timedelta
 import pytest
 from sqlmodel import select
 
-from treg import crypto
-from treg.application import arena
-from treg.application.call import service
-from treg.domain import arena as rules
-from treg.infra.db import session_maker
-from treg.models import ArenaEvaluation, ArenaRun, AsyncTaskRecord, Hold, LedgerEntry
-from treg.timeutil import utcnow_naive
+from stray import crypto
+from stray.application import arena
+from stray.application.call import service
+from stray.domain import arena as rules
+from stray.infra.db import session_maker
+from stray.models import ArenaEvaluation, ArenaRun, AsyncTaskRecord, Hold, LedgerEntry
+from stray.timeutil import utcnow_naive
 from test_marketplace_call import _balance, platform_on  # noqa: F401
 from test_routing import enrichment_on, _relay_by_provider  # noqa: F401
 
@@ -36,10 +36,10 @@ async def plan(c, mode="compare", providers=None, **extra):
 
 
 async def test_wiza_async_email_finder_completes_inside_arena(clients, monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "wiza")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "wiza")
     get_settings.cache_clear()
     endpoint = arena.catalog_store.load().by_id["wiza.people.email.find"]
     monkeypatch.setitem(endpoint["async"], "interval", 0.01)
@@ -68,10 +68,10 @@ async def test_wiza_async_email_finder_completes_inside_arena(clients, monkeypat
 
 
 async def test_wiza_arena_timeout_is_shown_as_pending_with_reservation(clients, monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "wiza")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "wiza")
     # The run deadline must land after the submit but before the first poll; a
     # tight deadline raced the submit under parallel load and read "cancelled".
     monkeypatch.setattr(arena, "RUN_SECONDS", 1)
@@ -93,11 +93,11 @@ async def test_wiza_arena_timeout_is_shown_as_pending_with_reservation(clients, 
 
 
 async def test_wiza_arena_poll_404_stops_waterfall_while_task_is_live(clients, monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_LUSHA", "PLATFORM-LUSHA")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "wiza,lusha")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_LUSHA", "PLATFORM-LUSHA")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "wiza,lusha")
     get_settings.cache_clear()
     endpoint = arena.catalog_store.load().by_id["wiza.people.phone.find"]
     monkeypatch.setitem(endpoint["async"], "interval", 0.01)
@@ -283,7 +283,7 @@ async def test_batch_own_keys_remain_free_at_maximum_list_size(clients, enrichme
 
 
 async def test_public_page_and_tasks_but_no_anonymous_spending(clients):
-    token = clients.headers.pop("X-Treg-Token")
+    token = clients.headers.pop("X-Stray-Token")
     assert (await clients.get("/enrich-arena")).status_code == 200
     assert (await clients.get("/enrich-arena/leaderboard")).status_code == 200
     assert (await clients.get("/enrich-arena/people-search-bench")).status_code == 200
@@ -308,7 +308,7 @@ async def test_public_page_and_tasks_but_no_anonymous_spending(clients):
     assert (await clients.post("/arena/plans", json={"capability":"people.email.find", "identity":IDENTITY})).status_code == 401
     for path in ("/arena/runs", "/arena/runs/anything"):
         assert (await clients.get(path)).status_code == 401
-    clients.headers["X-Treg-Token"] = token
+    clients.headers["X-Stray-Token"] = token
 
 
 async def test_compare_shows_vendors_and_costs_before_one_click_vote(clients, enrichment_on, monkeypatch):
@@ -417,12 +417,12 @@ async def test_no_partial_or_foreign_vote_and_no_cross_origin_start(clients,enri
     task=arena._owners.get(q["id"])
     if task: await task
     assert (await clients.post(path+"/evaluations",json={"kind":"winner","selected":["invented"]})).status_code==422
-    token=clients.headers["X-Treg-Token"]
+    token=clients.headers["X-Stray-Token"]
     other=(await clients.post('/users',json={"email":"other@superdesign.dev"})).json()["token"]
-    clients.headers['X-Treg-Token']=other
+    clients.headers['X-Stray-Token']=other
     assert (await clients.get(path)).status_code==404
     assert (await clients.post(path+"/reveal")).status_code==404
-    clients.headers['X-Treg-Token']=token
+    clients.headers['X-Stray-Token']=token
 
 
 async def test_concurrent_start_dispatches_only_once(clients,enrichment_on,monkeypatch):
@@ -459,7 +459,7 @@ def test_non_winner_feedback(kind,selected):
 
 
 def test_false_mailbox_verdict_is_not_a_miss():
-    from treg.domain.catalog import store
+    from stray.domain.catalog import store
     cat=store.load();ep=cat.by_id['hunter.people.email.verify']
     outcome,out=rules.classify(cat.contracts['people.email.verify'],cat.adapters[ep['id']],ep,200,
         {'data':{'status':'invalid','score':0}})
@@ -469,7 +469,7 @@ def test_false_mailbox_verdict_is_not_a_miss():
 async def test_oauth_return_only_allows_arena(clients,monkeypatch):
     from types import SimpleNamespace
     from starlette.requests import Request
-    from treg.routers.auth import _finish_oauth_login
+    from stray.routers.auth import _finish_oauth_login
     u=SimpleNamespace(id=1,token_version=0)
     for value,expected in [
         ('/enrich-arena', '/enrich-arena'),
@@ -483,16 +483,16 @@ async def test_oauth_return_only_allows_arena(clients,monkeypatch):
         ('/enrich-arena\r\nSet-Cookie: injected=1', '/app'),
     ]:
         req=Request({'type':'http','scheme':'http','server':('registry',80),'path':'/auth/google/callback',
-                     'headers':[(b'cookie',('treg_arena_return='+crypto.encrypt(value)).encode())]})
+                     'headers':[(b'cookie',('stray_arena_return='+crypto.encrypt(value)).encode())]})
         response=_finish_oauth_login(req,u,None)
         assert response.headers['location']==expected
-        from treg.routers.auth import _arena_return_target
+        from stray.routers.auth import _arena_return_target
         assert (_arena_return_target(value) or '/app') == expected
         assert _finish_oauth_login(req,u,('cli-id',)).headers['location']=='/login?cli=cli-id'
     for invalid_cookie in ('', '/enrich-arena', crypto.encrypt('/enrich-arena')[:-4] + 'xxxx'):
         req = Request({'type': 'http', 'scheme': 'http', 'server': ('registry', 80),
                        'path': '/auth/google/callback',
-                       'headers': [(b'cookie', ('treg_arena_return=' + invalid_cookie).encode())]})
+                       'headers': [(b'cookie', ('stray_arena_return=' + invalid_cookie).encode())]})
         assert _finish_oauth_login(req, u, None).headers['location'] == '/app'
 
 
@@ -632,7 +632,7 @@ async def test_manual_plan_rechecks_own_key_and_credit_admission(clients, enrich
     target = result['results'][1]
     path = '/arena/runs/' + result['id'] + '/attempts/' + target['id']
     q = (await clients.post(path+'/plan')).json()
-    from treg.domain import money
+    from stray.domain import money
     original = money.balance_of
     async def empty(*args, **kwargs): return 0
     monkeypatch.setattr(money, 'balance_of', empty)
@@ -670,12 +670,12 @@ async def test_manual_and_feedback_scope_validation_and_expiry(clients, enrichme
         db.add(row)
         await db.commit()
     assert (await clients.post(path+'/start',json={'quote_id':q['id']})).status_code == 409
-    token = clients.headers['X-Treg-Token']
+    token = clients.headers['X-Stray-Token']
     other = (await clients.post('/users',json={'email':'manual-other@superdesign.dev'})).json()['token']
-    clients.headers['X-Treg-Token'] = other
+    clients.headers['X-Stray-Token'] = other
     for suffix, body in [('plan',{}),('start',{'quote_id':q['id']}),('report',{'reason':'incorrect_data'}),('rating',{'value':'down'})]:
         assert (await clients.post(path+'/'+suffix,json=body)).status_code == 404
-    clients.headers['X-Treg-Token'] = token
+    clients.headers['X-Stray-Token'] = token
 
 
 @pytest.mark.parametrize('mode', ['waterfall', 'compare'])
@@ -713,9 +713,9 @@ async def test_ratings_persist_without_details_and_can_change(clients, enrichmen
 
 @pytest.mark.parametrize('extra_credit,hit', [(-1, True), (0, True), (1, True), (0, False)])
 async def test_waterfall_admits_cheapest_and_checks_later_balance(clients, enrichment_on, monkeypatch, extra_credit, hit):
-    from treg.config import get_settings
-    from treg.domain import money
-    monkeypatch.setenv('TREG_PLATFORM_MARGIN', '0')
+    from stray.config import get_settings
+    from stray.domain import money
+    monkeypatch.setenv('STRAY_PLATFORM_MARGIN', '0')
     get_settings.cache_clear()
     q = await plan(clients, mode='waterfall')
     prices = [p['estimate_micro'] for p in q['providers']]
@@ -752,9 +752,9 @@ async def test_waterfall_admits_cheapest_and_checks_later_balance(clients, enric
 
 
 async def test_waterfall_can_start_own_key_at_zero_balance(clients, enrichment_on, monkeypatch):
-    from treg.config import get_settings
-    from treg.domain import money
-    monkeypatch.setenv('TREG_PLATFORM_MARGIN', '0')
+    from stray.config import get_settings
+    from stray.domain import money
+    monkeypatch.setenv('STRAY_PLATFORM_MARGIN', '0')
     get_settings.cache_clear()
     await clients.post('/secrets', json={'name':'hunter', 'value':'OWN-KEY'})
     q = await plan(clients, mode='waterfall')
@@ -811,7 +811,7 @@ async def test_hourly_limit_applies_at_start_but_pricing_remains_available(clien
 
 @pytest.mark.parametrize('verdict', ['valid', 'invalid'])
 async def test_tomba_verification_sends_email_query_and_settles(clients, enrichment_on, monkeypatch, verdict):
-    from treg.application.call.types import UpstreamResponse
+    from stray.application.call.types import UpstreamResponse
     seen = []
     async def relay(request, upstream_url, tool, secrets, client, **kwargs):
         seen.append(upstream_url)
@@ -835,7 +835,7 @@ async def test_tomba_verification_sends_email_query_and_settles(clients, enrichm
 
 
 def test_arena_masked_required_fields_are_not_hits_and_negative_verdicts_survive():
-    from treg.domain.catalog import store
+    from stray.domain.catalog import store
     cat = store.load()
     ep = cat.by_id['pdl.people.enrich']
     outcome, out = rules.classify(cat.contracts['people.enrich'], cat.adapters[ep['id']], ep, 200,
@@ -902,7 +902,7 @@ def test_valid_email_forms_remain_accepted(email):
 
 @pytest.mark.parametrize('mode', ['compare', 'waterfall'])
 async def test_aviato_company_not_found_is_a_free_miss(clients, enrichment_on, monkeypatch, mode):
-    from treg.application.call.types import UpstreamResponse
+    from stray.application.call.types import UpstreamResponse
     async def relay(*args, **kwargs):
         async def body():
             yield b'Not Found'
@@ -923,7 +923,7 @@ async def test_aviato_company_not_found_is_a_free_miss(clients, enrichment_on, m
 
 @pytest.mark.parametrize('failure', ['timeout', 'invalid_json', 'oversized'])
 async def test_bad_vendor_response_finishes_and_finalizes_hold_once(clients, enrichment_on, monkeypatch, failure):
-    from treg.application.call.types import UpstreamResponse
+    from stray.application.call.types import UpstreamResponse
     closed = []
     async def relay(*args, **kwargs):
         if failure == 'timeout':
@@ -982,7 +982,7 @@ async def test_history_pages_keep_tied_rows_stable_and_never_dispatch(clients, e
     for limit in [0, -1, 101]:
         assert (await clients.get('/arena/runs', params={'limit': limit})).status_code == 422
     other = (await clients.post('/users', json={'email': 'history-other@superdesign.dev'})).json()['token']
-    assert (await clients.get('/arena/runs', params={'before': ids[-1]}, headers={'X-Treg-Token': other})).status_code == 404
+    assert (await clients.get('/arena/runs', params={'before': ids[-1]}, headers={'X-Stray-Token': other})).status_code == 404
     assert await _balance(clients) == before_balance
     async with session_maker() as db:
         assert not (await db.execute(select(Hold))).scalars().all()
@@ -1155,7 +1155,7 @@ async def test_auto_email_verification_is_priced_and_invalid_verdict_preserves_e
     monkeypatch.setattr(service, 'relay', _relay_by_provider({'tomba':[(200,TOMBA_HIT)], 'leadmagic':[(200,{'email_status':'invalid'})]}, seen))
     base = await plan(clients, mode='waterfall')
     q = await plan(clients, mode='waterfall', auto_verify=True)
-    assert q['auto_verify']['provider'] == 'treg'
+    assert q['auto_verify']['provider'] == 'stray'
     assert q['required_micro'] == base['required_micro'] + q['verification_estimate_micro']
     before = await _balance(clients)
     final = await finish(clients, q)
@@ -1247,7 +1247,7 @@ async def test_verification_credit_admission_and_ownership(clients, enrichment_o
     final = await finish(clients,await plan(clients,mode='waterfall'))
     path = '/arena/runs/'+final['id']+'/attempts/'+final['results'][0]['id']+'/verification'
     q = (await clients.post(path+'/plan')).json()
-    from treg.domain import money
+    from stray.domain import money
     async def empty(*args,**kwargs): return 0
     monkeypatch.setattr(money,'balance_of',empty)
     assert (await clients.post(path+'/start',json={'quote_id':q['id']})).status_code == 402
@@ -1255,7 +1255,7 @@ async def test_verification_credit_admission_and_ownership(clients, enrichment_o
     assert len(seen) == 1
     assert (await clients.post(path+'/plan',headers={'Origin':'https://evil.example'})).status_code == 403
     other = (await clients.post('/users',json={'email':'verify-other@superdesign.dev'})).json()['token']
-    assert (await clients.post(path+'/start',json={'quote_id':q['id']},headers={'X-Treg-Token':other})).status_code == 404
+    assert (await clients.post(path+'/start',json={'quote_id':q['id']},headers={'X-Stray-Token':other})).status_code == 404
 
 
 def test_phone_identity_requires_country_calling_code():
@@ -1334,15 +1334,15 @@ def test_issue_requires_completed_explicit_negative_email_verdict(task,state,sta
     assert not rules.verification_rejected_email(attempt,'people.phone.find')
 
 async def test_new_free_verifier_is_selected_for_auto_verification(clients, enrichment_on, monkeypatch):
-    from treg.config import get_settings
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS','tomba,contactout,trykitt,millionverifier')
+    from stray.config import get_settings
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS','tomba,contactout,trykitt,millionverifier')
     for name in ['CONTACTOUT','TRYKITT','MILLIONVERIFIER']:
-        monkeypatch.setenv('TREG_PLATFORM_KEY_'+name,'SYNTHETIC-VERIFICATION-KEY')
+        monkeypatch.setenv('STRAY_PLATFORM_KEY_'+name,'SYNTHETIC-VERIFICATION-KEY')
     get_settings.cache_clear()
     seen=[]
     monkeypatch.setattr(service,'relay',_relay_by_provider({'tomba':[(200,TOMBA_HIT)],'contactout':[(200,{'status_code':200,'data':{'status':'valid'}})]},seen))
     q=await plan(clients,mode='waterfall',providers=['tomba'],auto_verify=True)
-    assert q['auto_verify']['provider']=='treg'
+    assert q['auto_verify']['provider']=='stray'
     assert q['auto_verify']['estimate_micro']>0
     final=await finish(clients,q)
     result=final['results'][0]
@@ -1356,9 +1356,9 @@ async def test_new_free_verifier_is_selected_for_auto_verification(clients, enri
 @pytest.mark.parametrize('first_response', [(403, {'status_code':403,'message':'Out of credits'}), (200, {'status_code':200,'data':{}})])
 @pytest.mark.parametrize('verdict', ['valid', 'invalid', 'catch_all'])
 async def test_email_verification_uses_routed_fallback_and_accounts_for_children(clients, enrichment_on, monkeypatch, automatic, first_response, verdict):
-    from treg.config import get_settings
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS','tomba,contactout,leadmagic')
-    monkeypatch.setenv('TREG_PLATFORM_KEY_CONTACTOUT','SYNTHETIC-VERIFICATION-KEY')
+    from stray.config import get_settings
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS','tomba,contactout,leadmagic')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_CONTACTOUT','SYNTHETIC-VERIFICATION-KEY')
     get_settings.cache_clear()
     seen=[]
     monkeypatch.setattr(service,'relay',_relay_by_provider({
@@ -1369,7 +1369,7 @@ async def test_email_verification_uses_routed_fallback_and_accounts_for_children
     if not automatic:
         path='/arena/runs/'+final['id']+'/attempts/'+final['results'][0]['id']+'/verification'
         q=(await clients.post(path+'/plan')).json()
-        assert q['provider']=='treg' and q['estimate_micro']>0
+        assert q['provider']=='stray' and q['estimate_micro']>0
         assert (await clients.post(path+'/start',json={'quote_id':q['id']})).status_code==200
         await asyncio.wait_for(asyncio.shield(arena._owners[final['id']]),15)
         final=(await clients.get('/arena/runs/'+final['id'])).json()
@@ -1400,7 +1400,7 @@ def test_every_task_input_type_has_two_valid_public_examples():
 
 
 async def test_tracking_counts_one_batch_run_and_keeps_inputs_out(clients, enrichment_on, monkeypatch):
-    from treg import analytics
+    from stray import analytics
     events = []
     monkeypatch.setattr(analytics, "capture", lambda *a, **k: events.append((a, k)))
     monkeypatch.setattr(service, "relay", _relay_by_provider({
@@ -1425,9 +1425,9 @@ async def test_tracking_counts_one_batch_run_and_keeps_inputs_out(clients, enric
 @pytest.mark.parametrize('automatic', [True, False])
 @pytest.mark.parametrize('country', ['US', 'GB', None, 'N/A'])
 async def test_national_phone_verification_preserves_provider_country(clients, enrichment_on, monkeypatch, automatic, country):
-    from treg.config import get_settings
-    monkeypatch.setenv('TREG_PLATFORM_KEY_QUICKENRICH', 'PLATFORM-QUICKENRICH-KEY')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'quickenrich,tomba')
+    from stray.config import get_settings
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_QUICKENRICH', 'PLATFORM-QUICKENRICH-KEY')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'quickenrich,tomba')
     get_settings.cache_clear()
     phone = '020 7946 0958' if country == 'GB' else '415-555-0100'
     seen = []
@@ -1474,7 +1474,7 @@ def test_phone_verification_context_does_not_override_explicit_calling_code():
 async def test_run_finishes_while_cancel_poll_is_reading(clients, enrichment_on, monkeypatch):
     """Finish a real run while the cancellation poll is materializing a SQLite SELECT."""
     from aiosqlite import Cursor
-    from treg.infra import db as database
+    from stray.infra import db as database
 
     if not database._is_sqlite:
         pytest.skip("SQLite cursor cancellation regression")
@@ -1511,7 +1511,7 @@ async def test_run_finishes_while_cancel_poll_is_reading(clients, enrichment_on,
         assert result["state"] == "completed"
         assert not interrupted, "run completion cancelled the poll inside SQLite cursor execution"
         # Match the next fixture boundary: drain the writes, then rebuild the schema.
-        from treg import archive, audit
+        from stray import archive, audit
         await audit.drain()
         await archive.drain()
         await database.reset_db()
@@ -1521,12 +1521,12 @@ async def test_run_finishes_while_cancel_poll_is_reading(clients, enrichment_on,
 
 @pytest.mark.parametrize('change', ['disable', 'rotate', 'detach'])
 async def test_fresh_caller_keeps_key_attribution_and_rechecks_key_controls(clients, change):
-    from treg.domain.identity.access import Caller
-    from treg.domain.identity import session as sess
-    from treg.application.call.types import CallerSnapshot
-    from treg.models import ApiKey, Membership, Org, User
+    from stray.domain.identity.access import Caller
+    from stray.domain.identity import session as sess
+    from stray.application.call.types import CallerSnapshot
+    from stray.models import ApiKey, Membership, Org, User
 
-    claims = sess.read_identity_claims(clients.headers['X-Treg-Token'])
+    claims = sess.read_identity_claims(clients.headers['X-Stray-Token'])
     async with session_maker() as db:
         user = await db.get(User, claims['uid'])
         org = (await db.execute(select(Org).where(Org.slug == claims['org']))).scalar_one()

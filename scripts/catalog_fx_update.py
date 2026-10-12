@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh src/treg/catalog/fx.yaml from open.er-api.com (free, keyless).
+"""Refresh src/stray/catalog/fx.yaml from open.er-api.com (free, keyless).
 
 Run on deploy or cron: `uv run python scripts/catalog_fx_update.py`. Only currencies already
 listed in fx.yaml are refreshed — adding a new billing currency = add its key once, rerun.
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-FX = Path(__file__).resolve().parent.parent / "src" / "treg" / "catalog" / "fx.yaml"
+FX = Path(__file__).resolve().parent.parent / "src" / "stray" / "catalog" / "fx.yaml"
 
 
 def main() -> int:

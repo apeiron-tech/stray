@@ -1,4 +1,4 @@
-"""First-touch traffic-source attribution: web/sitetrack.js → `treg_utm` cookie → Org.utm_*.
+"""First-touch traffic-source attribution: web/sitetrack.js → `stray_utm` cookie → Org.utm_*.
 
 Why this exists: a paid sponsor link (`?utm_source=botdirectory.ai&utm_campaign=edge`) produced a
 signup count of "unknown" — the landing page loaded no analytics and the signup doors persisted only
@@ -9,9 +9,9 @@ from urllib.parse import quote
 
 from sqlmodel import select
 
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import Org
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import Org
 
 COOKIE = quote("botdirectory.ai|sponsor|edge||p1|botdirectory.ai", safe="")
 
@@ -22,7 +22,7 @@ async def _org(org_id: int) -> Org:
 
 
 async def test_signup_persists_the_utm_cookie(clients):
-    r = await clients.post("/users", json={"email": "sponsor@example.com"}, cookies={"treg_utm": COOKIE})
+    r = await clients.post("/users", json={"email": "sponsor@example.com"}, cookies={"stray_utm": COOKIE})
     assert r.status_code == 200, r.text
     org = await _org(r.json()["org_id"])
     assert (org.utm_source, org.utm_medium, org.utm_campaign) == ("botdirectory.ai", "sponsor", "edge")
@@ -33,7 +33,7 @@ async def test_signup_persists_the_utm_cookie(clients):
 
 async def test_org_creation_persists_the_utm_cookie(clients):
     # The OTHER signup door: browser sign-in → mandatory first-team creation via /orgs.
-    r = await clients.post("/orgs", json={"name": "sponsored team"}, cookies={"treg_utm": COOKIE})
+    r = await clients.post("/orgs", json={"name": "sponsored team"}, cookies={"stray_utm": COOKIE})
     assert r.status_code == 200, r.text
     org = await _org(r.json()["org_id"])
     assert org.utm_source == "botdirectory.ai" and org.utm_campaign == "edge"
@@ -49,7 +49,7 @@ async def test_signup_without_the_cookie_leaves_source_null(clients):
 async def test_referrer_only_cookie_records_just_the_host(clients):
     # A link with no utm tags still has a referrer — that alone is worth keeping.
     r = await clients.post("/users", json={"email": "ref@example.com"},
-                           cookies={"treg_utm": quote("|||||news.ycombinator.com", safe="")})
+                           cookies={"stray_utm": quote("|||||news.ycombinator.com", safe="")})
     assert r.status_code == 200, r.text
     org = await _org(r.json()["org_id"])
     assert org.utm_source is None and org.utm_referrer == "news.ycombinator.com"
@@ -57,7 +57,7 @@ async def test_referrer_only_cookie_records_just_the_host(clients):
 
 async def test_hostile_cookie_is_capped_and_never_errors(clients):
     r = await clients.post("/users", json={"email": "hostile@example.com"},
-                           cookies={"treg_utm": "x" * 5000})
+                           cookies={"stray_utm": "x" * 5000})
     assert r.status_code == 200, r.text
     org = await _org(r.json()["org_id"])
     assert org.utm_source == "x" * 100
@@ -69,7 +69,7 @@ async def test_sitetrack_is_inert_without_a_posthog_key(clients, monkeypatch):
     assert r.status_code == 200
     assert r.headers["cache-control"] == "no-cache"
     assert "var key = ''" in r.text  # analytics half off
-    assert "treg_utm" in r.text     # cookie half always present
+    assert "stray_utm" in r.text     # cookie half always present
     assert "{POSTHOG_KEY}" not in r.text
 
 

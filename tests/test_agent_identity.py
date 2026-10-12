@@ -1,6 +1,6 @@
 """Agent identity — a member token for a machine caller.
 
-NOTE: "agent" here is an IDENTITY, not the skill-directory registry in `treg/agents.py`
+NOTE: "agent" here is an IDENTITY, not the skill-directory registry in `stray/agents.py`
 (covered by test_agents.py). Same word, different concept.
 
 Proves the invariants that make an agent safe to hand out:
@@ -23,14 +23,14 @@ from sqlmodel import select
 
 from conftest import make_upstream
 
-from treg import crypto
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
-from treg.models import IdempotentCall, Membership, Org, User
+from stray import crypto
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
+from stray.models import IdempotentCall, Membership, Org, User
 
 
 def _h(t: str) -> dict:
-    return {"X-Treg-Token": t}
+    return {"X-Stray-Token": t}
 
 
 async def _mint(email: str, org_id: int, role: str) -> str:

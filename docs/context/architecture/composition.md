@@ -2,23 +2,23 @@
 title: Application composition and deployment roles
 status: shipped
 sources:
-  - src/treg/bootstrap.py
-  - src/treg/bootstrap_handlers.py
-  - src/treg/bootstrap_http.py
-  - src/treg/call_surface.py
-  - src/treg/application/connect.py
-  - src/treg/domain/identity/mcp_oauth.py
-  - src/treg/domain/identity/session.py
-  - src/treg/routers/admin.py
-  - src/treg/routers/auth.py
-  - src/treg/routers/billing.py
-  - src/treg/routers/call.py
-  - src/treg/routers/connections.py
-  - src/treg/routers/onboard.py
-  - src/treg/routers/orgs.py
-  - src/treg/routers/resources.py
-  - src/treg/routers/referrals.py
-  - src/treg/routers/web.py
+  - src/stray/bootstrap.py
+  - src/stray/bootstrap_handlers.py
+  - src/stray/bootstrap_http.py
+  - src/stray/call_surface.py
+  - src/stray/application/connect.py
+  - src/stray/domain/identity/mcp_oauth.py
+  - src/stray/domain/identity/session.py
+  - src/stray/routers/admin.py
+  - src/stray/routers/auth.py
+  - src/stray/routers/billing.py
+  - src/stray/routers/call.py
+  - src/stray/routers/connections.py
+  - src/stray/routers/onboard.py
+  - src/stray/routers/orgs.py
+  - src/stray/routers/resources.py
+  - src/stray/routers/referrals.py
+  - src/stray/routers/web.py
   - scripts/dump_surface.py
   - tests/test_app_roles.py
 related:
@@ -39,7 +39,7 @@ The `/agent-setup.js` browser asset (compiled from the Dashboard source for Aren
 
 `bootstrap.create_app(role)` is the FastAPI composition root. `api.py` hosts the ordered route table,
 attaches concern routers at compatibility-sensitive registration points, and calls the factory once at
-EOF so the deployed `treg.api:app` import path remains the default `all` role.
+EOF so the deployed `stray.api:app` import path remains the default `all` role.
 
 The factory owns concrete assembly: the three core pure-ASGI middleware registrations, the optional
 V2 path normalizer, five exception handlers, static mounts, optional MCP mounts and lifespans,
@@ -124,7 +124,7 @@ architecture test separately pins the dataplane/control startup split and backgr
 | `control` | Everything except the calling surfaces; includes OAuth issuance, `/run`, and static files | Ads conversion worker when enabled | Read-only DB verify, HTTP client |
 
 No role lifespan writes schema, performs a data backfill, or provisions the local single user. The explicit
-`python -m treg upgrade` release phase owns content-driven backfills; the default `python -m treg`
+`python -m stray upgrade` release phase owns content-driven backfills; the default `python -m stray`
 serve path adds single-user provisioning before Uvicorn starts. Raw ASGI operators must run the
 upgrade command separately on every release. `verify_db()` only checks revision compatibility and the
 Fernet-key guard; the exact startup manifests are pinned to a read-only allowlist.
@@ -145,7 +145,7 @@ owner. App creation fails on an unclassified, stale, duplicate, or multiply-owne
 route cannot silently expand the dataplane. Role separation is preparatory in stage 1; only the
 `all` role is deployed.
 
-`TREG_CLAUDE_CONNECTOR_ENABLED=true` adds `/mcp/v2` and starts its lifespan. When the flag is false
+`STRAY_CLAUDE_CONNECTOR_ENABLED=true` adds `/mcp/v2` and starts its lifespan. When the flag is false
 or missing, only the team `/mcp` mount starts. The nested V2 mount is registered first so the
 parent `/mcp` mount cannot consume it.
 
@@ -170,7 +170,7 @@ routes) joins `_CONTROL_ROUTE_KEYS` alongside the rest of the management surface
 `/catalog/call/` remain the only dataplane routes a hub run's own steps go through. The legacy
 dashboard's `/app/legacy/assets/{path:path}` mount is gone — see [dashboard](../interface/dashboard.md).
 
-No web process collects Arena statistics any more: `treg-worker arena insights` (a cron) does,
+No web process collects Arena statistics any more: `stray-worker arena insights` (a cron) does,
 and `/arena/insights`, a control route, only reads the last published snapshot. `ROLE_BACKGROUND_TASKS`
 therefore lists `adsconv.worker` alone for control/all.
 Shutdown cancels and awaits every started background worker before draining Arena, audit and

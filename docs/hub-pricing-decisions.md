@@ -26,7 +26,7 @@ Mode `cost_plus`: the maker earns a percent of the run's catalog step cost. The 
 mode per tool version.
 
 **2. In `per_unit` mode, what is one unit?**
-The script returns an integer in a reserved output field named `units`. treg multiplies `units` by
+The script returns an integer in a reserved output field named `units`. stray multiplies `units` by
 the per-unit price. The maker's code sets `units`, usually the row count, but it can be anything
 they bill for.
 
@@ -44,7 +44,7 @@ Example: steps cost $0.20, markup 30 percent, the maker earns $0.06, the buyer p
 
 **6. Where does the maker write the mode and its numbers?**
 `recipe.json` gets a `pricing` block: `{mode, price_usd, per_unit_usd, markup_percent, max_price_usd}`.
-treg reads only the fields the mode needs. A file with just `price_usd` still means `flat`.
+stray reads only the fields the mode needs. A file with just `price_usd` still means `flat`.
 
 **7. What does the buyer see before a run on the public page?**
 The page shows the mode in words and the worst case. `flat`: "$X per run". `per_unit`: "$X per unit,
@@ -89,7 +89,7 @@ breakdown, just the average price per successful run, so the maker sees how the 
 
 **1. What price does a caller read first?**
 A range, not the formula. "steps +25% up to $0.5/run" is accurate and unreadable. The headline on
-every surface (the dashboard list and overview, `treg hub ls`, the public page, `catalog_get`, a
+every surface (the dashboard list and overview, `stray hub ls`, the public page, `catalog_get`, a
 search row) is what a successful run actually cost, steps and seller price together, over the last
 30 days: one number when every run cost the same, `$low–$high/run` otherwise. The formula stays
 as the second line, for the maker (`price_label`).

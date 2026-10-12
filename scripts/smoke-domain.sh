@@ -2,7 +2,7 @@
 # smoke-domain.sh — live verification of the treg.superdesign.dev → treg.to cutover, phase-aware.
 #
 #   scripts/smoke-domain.sh pre     # after the INERT deploy (env still on the old domain)
-#   scripts/smoke-domain.sh post    # after flipping TREG_PUBLIC_URL to https://treg.to
+#   scripts/smoke-domain.sh post    # after flipping STRAY_PUBLIC_URL to https://treg.to
 #
 # Reviews reason about code; this checks the actual deployment, Render's edge included. Every
 # check prints PASS/FAIL and the script exits non-zero if anything failed. No tokens needed —
@@ -36,19 +36,19 @@ for base in "$OLD" "$NEW"; do
   done
   # /mcp/: 421 = the Host allow-list rejected this domain (the exact pre-cutover breakage class).
   # A bare 401 proves the transport answered but NOT host acceptance (auth challenges first) — set
-  # TREG_SMOKE_TOKEN to a real token to make this check authoritative (expects 200).
+  # STRAY_SMOKE_TOKEN to a real token to make this check authoritative (expects 200).
   auth_args=()
-  [ -n "${TREG_SMOKE_TOKEN:-}" ] && auth_args=(-H "Authorization: Bearer $TREG_SMOKE_TOKEN")
+  [ -n "${STRAY_SMOKE_TOKEN:-}" ] && auth_args=(-H "Authorization: Bearer $STRAY_SMOKE_TOKEN")
   c=$(code -X POST "$base/mcp/" -H 'Content-Type: application/json' \
         -H 'Accept: application/json, text/event-stream' "${auth_args[@]}" \
         -H "Origin: $base" \
         -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}')
-  if [ -n "${TREG_SMOKE_TOKEN:-}" ]; then
+  if [ -n "${STRAY_SMOKE_TOKEN:-}" ]; then
     [ "$c" = 200 ] && note PASS "$base/mcp/ authed initialize → 200 (host+origin accepted)" \
                    || note FAIL "$base/mcp/ authed initialize → $c (expected 200)"
   else
     case "$c" in
-      200|401) note PASS "$base/mcp/ initialize → $c (transport alive; set TREG_SMOKE_TOKEN for full proof)" ;;
+      200|401) note PASS "$base/mcp/ initialize → $c (transport alive; set STRAY_SMOKE_TOKEN for full proof)" ;;
       421)     note FAIL "$base/mcp/ → 421 Misdirected (host allow-list rejected this domain)" ;;
       *)       note FAIL "$base/mcp/ → $c" ;;
     esac

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 
-import treg.api  # noqa: F401 - builds the MCP servers, which turn the root logger on at INFO
+import stray.api  # noqa: F401 - builds the MCP servers, which turn the root logger on at INFO
 
 
 def test_the_http_clients_log_nothing_below_warning():

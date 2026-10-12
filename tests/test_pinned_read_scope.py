@@ -6,13 +6,13 @@ from datetime import timedelta
 import pytest
 from sqlmodel import select
 
-from treg import archive, audit
-from treg.application import asynctasks as task_app
-from treg.application.call import service as call_service
-from treg.domain import money
-from treg.infra.db import session_maker
-from treg.models import AsyncResourceRecord, AsyncTaskRecord, CallRecord, Feedback, LedgerEntry, RunRecord
-from treg.timeutil import utcnow_naive
+from stray import archive, audit
+from stray.application import asynctasks as task_app
+from stray.application.call import service as call_service
+from stray.domain import money
+from stray.infra.db import session_maker
+from stray.models import AsyncResourceRecord, AsyncTaskRecord, CallRecord, Feedback, LedgerEntry, RunRecord
+from stray.timeutil import utcnow_naive
 from test_asynctasks import EP, _response, replicate_platform, legacy_async_platform, minimax_platform
 from test_tag_billing import _mint_agent, _mk_echo_tool, _org_id
 from test_run import _register_runnable
@@ -27,7 +27,7 @@ async def identities(clients):
     for name, tags in [('a', {'customer': 'a'}), ('b', {'customer': 'b'}),
                        ('aw', {'customer': 'a', 'workspace': 'w'})]:
         token = await _mint_agent(clients, org, name, role='viewer', pinned_tags=tags)
-        result[name] = {'X-Treg-Token': token}
+        result[name] = {'X-Stray-Token': token}
     return org, result
 
 
@@ -54,10 +54,10 @@ async def test_history_filters_before_pagination_and_ignores_read_headers(client
     for row in all_rows:
         expected = 200 if row in own else 404
         for path in [f"/calls/{row['id']}/result", f"/calls/{row['call_ref']}"]:
-            response = await clients.get(path, headers={**h['a'], 'X-Treg-Meta': 'customer=b'})
+            response = await clients.get(path, headers={**h['a'], 'X-Stray-Meta': 'customer=b'})
             assert response.status_code == expected, response.text
     # A matching second pin is required, not merely the primary customer tag.
-    response = await clients.get('/call/echo/hello', headers={**h['a'], 'X-Treg-Meta': 'workspace=w'})
+    response = await clients.get('/call/echo/hello', headers={**h['a'], 'X-Stray-Meta': 'workspace=w'})
     assert response.status_code == 200
     await audit.drain()
     assert len((await clients.get('/calls', headers=h['aw'])).json()) == 1
@@ -118,7 +118,7 @@ async def test_async_submission_snapshots_tags_without_audit(clients, identities
     monkeypatch.setattr(call_service, 'relay', relay)
     response = await clients.post(f'/call/{EP}', headers=h['a'], json={'input': {'prompt': 'kite'}})
     assert response.status_code == 201, response.text
-    ref = response.headers['X-Treg-Call-Id']
+    ref = response.headers['X-Stray-Call-Id']
     async with session_maker() as db:
         task = await db.get(AsyncTaskRecord, ref)
         assert task.tags == {'customer': 'a'}
@@ -139,7 +139,7 @@ async def test_async_submission_snapshots_tags_without_audit(clients, identities
 async def test_legacy_async_rows_fail_closed_for_pins(clients, identities, monkeypatch, replicate_platform):
     org, h = identities
     now = utcnow_naive()
-    from treg.domain.catalog import store
+    from stray.domain.catalog import store
     async with session_maker() as db:
         db.add(AsyncTaskRecord(call_id='legacy', org_id=org, provider='replicate', endpoint_id=EP,
             task_id='old', reserved_micro=0, descriptor=store.load().by_id[EP]['async'],
@@ -191,16 +191,16 @@ async def test_runs_are_filtered_before_limits(clients, identities):
 
 
 async def test_run_writers_snapshot_pins(clients, identities, monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
     monkeypatch.setattr(get_settings(), 'run_proof', 'synthetic-proof')
     org, _ = identities
     await _register_runnable(clients)
     token = await _mint_agent(clients, org, 'runner', role='member',
                              pinned_tags={'customer': 'a'}, local_run_enabled=True)
-    headers = {'X-Treg-Token': token}
+    headers = {'X-Stray-Token': token}
     response = await clients.post('/run', headers=headers, json={'tool': 'sh-skill', 'args': ['-c', 'echo hi']})
     assert response.status_code == 200, response.text
-    grant = await clients.post('/tools/sh-skill/grant', headers={**headers, 'X-Treg-Run-Proof': 'synthetic-proof'}, json={'argv': ['echo', 'hi']})
+    grant = await clients.post('/tools/sh-skill/grant', headers={**headers, 'X-Stray-Run-Proof': 'synthetic-proof'}, json={'argv': ['echo', 'hi']})
     assert grant.status_code == 200, grant.text
     await audit.drain()
     rows = (await clients.get('/runs', headers=headers)).json()
@@ -235,7 +235,7 @@ async def test_mcp_async_reads_apply_the_same_pin_check(clients, identities, mon
     monkeypatch.setattr(call_service, 'relay', must_not_relay)
     async with paired_mcp_session() as client:
         result = await _call_tool(client, tool, {'endpoint_id': 'replicate.predictions.get',
-                                  'params': {'id': 'mcp-task'}}, h['b']['X-Treg-Token'], path=path)
+                                  'params': {'id': 'mcp-task'}}, h['b']['X-Stray-Token'], path=path)
     assert result.get('status') == 404, result
 
 
@@ -268,8 +268,8 @@ async def test_terminal_resource_inherits_submission_tags(clients, identities, m
 
 
 def test_replay_scope_includes_every_pin_and_preserves_unpinned_keys():
-    from treg.application.call.idempotency import _scoped_idempotency_key
-    from treg.application.call.intake import CallMeta
+    from stray.application.call.idempotency import _scoped_idempotency_key
+    from stray.application.call.intake import CallMeta
     meta = CallMeta(tags={'customer': 'a'}, primary_dim='customer')
     old = _scoped_idempotency_key('retry', meta)
     a = _scoped_idempotency_key('retry', meta, pinned_tags={'customer': 'a', 'workspace': 'a'})
@@ -288,7 +288,7 @@ async def test_repinning_cannot_read_or_replay_previous_scope(clients, identitie
     for workspace in ['first', 'second']:
         token = await _mint_agent(clients, org, 'repinned', role='viewer',
                                   pinned_tags={'customer': 'a', 'workspace': workspace})
-        headers = {'X-Treg-Token': token, 'Idempotency-Key': 'retry'}
+        headers = {'X-Stray-Token': token, 'Idempotency-Key': 'retry'}
         response = await clients.post(f'/call/{EP}', headers=headers, json={'input': {'prompt': 'kite'}})
         assert response.status_code == 201
         assert response.json()['id'] == f'task-{len(hits)}'
@@ -309,7 +309,7 @@ async def test_routed_parent_row_carries_the_pin_and_reviews_are_scoped(clients,
     r = await clients.post(f'/call/{ROUTED}', json={'full_name': 'Patrick Collison', 'domain': 'stripe.com'},
                            headers=h['a'])
     assert r.status_code == 200, r.text
-    ref = r.headers['X-Treg-Call-Id']
+    ref = r.headers['X-Stray-Call-Id']
     await audit.drain()
     rows = (await clients.get('/calls', headers=h['a'])).json()
     assert {(x['tool_name'], x['credential_tier'], x['call_ref']) for x in rows} >= {(ROUTED, 'routed', ref)}
@@ -328,10 +328,10 @@ async def test_refusals_and_feedback_reports_stay_inside_the_pin(clients, identi
     org, h = identities
     await _mk_echo_tool(clients)
     refs = []
-    for headers, status in [(h['a'], 404), ({**h['a'], 'X-Treg-Meta': 'customer=b'}, 403)]:
+    for headers, status in [(h['a'], 404), ({**h['a'], 'X-Stray-Meta': 'customer=b'}, 403)]:
         r = await clients.get('/call/no-such-tool/x' if status == 404 else '/call/echo/hello', headers=headers)
         assert r.status_code == status, r.text
-        refs.append(r.headers['X-Treg-Call-Id'])
+        refs.append(r.headers['X-Stray-Call-Id'])
     await audit.drain()
     own = (await clients.get('/calls', headers=h['a'])).json()
     assert {x['call_ref'] for x in own} == set(refs) and all(x['tags'] == {'customer': 'a'} for x in own)

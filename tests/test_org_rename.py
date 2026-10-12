@@ -23,7 +23,7 @@ async def test_old_slug_keeps_resolving_for_pinned_credentials(c: AsyncClient):
     # otok was minted by POST /orgs with org=team-a baked into its claim
     await c.patch(f"/orgs/{org_id}", headers=_h(otok), json={"slug": "team-b"})
     for slug in ("team-a", "team-b"):
-        r = await c.post("/agents/checkin", headers={**_h(otok), "X-Treg-Org": slug})
+        r = await c.post("/agents/checkin", headers={**_h(otok), "X-Stray-Org": slug})
         assert r.status_code == 200, (slug, r.text)
         assert r.json()["org"] == "team-b"
     assert (await c.get("/tools", headers=_h(mtok))).status_code == 200

@@ -1,4 +1,4 @@
-"""Phase A: treg keeps OAuth tokens fresh. A stale oauth secret is refreshed (via its token_uri)
+"""Phase A: stray keeps OAuth tokens fresh. A stale oauth secret is refreshed (via its token_uri)
 in place before the call, so the upstream always sees a live token. The upstream's /token route
 (conftest) stands in for the provider's token endpoint and returns access_token "REFRESHED".
 """
@@ -12,7 +12,7 @@ import time
 import httpx
 from httpx import AsyncClient
 
-from treg import audit, oauth
+from stray import audit, oauth
 
 
 def _oauth_blob(access: str, expires_at: float) -> str:
@@ -38,7 +38,7 @@ async def test_stale_token_is_refreshed_before_call(clients: AsyncClient):
     await _register_oauth_tool(clients, "gsc", _oauth_blob("OLD", expires_at=0))  # already expired
     r = await clients.get("/call/gsc/echo")
     assert r.status_code == 200, r.text
-    assert r.json()["auth"] == "Bearer REFRESHED"  # treg refreshed it silently
+    assert r.json()["auth"] == "Bearer REFRESHED"  # stray refreshed it silently
 
 
 async def test_valid_token_is_not_refreshed(clients: AsyncClient):
@@ -49,7 +49,7 @@ async def test_valid_token_is_not_refreshed(clients: AsyncClient):
 
 async def test_manual_mode_token_without_refresh_fields_is_injected_as_is(clients: AsyncClient):
     # MANUAL mode: a bare uploaded token (no refresh_token/client creds), even with no expiry,
-    # is injected verbatim — treg never tries to refresh what it can't.
+    # is injected verbatim — stray never tries to refresh what it can't.
     blob = json.dumps({"access_token": "MANUAL-TOKEN"})
     await _register_oauth_tool(clients, "manual", blob)
     r = await clients.get("/call/manual/echo")
@@ -61,8 +61,8 @@ async def test_token_endpoint_io_holds_no_database_connection(
     clients: AsyncClient, monkeypatch,
 ):
     """The provider may take seconds; the refresh transaction must release its pool slot first."""
-    from treg.api import app
-    from treg.infra.db import _engine
+    from stray.api import app
+    from stray.infra.db import _engine
 
     await _register_oauth_tool(clients, "pool-free-refresh", _oauth_blob("OLD", expires_at=0))
     await audit.drain()  # Registration's asynchronous audit write must finish before sampling the pool.
@@ -83,7 +83,7 @@ async def test_token_endpoint_io_holds_no_database_connection(
 async def test_concurrent_stale_calls_keep_one_refresh_winner(
     clients: AsyncClient, monkeypatch,
 ):
-    from treg.api import app
+    from stray.api import app
 
     await _register_oauth_tool(clients, "single-flight-refresh", _oauth_blob("OLD", expires_at=0))
     calls = 0
@@ -171,13 +171,13 @@ async def test_refresh_body_auth_providers_unaffected():
 async def test_exchange_code_persists_basic_auth_method_into_blob():
     # The blob is the ONLY thing refresh() has months later — PendingOAuth is long deleted. If the
     # method doesn't ride along here, every X/Pinterest refresh reverts to body auth and 401s.
-    from treg import crypto
-    from treg.models import PendingOAuth
+    from stray import crypto
+    from stray.models import PendingOAuth
 
     p = PendingOAuth(
         state="s", org_id=1, owner="o@x", provider="x", scopes="tweet.read",
         auth_uri="https://x.test/authorize", token_uri="https://x.test/2/oauth2/token",
-        client_id="cid", client_secret=crypto.encrypt("csec"), redirect_uri="https://treg/cb",
+        client_id="cid", client_secret=crypto.encrypt("csec"), redirect_uri="https://stray/cb",
         token_endpoint_auth_method="client_secret_basic",
     )
 
@@ -193,7 +193,7 @@ async def test_exchange_code_persists_basic_auth_method_into_blob():
     g = PendingOAuth(
         state="s2", org_id=1, owner="o@x", provider="google-analytics", scopes="r",
         auth_uri="https://g.test/auth", token_uri="https://g.test/token",
-        client_id="cid", client_secret=crypto.encrypt("csec"), redirect_uri="https://treg/cb",
+        client_id="cid", client_secret=crypto.encrypt("csec"), redirect_uri="https://stray/cb",
     )
 
     def g_handler(request: httpx.Request) -> httpx.Response:

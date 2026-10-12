@@ -7,7 +7,7 @@ export default { components: { BrandMark }, setup: useDashboard }
 <template>
   <div class="lp">
     <header class="lp-nav">
-      <a href="/" class="brand"><BrandMark/>treg</a>
+      <a href="/" class="brand"><BrandMark/>stray</a>
       <nav class="lp-links">
         <a href="/tutorial">Docs</a>
         <button class="iconbtn" @click="toggleTheme" :aria-label="theme==='dark'?'Light theme':'Dark theme'">{{theme==='dark'?'◐':'◑'}}</button>
@@ -20,7 +20,7 @@ export default { components: { BrandMark }, setup: useDashboard }
         <p class="lp-lead">A teammate shared this {{shareGate.kind}} with you. Sign in to view it.</p>
       </template>
       <template v-else>
-        <h1 class="lp-h1">Sign in to treg</h1>
+        <h1 class="lp-h1">Sign in to stray</h1>
         <p class="lp-lead">Connect your agent and manage your team.</p>
       </template>
       <div class="lp-cta"><button class="btn primary lg" @click="demo.signin=true">{{shareGate?'Sign in to view':'Sign in'}}</button></div>

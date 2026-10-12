@@ -718,7 +718,7 @@
       "HEAD"
     ],
     "name": "indexnow_key",
-    "path": "/7c2e4a91b5d3f8e6treg2026.txt"
+    "path": "/7c2e4a91b5d3f8e6stray2026.txt"
   },
   {
     "kind": "APIRoute",
@@ -1199,7 +1199,7 @@
       "HEAD"
     ],
     "name": "well_known_skill_md",
-    "path": "/.well-known/skills/treg/SKILL.md"
+    "path": "/.well-known/skills/stray/SKILL.md"
   },
   {
     "kind": "APIRoute",

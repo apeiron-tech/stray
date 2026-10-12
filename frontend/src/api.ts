@@ -33,7 +33,7 @@ export async function requestJson<T = unknown>(
   }
   if (encode && typeof opts.body === 'string') {
     init.body = encodeBody(opts.body)
-    init.headers = { ...headers, ...opts.headers, 'X-Treg-Body-Encoding': 'base64' }
+    init.headers = { ...headers, ...opts.headers, 'X-Stray-Body-Encoding': 'base64' }
   }
   let response = await fetch(path, init)
   if (response.status === 403 && typeof opts.body === 'string' && !encode &&
@@ -42,7 +42,7 @@ export async function requestJson<T = unknown>(
       response = await fetch(path, {
         ...init,
         body: encodeBody(opts.body),
-        headers: { ...headers, ...opts.headers, 'X-Treg-Body-Encoding': 'base64' },
+        headers: { ...headers, ...opts.headers, 'X-Stray-Body-Encoding': 'base64' },
       })
     } catch {
       throw new ApiError(403, 'The edge blocked this request and the encoded retry failed - try a smaller folder')

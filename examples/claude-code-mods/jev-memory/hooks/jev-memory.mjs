@@ -1,4 +1,4 @@
-// jev-memory: after each answered prompt, Jev (through Treg) judges the prompt's
+// jev-memory: after each answered prompt, Jev (through Stray) judges the prompt's
 // sentences in one request and the lasting preferences are saved to
 // .claude/jev-memory.md, which is put back into context at the next session.
 
@@ -13,7 +13,7 @@ const HOW_NAME = "How preferences are remembered here";
 const HOW_TEXT =
   "The jev-memory mod saves the user's lasting preferences automatically after each turn, to .claude/jev-memory.md. " +
   "Don't save preferences yourself (no edits to CLAUDE.md, ~/.claude/CLAUDE.md or memory files for that); follow them, and say they'll be remembered.";
-const TREG_ENDPOINT = "openrouter.ai-judge.decide";
+const STRAY_ENDPOINT = "openrouter.ai-judge.decide";
 const JEV_MODEL = "typesafe/jev-1.13";
 // Only prompts the person wrote: not notifications, peers, schedules or other plugins.
 const USER_ORIGINS = new Set(["composer", "bridge", "sdk"]);
@@ -83,7 +83,7 @@ export function register(on, options) {
     await $.state.set(pendingKey, []);
     if (e.reason !== "answer") return result;
 
-    // Judge outside this dispatch so the turn never waits on Treg.
+    // Judge outside this dispatch so the turn never waits on Stray.
     await $.state.set(judgingKey, true);
     $.clock.after(0, () => {
       judge($, options, pending.join("\n"))
@@ -223,7 +223,7 @@ async function judge($, options, promptText) {
 }
 
 async function askJev($, options, sentences) {
-  const treg = options?.tregPath || `${(await $.env.get("HOME")) ?? ""}/.local/bin/treg`;
+  const stray = options?.strayPath || `${(await $.env.get("HOME")) ?? ""}/.local/bin/stray`;
   const state = [
     "# Decision context",
     "",
@@ -245,13 +245,13 @@ async function askJev($, options, sentences) {
   const body = JSON.stringify({ model: JEV_MODEL, state, questions });
 
   try {
-    const run = await $.process.run([treg, "--json", "call", TREG_ENDPOINT, "--method", "POST", "--data", body]);
+    const run = await $.process.run([stray, "--json", "call", STRAY_ENDPOINT, "--method", "POST", "--data", body]);
     if (run.exitCode !== 0) return undefined;
     const parsed = JSON.parse(run.stdout);
-    // treg before 0.22.0 prints the bare body, without the {result, _treg} envelope.
+    // stray before 0.22.0 prints the bare body, without the {result, _stray} envelope.
     const answers = (parsed?.result ?? parsed)?.answers;
     if (!answers) return undefined;
-    return { answers, costMicro: Number(parsed._treg?.charged_micro) || 0 };
+    return { answers, costMicro: Number(parsed._stray?.charged_micro) || 0 };
   } catch {
     return undefined;
   }

@@ -4,11 +4,11 @@ from datetime import timedelta
 import pytest
 from sqlmodel import select
 
-from treg.application import web_arena_calls, web_arena_publications
-from treg.infra.db import session_maker
-from treg.models import (CallRecord, WebArenaCallCursor, WebArenaCallDayStat,
+from stray.application import web_arena_calls, web_arena_publications
+from stray.infra.db import session_maker
+from stray.models import (CallRecord, WebArenaCallCursor, WebArenaCallDayStat,
                          WebArenaPublication, WebArenaSeedDayStat, WebArenaSeedProgress)
-from treg.timeutil import utcnow_naive
+from stray.timeutil import utcnow_naive
 
 
 async def _call(*, org=1, hit=None, status=200, cached=False, refused_by=None, ms=120,

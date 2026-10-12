@@ -1,8 +1,8 @@
 """Request bounds and response evidence for Enrichlayer's shared-key result prices."""
 
-from treg.application.call import enrichlayer
-from treg.application.call.resolve import QueryValues, _marketplace_pricing
-from treg.domain.catalog import store as catalog_store
+from stray.application.call import enrichlayer
+from stray.application.call.resolve import QueryValues, _marketplace_pricing
+from stray.domain.catalog import store as catalog_store
 
 
 def test_search_premium_hold_and_returned_result_settlement():

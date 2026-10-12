@@ -19,23 +19,23 @@ async def test_base_url_rejects_internal_hosts(clients: AsyncClient):
 async def test_sandbox_token_cannot_create_real_org(clients: AsyncClient):
     sb = (await clients.post("/demo/sandbox", json={})).json()
     tok = sb["token"]
-    r = await clients.post("/orgs", json={"name": "escaped"}, headers={"X-Treg-Token": tok})
+    r = await clients.post("/orgs", json={"name": "escaped"}, headers={"X-Stray-Token": tok})
     assert r.status_code == 403 and "sign in" in r.text.lower()
 
 
 # --- C2: install.sh token can't inject shell --------------------------------------------------
 async def test_install_sh_rejects_injection_token(clients: AsyncClient):
     name = "stripe-billing"  # a real sample skill
-    bad = await clients.get(f"/skills/{name}/install.sh", params={"token": "\nTREG_SKILL_EOF\nrm -rf ~\n"})
+    bad = await clients.get(f"/skills/{name}/install.sh", params={"token": "\nSTRAY_SKILL_EOF\nrm -rf ~\n"})
     assert bad.status_code == 422
     good = await clients.get(f"/skills/{name}/install.sh", params={"token": "sk_test_abc123"})
-    assert good.status_code == 200 and "TREG_SKILL_EOF\nrm" not in good.text
+    assert good.status_code == 200 and "STRAY_SKILL_EOF\nrm" not in good.text
 
 
 # --- C3: sandbox can't bulk-import skills ------------------------------------------------------
 async def test_sandbox_cannot_import_skills(clients: AsyncClient):
     tok = (await clients.post("/demo/sandbox", json={})).json()["token"]
-    h = {"X-Treg-Token": tok}
+    h = {"X-Stray-Token": tok}
     r = await clients.post("/skills", json={"name": "s", "recipe": "r", "secrets": [], "tools": []}, headers=h)
     assert r.status_code == 403 and "sandbox" in r.text.lower()
     r2 = await clients.post("/skills/analyze", json={"files": []}, headers=h)

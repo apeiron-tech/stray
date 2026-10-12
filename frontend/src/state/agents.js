@@ -22,7 +22,7 @@ promoteObserved(o){
       this.showAddAgent=true; this.showInvite=false;
       this.agentAccessMode=null; this.agentToolSel={};
       this.agentName=who+'-'+o.client; this.promoteHint='Creating a token for "'+o.client+'" running as '
-        +o.member+'. After Create, put the new token in that runtime\'s TREG_TOKEN — from then on it '
+        +o.member+'. After Create, put the new token in that runtime\'s STRAY_TOKEN — from then on it '
         +'acts as itself, with its own cap and scope, instead of as '+o.member+'.'; },
 openAddAgent(){ this.showAddAgent=!this.showAddAgent; if(this.showAddAgent){ this.showInvite=false; this.agentAccessMode=null; this.agentToolSel={}; } },
 async createAgent(){ const name=(this.agentName||'').trim();

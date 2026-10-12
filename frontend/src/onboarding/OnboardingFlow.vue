@@ -372,12 +372,12 @@ let fieldRaf = 0
 function mountField() {
   const mount = () => {
     const w = window as any
-    const field = stage.value && w.tregMountField?.(stage.value)
+    const field = stage.value && w.strayMountField?.(stage.value)
     if (!field) return
     const loop = (t: number) => { field.tick(t); fieldRaf = requestAnimationFrame(loop) }
     fieldRaf = requestAnimationFrame(loop)
   }
-  if ((window as any).tregMountField) return mount()
+  if ((window as any).strayMountField) return mount()
   const s = document.createElement('script')
   s.src = '/media/landing/hero-particles.js'; s.onload = mount
   document.head.appendChild(s)
@@ -391,7 +391,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-<div class="ob2" role="dialog" aria-modal="true" aria-label="Set up treg">
+<div class="ob2" role="dialog" aria-modal="true" aria-label="Set up stray">
   <div ref="stage" class="ob-field" aria-hidden="true"></div>
 
   <main class="wrap">
@@ -448,7 +448,7 @@ onBeforeUnmount(() => {
         <!-- 2. What should your agent do first -->
         <section v-else-if="sheet==='task'" key="task" class="sheet cur" aria-labelledby="ob-t-task">
           <span v-if="preview" class="ob-preview-chip st" style="--i:0">Preview of {{data?.email}}</span>
-          <h2 id="ob-t-task" class="sh-title st" style="--i:1" tabindex="-1">A task treg could help your agent with</h2>
+          <h2 id="ob-t-task" class="sh-title st" style="--i:1" tabindex="-1">A task stray could help your agent with</h2>
           <div class="sh-body"><div class="q-opts" role="radiogroup" aria-labelledby="ob-t-task">
             <div v-for="(r, i) in ranked" v-show="showAll || i < SHOWN" :key="r.id" class="opt st" :style="{'--i': i < SHOWN ? i + 3 : i - SHOWN}"
               role="radio" :aria-checked="picked===r.id" :data-opt="r.id"
@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
                 <button v-if="dirty || runErr" type="submit" class="ob-rerun" :disabled="running || !parses(picked)">Run again</button></label>
             </form>
             <div class="ob-term">
-              <div class="term-h"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>treg · first call</span>
+              <div class="term-h"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>stray · first call</span>
                 <span v-if="running || !runErr" class="ob-btn oneclick ob-run" :class="{'ob-done': ran && !runErr}" role="status">
                   <template v-if="running"><span class="ob-spin"></span> Running</template>
                   <template v-else-if="!runErr">Done ✓</template>
@@ -522,10 +522,10 @@ onBeforeUnmount(() => {
       </div>
       <div v-if="moneyText" class="dock-credit">
         <p class="dock-amt">
-          <span class="glyph" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="149.5" width="140.5" height="140.5" rx="20"/></svg></span>
+          <span class="glyph" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="0" width="140.5" height="140.5" rx="20"/><rect x="0" y="149.5" width="140.5" height="140.5" rx="20"/><rect x="220" y="220" width="70" height="70" rx="14"/></svg></span>
           <b class="money" :class="{tick}">{{moneyText}}</b>
         </p>
-        <!-- A new team's balance is its signup grant: "free credit", the word the rest of treg uses. -->
+        <!-- A new team's balance is its signup grant: "free credit", the word the rest of stray uses. -->
         <p class="covers">{{(balance ?? 0) > 0 ? 'Free credit' : 'Your credit'}}<template v-if="covers"> · covers about <b>{{covers}}</b></template></p>
       </div>
       <!-- The step's buttons live here, not at the end of the sheet: a tall sheet never hides them. -->

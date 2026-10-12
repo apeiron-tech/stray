@@ -1,18 +1,18 @@
-# List your API on treg
+# List your API on stray
 
-treg is the tool catalog for AI agents: ~2,600 endpoints across ~40 providers, discoverable by
+stray is the tool catalog for AI agents: ~2,600 endpoints across ~40 providers, discoverable by
 *capability* ("get a domain's backlink summary") rather than by vendor name. Agents search the
 catalog, compare providers side by side on price / measured success rate / speed, and call your
-API through treg's proxy with the credential injected server-side.
+API through stray's proxy with the credential injected server-side.
 
 **What listing gets you:**
 
-- **Discovery** — every agent connected to a treg deployment can find your endpoints when they
+- **Discovery** — every agent connected to a stray deployment can find your endpoints when they
   search for the job your API does, next to (and compared against) your competitors.
 - **Zero-friction customers** — teams that connect their own key to your API call you directly;
-  you keep the billing relationship. treg never sits between you and your customer's account.
+  you keep the billing relationship. stray never sits between you and your customer's account.
 - **Metered platform traffic (optional)** — if your pricing is published and machine-checkable,
-  treg can serve your endpoints on *its own* key, metered per call from teams' prepaid balances.
+  stray can serve your endpoints on *its own* key, metered per call from teams' prepaid balances.
   That means paid usage from teams that never signed up with you. See "Platform-eligible" below.
 
 ## Eligibility
@@ -22,7 +22,7 @@ You need ALL of these. They exist because every listing is *live-tested*, not tr
 | Requirement | Why |
 |---|---|
 | **Self-serve API keys** — sign up, get a key, no sales call | The whole listing pipeline runs in one session; sales-gated APIs can't be verified |
-| **Key rides in a header or query param** | treg injects credentials as a header (preferred) or query param. Keys embedded in the URL path are not supported |
+| **Key rides in a header or query param** | stray injects credentials as a header (preferred) or query param. Keys embedded in the URL path are not supported |
 | **A free (or near-free) probe endpoint** that returns 2xx for a valid key and a distinguishable failure for an invalid one | Connect-time verification. We will literally send your API a garbage key and watch it get rejected — **an API that accepts any key cannot be listed** |
 | **Published pricing** with a stable URL | Costs in the catalog carry provenance (`source_url`, `checked`, `confidence`); "contact sales" prices can't be listed as numbers |
 | **Accurate docs** for your core endpoints: param names, types, required flags, and example *values* | Every listed endpoint gets a real test call; docs without example values can't be verified |
@@ -34,7 +34,7 @@ Strongly preferred (each one directly improves your listing):
 - **A machine-readable rate card endpoint** (an API route that returns your current per-endpoint
   prices) — the strongest cost provenance we have, and the fastest route to platform eligibility.
 - **Per-success billing** (errors free) — makes verification and retries cheap, and means broken
-  calls never bill treg users.
+  calls never bill stray users.
 - **Documented rate limits**, including per-route limits, not just the account-wide one.
 
 ## What to send us
@@ -74,9 +74,9 @@ A fictional vendor: Acme SEO sells backlink data at `https://api.acmeseo.example
 `X-Api-Key` header, free `/account` route, $0.002 per successful request, pricing at
 `https://acmeseo.example/pricing`.
 
-### 1. Registry entry — `src/treg/oauth_providers.py`
+### 1. Registry entry — `src/stray/oauth_providers.py`
 
-How a team connects a key, and how treg verifies it is real:
+How a team connects a key, and how stray verifies it is real:
 
 ```python
 ACMESEO = OAuthProvider(
@@ -105,14 +105,14 @@ ACMESEO = OAuthProvider(
 )
 ```
 
-…added to the `REGISTRY` tuple, plus a neutral lettermark at `src/treg/web/logos/acmeseo.svg`
+…added to the `REGISTRY` tuple, plus a neutral lettermark at `src/stray/web/logos/acmeseo.svg`
 and the two test-list additions (`test_every_provider_is_registered`, `test_key_providers`).
 
 If your API answers HTTP 200 even for a bad key, the entry instead names the body field that
 distinguishes them (`token_verify_field`, `token_ok_field`/`token_ok_value`, or
 `token_reject_field`) — tell us the exact behavior and we pick the right one.
 
-### 2. Core catalog file — `src/treg/catalog/acmeseo.yaml`
+### 2. Core catalog file — `src/stray/catalog/acmeseo.yaml`
 
 What an agent can do, priced and verifiable:
 
@@ -172,7 +172,7 @@ with our meter gets corrected from the observed charge.
 ```bash
 # 1. Live bogus-key test: a garbage key POSTed to /connections/token must come back rejected
 # 2. Live verification of every endpoint's test_request (with the test credential, from env)
-TREG_CATALOG_CRED='<key>' uv run python scripts/catalog_verify.py acmeseo.yaml
+STRAY_CATALOG_CRED='<key>' uv run python scripts/catalog_verify.py acmeseo.yaml
 # 3. Schema + referential integrity
 uv run python scripts/catalog_validate.py     # must exit 0
 # 4. The full test suite
@@ -180,12 +180,12 @@ uv run --frozen python -m pytest -q
 ```
 
 Endpoints that pass get a `verified:` date and a truncated, PII-scrubbed real example response
-committed to `src/treg/catalog/examples/` — that example is what convinces an agent choosing
+committed to `src/stray/catalog/examples/` — that example is what convinces an agent choosing
 between providers, so passing verification is the listing's main asset.
 
-## Platform-eligible — getting paid calls from treg's own key
+## Platform-eligible — getting paid calls from stray's own key
 
-Beyond discovery, treg can serve your endpoints on its **own** key, charging the calling team's
+Beyond discovery, stray can serve your endpoints on its **own** key, charging the calling team's
 prepaid balance per call. An endpoint qualifies when:
 
 - its cost is machine-computable in USD (a concrete `value`, or a convertible credit/unit rate),
@@ -193,7 +193,7 @@ prepaid balance per call. An endpoint qualifies when:
   `documented` (transcribed from your published pricing), and
 - it isn't an own-account or account-management route.
 
-Eligibility is necessary but not sufficient — treg also has to hold a funded account with you
+Eligibility is necessary but not sufficient — stray also has to hold a funded account with you
 and allow-list your service, which is an ops decision made per provider. The fastest way to get
 there: publish a rate-card endpoint, bill per success, and give us a verification credit grant.
 
@@ -212,5 +212,5 @@ Recorded reasons from past reviews, so nobody wastes a cycle:
 - **Prices moved?** Tell us or PR the `cost` blocks — stale prices are flagged after 90 days.
 - **Routes changed?** If you publish OpenAPI, a re-ingest regenerates your extended tier from
   the spec; the curated core file is updated by hand, so breaking changes there need a heads-up.
-- **Success rates are public.** treg aggregates observed success rate and latency per endpoint
+- **Success rates are public.** stray aggregates observed success rate and latency per endpoint
   across all callers and shows them next to your price. Reliability is your ranking.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from treg.infra.catalog_observations import CachedEndpointObservationReader
+from stray.infra.catalog_observations import CachedEndpointObservationReader
 
 
 class _Source:

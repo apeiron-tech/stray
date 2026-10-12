@@ -1,5 +1,5 @@
 {
- "tool_id": "treg-hub.domain-authority",
+ "tool_id": "stray-hub.domain-authority",
  "version": 1,
  "kind": "script",
  "status": "live",
@@ -67,7 +67,7 @@
     "status": 200,
     "ms": 1396,
     "cost_micro": 2500,
-    "key": "treg",
+    "key": "stray",
     "call": "a catalog tool"
    },
    {
@@ -77,7 +77,7 @@
     "status": 200,
     "ms": 1422,
     "cost_micro": 500,
-    "key": "treg",
+    "key": "stray",
     "call": "a catalog tool"
    },
    {
@@ -87,7 +87,7 @@
     "status": 200,
     "ms": 3479,
     "cost_micro": 500,
-    "key": "treg",
+    "key": "stray",
     "call": "a catalog tool"
    }
   ],

@@ -7,12 +7,12 @@ import httpx
 import pytest
 from sqlmodel import select
 
-from treg import cli
-from treg.application import feedback as feedback_app
-from treg.config import get_settings
-from treg.feedback_contract import FEEDBACK_CATEGORIES
-from treg.infra.db import session_maker
-from treg.models import CallRecord, Feedback, FeedbackHandling, FeedbackHandlingEvent, LedgerEntry
+from stray import cli
+from stray.application import feedback as feedback_app
+from stray.config import get_settings
+from stray.feedback_contract import FEEDBACK_CATEGORIES
+from stray.infra.db import session_maker
+from stray.models import CallRecord, Feedback, FeedbackHandling, FeedbackHandlingEvent, LedgerEntry
 
 
 async def rows():
@@ -35,10 +35,10 @@ async def test_feedback_is_durable_and_private_to_the_team(clients):
     assert row.user_email == "tim@superdesign.dev"
 
     other = (await clients.post("/users", json={"email": "other-feedback@example.test"})).json()
-    denied = await clients.get(f"/feedback/{row.id}", headers={"X-Treg-Token": other["token"]})
+    denied = await clients.get(f"/feedback/{row.id}", headers={"X-Stray-Token": other["token"]})
     assert denied.status_code == 404
     assert (await clients.get("/admin/feedback")).status_code == 403
-    assert (await clients.post("/feedback", headers={"X-Treg-Token": ""}, json={
+    assert (await clients.post("/feedback", headers={"X-Stray-Token": ""}, json={
         "category": "other", "message": "Anonymous",
     })).status_code == 401
 
@@ -68,7 +68,7 @@ async def test_call_references_verify_only_same_team_without_requiring_audit(cli
         db.add(LedgerEntry(id="feedback-ledger-fixture", org_id=own["org_id"],
                            kind="settle", amount_micro=0, call_id="ledger-only"))
         await db.commit()
-    response = await clients.post("/feedback", headers={"X-Treg-Token": own["token"]}, json={
+    response = await clients.post("/feedback", headers={"X-Stray-Token": own["token"]}, json={
         "category": "quality", "message": "Some results are outdated.",
         "call_ids": ["same-team", "other-team", "missing", "ledger-only", "same-team"],
     })
@@ -85,12 +85,12 @@ async def test_rate_limit_is_per_team(clients, monkeypatch):
     assert (await clients.post("/feedback", json=body)).status_code == 429
     other = (await clients.post("/orgs", json={"name": "Separate feedback budget"})).json()
     assert (await clients.post("/feedback", json=body,
-                               headers={"X-Treg-Token": other["token"]})).status_code == 201
+                               headers={"X-Stray-Token": other["token"]})).status_code == 201
     assert len(await rows()) == 2
 
 
 async def test_failed_insert_rolls_back_without_an_acknowledgement(clients, monkeypatch):
-    from treg.domain import feedback
+    from stray.domain import feedback
 
     def fail(*args, **kwargs):
         raise RuntimeError("storage unavailable")
@@ -107,12 +107,12 @@ async def test_failed_insert_rolls_back_without_an_acknowledgement(clients, monk
 
 
 async def test_admin_can_filter_and_page_reports(clients, monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", "feedback-admin-test-token")
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", "feedback-admin-test-token")
     get_settings.cache_clear()
     try:
         for category in ["quality", "friction", "quality"]:
             await clients.post("/feedback", json={"category": category, "message": "Example"})
-        headers = {"X-Treg-Token": "feedback-admin-test-token"}
+        headers = {"X-Stray-Token": "feedback-admin-test-token"}
         first = (await clients.get("/admin/feedback", headers=headers,
                                     params={"category": "quality", "limit": 1})).json()
         second = (await clients.get("/admin/feedback", headers=headers, params={
@@ -151,7 +151,7 @@ async def test_both_mcp_surfaces_submit_to_the_same_intake(clients, surface):
     from test_mcp import _call_tool as team_call, mcp_session
     from test_mcp_directory import _call_tool as directory_call, directory_session
 
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     context = mcp_session(clients) if surface == "team" else directory_session()
     call = team_call if surface == "team" else directory_call
     async with context as client:
@@ -165,7 +165,7 @@ async def test_both_mcp_surfaces_submit_to_the_same_intake(clients, surface):
 
 
 async def test_mcp_exposes_the_small_category_enum():
-    from treg.mcp import mcp, directory_mcp
+    from stray.mcp import mcp, directory_mcp
 
     for server in [mcp, directory_mcp]:
         tool = next(tool for tool in await server.list_tools() if tool.name == "feedback")
@@ -179,7 +179,7 @@ async def test_mcp_exposes_the_small_category_enum():
 
 async def test_deleting_a_team_removes_its_feedback(clients):
     org = (await clients.post("/orgs", json={"name": "Feedback cleanup"})).json()
-    response = await clients.post("/feedback", headers={"X-Treg-Token": org["token"]}, json={
+    response = await clients.post("/feedback", headers={"X-Stray-Token": org["token"]}, json={
         "category": "other", "message": "A team-scoped suggestion.",
     })
     assert response.status_code == 201, response.text
@@ -187,7 +187,7 @@ async def test_deleting_a_team_removes_its_feedback(clients):
     slug = next(item["slug"] for item in (await clients.get("/orgs")).json()
                 if item["org_id"] == org["org_id"])
     deleted = await clients.delete(f'/orgs/{org["org_id"]}', params={"confirm": slug},
-                                   headers={"X-Treg-Token": org["token"]})
+                                   headers={"X-Stray-Token": org["token"]})
     assert deleted.status_code == 200, deleted.text
     assert await rows() == []
 
@@ -197,7 +197,7 @@ async def test_public_demo_token_cannot_submit_feedback(clients):
 
     org_id = await _org_with_stripe_tool(clients)
     token = await _mint_public(clients, org_id)
-    response = await clients.post("/feedback", headers={"X-Treg-Token": token}, json={
+    response = await clients.post("/feedback", headers={"X-Stray-Token": token}, json={
         "category": "other", "message": "A report from a public token.",
     })
     assert response.status_code == 403, response.text
@@ -222,7 +222,7 @@ def test_cli_feedback_get_uses_the_configured_registry(monkeypatch, capsys):
 
 
 @pytest.mark.parametrize("status,code,hint", [
-    (401, "authentication_required", "treg login"),
+    (401, "authentication_required", "stray login"),
     (403, "access_denied", "active team"),
     (404, "not_found", "ID"),
     (422, "invalid_feedback", "submit --help"),

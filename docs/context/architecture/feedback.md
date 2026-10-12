@@ -2,23 +2,23 @@
 title: Feedback - private intake for problems and suggestions
 status: shipped
 sources:
-  - src/treg/feedback_contract.py
-  - src/treg/domain/feedback/__init__.py
-  - src/treg/domain/feedback/reports.py
-  - src/treg/domain/feedback/reviews.py
-  - src/treg/domain/feedback/verdicts.py
-  - src/treg/hints.py
-  - src/treg/config.py
-  - src/treg/routers/call.py
-  - src/treg/application/call/invite.py
-  - src/treg/infra/kv.py
-  - src/treg/application/feedback.py
-  - src/treg/routers/feedback.py
-  - src/treg/alembic/versions/0025_feedback.py
-  - src/treg/alembic/versions/0026_callreview.py
-  - src/treg/alembic/versions/0030_feedback_handling.py
+  - src/stray/feedback_contract.py
+  - src/stray/domain/feedback/__init__.py
+  - src/stray/domain/feedback/reports.py
+  - src/stray/domain/feedback/reviews.py
+  - src/stray/domain/feedback/verdicts.py
+  - src/stray/hints.py
+  - src/stray/config.py
+  - src/stray/routers/call.py
+  - src/stray/application/call/invite.py
+  - src/stray/infra/kv.py
+  - src/stray/application/feedback.py
+  - src/stray/routers/feedback.py
+  - src/stray/alembic/versions/0025_feedback.py
+  - src/stray/alembic/versions/0026_callreview.py
+  - src/stray/alembic/versions/0030_feedback_handling.py
   - tests/test_feedback_handling_schema.py
-  - src/treg/web/feedback.md
+  - src/stray/web/feedback.md
   - tests/test_feedback.py
   - tests/test_reviews.py
   - tests/test_endpoint_verdicts.py
@@ -93,7 +93,7 @@ closed status. Both tables reference `feedback.id` with `ON DELETE CASCADE`, so 
 report or its team also removes its internal history. History is append-only for the admin role,
 not exempt from the report's retention lifecycle.
 
-The private `treg-internal` admin's handling store is the only runtime writer. It owns the atomic
+The private `stray-internal` admin's handling store is the only runtime writer. It owns the atomic
 state/history transaction, optimistic version checks, input validation and narrowly scoped DB
 grants. Shared-token authentication records `shared-admin`, not an individual operator's identity.
 This repository owns only the models and migration; public intake, receipt response shapes and
@@ -130,7 +130,7 @@ stays open until the application commit, avoiding SQLite deferred-BEGIN early co
 is `domain.feedback.reviews`; the moved `reports` module preserves feedback behavior.
 
 `hints.sampled(kind, sample_id)` hashes `kind:sample_id` with SHA-256 into the same 64-bit bucket
-construction for both kinds. `TREG_REVIEW_SAMPLE_RATE` and `TREG_FEEDBACK_HINT_RATE` are bounded
+construction for both kinds. `STRAY_REVIEW_SAMPLE_RATE` and `STRAY_FEEDBACK_HINT_RATE` are bounded
 0..1 floats, default 0. Sampling is local and deterministic under the current configuration.
 Sampling decides which calls *qualify*; a per-team budget decides how many of them a team is
 actually asked about (next section). `invited` on a review row therefore means "sampled, so
@@ -148,20 +148,20 @@ pagination with optional `endpoint_id`. It is excluded from OpenAPI; there is no
 
 One decision, server-side: `application.call.invite.invitation(context, status, replayed)` runs
 in `routers.call.call_tool` after the streaming response is constructed and before it streams,
-and returns `review`, `feedback` or nothing. The router writes it as `X-Treg-Hint: review|feedback`
-(plus the older `X-Treg-Review: requested` on a review, which CLI releases up to 0.18 read) and
+and returns `review`, `feedback` or nothing. The router writes it as `X-Stray-Hint: review|feedback`
+(plus the older `X-Stray-Review: requested` on a review, which CLI releases up to 0.18 read) and
 emits one `hint_attached` analytics event per invitation actually sent, with `kind`, `call_id`,
-`endpoint_id`, the caller's `X-Treg-Client` and the team group. Every surface only translates the
+`endpoint_id`, the caller's `X-Stray-Client` and the team group. Every surface only translates the
 header: plain HTTP callers read it themselves, the CLI prints one stderr line per kind next to the
 charge line, and both MCP transports render it into their single hint slot with priority
 replay > 402 > review > feedback. Neither MCP transport samples or records anything of its own.
 
-A **review** invitation needs a direct catalog call served on treg's own platform key
+A **review** invitation needs a direct catalog call served on stray's own platform key
 (`context.marketplace` exists and its `tier` is `platform`), a 2xx status, no idempotent replay,
 `context.cached == False` (the service sets it from `served_hit` when the archive answers), a
 sampled call reference, and **budget**: `kv.store().take("review-budget:<org_id>",
 review_budget_per_hour, 3600)` counts invitations per team in a window that starts at the team's
-first invitation and lasts an hour. `TREG_REVIEW_BUDGET_PER_HOUR` defaults to 5. The budget exists
+first invitation and lasts an hour. `STRAY_REVIEW_BUDGET_PER_HOUR` defaults to 5. The budget exists
 because per-call sampling scales with call volume: one team's 2,213 calls in twenty minutes drew
 93 invitations at 5% on launch week, and the agent answered every one. Low-volume teams never
 reach the cap, so the sampling rate alone sets their odds; high-volume teams are asked at most
@@ -171,12 +171,12 @@ not a collection problem. Routed parents and own-key catalog calls can still be 
 uninvited; an own tool never qualifies, even if its name matches a catalog endpoint.
 
 A **feedback** hint rides any other successful, non-replayed, non-cached call (own tools included)
-that samples in, at `TREG_FEEDBACK_HINT_RATE`. It asks for nothing, so it has no budget; a team
+that samples in, at `STRAY_FEEDBACK_HINT_RATE`. It asks for nothing, so it has no budget; a team
 whose review budget is spent still receives it when sampled.
 
 The whole hook is best-effort: no database or body access, no change to the call service's exits
 or writes, and a fault anywhere (the store included) can only lose the header, never the answer.
-The store is `infra/kv.py`: Render Key Value (Redis protocol) at `TREG_KV_URL`, or a bounded
+The store is `infra/kv.py`: Render Key Value (Redis protocol) at `STRAY_KV_URL`, or a bounded
 in-process dictionary when unset; both answer through one `take(key, limit, ttl_s)` that is one
 atomic `INCR` + `EXPIRE NX`. Reads and writes are capped at 100 ms and **fail closed**: a store
 that cannot answer is a spent budget, so an outage silently withholds review invitations rather

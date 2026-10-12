@@ -9,14 +9,14 @@ import httpx
 import pytest
 from sqlmodel import select
 
-from treg.application import asynctasks as task_app
-from treg.application.call import service as call_service
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
-from treg.domain.capacity import collectors, policy
-from treg.infra.db import session_maker
-from treg.models import AsyncTaskRecord
-from treg.timeutil import utcnow_naive
+from stray.application import asynctasks as task_app
+from stray.application.call import service as call_service
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
+from stray.domain.capacity import collectors, policy
+from stray.infra.db import session_maker
+from stray.models import AsyncTaskRecord
+from stray.timeutil import utcnow_naive
 
 
 def _response(status: int, document: object) -> UpstreamResponse:
@@ -33,8 +33,8 @@ def _response(status: int, document: object) -> UpstreamResponse:
 
 @pytest.fixture
 def tinyfish_platform(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TINYFISH", "test-platform-tinyfish")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tinyfish")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TINYFISH", "test-platform-tinyfish")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tinyfish")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

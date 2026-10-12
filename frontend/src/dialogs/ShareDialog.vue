@@ -13,7 +13,7 @@ export default { setup: useDashboard }
             <pre class="code" style="white-space:pre-wrap;word-break:break-all">{{shareInviteUrl}}</pre>
             <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
               <button class="btn primary" @click="copyDetail(shareInviteUrl,'sharecopy')">⧉ {{detailCopied==='sharecopy'?'Copied!':'Copy invite link'}}</button>
-              <span class="sub" style="margin:0;font-size:12px">backup code: <span class="mono">{{share.sent.code}}</span> (<span class="mono">treg org join</span>)</span>
+              <span class="sub" style="margin:0;font-size:12px">backup code: <span class="mono">{{share.sent.code}}</span> (<span class="mono">stray org join</span>)</span>
             </div>
           </template>
           <template v-else>

@@ -8,9 +8,9 @@ from types import SimpleNamespace
 import httpx
 import yaml
 
-from treg import cli
-from treg.application.call.types import UpstreamResponse
-from treg.routers import call as call_router
+from stray import cli
+from stray.application.call.types import UpstreamResponse
+from stray.routers import call as call_router
 
 
 class FakeClock:
@@ -63,7 +63,7 @@ def test_async_wait_succeeds_after_unknown_status_and_warns_once():
     )
     assert outcome["code"] == 0
     assert outcome["result"] == "https://asset.test/v.mp4"
-    assert outcome["recovery"] == "treg call vendor.task.status -p task_id=task-1"
+    assert outcome["recovery"] == "stray call vendor.task.status -p task_id=task-1"
     assert sum("unknown async status" in event for event in clock.events) == 1
 
 
@@ -134,7 +134,7 @@ def test_async_wait_dynamic_url_enforces_hosts_and_fetches_by_terminal_id():
         FakeClock(), 30,
     )
     assert outcome["code"] == 0
-    assert outcome["fetch_command"] == "treg call vendor.result -p file_id=file-9"
+    assert outcome["fetch_command"] == "stray call vendor.result -p file_id=file-9"
     assert outcome["ttl_note"] == "9h"
 
     refused = cli.await_async_task(
@@ -187,7 +187,7 @@ def test_call_preserves_binary_result_bytes(monkeypatch, capsysbinary):
 def test_call_await_writes_only_terminal_raw_body_to_stdout(monkeypatch, capsys):
     descriptor = static_descriptor(fetch=True)
     submitted = response(202, {"task_id": "task-7"}, {
-        "X-Treg-Async": json.dumps(descriptor), "X-Treg-Cost-Micro": "100000",
+        "X-Stray-Async": json.dumps(descriptor), "X-Stray-Cost-Micro": "100000",
     })
     terminal = response(200, {"task": {"status": "succeeded"}, "file": {"id": "file-7"}})
 
@@ -206,18 +206,18 @@ def test_call_await_writes_only_terminal_raw_body_to_stdout(monkeypatch, capsys)
     captured = capsys.readouterr()
     assert captured.out == terminal.text
     assert "async task submitted: task-7" in captured.err
-    assert "resume: treg call vendor.task.status -p task_id=task-7" in captured.err
+    assert "resume: stray call vendor.task.status -p task_id=task-7" in captured.err
     assert "generation reservation: $0.1" in captured.err
-    assert "retrieve the result (file bytes, or JSON with a download URL): treg call vendor.result -p file_id=file-7" in captured.err
+    assert "retrieve the result (file bytes, or JSON with a download URL): stray call vendor.result -p file_id=file-7" in captured.err
     assert "result lifetime: 9h" in captured.err
 
 
-def test_call_await_routes_dynamic_poll_urls_back_through_treg(monkeypatch, capsys):
+def test_call_await_routes_dynamic_poll_urls_back_through_stray(monkeypatch, capsys):
     descriptor = static_descriptor()
     descriptor["poll"] = {"url_from": "urls.get", "url_hosts": ["api.replicate.com"]}
     submitted = response(202, {
         "task_id": "task-8", "urls": {"get": "https://api.replicate.com/v1/predictions/task-8"},
-    }, {"X-Treg-Async": json.dumps(descriptor)})
+    }, {"X-Stray-Async": json.dumps(descriptor)})
     terminal = response(200, {"task": {"status": "succeeded", "content": {"url": "asset"}}})
     called = []
 
@@ -256,7 +256,7 @@ def test_router_attaches_static_async_metadata_without_reading_body(monkeypatch)
     context = SimpleNamespace(marketplace=SimpleNamespace(endpoint_id="vendor.submit"))
     call_router._attach_async_descriptor(upstream, context)
     headers = httpx.Headers(upstream.raw_headers)
-    assert json.loads(headers["X-Treg-Async"]) == descriptor
+    assert json.loads(headers["X-Stray-Async"]) == descriptor
 
 
 def test_ingesters_are_byte_deterministic(tmp_path, monkeypatch):

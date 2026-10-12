@@ -17,8 +17,8 @@ async def test_org_delete_clears_EVERY_org_scoped_table(clients):
 
     from sqlmodel import SQLModel
 
-    from treg import models as m
-    from treg.domain.governance.teams import ORG_SCOPED_MODELS
+    from stray import models as m
+    from stray.domain.governance.teams import ORG_SCOPED_MODELS
 
     covered = {model.__name__ for model in ORG_SCOPED_MODELS}
     # Handled inside cascade_delete_org by hand rather than through the list, because their column
@@ -41,8 +41,8 @@ async def test_org_delete_clears_EVERY_org_scoped_table(clients):
     # And there is only ONE list. The sandbox reaper and the demo reset each kept a private copy
     # until 2026-09-02, when the copies had not learned about IdempotentCall and every sandbox
     # mint returned a 500. A reaper that names its own tables is the bug coming back.
-    from treg.application.onboard import demo, sandbox
-    from treg.domain.governance.teams import cascade_delete_org
+    from stray.application.onboard import demo, sandbox
+    from stray.domain.governance.teams import cascade_delete_org
 
     for module in (sandbox, demo):
         assert not hasattr(module, "_ORG_MODELS"), f"{module.__name__} keeps its own org-table list"
@@ -62,8 +62,8 @@ async def test_a_team_with_a_BALANCE_can_still_be_deleted(clients):
     r = await verified_signup(clients, json={"email": "throwaway-team@example.org"})
     assert r.status_code == 200, r.text
     org_id, slug, token = r.json()["org_id"], r.json()["org"], r.json()["token"]
-    # the new team's OWN token: a per-org token has its org baked in, so X-Treg-Org cannot switch it
-    hdr = {"X-Treg-Token": token}
+    # the new team's OWN token: a per-org token has its org baked in, so X-Stray-Org cannot switch it
+    hdr = {"X-Stray-Token": token}
 
     bal = await clients.get(f"/orgs/{org_id}/balance", headers=hdr)
     assert bal.status_code == 200 and bal.json()["balance_micro"] > 0, (
@@ -81,8 +81,8 @@ async def test_a_team_with_oauth_family_authority_can_be_deleted(clients):
     from datetime import datetime
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import OAuthGrant, OAuthRefresh
+    from stray.infra.db import session_maker
+    from stray.models import OAuthGrant, OAuthRefresh
 
     former = (await clients.post("/orgs", json={"name": "former-oauth-family-team"})).json()
     made = (await clients.post("/orgs", json={"name": "oauth-family-team"})).json()
@@ -96,7 +96,7 @@ async def test_a_team_with_oauth_family_authority_can_be_deleted(clients):
         await db.commit()
     gone = await clients.request("DELETE", f"/orgs/{made['org_id']}",
                                  params={"confirm": made["org"]},
-                                 headers={"X-Treg-Token": made["token"]})
+                                 headers={"X-Stray-Token": made["token"]})
     assert gone.status_code == 200, gone.text
     async with session_maker() as db:
         assert (await db.execute(select(OAuthGrant).where(
@@ -114,8 +114,8 @@ async def test_deleting_a_former_grant_team_removes_the_whole_family(clients):
     from datetime import datetime, timedelta, timezone
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import OAuthGrant, OAuthRefresh, User
+    from stray.infra.db import session_maker
+    from stray.models import OAuthGrant, OAuthRefresh, User
 
     former = (await clients.post("/orgs", json={"name": "former-grant-team"})).json()
     current = (await clients.post("/orgs", json={"name": "current-grant-team"})).json()
@@ -135,7 +135,7 @@ async def test_deleting_a_former_grant_team_removes_the_whole_family(clients):
 
     gone = await clients.request(
         "DELETE", f"/orgs/{former['org_id']}", params={"confirm": former["org"]},
-        headers={"X-Treg-Token": former["token"]})
+        headers={"X-Stray-Token": former["token"]})
     assert gone.status_code == 200, gone.text
     async with session_maker() as db:
         assert (await db.execute(select(OAuthGrant).where(

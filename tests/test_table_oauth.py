@@ -1,8 +1,8 @@
-""""Sign in with treg" for the Google Sheets add-on: the first-party OAuth client `treg-sheets`.
+""""Sign in with stray" for the Google Sheets add-on: the first-party OAuth client `stray-sheets`.
 
 The owner's two decisions (2026-09-26): the token works ONLY on the table routes (`/table/*`,
 `/table-columns/*`, `/table-account`), and it belongs to the person, so each request picks one of
-their teams with `X-Treg-Org`, checked against membership every time. The mechanism:
+their teams with `X-Stray-Org`, checked against membership every time. The mechanism:
 docs/context/architecture/table.md.
 """
 
@@ -14,9 +14,9 @@ from httpx import AsyncClient
 from test_mcp import _call_tool, mcp_session
 from test_mcp_oauth import _grant, _pkce, _register, _signed_in
 from tests.test_marketplace_call import _fake_relay, platform_on  # noqa: F401 - tier 4 on
-from treg.application.call import service as call_service
-from treg.config import get_settings
-from treg.domain.identity import mcp_oauth
+from stray.application.call import service as call_service
+from stray.config import get_settings
+from stray.domain.identity import mcp_oauth
 
 REDIRECT = "https://script.google.com/macros/d/TESTSCRIPT/usercallback"
 EP = "tikhub.tiktok.video.comments"
@@ -24,8 +24,8 @@ EP = "tikhub.tiktok.video.comments"
 
 @pytest.fixture
 def sheets_on(monkeypatch):
-    monkeypatch.setenv("TREG_TABLE_ENABLED", "1")
-    monkeypatch.setenv("TREG_SHEETS_REDIRECT_URIS", REDIRECT)
+    monkeypatch.setenv("STRAY_TABLE_ENABLED", "1")
+    monkeypatch.setenv("STRAY_SHEETS_REDIRECT_URIS", REDIRECT)
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -56,27 +56,27 @@ async def _sheets_grant(clients: AsyncClient, email: str) -> tuple[dict, int]:
 async def _make_team(clients: AsyncClient, name: str) -> str:
     """A team made by the person signed in by cookie (the test client also carries another user's
     default team key, which would otherwise own the new team)."""
-    key = clients.headers.pop("X-Treg-Token", None)
+    key = clients.headers.pop("X-Stray-Token", None)
     try:
         r = await clients.post("/orgs", json={"name": name})
         assert r.status_code in (200, 201), r.text
         return next(o["slug"] for o in (await clients.get("/orgs")).json() if o["name"] == name)
     finally:
         if key is not None:
-            clients.headers["X-Treg-Token"] = key
+            clients.headers["X-Stray-Token"] = key
 
 
 def _bearer(token: str, team: str | None = None) -> dict:
     h = {"Authorization": f"Bearer {token}"}
     if team:
-        h["X-Treg-Org"] = team
+        h["X-Stray-Org"] = team
     return h
 
 
 async def _no_cookie(clients: AsyncClient):
     """The add-on has no browser session: drop the test client's cookie and token headers."""
     clients.cookies.clear()
-    clients.headers.pop("X-Treg-Token", None)
+    clients.headers.pop("X-Stray-Token", None)
 
 
 async def test_the_consent_page_says_what_sheets_may_do_and_asks_no_team(clients: AsyncClient, sheets_on):
@@ -84,8 +84,8 @@ async def test_the_consent_page_says_what_sheets_may_do_and_asks_no_team(clients
     _, challenge = _pkce()
     page = await clients.get("/oauth/authorize", params=_params(challenge))
     assert page.status_code == 200
-    assert "treg for Sheets wants to use your treg account" in page.text
-    assert "Call treg tools for you" in page.text and "See your teams and their balances" in page.text
+    assert "stray for Sheets wants to use your stray account" in page.text
+    assert "Call stray tools for you" in page.text and "See your teams and their balances" in page.text
     assert "<select" not in page.text                                  # no team picker
 
 
@@ -101,7 +101,7 @@ async def test_one_sign_in_reaches_every_team_of_the_person(clients: AsyncClient
     assert account["email"] == "sheets@superdesign.dev" and len(slugs) == 2 and second["slug"] in slugs
     assert all("balance_micro" in t and "role" in t for t in account["teams"])
 
-    cols = await clients.get("/table-columns/treg.people.email.verify", headers=_bearer(access, second["slug"]))
+    cols = await clients.get("/table-columns/stray.people.email.verify", headers=_bearer(access, second["slug"]))
     assert cols.status_code == 200 and cols.json()["column_source"] == "contract"
 
     seen: list = []
@@ -115,7 +115,7 @@ async def test_one_sign_in_reaches_every_team_of_the_person(clients: AsyncClient
     r = await clients.get(f"/table/{EP}?aweme_id=1", headers=_bearer(access, first_slug))
     assert r.status_code == 200, r.text
     assert r.json()["rows"] == [[1]]
-    assert seen and b"authorization" not in seen[0]                    # treg's token never reaches the provider
+    assert seen and b"authorization" not in seen[0]                    # stray's token never reaches the provider
 
 
 async def test_a_team_the_person_is_not_in_is_refused(clients: AsyncClient, sheets_on):
@@ -157,7 +157,7 @@ async def test_only_the_sheets_client_gets_the_table_resource(clients: AsyncClie
 
 
 async def test_no_redirect_setting_means_no_client(clients: AsyncClient, monkeypatch):
-    monkeypatch.setenv("TREG_TABLE_ENABLED", "1")
+    monkeypatch.setenv("STRAY_TABLE_ENABLED", "1")
     get_settings.cache_clear()
     await _signed_in(clients, "absent@superdesign.dev")
     _, challenge = _pkce()

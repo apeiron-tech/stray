@@ -4,7 +4,7 @@ async loadAdmin(){ this.confirmAdmUser=null; this.confirmAdmOrg=null;
       try{ this.adminStats=await this.api('/admin/stats'); this.adminOrgs=await this.api('/admin/orgs'); this.adminUsers=await this.api('/admin/users'); }
       catch(e){ this.err='Admin: '+(e.detail||e.status); }
       this.loadAdminHub(); },
-// Hub listing review: a maker's `treg hub list` is a request; approve puts the tool in search,
+// Hub listing review: a maker's `stray hub list` is a request; approve puts the tool in search,
 // reject takes it out with a reason the maker reads. A server without the hub (/meta.hub false)
 // has no queue to read, so the section stays hidden without asking.
 async loadAdminHub(state){ if(state) this.admHub={...this.admHub, state};

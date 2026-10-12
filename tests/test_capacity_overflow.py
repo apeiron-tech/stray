@@ -1,5 +1,5 @@
 """Step E of docs/PROVIDER-CAPACITY-PLAN.md — the overflow child cycle: the same vendor endpoint
-served through a treg-owned aggregator account when treg's own account fails a tier-4 call.
+served through a stray-owned aggregator account when stray's own account fails a tier-4 call.
 Off by default; shadow mode never changes the caller's answer."""
 
 from __future__ import annotations
@@ -13,19 +13,19 @@ from httpx import AsyncClient
 from sqlmodel import select
 
 from datetime import timedelta
-from treg.domain.capacity import routes as R
-from treg import audit, ratestore
-from treg.application.call import overflow as O
-from treg.application.call import service as call_service
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.domain.capacity.policy import LatestState
-from treg.domain.capacity.routes_view import view as routes_view
-from treg.domain.capacity.marks import LOCK_NS, Lock
-from treg.domain.capacity.sweep import STATE_NS
-from treg.domain.capacity.view import view as capacity_view
-from treg.models import Hold, LedgerEntry, OverflowRoute, OverflowSpend
-from treg.timeutil import utcnow_naive
+from stray.domain.capacity import routes as R
+from stray import audit, ratestore
+from stray.application.call import overflow as O
+from stray.application.call import service as call_service
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.domain.capacity.policy import LatestState
+from stray.domain.capacity.routes_view import view as routes_view
+from stray.domain.capacity.marks import LOCK_NS, Lock
+from stray.domain.capacity.sweep import STATE_NS
+from stray.domain.capacity.view import view as capacity_view
+from stray.models import Hold, LedgerEntry, OverflowRoute, OverflowSpend
+from stray.timeutil import utcnow_naive
 
 from test_capacity_overflow_routes import APOLLO_OUT_OF_CREDITS, APOLLO_VALIDATION, ICYPEAS_OUT_OF_CREDITS
 from test_marketplace_call import EP, EP_MICRO, EP_PATH, _balance, _fake_relay, platform_on  # noqa: F401
@@ -35,9 +35,9 @@ VENDOR_BODY = {"data": {"comments": [{"id": "1", "text": "hashed"}], "cursor": 2
 
 @pytest.fixture
 def overflow_on(monkeypatch, platform_on):
-    monkeypatch.setenv("TREG_OVERFLOW_MODE", "on")
-    monkeypatch.setenv("TREG_OVERFLOW_KEY_ORTHOGONAL", "ORTH-KEY")
-    monkeypatch.setenv("TREG_OVERFLOW_KEY_MONID", "MONID-KEY")
+    monkeypatch.setenv("STRAY_OVERFLOW_MODE", "on")
+    monkeypatch.setenv("STRAY_OVERFLOW_KEY_ORTHOGONAL", "ORTH-KEY")
+    monkeypatch.setenv("STRAY_OVERFLOW_KEY_MONID", "MONID-KEY")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -78,7 +78,7 @@ async def test_off_by_default_the_vendor_402_is_relayed_unchanged(clients: Async
     seen = []
     monkeypatch.setattr(O, "_send", _orthogonal([(200, {})], seen))
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 402 and seen == [] and "X-Treg-Served-Via" not in r.headers
+    assert r.status_code == 402 and seen == [] and "X-Stray-Served-Via" not in r.headers
 
 
 async def test_findymail_shaped_402_on_tier4_runs_one_child_cycle(clients: AsyncClient, overflow_on, monkeypatch):
@@ -92,8 +92,8 @@ async def test_findymail_shaped_402_on_tier4_runs_one_child_cycle(clients: Async
     r = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     assert r.status_code == 200, r.text
     assert r.json() == VENDOR_BODY, "the vendor's body, byte-for-byte the fixture's data"
-    assert r.headers["X-Treg-Served-Via"] == "overflow:orthogonal"
-    assert r.headers["X-Treg-Cost-Micro"] == "3000", "the aggregator's real price, 0% markup"
+    assert r.headers["X-Stray-Served-Via"] == "overflow:orthogonal"
+    assert r.headers["X-Stray-Cost-Micro"] == "3000", "the aggregator's real price, 0% markup"
     assert before - await _balance(clients) == 3_000
     # the aggregator saw the SAME vendor request, wrapped
     assert len(seen) == 1 and seen[0].json == {"api": "tikhub", "path": EP_PATH, "query": {"aweme_id": "7", "count": "5"}}
@@ -101,7 +101,7 @@ async def test_findymail_shaped_402_on_tier4_runs_one_child_cycle(clients: Async
     assert await _holds() == [], "both holds closed"
     entries = await _rows(LedgerEntry)
     kinds = sorted((e.kind, e.call_id or "") for e in entries if e.kind != "grant")
-    parent = r.headers["X-Treg-Call-Id"]
+    parent = r.headers["X-Stray-Call-Id"]
     assert kinds == sorted([("reserve", parent), ("release", parent), ("reserve", f"{parent}:overflow"), ("settle", f"{parent}:overflow")])
     settle = next(e for e in entries if e.kind == "settle")
     assert settle.meta["cost_source"] == "aggregator" and settle.meta["served_via"] == "overflow:orthogonal"
@@ -128,7 +128,7 @@ async def test_overflow_budget_reconciles_the_estimate_to_the_actual_cost(
     response = await clients.get(f"/call/{EP}?aweme_id=7")
 
     assert response.status_code == 200
-    assert response.headers["X-Treg-Cost-Micro"] == "2500"
+    assert response.headers["X-Stray-Cost-Micro"] == "2500"
     spend = await _rows(OverflowSpend)
     assert len(spend) == 1
     assert (spend[0].calls, spend[0].cost_micro) == (1, 2_500)
@@ -138,9 +138,9 @@ async def test_overflow_substitutes_consumed_path_params_before_calling_aggregat
     clients: AsyncClient, overflow_on, monkeypatch,
 ):
     endpoint = "predictleads.companies.enrich"
-    monkeypatch.setenv("TREG_PLATFORM_KEY_PREDICTLEADS", "TEST-PREDICTLEADS-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_PREDICTLEADS", "TEST-PREDICTLEADS-KEY")
     monkeypatch.setenv(
-        "TREG_PLATFORM_PROVIDERS", "tikhub,scrapecreators,dataforseo,brightdata,predictleads",
+        "STRAY_PLATFORM_PROVIDERS", "tikhub,scrapecreators,dataforseo,brightdata,predictleads",
     )
     get_settings.cache_clear()
     async with session_maker() as db:
@@ -183,7 +183,7 @@ async def test_aggregator_402_releases_the_child_marks_it_unhealthy_and_answers_
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 503 and r.json()["detail"]["error"] == "provider_capacity_unavailable"
-    assert r.headers["X-Treg-Error"] == "1" and r.headers.get("X-Treg-Cost-Micro") in (None, "0")
+    assert r.headers["X-Stray-Error"] == "1" and r.headers.get("X-Stray-Cost-Micro") in (None, "0")
     assert await _balance(clients) == before and await _holds() == []
     assert len(seen) == 1, "one hop: the second aggregator is never contacted"
     async with session_maker() as db:
@@ -195,8 +195,8 @@ async def test_aggregator_402_releases_the_child_marks_it_unhealthy_and_answers_
                 "billing": {"reportedCost": {"value": 2000, "unit": "MICRO_DOLLAR"}}}
     monkeypatch.setattr(O, "_send", _orthogonal([(200, monid_ok)], seen))
     r2 = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r2.status_code == 200 and r2.headers["X-Treg-Served-Via"] == "overflow:monid"
-    assert seen[-1].json["provider"] == "tikhub" and r2.headers["X-Treg-Cost-Micro"] == "2000"
+    assert r2.status_code == 200 and r2.headers["X-Stray-Served-Via"] == "overflow:monid"
+    assert seen[-1].json["provider"] == "tikhub" and r2.headers["X-Stray-Cost-Micro"] == "2000"
 
 
 async def test_contract_refusal_falls_back_to_the_vendor_answer(clients: AsyncClient, overflow_on, monkeypatch):
@@ -288,10 +288,10 @@ async def test_vendor_500_cost_reported_by_aggregator_is_counted_in_daily_spend(
 
 async def test_budget_crossing_skips_overflow(clients: AsyncClient, overflow_on, monkeypatch):
     await _route(price_micro=3_000)
-    monkeypatch.setenv("TREG_OVERFLOW_DAILY_BUDGET_USD", "0.004")
+    monkeypatch.setenv("STRAY_OVERFLOW_DAILY_BUDGET_USD", "0.004")
     get_settings.cache_clear()
     async with session_maker() as db:
-        from treg.domain.capacity.overflow_spend import add_in_transaction
+        from stray.domain.capacity.overflow_spend import add_in_transaction
         await add_in_transaction(db, "orthogonal", 2_000, 0)
         await db.commit()
     monkeypatch.setattr(call_service, "relay", _fake_relay(402, b"out"))
@@ -314,7 +314,7 @@ async def test_caller_400_and_own_key_never_overflow(clients: AsyncClient, overf
 
 
 async def test_shadow_mode_probes_records_spend_and_returns_the_vendor_error(clients: AsyncClient, overflow_on, monkeypatch):
-    monkeypatch.setenv("TREG_OVERFLOW_MODE", "shadow")
+    monkeypatch.setenv("STRAY_OVERFLOW_MODE", "shadow")
     get_settings.cache_clear()
     await _route(price_micro=3_000)
     monkeypatch.setattr(call_service, "relay", _fake_relay(402, b'{"detail":"Insufficient balance"}'))
@@ -322,7 +322,7 @@ async def test_shadow_mode_probes_records_spend_and_returns_the_vendor_error(cli
     monkeypatch.setattr(O, "_send", _orthogonal([(200, {"success": True, "data": VENDOR_BODY, "priceCents": 0.3})], seen))
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 402 and "X-Treg-Served-Via" not in r.headers and r.headers["X-Treg-Cost-Micro"] == "0"
+    assert r.status_code == 402 and "X-Stray-Served-Via" not in r.headers and r.headers["X-Stray-Cost-Micro"] == "0"
     assert len(seen) == 1 and await _balance(clients) == before and await _holds() == []
     spend = await _rows(OverflowSpend)
     assert len(spend) == 1 and spend[0].cost_micro == 3_000 and spend[0].calls == 1
@@ -331,10 +331,10 @@ async def test_shadow_mode_probes_records_spend_and_returns_the_vendor_error(cli
 
 
 async def test_cancellation_cleanup_releases_both_holds_exactly_once(clients: AsyncClient, overflow_on):
-    from treg.domain import money as ledger
-    from treg.application.call.settle import _finish_cancelled_call
-    from treg.application.call.resolve import MarketplaceCall
-    from treg.models import Tool
+    from stray.domain import money as ledger
+    from stray.application.call.settle import _finish_cancelled_call
+    from stray.application.call.resolve import MarketplaceCall
+    from stray.models import Tool
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:
         await ledger.reserve_in_transaction(db, org_id, EP, 1_000, call_id="REF")
@@ -371,14 +371,14 @@ async def test_an_exhausted_account_with_a_route_skips_the_direct_attempt(client
     monkeypatch.setattr(O, "_send", _orthogonal([(200, {"success": True, "data": VENDOR_BODY, "priceCents": 0.3})], seen))
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "k1"})
-    assert r.status_code == 200 and r.headers["X-Treg-Served-Via"] == "overflow:orthogonal", r.text
+    assert r.status_code == 200 and r.headers["X-Stray-Served-Via"] == "overflow:orthogonal", r.text
     assert direct == [] and len(seen) == 1
     assert before - await _balance(clients) == 3_000 and await _holds() == []
-    parent = r.headers["X-Treg-Call-Id"]
+    parent = r.headers["X-Stray-Call-Id"]
     kinds = sorted((e.kind, e.call_id or "") for e in await _rows(LedgerEntry) if e.kind != "grant")
     assert kinds == [("reserve", f"{parent}:overflow"), ("settle", f"{parent}:overflow")], "no parent hold at all"
     replay = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "k1"})
-    assert replay.status_code == 200 and replay.headers.get("X-Treg-Idempotent-Replay") == "true"
+    assert replay.status_code == 200 and replay.headers.get("X-Stray-Idempotent-Replay") == "true"
     assert len(seen) == 1, "the replay never touched the aggregator"
 
 
@@ -448,7 +448,7 @@ async def test_org_opt_out_is_honoured_before_any_aggregator_is_contacted(client
     # …and back on: served
     await clients.patch(f"/orgs/{org_id}/settings", json={"platform_overflow": True})
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 200 and r.headers["X-Treg-Served-Via"] == "overflow:orthogonal" and len(seen) == 1
+    assert r.status_code == 200 and r.headers["X-Stray-Served-Via"] == "overflow:orthogonal" and len(seen) == 1
 
 
 async def test_child_with_no_reported_cost_settles_at_the_aggregator_reserve(
@@ -464,7 +464,7 @@ async def test_child_with_no_reported_cost_settles_at_the_aggregator_reserve(
     before = await _balance(clients)
     response = await clients.get(f"/call/{EP}?aweme_id=7")
     assert response.status_code == 200
-    assert response.headers["X-Treg-Cost-Micro"] == "3000"
+    assert response.headers["X-Stray-Cost-Micro"] == "3000"
     assert before - await _balance(clients) == 3_000
     assert 3_000 != EP_MICRO, "the fixture must price the aggregator differently from direct"
 
@@ -486,8 +486,8 @@ async def test_apollo_out_of_credits_422_on_tier4_overflows_through_orthogonal(c
     before = await _balance(clients)
     r = await clients.post(f"/call/{APOLLO_EP}", json={"email": "hashed@example.com"})
     assert r.status_code == 200, r.text
-    assert r.json() == APOLLO_PERSON and r.headers["X-Treg-Served-Via"] == "overflow:orthogonal"
-    assert r.headers["X-Treg-Cost-Micro"] == "10000" and before - await _balance(clients) == 10_000
+    assert r.json() == APOLLO_PERSON and r.headers["X-Stray-Served-Via"] == "overflow:orthogonal"
+    assert r.headers["X-Stray-Cost-Micro"] == "10000" and before - await _balance(clients) == 10_000
     assert len(seen) == 1 and seen[0].json["api"] == "apollo" and seen[0].json["path"] == APOLLO_PATH
     assert seen[0].json["body"] == {"email": "hashed@example.com"}, "the caller's own request, relayed"
     assert await _holds() == []
@@ -505,7 +505,7 @@ APOLLO_SEARCH_PATH = "/mixed_companies/search"
 
 async def test_apollo_out_of_credits_on_a_per_call_endpoint_is_never_billed_to_the_caller(clients: AsyncClient, platform_on, monkeypatch):
     """`per_call` bills a 422 as the caller's input error. Not this one: the table says it is OUR
-    account, so the hold is released, and the caller pays nothing for treg's empty pool."""
+    account, so the hold is released, and the caller pays nothing for stray's empty pool."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(422, APOLLO_OUT_OF_CREDITS))
     before = await _balance(clients)
     r = await clients.post(f"/call/{APOLLO_SEARCH}", json={"q_organization_name": "x"})
@@ -525,9 +525,9 @@ async def test_apollo_out_of_credits_on_a_per_call_endpoint_pays_the_aggregator_
     monkeypatch.setattr(O, "_send", _orthogonal([(200, envelope)], seen))
     before = await _balance(clients)
     r = await clients.post(f"/call/{APOLLO_SEARCH}", json={"q_organization_name": "x"})
-    assert r.status_code == 200 and r.headers["X-Treg-Served-Via"] == "overflow:orthogonal"
+    assert r.status_code == 200 and r.headers["X-Stray-Served-Via"] == "overflow:orthogonal"
     assert before - await _balance(clients) == 10_000, "the aggregator's price once; the parent 422 was released, not settled"
-    parent = r.headers["X-Treg-Call-Id"]
+    parent = r.headers["X-Stray-Call-Id"]
     kinds = sorted((e.kind, e.call_id or "") for e in await _rows(LedgerEntry) if e.kind != "grant")
     assert kinds == sorted([("reserve", parent), ("release", parent), ("reserve", f"{parent}:overflow"), ("settle", f"{parent}:overflow")])
 
@@ -558,7 +558,7 @@ async def test_aggregator_relaying_the_vendors_own_out_of_credits_dialect_is_the
     again = []
     monkeypatch.setattr(O, "_send", _orthogonal([], again))
     r2 = await clients.post(f"/call/{APOLLO_SEARCH}", json={"q_organization_name": "x"})
-    assert r2.status_code == 422 and again == [] and "X-Treg-Served-Via" not in r2.headers
+    assert r2.status_code == 422 and again == [] and "X-Stray-Served-Via" not in r2.headers
 
 
 APOLLO_ROUTE = dict(endpoint_id=APOLLO_SEARCH, provider="apollo", method="POST", path=APOLLO_SEARCH_PATH,
@@ -611,7 +611,7 @@ async def test_apollo_validation_422_is_the_callers_and_never_overflows(clients:
     monkeypatch.setattr(O, "_send", _orthogonal([], seen))
     r = await clients.post(f"/call/{APOLLO_EP}", json={})
     assert r.status_code == 422 and r.content == APOLLO_VALIDATION and seen == [], "relayed verbatim, no aggregator contacted"
-    assert "X-Treg-Served-Via" not in r.headers
+    assert "X-Stray-Served-Via" not in r.headers
 # --- the dashboard sees what the caller got -----------------------------------------------------
 
 async def _exhausted(provider: str = "tikhub") -> None:
@@ -636,7 +636,7 @@ CONTRACT_REFUSAL = (400, {"success": False, "error": "x",
      {"outcome": "ok", "refused_by": None, "tier": "platform-overflow",
       "served_via": "overflow:orthogonal", "charged_micro": 3_000}),
     (True, None, (402, {"success": False, "error": "insufficient balance"}), 503,
-     {"outcome": "treg_refused", "refused_by": "capacity"}),
+     {"outcome": "stray_refused", "refused_by": "capacity"}),
     # The post-failure path: the vendor answered 402, the child served. One event, the child's,
     # and the strike is still on it.
     (False, b'{"detail":"Insufficient balance"}', OK_ANSWER, 200,
@@ -661,11 +661,11 @@ async def test_an_overflow_attempt_is_one_event_saying_what_the_caller_got(
     assert p["status_code"] == status
     assert {k: p[k] for k in props} == props
     if "served_via" in props:
-        assert r.headers["X-Treg-Served-Via"] == props["served_via"]
+        assert r.headers["X-Stray-Served-Via"] == props["served_via"]
     else:
         assert "served_via" not in p
     if skip_direct and status == 200:
-        assert p["call_ref"] == r.headers["X-Treg-Call-Id"]
+        assert p["call_ref"] == r.headers["X-Stray-Call-Id"]
         await audit.drain()
         rows = [x for x in (await clients.get("/calls")).json() if x["tool_name"] == EP]
         assert {x.get("credential_tier") for x in rows} == {"platform", "platform-overflow"}, "both DB rows stay"
@@ -679,7 +679,7 @@ async def test_an_overflow_attempt_is_one_event_saying_what_the_caller_got(
 def test_verify_plan_renews_stamped_routes_first_and_discovers_only_with_all():
     from datetime import timedelta
     from types import SimpleNamespace
-    from treg import worker
+    from stray import worker
     now = utcnow_naive()
     old = SimpleNamespace(endpoint_id="a.old", provider="a", enabled=True, last_verified_at=now - timedelta(days=6))
     fresh = SimpleNamespace(endpoint_id="a.fresh", provider="a", enabled=True, last_verified_at=now - timedelta(days=1))
@@ -699,9 +699,9 @@ async def test_verify_run_visits_pricey_renewals_within_budget_and_skips_pricey_
 ):
     from datetime import timedelta
     from types import SimpleNamespace
-    from treg import worker
-    from treg.domain.capacity import verify as V
-    from treg.domain.catalog import store as catalog_store
+    from stray import worker
+    from stray.domain.capacity import verify as V
+    from stray.domain.catalog import store as catalog_store
     monkeypatch.setattr(get_settings(), "secret_key", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
     eps = [e for e in catalog_store.load().endpoints if e.get("test_request")][:3]
     assert len(eps) == 3
@@ -718,7 +718,7 @@ async def test_verify_run_visits_pricey_renewals_within_budget_and_skips_pricey_
                                  agg_price_micro=price, agg_unit="call", ratio=1.0, enabled=enabled,
                                  last_verified_at=stamped))
         await db.commit()
-    from treg import oauth_providers
+    from stray import oauth_providers
     monkeypatch.setattr(oauth_providers, "get", lambda *_: None)  # no direct key: spend = relay fee
     seen = []
     async def verify(client, route, **kwargs):
@@ -745,8 +745,8 @@ CONTACTOUT_BODY = {'status_code': 200, 'profile': {'work_email': ['test@example.
 
 @pytest.fixture
 def contactout_on(monkeypatch, overflow_on):
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'contactout')
-    monkeypatch.setenv('TREG_PLATFORM_KEY_CONTACTOUT', 'DIRECT-TEST')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'contactout')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_CONTACTOUT', 'DIRECT-TEST')
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -756,7 +756,7 @@ def contactout_on(monkeypatch, overflow_on):
 async def test_contactout_renewal_budget_includes_direct_cost_and_uses_ephemeral_profile(monkeypatch,budget,expected_calls):
     import runpy
     from types import SimpleNamespace
-    from treg.domain.capacity import verify as V
+    from stray.domain.capacity import verify as V
     namespace=runpy.run_path(str(Path(__file__).parents[1] / 'scripts' / 'contactout_overflow_verify.py'))
     main=namespace['main']
     globals_=main.__globals__
@@ -794,7 +794,7 @@ ORTHOGONAL_OWN_422 = {"success": False, "error": "Unprocessable: body.per_page e
 
 
 def test_orthogonal_parse_reserves_malformed_for_what_is_not_an_envelope():
-    from treg.infra.upstream.aggregators import AGGREGATOR_SIDE, orthogonal
+    from stray.infra.upstream.aggregators import AGGREGATOR_SIDE, orthogonal
     own_400 = orthogonal.parse(400, json.dumps(ORTHOGONAL_OWN_400).encode())
     own_422 = orthogonal.parse(422, json.dumps(ORTHOGONAL_OWN_422).encode())
     own_404 = orthogonal.parse(404, b'{"success":false,"error":"Unknown api slug"}')
@@ -834,15 +834,15 @@ async def test_orthogonals_own_400_is_request_scoped_and_never_strikes_the_aggre
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 402 and r.text == '{"detail":"nope"}', "the vendor's answer, not the relay's envelope"
-    assert "X-Treg-Served-Via" not in r.headers
+    assert "X-Stray-Served-Via" not in r.headers
     assert await _balance(clients) == before and await _holds() == []
     lock = await _orthogonal_lock()
     assert lock is None or not lock.is_active(), "a request-scoped refusal is not an aggregator outage"
     r2 = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r2.status_code == 200 and r2.headers["X-Treg-Served-Via"] == "overflow:orthogonal", r2.text
+    assert r2.status_code == 200 and r2.headers["X-Stray-Served-Via"] == "overflow:orthogonal", r2.text
     assert len(seen) == 2 and before - await _balance(clients) == 3_000
     await audit.drain()
-    from treg.models import CallRecord
+    from stray.models import CallRecord
     async with session_maker() as db:
         children = (await db.execute(select(CallRecord).where(CallRecord.credential_tier == "platform-overflow"))).scalars().all()
     refused = [c for c in children if (c.error_response or "").endswith("contract")]
@@ -853,7 +853,7 @@ async def test_orthogonals_own_400_is_request_scoped_and_never_strikes_the_aggre
 async def test_orthogonals_own_422_on_the_skip_direct_ladder_is_a_typed_503_naming_the_refusal(
     clients: AsyncClient, overflow_on, monkeypatch,
 ):
-    """No vendor answer exists on this ladder, so the caller gets treg's typed 503 that says the
+    """No vendor answer exists on this ladder, so the caller gets stray's typed 503 that says the
     relay refused THIS request - never Orthogonal's envelope as if Apollo had answered - and the
     aggregator stays healthy for the next caller."""
     await _route(endpoint_id=APOLLO_SEARCH_EP, provider="apollo", method="POST", path=APOLLO_SEARCH_PATH,
@@ -872,12 +872,12 @@ async def test_orthogonals_own_422_on_the_skip_direct_ladder_is_a_typed_503_nami
     monkeypatch.setattr(O, "_send", _orthogonal([(422, ORTHOGONAL_OWN_422)], seen))
     before = await _balance(clients)
     r = await clients.post(f"/call/{APOLLO_SEARCH_EP}", json={"person_titles": ["cto"], "per_page": 500})
-    assert r.status_code == 503 and r.headers["X-Treg-Error"] == "1", r.text
+    assert r.status_code == 503 and r.headers["X-Stray-Error"] == "1", r.text
     detail = r.json()["detail"]
     assert detail["error"] == "provider_capacity_unavailable" and detail["provider"] == "apollo"
     assert "contract" in detail["message"] and "body.per_page exceeds 100" in detail["message"]
     assert "nothing was charged" in detail["message"]
-    assert "success" not in r.json() and r.headers.get("X-Treg-Cost-Micro") in (None, "0")
+    assert "success" not in r.json() and r.headers.get("X-Stray-Cost-Micro") in (None, "0")
     assert await _balance(clients) == before and await _holds() == []
     lock = await _orthogonal_lock()
     assert lock is None or not lock.is_active(), "one refused request must not take the relay offline"
@@ -911,7 +911,7 @@ async def test_catalog_get_says_nothing_about_overflow_when_the_deployment_canno
     r = await clients.get(f"/catalog/endpoints/{EP}")
     assert "overflow_price_usd" not in r.json()["endpoint"]
     # mode off: the price is not a price this deployment can bill
-    monkeypatch.setenv("TREG_OVERFLOW_MODE", "off")
+    monkeypatch.setenv("STRAY_OVERFLOW_MODE", "off")
     get_settings.cache_clear()
     r = await clients.get(f"/catalog/endpoints/{APOLLO_SEARCH_EP}")
     assert "overflow_price_usd" not in r.json()["endpoint"]
@@ -933,7 +933,7 @@ async def test_caller_ceiling_checks_actual_overflow_reserve(
     monkeypatch.setattr(O, '_send', _orthogonal([(200, envelope)], seen))
     before = await _balance(clients)
     response = await clients.get(f'/call/{EP}?aweme_id=7',
-                                headers={'X-Treg-Route-Max-Cost': cap})
+                                headers={'X-Stray-Route-Max-Cost': cap})
     assert response.status_code == status, response.text
     assert before - await _balance(clients) == (3000 if status == 200 else 0)
     assert len(seen) == (1 if status == 200 else 0)
@@ -949,8 +949,8 @@ async def test_caller_ceiling_checks_actual_overflow_reserve(
 
 @pytest.fixture
 def icypeas_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ICYPEAS", "PLATFORM-ICYPEAS")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "icypeas")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ICYPEAS", "PLATFORM-ICYPEAS")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "icypeas")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -958,7 +958,7 @@ def icypeas_on(monkeypatch):
 
 async def test_icypeas_out_of_credits_200_is_never_billed_and_strikes_the_breaker(
         clients: AsyncClient, icypeas_on, monkeypatch):
-    """A 200 that says treg's pool is empty is not a served answer: the hold is released, the
+    """A 200 that says stray's pool is empty is not a served answer: the hold is released, the
     breaker counts a strike."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, ICYPEAS_OUT_OF_CREDITS))
     before = await _balance(clients)
@@ -976,8 +976,8 @@ async def test_icypeas_out_of_credits_200_is_never_billed_and_strikes_the_breake
 
 async def test_icypeas_out_of_credits_200_overflows_through_orthogonal(
         clients: AsyncClient, overflow_on, monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ICYPEAS", "PLATFORM-ICYPEAS")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "icypeas")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ICYPEAS", "PLATFORM-ICYPEAS")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "icypeas")
     get_settings.cache_clear()
     await _route(endpoint_id="icypeas.people.enrich", provider="icypeas", path="/scrape/profile",
                  price_micro=20_000, ratio=0.7)
@@ -990,14 +990,14 @@ async def test_icypeas_out_of_credits_200_overflows_through_orthogonal(
     before = await _balance(clients)
     r = await clients.get("/call/icypeas.people.enrich?url=https://www.linkedin.com/in/x")
     assert r.status_code == 200 and r.json() == profile, r.text
-    assert r.headers["X-Treg-Served-Via"] == "overflow:orthogonal"
+    assert r.headers["X-Stray-Served-Via"] == "overflow:orthogonal"
     assert before - await _balance(clients) == 20_000, "the aggregator's price once; the empty-pool 200 was released"
     assert len(seen) == 1 and seen[0].json["api"] == "icypeas" and seen[0].json["path"] == "/scrape/profile"
 
 
 async def _sync_icypeas_seed():
     """The seed as the weekly verify leaves it: every route freshly verified."""
-    from treg.domain.catalog import store as catalog_store
+    from stray.domain.catalog import store as catalog_store
     now = utcnow_naive()
     seed = [{**r, "verified_at": now.isoformat()} for r in R.load_seed() if r["provider"] == "icypeas"]
     async with session_maker() as db:
@@ -1010,8 +1010,8 @@ async def _sync_icypeas_seed():
 async def test_icypeas_people_search_overflows_at_orthogonals_flat_fee(clients: AsyncClient, overflow_on, monkeypatch):
     """We pay per row, Orthogonal a flat cent per request (charged 1 cent for 200 leads live):
     the fixed-fee exception admits the route, and an empty-pool 200 is served through it."""
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ICYPEAS", "PLATFORM-ICYPEAS")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "icypeas")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ICYPEAS", "PLATFORM-ICYPEAS")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "icypeas")
     get_settings.cache_clear()
     await _sync_icypeas_seed()
     rows = {r.endpoint_id: r for r in await _rows(OverflowRoute)}
@@ -1027,7 +1027,7 @@ async def test_icypeas_people_search_overflows_at_orthogonals_flat_fee(clients: 
     body = {"query": {"currentJobTitle": {"include": ["Engineer"]}}, "pagination": {"size": 50}}
     r = await clients.post("/call/icypeas.people.search", json=body)
     assert r.status_code == 200 and r.json() == page, r.text
-    assert r.headers["X-Treg-Served-Via"] == "overflow:orthogonal"
+    assert r.headers["X-Stray-Served-Via"] == "overflow:orthogonal"
     assert before - await _balance(clients) == 10_000
     assert seen[0].json == {"api": "icypeas", "path": "/api/find-people", "body": body}
     assert await _holds() == []

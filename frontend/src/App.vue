@@ -19,14 +19,14 @@ export default { ...controller, components: { ...controller.components, ...dialo
 <template>
 <div>
 <main v-if="bootFailed" class="boot-status" aria-live="polite">
-  <a href="/" class="brand"><BrandMark/>treg</a>
+  <a href="/" class="brand"><BrandMark/>stray</a>
   <p role="alert">The dashboard couldn't load. Please try again.</p>
   <button class="btn" @click="reloadApp()">Try again</button>
 </main>
 <!-- Continues index.html's loader on the page's own clock, so mounting does not restart it. -->
 <main v-else-if="!bootReady" class="boot-status" aria-busy="true" :style="{'--boot-t': -Math.round(bootStartedAt)+'ms'}">
   <span class="boot-bar" aria-hidden="true"></span>
-  <p role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Loading treg…</p>
+  <p role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">Loading stray…</p>
 </main>
 <div v-else :class="{redesign:authed && !publicCatalog}">
   <!-- Focused sign-in entry after session initialization. -->
@@ -181,7 +181,7 @@ export default { ...controller, components: { ...controller.components, ...dialo
     <div class="scrim" role="dialog" aria-labelledby="add-org-title" aria-modal="true" v-if="addOrg" v-dialog="() => { addOrg=false }" @click.self="addOrg=false">
       <div class="modal" style="width:min(440px,92vw)"><div class="hd"><b id="add-org-title">Add an organization</b><button class="btn sm" @click="addOrg=false" aria-label="Close">✕</button></div>
         <div style="padding:18px"><p class="sub" style="margin-top:0">Paste that org's token (each org has its own).</p>
-          <div class="field"><input v-model="tokenInput" type="password" placeholder="X-Treg-Token"/></div>
+          <div class="field"><input v-model="tokenInput" type="password" placeholder="X-Stray-Token"/></div>
           <button class="btn primary" @click="addToken(tokenInput, true)" :disabled="busy">{{busy?'Checking…':'Add'}}</button>
           <div v-if="loginErr" class="banner" style="margin-top:12px">{{loginErr}}</div>
         </div></div>
@@ -228,7 +228,7 @@ export default { ...controller, components: { ...controller.components, ...dialo
     <RunToolDialog v-if="tryTool" />
 
     <!-- Try a MARKETPLACE endpoint right here. Same relay as any call — served by the org's own
-         key when one exists, else by a verified public upstream route when declared, else treg's
+         key when one exists, else by a verified public upstream route when declared, else stray's
          key billed to the team balance — and logged in Activity exactly like a CLI call. -->
     <!-- Activity → one call. The archive's copy of what was asked and what came back (metered
          platform calls only — own-key and own-tool calls are relayed without being stored). -->

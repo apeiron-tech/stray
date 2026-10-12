@@ -21,24 +21,24 @@ detailPrompt(){  // the copyable "give this to your agent" instruction — no to
       // recipient signs in as themselves (this text is meant to be forwarded)
       if(!this.detail) return '';
       const B=(this.proxy||location.origin).replace(/\/$/,''); const n=this.detail.name;
-      const head=[`I want to use the shared ${this.detail.kind==='skill'?'skill':'tool'} "${n}" from my team's treg at ${B} .`,``,
-        `1. Install the treg CLI (skip if \`treg\` already works) and sign me in:`,
-        `   curl -fsSL ${B}/install.sh | sh`,`   treg login`,``];
+      const head=[`I want to use the shared ${this.detail.kind==='skill'?'skill':'tool'} "${n}" from my team's stray at ${B} .`,``,
+        `1. Install the stray CLI (skip if \`stray\` already works) and sign me in:`,
+        `   curl -fsSL ${B}/install.sh | sh`,`   stray login`,``];
       if(this.detail.kind==='skill'){
         const t=(this.detailData&&this.detailData.tools&&this.detailData.tools[0])||null;
         return head.concat([
           `2. Install the skill into this project (writes the skill folder into my agent skills dir):`,
-          `   treg skill install ${n}`,``,
-          ...(t?[`3. The skill's API calls go through treg's proxy — the credential is injected server-side, never on this machine:`,
-                `   treg call ${t.name} <PATH>   # or prefix the real URL: ${B}/call/<full upstream URL>`,``]:[]),
+          `   stray skill install ${n}`,``,
+          ...(t?[`3. The skill's API calls go through stray's proxy — the credential is injected server-side, never on this machine:`,
+                `   stray call ${t.name} <PATH>   # or prefix the real URL: ${B}/call/<full upstream URL>`,``]:[]),
           `Then use the "${n}" skill for my request.`,``,
           `Full protocol reference: ${B}/llms.txt`]).join('\n');
       }
       const t=this.detailData||{};
       return head.concat([
         `2. Call it through the proxy — the credential is injected server-side, never on this machine:`,
-        `   treg call ${n} <PATH>   # PATH = the ${t.host||'upstream'} path you'd normally call`,
-        ...(t.cli?[``,`   # it's also a CLI — run it with the key injected:`,`   treg run ${n} -- <cli args>`]:[]),``,
+        `   stray call ${n} <PATH>   # PATH = the ${t.host||'upstream'} path you'd normally call`,
+        ...(t.cli?[``,`   # it's also a CLI — run it with the key injected:`,`   stray run ${n} -- <cli args>`]:[]),``,
         `Full protocol reference: ${B}/llms.txt`]).join('\n');
     }
 }

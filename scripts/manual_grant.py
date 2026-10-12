@@ -50,7 +50,7 @@ run two of these at once for the same comp.
 
 DATABASE ACCESS
 ---------------
-Uses the configured TREG_DATABASE_URL through treg's database infrastructure. Run from a checkout
+Uses the configured STRAY_DATABASE_URL through stray's database infrastructure. Run from a checkout
 whose schema matches the target database. Hosted operators use their private maintenance runbook.
 """
 
@@ -86,13 +86,13 @@ def to_micro(amount: str) -> int:
 
 
 async def run(args) -> int:
-    if not os.environ.get("TREG_DATABASE_URL"):
-        raise SystemExit("Set TREG_DATABASE_URL explicitly before running this maintenance tool")
+    if not os.environ.get("STRAY_DATABASE_URL"):
+        raise SystemExit("Set STRAY_DATABASE_URL explicitly before running this maintenance tool")
     from sqlmodel import select
 
-    from treg.domain import money
-    from treg.infra.db import dispose_engine, session_maker
-    from treg.models import CreditBlock, LedgerEntry, Membership, Org, User
+    from stray.domain import money
+    from stray.infra.db import dispose_engine, session_maker
+    from stray.models import CreditBlock, LedgerEntry, Membership, Org, User
 
     try:
         async with session_maker() as db:

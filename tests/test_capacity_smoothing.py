@@ -1,4 +1,4 @@
-"""Step D′ of docs/PROVIDER-CAPACITY-PLAN.md — burst smoothing on treg's own platform keys:
+"""Step D′ of docs/PROVIDER-CAPACITY-PLAN.md — burst smoothing on stray's own platform keys:
 a per-provider token bucket (wait ≤ 2 s, in-process, no DB) and one bounded `retry-after`
 re-send for idempotent reads. Never a refusal; never on tiers 1/2."""
 
@@ -10,16 +10,16 @@ import time
 import pytest
 from httpx import AsyncClient
 
-from treg import ratestore
-from treg.application.call import service as call_service
-from treg.application.call.types import UpstreamResponse
-from treg.infra.db import _engine, session_maker
-from treg.domain.capacity.policy import LatestState
-from treg.domain.capacity.sweep import STATE_NS
-from treg.domain.capacity.view import view as capacity_view
-from treg.infra.upstream.limiter import Limiter, limiter
-from treg.models import Hold
-from treg.timeutil import utcnow_naive
+from stray import ratestore
+from stray.application.call import service as call_service
+from stray.application.call.types import UpstreamResponse
+from stray.infra.db import _engine, session_maker
+from stray.domain.capacity.policy import LatestState
+from stray.domain.capacity.sweep import STATE_NS
+from stray.domain.capacity.view import view as capacity_view
+from stray.infra.upstream.limiter import Limiter, limiter
+from stray.models import Hold
+from stray.timeutil import utcnow_naive
 
 from test_marketplace_call import EP, PLATFORM_KEYS, _balance, _fake_relay, platform_on  # noqa: F401
 
@@ -80,7 +80,7 @@ async def test_burst_429_with_a_short_retry_after_is_re_sent_once_on_the_same_ho
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 200, r.text
-    assert r.headers["X-Treg-Smoothed"] == "retry=1"
+    assert r.headers["X-Stray-Smoothed"] == "retry=1"
     assert len(seen) == 2 and seen[0][:2] == seen[1][:2], "the identical request, twice"
     assert before - await _balance(clients) > 0, "charged once, for the answer that came back"
     async with session_maker() as db:
@@ -97,12 +97,12 @@ async def test_tool_called_reads_a_vendor_429_as_the_vendors_burst(
         [(429, ((b"retry-after", b"0"),), b"x"), (429, ((b"retry-after", b"0"),), b"y")], seen))
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"User-Agent": "Python-urllib/3.12"})
     assert r.status_code == 429 and len(seen) == 2 and r.text == "y"
-    assert r.headers["X-Treg-Cost-Micro"] == "0"
+    assert r.headers["X-Stray-Cost-Micro"] == "0"
     (e,) = await posthog_events()
     p = e["properties"]
     assert p["outcome"] == "vendor_error" and p["refused_by"] is None
     assert p["capacity_signal"] == "burst" and p["smoothed"] == "retry=1"
-    assert p["call_ref"] == r.headers["X-Treg-Call-Id"]
+    assert p["call_ref"] == r.headers["X-Stray-Call-Id"]
     assert p["duration_ms"] is not None and p["cached"] is False and p["response_bytes"] == 1
     assert p["ua_family"] == "python-urllib" and p["user_agent"] == "Python-urllib/3.12"
     assert p["provider"] == "tikhub" and p["tier"] == "platform" and p["charged_micro"] == 0
@@ -138,7 +138,7 @@ async def test_no_retry_for_a_post_a_long_retry_after_or_a_quota_429(clients: As
     seen.clear()
     monkeypatch.setattr(call_service, "relay", _relay_script([(429, ((b"retry-after", b"7200"),), b"quota")], seen))
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 429 and len(seen) == 1 and "retry=" not in r.headers.get("X-Treg-Smoothed", "")
+    assert r.status_code == 429 and len(seen) == 1 and "retry=" not in r.headers.get("X-Stray-Smoothed", "")
 
 
 async def test_own_key_calls_are_never_smoothed(clients: AsyncClient, platform_on, monkeypatch):
@@ -180,7 +180,7 @@ async def test_concurrent_platform_calls_over_the_limit_relay_no_429(
     rs = await asyncio.gather(*(clients.get(f"/call/{EP}?aweme_id={i}") for i in range(4)))
     assert [r.status_code for r in rs] == [200] * 4, [r.text for r in rs]
     assert time.monotonic() - t0 <= 2.5
-    waits = sorted(int(r.headers["X-Treg-Smoothed"].split("=")[1]) for r in rs if "X-Treg-Smoothed" in r.headers)
+    waits = sorted(int(r.headers["X-Stray-Smoothed"].split("=")[1]) for r in rs if "X-Stray-Smoothed" in r.headers)
     assert len(waits) == 3 and waits[-1] <= 2000, waits
 
 
@@ -211,7 +211,7 @@ async def test_a_smoothed_call_holds_no_db_connection_while_it_waits(clients: As
     bucket.tokens = -2.0
     t_drained = time.monotonic()
     r = await clients.get(f"/call/{EP}?aweme_id=1")
-    assert r.status_code == 200 and r.headers["X-Treg-Smoothed"].startswith("wait=")
+    assert r.status_code == 200 and r.headers["X-Stray-Smoothed"].startswith("wait=")
     elapsed_ms = int((time.monotonic() - t_drained) * 1000)
-    assert int(r.headers["X-Treg-Smoothed"].split("=")[1]) >= 300, f"setup took {elapsed_ms} ms"
+    assert int(r.headers["X-Stray-Smoothed"].split("=")[1]) >= 300, f"setup took {elapsed_ms} ms"
     assert seen == [0], "no pooled connection during the wait or the relay"

@@ -1,9 +1,9 @@
 /**
- * treg as a DeepSeek Harness (dsh) plugin.
+ * stray as a DeepSeek Harness (dsh) plugin.
  *
  * Registers one `ctx.skills` provider that publishes the generated
- * `dsh/skills/treg/SKILL.md`. The MCP connector is NOT here: it is a separate
- * row in `cordis.patch.yml`, disabled until `TREG_TOKEN` exists, so the skill
+ * `dsh/skills/stray/SKILL.md`. The MCP connector is NOT here: it is a separate
+ * row in `cordis.patch.yml`, disabled until `STRAY_TOKEN` exists, so the skill
  * still installs and reads with no token at all.
  *
  * Two constraints on this file, both load-bearing:
@@ -21,12 +21,12 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
-const PROVIDER_NAME = 'treg'
-const SKILL_NAME = 'treg'
+const PROVIDER_NAME = 'stray'
+const SKILL_NAME = 'stray'
 /** Rank of the `bundled` discovery source in dsh's own skill provider. */
 const BUNDLED_SKILL_RANK = 600
 
-const SKILL_DIR_URL = new URL('./skills/treg/', import.meta.url)
+const SKILL_DIR_URL = new URL('./skills/stray/', import.meta.url)
 const SKILL_BODY_URL = new URL('SKILL.md', SKILL_DIR_URL)
 const RESOURCE_BASE = { kind: 'directory', path: fileURLToPath(SKILL_DIR_URL) }
 const INVOCATION = { modelInvocable: true, userInvocable: true }
@@ -34,8 +34,8 @@ const INVOCATION = { modelInvocable: true, userInvocable: true }
 /**
  * Read the one-line `description` from SKILL.md's frontmatter.
  *
- * SKILL.md is generated from `src/treg/web/skill.md`, which is the one source
- * for how treg describes itself. Restating the description here would be a
+ * SKILL.md is generated from `src/stray/web/skill.md`, which is the one source
+ * for how stray describes itself. Restating the description here would be a
  * second copy that nothing regenerates. The frontmatter is flat scalars, so a
  * YAML dependency would be more surface than the job needs.
  *
@@ -102,12 +102,12 @@ const provider = {
 }
 
 /** Cordis plugin name. */
-export const name = 'treg-skill'
+export const name = 'stray-skill'
 /** The registry this plugin contributes to. */
 export const inject = ['skills']
 
 /**
- * Register the packaged treg skill on `ctx.skills`.
+ * Register the packaged stray skill on `ctx.skills`.
  *
  * @param {import('@deepseek-ai/cordis').Context} ctx - the plugin context.
  */

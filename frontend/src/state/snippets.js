@@ -35,22 +35,22 @@ buildSnippet(tab){
       const urlT=`${proxy}/call/${up}/${path}`;
       const urlH=`${P(proxy)}${C('/call/')}${H(up)}/${A(path)}`;
       const hint=(t.examples||[]).length?`e.g. ${t.examples[0].path}`:'the part after the domain';
-      const tok=this.myToken||'$TREG_TOKEN', org=(this.activeOrg&&this.activeOrg.slug)||'$TREG_ORG';  // real token+org so a copied snippet runs as-is
+      const tok=this.myToken||'$STRAY_TOKEN', org=(this.activeOrg&&this.activeOrg.slug)||'$STRAY_ORG';  // real token+org so a copied snippet runs as-is
       const tokShort=tok;  // show the full real token — the preview must match what Copy puts on the clipboard
       switch(tab){
         case 'Claude Code': return {
-          text:`# Call "${t.name}" through treg - your key is injected server-side.\n${m} ${urlT}\nX-Treg-Token: ${tok}\nX-Treg-Org: ${org}\n\n# PATH = the ${t.host} path you'd normally call (${hint}).`,
-          html:`${C('# Call "'+t.name+'" through treg - your key is injected server-side.')}\n${K(m)} ${urlH}\n${C('X-Treg-Token:')} ${T(tokShort)}\n${C('X-Treg-Org:')} ${T(org)}\n\n${C('# PATH = the '+t.host+" path you'd normally call ("+hint+').')}` };
-        case 'CLI': return { text:`treg call ${t.name} ${path}${m!=='GET'?' --method '+m:''}`, html:`${P('treg call')} ${H(t.name)} ${A(path)}${m!=='GET'?' '+K('--method '+m):''}` };
+          text:`# Call "${t.name}" through stray - your key is injected server-side.\n${m} ${urlT}\nX-Stray-Token: ${tok}\nX-Stray-Org: ${org}\n\n# PATH = the ${t.host} path you'd normally call (${hint}).`,
+          html:`${C('# Call "'+t.name+'" through stray - your key is injected server-side.')}\n${K(m)} ${urlH}\n${C('X-Stray-Token:')} ${T(tokShort)}\n${C('X-Stray-Org:')} ${T(org)}\n\n${C('# PATH = the '+t.host+" path you'd normally call ("+hint+').')}` };
+        case 'CLI': return { text:`stray call ${t.name} ${path}${m!=='GET'?' --method '+m:''}`, html:`${P('stray call')} ${H(t.name)} ${A(path)}${m!=='GET'?' '+K('--method '+m):''}` };
         case 'Python': return {
-          text:`import httpx\nr = httpx.request("${m}", "${urlT}", headers={"X-Treg-Token": "${tok}", "X-Treg-Org": "${org}"})\nprint(r.json())`,
-          html:`import httpx\nr = httpx.request(${A('"'+m+'"')}, "${urlH}", headers={"X-Treg-Token": ${T('"'+tokShort+'"')}, "X-Treg-Org": ${T('"'+org+'"')}})\nprint(r.json())` };
+          text:`import httpx\nr = httpx.request("${m}", "${urlT}", headers={"X-Stray-Token": "${tok}", "X-Stray-Org": "${org}"})\nprint(r.json())`,
+          html:`import httpx\nr = httpx.request(${A('"'+m+'"')}, "${urlH}", headers={"X-Stray-Token": ${T('"'+tokShort+'"')}, "X-Stray-Org": ${T('"'+org+'"')}})\nprint(r.json())` };
         case 'Node': return {
-          text:`const r = await fetch("${urlT}", {\n  method: "${m}",\n  headers: { "X-Treg-Token": "${tok}", "X-Treg-Org": "${org}" },\n});\nconsole.log(await r.json());`,
-          html:`const r = await fetch("${urlH}", {\n  method: ${A('"'+m+'"')},\n  headers: { "X-Treg-Token": ${T('"'+tokShort+'"')}, "X-Treg-Org": ${T('"'+org+'"')} },\n});\nconsole.log(await r.json());` };
+          text:`const r = await fetch("${urlT}", {\n  method: "${m}",\n  headers: { "X-Stray-Token": "${tok}", "X-Stray-Org": "${org}" },\n});\nconsole.log(await r.json());`,
+          html:`const r = await fetch("${urlH}", {\n  method: ${A('"'+m+'"')},\n  headers: { "X-Stray-Token": ${T('"'+tokShort+'"')}, "X-Stray-Org": ${T('"'+org+'"')} },\n});\nconsole.log(await r.json());` };
         case 'cURL': return {
-          text:`TREG_API_TOKEN=${tok}\ncurl -X ${m} \\\n  -H "X-Treg-Token: $TREG_API_TOKEN" \\\n  -H "X-Treg-Org: ${org}" \\\n  "${urlT}"`,
-          html:`TREG_API_TOKEN=${T(tokShort)}\n${K('curl')} -X ${K(m)} \\\n  -H "X-Treg-Token: ${T('$TREG_API_TOKEN')}" \\\n  -H "X-Treg-Org: ${T(org)}" \\\n  "${urlH}"` };
+          text:`STRAY_API_TOKEN=${tok}\ncurl -X ${m} \\\n  -H "X-Stray-Token: $STRAY_API_TOKEN" \\\n  -H "X-Stray-Org: ${org}" \\\n  "${urlT}"`,
+          html:`STRAY_API_TOKEN=${T(tokShort)}\n${K('curl')} -X ${K(m)} \\\n  -H "X-Stray-Token: ${T('$STRAY_API_TOKEN')}" \\\n  -H "X-Stray-Org: ${T(org)}" \\\n  "${urlH}"` };
       }
     },
 async copy(text){ if(!(await this.toClipboard(text))) return; this.copied=true; setTimeout(()=>this.copied=false,1500); }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backfill the `cost` schema's unit + provenance keys across src/treg/catalog/*.yaml.
+"""Backfill the `cost` schema's unit + provenance keys across src/stray/catalog/*.yaml.
 
 Run from the repo root: `uv run python scripts/catalog_cost_provenance.py [--check] [service ...]`
 
@@ -36,7 +36,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "src" / "treg" / "catalog"
+CATALOG = ROOT / "src" / "stray" / "catalog"
 SWEEP = "2026-07-28"  # the day the pricing sweep read every provider's rate card / pricing page
 
 # The order a cost block reads best in: how much, of what, per what, says who, when, how sure.

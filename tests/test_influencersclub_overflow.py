@@ -9,19 +9,19 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
-from treg import ratestore, worker
-from treg.application.call import overflow as O, service as call_service
-from treg.config import get_settings
-from treg.domain.capacity import routes as R, signatures as S
-from treg.domain.capacity import verify as V
-from treg.domain.capacity.policy import LatestState
-from treg.domain.capacity.routes_view import view as routes_view
-from treg.domain.capacity.sweep import STATE_NS
-from treg.domain.capacity.view import view as capacity_view
-from treg.domain.catalog import store as catalog_store
-from treg.infra.db import reset_db, session_maker
-from treg.models import LedgerEntry, OverflowRoute, OverflowSpend
-from treg.timeutil import utcnow_naive
+from stray import ratestore, worker
+from stray.application.call import overflow as O, service as call_service
+from stray.config import get_settings
+from stray.domain.capacity import routes as R, signatures as S
+from stray.domain.capacity import verify as V
+from stray.domain.capacity.policy import LatestState
+from stray.domain.capacity.routes_view import view as routes_view
+from stray.domain.capacity.sweep import STATE_NS
+from stray.domain.capacity.view import view as capacity_view
+from stray.domain.catalog import store as catalog_store
+from stray.infra.db import reset_db, session_maker
+from stray.models import LedgerEntry, OverflowRoute, OverflowSpend
+from stray.timeutil import utcnow_naive
 
 from test_capacity_overflow import _holds, _orthogonal, _rows, overflow_on  # noqa: F401
 from test_marketplace_call import _balance, _fake_relay, platform_on  # noqa: F401
@@ -37,8 +37,8 @@ ENVELOPE = json.loads((FIX / "orthogonal_influencersclub_search.json").read_text
 
 @pytest.fixture
 def influencers_on(monkeypatch, overflow_on):  # noqa: F811
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "influencersclub")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_INFLUENCERSCLUB", "DIRECT-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "influencersclub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_INFLUENCERSCLUB", "DIRECT-KEY")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -105,12 +105,12 @@ async def test_exhaustion_releases_parent_and_charges_flat_orthogonal_price(
     response = await clients.post(f"/call/{endpoint}", json=body)
     assert response.status_code == 200, response.text
     assert response.json() == ENVELOPE["data"]
-    assert response.headers["X-Treg-Served-Via"] == "overflow:orthogonal"
-    assert response.headers["X-Treg-Cost-Micro"] == "30000"
+    assert response.headers["X-Stray-Served-Via"] == "overflow:orthogonal"
+    assert response.headers["X-Stray-Cost-Micro"] == "30000"
     assert before - await _balance(clients) == 30_000 and await _holds() == []
     assert len(seen) == 1 and seen[0].json["api"] == "influencers-club"
     assert seen[0].json["body"] == body
-    parent = response.headers["X-Treg-Call-Id"]
+    parent = response.headers["X-Stray-Call-Id"]
     entries = [(r.kind, r.call_id) for r in await _rows(LedgerEntry) if r.kind != "grant"]
     assert sorted(entries) == sorted([
         ("reserve", parent), ("release", parent),
@@ -143,12 +143,12 @@ async def test_known_empty_account_skips_direct_and_serves_any_page_size_via_ove
                                   headers={"Idempotency-Key": "discovery-empty"})
     assert response.status_code == expected_status, response.text
     entries = [r for r in await _rows(LedgerEntry) if r.kind != "grant"]
-    assert len(seen) == 1 and response.headers["X-Treg-Cost-Micro"] == "30000"
+    assert len(seen) == 1 and response.headers["X-Stray-Cost-Micro"] == "30000"
     assert await _holds() == []
     assert sorted(r.kind for r in entries) == ["reserve", "settle"]
     replay = await clients.post(f"/call/{SEARCH}", json=_body(limit=limit),
                                 headers={"Idempotency-Key": "discovery-empty"})
-    assert replay.status_code == 200 and replay.headers["X-Treg-Idempotent-Replay"] == "true"
+    assert replay.status_code == 200 and replay.headers["X-Stray-Idempotent-Replay"] == "true"
     assert len(seen) == 1
 
 

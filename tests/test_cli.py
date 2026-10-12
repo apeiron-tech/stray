@@ -7,12 +7,12 @@ import stat
 
 import pytest
 
-from treg import cli
+from stray import cli
 
 
 @pytest.fixture(autouse=True)
 def _isolate_cli_config(tmp_path, monkeypatch):
-    """Never let a CLI test touch the real ~/.treg/config.json. Some commands persist config
+    """Never let a CLI test touch the real ~/.stray/config.json. Some commands persist config
     (e.g. _clear_active_if_targeted -> _save_config), so an un-isolated test would wipe the
     developer's own login mid-suite. Redirect CONFIG_PATH to a tmp file for every test here."""
     monkeypatch.setattr(cli, "CONFIG_PATH", tmp_path / "config.json")
@@ -60,16 +60,16 @@ def test_call_named_and_single_url():
 
 
 def test_host_subcommand_is_registered_not_mistaken_for_system_binary():
-    """Issue #557: `treg host` must parse as the host subcommand, not fall through to /usr/bin/host.
+    """Issue #557: `stray host` must parse as the host subcommand, not fall through to /usr/bin/host.
     When `host` was missing from an older release, `_looks_like_a_program` matched it to the system
-    `host` binary (DNS lookup tool), causing `treg host face.jpg` to run `/usr/bin/host face.jpg`
-    via `treg with` — banner, then a confusing DNS error. The fix: keep `host` as a registered
+    `host` binary (DNS lookup tool), causing `stray host face.jpg` to run `/usr/bin/host face.jpg`
+    via `stray with` — banner, then a confusing DNS error. The fix: keep `host` as a registered
     subcommand so the bare-word fallback never applies."""
     p = cli.build_parser()
     subcommands = cli._subcommands(p)
     assert "host" in subcommands, "`host` must be a registered subcommand"
     assert p.parse_args(["host", "face.jpg"]).fn is cli.cmd_host
-    # The bare-word fallback (`treg claude` → `treg with claude`) must NOT treat `host` as a program
+    # The bare-word fallback (`stray claude` → `stray with claude`) must NOT treat `host` as a program
     # even though /usr/bin/host exists on most Unix systems.
     assert cli._looks_like_a_program(["host", "face.jpg"], subcommands) is False
 
@@ -84,8 +84,8 @@ def test_legacy_multiorg_config_migrates(tmp_path, monkeypatch):
 
 
 def test_load_config_defaults_to_production_not_localhost(tmp_path, monkeypatch):
-    """A fresh CLI (no ~/.treg/config.json) must default to https://treg.to, NOT localhost.
-    The first-run bug was: install.sh's `treg config --base-url` failed silently, so login
+    """A fresh CLI (no ~/.stray/config.json) must default to https://treg.to, NOT localhost.
+    The first-run bug was: install.sh's `stray config --base-url` failed silently, so login
     opened Chrome to http://localhost:18790/login — nothing listening, connection refused."""
     monkeypatch.setattr(cli, "CONFIG_PATH", tmp_path / "missing" / "config.json")
     cfg = cli._load_config()
@@ -125,7 +125,7 @@ def test_login_exits_with_helpful_message_when_localhost_unreachable(monkeypatch
 
     error_msg = str(exc_info.value)
     assert "localhost" in error_msg.lower() or "Cannot reach" in error_msg
-    assert "treg config --base-url" in error_msg
+    assert "stray config --base-url" in error_msg
     assert cli.PRODUCTION_BASE_URL in error_msg
 
 
@@ -166,7 +166,7 @@ def test_login_token_keeps_a_typed_default_as_a_human_identity(monkeypatch):
 def test_pick_active_org_prefers_the_tokens_baked_org(monkeypatch):
     """Against an older server that marks nothing active for a team-pinned token, `_pick_active_org`
     must land on the token's own org — not the first membership, which for a multi-team user is an
-    arbitrary other team (`treg login --token <superdesign key>` used to activate `oauth-test`)."""
+    arbitrary other team (`stray login --token <superdesign key>` used to activate `oauth-test`)."""
     import base64
 
     class _Resp:
@@ -196,7 +196,7 @@ def test_client_sends_token_and_active_org(monkeypatch):
     monkeypatch.setattr(cli, "_ORG_OVERRIDE", None)
     cfg = {"base_url": "http://x", "token": "TK", "active_org": "team-a"}
     with cli._client(cfg) as c:
-        assert c.headers["X-Treg-Token"] == "TK" and c.headers["X-Treg-Org"] == "team-a"
+        assert c.headers["X-Stray-Token"] == "TK" and c.headers["X-Stray-Org"] == "team-a"
 
 
 def test_org_override_beats_active(monkeypatch):
@@ -204,7 +204,7 @@ def test_org_override_beats_active(monkeypatch):
     cfg = {"base_url": "http://x", "token": "TK", "active_org": "team-a"}
     assert cli._effective_org(cfg) == "team-b"
     with cli._client(cfg) as c:
-        assert c.headers["X-Treg-Org"] == "team-b"
+        assert c.headers["X-Stray-Org"] == "team-b"
 
 
 def test_org_use_saves_team_and_active_default_together(monkeypatch):
@@ -227,7 +227,7 @@ def test_org_use_saves_team_and_active_default_together(monkeypatch):
                     {"slug": "team-two", "active": False},
                 ])
             assert path == "/auth/cli-token"
-            assert kwargs["headers"] == {"X-Treg-Org": "team-two"}
+            assert kwargs["headers"] == {"X-Stray-Org": "team-two"}
             return Response({
                 "org": "team-two", "token": "team-two-default",
                 "default_key_state": "active",
@@ -313,10 +313,10 @@ def test_pop_org_flag():
 def test_admin_client_prefers_admin_token():
     cfg = {"base_url": "http://x", "admin_token": "ENV", "token": "USER"}
     with cli._admin_client(cfg) as c:
-        assert c.headers["X-Treg-Token"] == "ENV"
+        assert c.headers["X-Stray-Token"] == "ENV"
     del cfg["admin_token"]
     with cli._admin_client(cfg) as c:
-        assert c.headers["X-Treg-Token"] == "USER"
+        assert c.headers["X-Stray-Token"] == "USER"
 
 
 def test_org_delete_requires_matching_slug():
@@ -401,7 +401,7 @@ def test_call_preserves_duplicate_query_keys(monkeypatch):
     assert params == [("tag", "a"), ("tag", "b")]  # both survive; a dict would drop tag=a
 
 
-def test_call_sends_explicit_authorization_method_as_treg_control_header(monkeypatch):
+def test_call_sends_explicit_authorization_method_as_stray_control_header(monkeypatch):
     fake = _FakeClient()
     monkeypatch.setattr(cli, "_client", lambda cfg: fake)
     monkeypatch.setattr(cli, "_show", lambda r: None)
@@ -411,7 +411,7 @@ def test_call_sends_explicit_authorization_method_as_treg_control_header(monkeyp
         "--query", "page_id=PAGE-1",
     ])
     cli.cmd_call(args, {"base_url": "http://x"})
-    assert fake.calls[0][4]["X-Treg-Authorization-Method"] == "delegated-admin"
+    assert fake.calls[0][4]["X-Stray-Authorization-Method"] == "delegated-admin"
 
 
 def _args(**kw):
@@ -498,7 +498,7 @@ def test_find_env_upwards_locates_project_env(tmp_path):
 
 
 def test_secret_add_env_var_parses_and_strips_quotes(tmp_path, monkeypatch):
-    """`secret add --env-var` reads ONE var from an .env via treg's parser — a quoted value
+    """`secret add --env-var` reads ONE var from an .env via stray's parser — a quoted value
     (AGENTMAIL_API_KEY="am_…") is stored WITHOUT the quotes (the bug agents hit hand-extracting)."""
     (tmp_path / ".env").write_text('AGENTMAIL_API_KEY="am_us_pod_QUOTED"\nOTHER=nope\n')
     posted = {}
@@ -533,8 +533,8 @@ def test_onboard_setup_import_args_are_complete():
 
 
 def test_scan_upload_import_verbs():
-    """`treg scan` is the read-only preview (forced dry_run, no prompts); `treg upload` is the real
-    thing; `treg import` stays a working alias of upload (old docs/scripts must not break)."""
+    """`stray scan` is the read-only preview (forced dry_run, no prompts); `stray upload` is the real
+    thing; `stray import` stays a working alias of upload (old docs/scripts must not break)."""
     p = cli.build_parser()
     s = p.parse_args(["scan"])
     assert s.dry_run and s.as_scan and s.all and s.no_oauth and s.fn is cli.cmd_import
@@ -545,7 +545,7 @@ def test_scan_upload_import_verbs():
 
 
 def test_onboard_setup_source_picks_scan_dirs(tmp_path, monkeypatch):
-    """`treg onboard --path setup --source global` scans the machine-wide agent skill folders
+    """`stray onboard --path setup --source global` scans the machine-wide agent skill folders
     (~/.claude/skills, …); `--source local` keeps the project-only scan; `--source both` unions them."""
     gdir = tmp_path / "home" / ".claude" / "skills"
     (gdir / "globskill").mkdir(parents=True)
@@ -556,7 +556,7 @@ def test_onboard_setup_source_picks_scan_dirs(tmp_path, monkeypatch):
     (local / "SKILL.md").write_text("---\nname: localskill\n---\nhi")
     monkeypatch.chdir(proj)
 
-    from treg import agents as ag
+    from stray import agents as ag
     monkeypatch.setattr(ag, "detect_installed", lambda: ["claude-code"])
     monkeypatch.setattr(ag, "global_dir", lambda a: gdir)
     monkeypatch.setattr(cli, "_onboard_active_org", lambda cfg: {"name": "T", "slug": "t", "role": "admin"})
@@ -583,7 +583,7 @@ def test_only_resolvable_gaps():
 
     assert cli._only_resolvable_gaps(mk([]))                                  # no gaps → checkable
     assert cli._only_resolvable_gaps(mk(["needs env var STRIPE_KEY — not found in the env"]))  # env-var → fixable
-    assert not cli._only_resolvable_gaps(mk(["treg.json secret file missing: token.json"]))    # file gap → not
+    assert not cli._only_resolvable_gaps(mk(["stray.json secret file missing: token.json"]))    # file gap → not
 
 
 def test_prompt_missing_skill_creds_fills_values_and_clears_gaps(monkeypatch):
@@ -603,7 +603,7 @@ def test_prompt_missing_skill_creds_fills_values_and_clears_gaps(monkeypatch):
 def test_load_catalog_prefers_newer_bundled_over_older_server(tmp_path, monkeypatch):
     """A CLI updated ahead of its server must NOT regress to the server's older catalog (which lacks new
     CLIs + auth_mechanism/detect). _load_catalog uses whichever is newer by CATALOG_VERSION."""
-    from treg import providers as prov
+    from stray import providers as prov
     monkeypatch.setattr(cli, "CONFIG_PATH", tmp_path / "config.json")
 
     class _Resp:
@@ -750,7 +750,7 @@ def test_audit_filters_delegate_to_the_single_source_views(monkeypatch):
 
 # ---- catalog search / get (the discover -> inspect pair) ----------------------------------
 def test_catalog_verbs_parse_without_displacing_a_platform_slug():
-    """`search`/`get` are positional verbs, not subparsers — so `treg catalog tiktok` still browses
+    """`search`/`get` are positional verbs, not subparsers — so `stray catalog tiktok` still browses
     a shelf, and the multi-word query needs no quoting."""
     p = cli.build_parser()
     a = p.parse_args(["catalog", "search", "tiktok", "comments", "--limit", "5"])
@@ -793,7 +793,7 @@ def test_catalog_get_renders_params_siblings_and_the_command(monkeypatch, capsys
                       "summary": "s", "method": "GET", "path": "/p", "scope": "any_account", "tier": "core",
                       "cost": {"type": "per_call", "value": 0.001, "currency": "USD", "usd": 0.001},
                       "verified": "2026-07-28", "docs_url": "", "has_example": True, "input": None}],
-        "call_template": "treg call justoneapi /api/tiktok/get-post-comment/v1 --query awemeId=76662",
+        "call_template": "stray call justoneapi /api/tiktok/get-post-comment/v1 --query awemeId=76662",
         "example_response": {"code": 0, "data": {"comments": [{"text": "hi"}]}},
         "hints": [],
     }
@@ -806,7 +806,7 @@ def test_catalog_get_renders_params_siblings_and_the_command(monkeypatch, capsys
     assert provider["limits"] in out and provider["pricing_url"] in out
     assert "tikhub.tiktok.video.comments" in out                    # the sibling, for comparison
     assert "awemeId" in out and "the post id" in out and "e.g. 76662" in out
-    assert "treg call justoneapi /api/tiktok/get-post-comment/v1 --query awemeId=76662" in out
+    assert "stray call justoneapi /api/tiktok/get-post-comment/v1 --query awemeId=76662" in out
     assert '"comments"' in out                                      # the example response, inline
 
 
@@ -834,7 +834,7 @@ def test_catalog_get_needs_an_id_and_404s_helpfully(monkeypatch, capsys):
     _stub_catalog_client(monkeypatch, {"/catalog/endpoints/nope.x": _CatalogResp({}, status=404)})
     with pytest.raises(SystemExit):
         cli.cmd_catalog(p.parse_args(["catalog", "get", "nope.x"]), {"base_url": "http://x"})
-    assert "find one with: treg catalog search" in capsys.readouterr().out
+    assert "find one with: stray catalog search" in capsys.readouterr().out
 
 
 # ---- onboarding path 1: the catalog ---------------------------------------------------------
@@ -885,13 +885,13 @@ def _onboard_catalog(monkeypatch, access, call_status=200):
     return client
 
 
-def test_onboard_catalog_calls_when_treg_serves_it(monkeypatch, capsys):
-    """The happy path: treg's own key covers it, so the price is stated and the call is made."""
+def test_onboard_catalog_calls_when_stray_serves_it(monkeypatch, capsys):
+    """The happy path: stray's own key covers it, so the price is stated and the call is made."""
     c = _onboard_catalog(monkeypatch, {"tier": "platform", "estimated_cost_usd": 0.001})
     out = capsys.readouterr().out
-    assert "on treg's key" in out and "$0.001" in out
+    assert "on stray's key" in out and "$0.001" in out
     assert "GET /call/tikhub.tiktok.user.profile" in c.seen      # it really called
-    assert "treg balance" in out                                  # and showed what it cost
+    assert "stray balance" in out                                  # and showed what it cost
 
 
 def test_onboard_catalog_says_not_metered_for_your_own_key(monkeypatch, capsys):
@@ -899,15 +899,15 @@ def test_onboard_catalog_says_not_metered_for_your_own_key(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "OWN credential" in out and "not metered" in out
     assert any(s.startswith("GET /call/") for s in c.seen)
-    assert "treg balance" not in out          # nothing was spent, so don't show a balance
+    assert "stray balance" not in out          # nothing was spent, so don't show a balance
 
 
 def test_onboard_catalog_dead_end_names_the_one_command_that_fixes_it(monkeypatch, capsys):
-    """Before platform providers are switched on (TREG_PLATFORM_PROVIDERS empty) this is what every
+    """Before platform providers are switched on (STRAY_PLATFORM_PROVIDERS empty) this is what every
     new user sees — so it must not read like a failure, and must never pretend to call."""
     c = _onboard_catalog(monkeypatch, {"tier": "none", "detail": "no tikhub credential in this org yet"})
     out = capsys.readouterr().out
-    assert "treg connections connect --provider tikhub" in out
+    assert "stray connections connect --provider tikhub" in out
     assert not any(s.startswith("GET /call/") for s in c.seen)   # nothing was called
 
 
@@ -918,7 +918,7 @@ def test_show_prints_failure_diagnostics_on_stderr_and_keeps_stdout_the_body(cap
     import httpx
     body = b'{"error":"The account does not have enough quota remaining for current period."}'
     relayed = httpx.Response(403, content=body, headers={
-        "content-type": "application/json", "X-Treg-Call-Id": "c2075d8d79eb4436aafc310e81081c1b"})
+        "content-type": "application/json", "X-Stray-Call-Id": "c2075d8d79eb4436aafc310e81081c1b"})
     with pytest.raises(SystemExit):
         cli._show(relayed)
     out, err = capsys.readouterr()
@@ -927,11 +927,11 @@ def test_show_prints_failure_diagnostics_on_stderr_and_keeps_stdout_the_body(cap
     assert "charged" not in err  # no cost header → no claim about money
 
     refused = httpx.Response(402, content=b'{"detail":{"error":"route_max_cost"}}', headers={
-        "content-type": "application/json", "X-Treg-Error": "1"})
+        "content-type": "application/json", "X-Stray-Error": "1"})
     with pytest.raises(SystemExit):
         cli._show(refused)
     _, err = capsys.readouterr()
-    assert "HTTP 402" in err and "treg refused" in err
+    assert "HTTP 402" in err and "stray refused" in err
 
     ok = httpx.Response(200, content=b'{"ok":true}', headers={"content-type": "application/json"})
     cli._show(ok)
@@ -944,32 +944,32 @@ def test_show_prints_the_charge_and_call_id_for_a_metered_success(capsys):
     body. No cost header (own key, or a non-call response) → nothing extra. A replay says so."""
     import httpx
     metered = httpx.Response(200, content=b'{"results":[{"x":1}],"next_token":"abc"}', headers={
-        "content-type": "application/json", "X-Treg-Cost-Micro": "6667",
-        "X-Treg-Call-Id": "125117d50cd3470cb25ba11f3d9789ad"})
+        "content-type": "application/json", "X-Stray-Cost-Micro": "6667",
+        "X-Stray-Call-Id": "125117d50cd3470cb25ba11f3d9789ad"})
     cli._show(metered)
     out, err = capsys.readouterr()
     assert json.loads(out) == {"results": [{"x": 1}], "next_token": "abc"}
-    assert err.strip() == "treg: charged $0.006667 · call id 125117d50cd3470cb25ba11f3d9789ad"
+    assert err.strip() == "stray: charged $0.006667 · call id 125117d50cd3470cb25ba11f3d9789ad"
 
     own_key = httpx.Response(200, content=b'{"ok":true}', headers={
-        "content-type": "application/json", "X-Treg-Call-Id": "deadbeef"})
+        "content-type": "application/json", "X-Stray-Call-Id": "deadbeef"})
     cli._show(own_key)
     _, err = capsys.readouterr()
     assert err == ""
 
     replay = httpx.Response(200, content=b'{}', headers={
-        "content-type": "application/json", "X-Treg-Cost-Micro": "0", "X-Treg-Original-Cost-Micro": "6667",
-        "X-Treg-Idempotent-Replay": "true", "X-Treg-Call-Id": "c1"})
+        "content-type": "application/json", "X-Stray-Cost-Micro": "0", "X-Stray-Original-Cost-Micro": "6667",
+        "X-Stray-Idempotent-Replay": "true", "X-Stray-Call-Id": "c1"})
     cli._show(replay)
     _, err = capsys.readouterr()
     assert "$0.006667 by the original call" in err and "nothing new charged" in err
 
     async_submission = httpx.Response(200, content=b'{"run_id":"r1"}', headers={
-        "content-type": "application/json", "X-Treg-Cost-Micro": "2400000",
-        "X-Treg-Async": "{}", "X-Treg-Call-Id": "async1"})
+        "content-type": "application/json", "X-Stray-Cost-Micro": "2400000",
+        "X-Stray-Async": "{}", "X-Stray-Call-Id": "async1"})
     cli._show(async_submission)
     _, err = capsys.readouterr()
-    assert err.strip() == "treg: reserved up to $2.4 for async settlement · call id async1"
+    assert err.strip() == "stray: reserved up to $2.4 for async settlement · call id async1"
 
 
 
@@ -977,7 +977,7 @@ def test_show_prints_the_charge_and_call_id_for_a_metered_success(capsys):
 # The hub family (phase 4)
 
 def test_hub_init_writes_the_four_files(tmp_path, monkeypatch):
-    from treg import cli
+    from stray import cli
     import argparse
     args = argparse.Namespace(name="leads-db", script=True, dir=str(tmp_path / "leads"))
     cli.cmd_hub_init(args, {})
@@ -994,7 +994,7 @@ def test_hub_init_writes_the_four_files(tmp_path, monkeypatch):
 
 
 def test_hub_is_in_the_help_and_parses():
-    from treg import cli
+    from stray import cli
     assert any(name == "hub" for _, rows in cli.HELP_GROUPS for name, _ in rows)
     parser = cli.build_parser() if hasattr(cli, "build_parser") else None
     if parser is not None:
@@ -1010,44 +1010,44 @@ def test_hub_is_in_the_help_and_parses():
 
 
 def test_catalog_get_prints_a_hub_tool_contract(capsys):
-    from treg import cli
+    from stray import cli
     e = {"id": "acme.leads-db", "kind": "hub", "version": 2, "provider": "acme", "made_of": 2, "recipe": "script",
          "price_line": "seller $0.01 + steps", "cost": {"usd": 0.01}, "status": "live",
          "check": {"status": "passed", "checked_at": "2026-09-09T20:11:00"},
          "inputs": {"domain": {"type": "string", "example": "figma.com", "note": "one domain"},
                     "limit": {"type": "int", "default": 20, "max": 100}},
          "output": {"fields": ["rows", "count"]},
-         "call_template": {"cli": "treg call acme.leads-db --data '{\"domain\": \"figma.com\"}'", "http": "POST https://treg.to/call/acme.leads-db"},
+         "call_template": {"cli": "stray call acme.leads-db --data '{\"domain\": \"figma.com\"}'", "http": "POST https://treg.to/call/acme.leads-db"},
          "page": "https://treg.to/hub/acme.leads-db"}
     cli._catalog_get_hub(e)
     out = capsys.readouterr().out
     assert "seller $0.01 + steps" in out and "domain" in out and "(required)" in out and "rows, count" in out
-    assert "treg call acme.leads-db" in out and "https://treg.to/hub/acme.leads-db" in out
+    assert "stray call acme.leads-db" in out and "https://treg.to/hub/acme.leads-db" in out
 
 
 
 def test_a_hub_refusal_names_the_missing_tool_in_its_fix_commands(capsys):
     """From the case study walk (2026-09-09): the refusal must name the tool the manifest wants,
     one command per line, in the order to run them."""
-    from treg import cli
+    from stray import cli
 
     class R:
         status_code = 422
         headers = {"content-type": "application/json"}
         def json(self):
             return {"detail": {"error": "manifest_invalid", "field": "uses[0]",
-                               "rule": "'supabase' is not one of your team's tools (register it first: treg tool add)"}}
+                               "rule": "'supabase' is not one of your team's tools (register it first: stray tool add)"}}
     import pytest as _pytest
     with _pytest.raises(SystemExit):
         cli._hub_report(R(), json_out=False)
     out = capsys.readouterr().out
     assert "uses[0]" in out
-    assert "treg secret add SUPABASE_KEY --value" in out
-    assert "treg tool add supabase --base-url" in out
-    lines = [l for l in out.splitlines() if "treg " in l]
-    assert len(lines) >= 3 and all(l.count("treg ") == 1 for l in lines)     # one command per line
+    assert "stray secret add SUPABASE_KEY --value" in out
+    assert "stray tool add supabase --base-url" in out
+    lines = [l for l in out.splitlines() if "stray " in l]
+    assert len(lines) >= 3 and all(l.count("stray ") == 1 for l in lines)     # one command per line
 def test_host_prints_the_url_alone_and_the_full_response_under_json(monkeypatch, tmp_path, capsys):
-    """`$(treg host face.jpg)` must yield the bare URL; `--json` is the GLOBAL flag main() pops from
+    """`$(stray host face.jpg)` must yield the bare URL; `--json` is the GLOBAL flag main() pops from
     argv, so cmd_host reads _JSON_OVERRIDE like every other command (a per-subcommand flag is dead)."""
     class Response:
         status_code = 201
@@ -1073,7 +1073,7 @@ def test_host_prints_the_url_alone_and_the_full_response_under_json(monkeypatch,
 
 
 def test_org_rename_follows_slug_change_locally(monkeypatch, tmp_path):
-    """`treg org rename --slug` rewrites active_org; the pinned token is untouched because the server
+    """`stray org rename --slug` rewrites active_org; the pinned token is untouched because the server
     keeps the old slug as an alias."""
     monkeypatch.setattr(cli, "CONFIG_PATH", tmp_path / "config.json")
     saved = {}

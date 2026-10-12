@@ -29,13 +29,13 @@ personalWithTeams(){ return this.isPersonal(this.activeOrg) && this.myOrgs.some(
     ]; },
 cliShowHtml(){
       const t = [
-        '$ treg login',
+        '$ stray login',
         '✓ Signed in as you@team.dev  (org: team)',
         '',
-        '$ treg add stripe --base-url https://api.stripe.com --secret STRIPE_KEY',
+        '$ stray add stripe --base-url https://api.stripe.com --secret STRIPE_KEY',
         "✓ Registered 'stripe' - the key is stored server-side, never on your machine",
         '',
-        '$ treg call https://api.stripe.com/v1/balance',
+        '$ stray call https://api.stripe.com/v1/balance',
         '{ "object": "balance", "available": [ { "amount": 4210, "currency": "usd" } ] }',
       ].join('\n');
       return this.tutHL(t,'cmd');

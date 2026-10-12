@@ -1,17 +1,17 @@
-# treg — CLI usage
+# stray — CLI usage
 
-`treg` is the command-line client for **tools-registry**: call shared team tools without holding
+`stray` is the command-line client for **stray**: call shared team tools without holding
 their credentials, and turn your local skills into shareable tools. It's a thin client over the
 API (`https://treg.to`); the API is the only brain.
 
-Every command reads `~/.treg/config.json` for the endpoint + your token. Get per-command detail
-with `treg <command> --help` (e.g. `treg secret --help`, not `treg "secret add"`).
+Every command reads `~/.stray/config.json` for the endpoint + your token. Get per-command detail
+with `stray <command> --help` (e.g. `stray secret --help`, not `stray "secret add"`).
 
 ## Install (once)
 
 ```bash
-cd tools-registry
-uv tool install --editable . --python 3.13     # puts `treg` on your PATH, tracking the dev source
+cd stray
+uv tool install --editable . --python 3.13     # puts `stray` on your PATH, tracking the dev source
 # code edits reflect with no reinstall; re-run with --reinstall only after a dependency change
 ```
 
@@ -21,7 +21,7 @@ uv tool install --editable . --python 3.13     # puts `treg` on your PATH, track
 
 - **The catalogue** — ~2,600 curated external endpoints across ~40 data providers (TikTok, Instagram,
   Reddit, SEO and SERP data, enrichment, scraping…). Call one by its **endpoint id**. If nobody on the
-  team holds a key for that provider, treg can serve it on **its own key**, billed per call from the
+  team holds a key for that provider, stray can serve it on **its own key**, billed per call from the
   team's prepaid balance. No provider signup.
 - **The vault** — your team's own tools. Any API key, OAuth connection or vendor CLI a member
   registers becomes callable by every teammate and their agents, without the key ever leaving the
@@ -34,7 +34,7 @@ The vocabulary for the vault half:
   `developer-token` header).
 - A **skill / bundle** = a recipe (SKILL.md) + its secrets + its tool(s).
 - The proxy **relays, never models** the upstream, and **injects auth server-side**, so callers
-  never hold the key. Your `X-Treg-Token` is stripped before the upstream sees it.
+  never hold the key. Your `X-Stray-Token` is stripped before the upstream sees it.
 
 ---
 
@@ -46,73 +46,73 @@ present a per-org token directly.
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg config` | `--base-url URL` | show or set the endpoint (prints base URL, email, active org, logged-in) — use `treg org ls` for the full org list |
-| `treg login` | _(none)_ | GitHub browser sign-in (register-or-login), stores one identity token |
-| `treg login` | `--email EMAIL` | email one-time-code sign-in (register-or-login); prompts for the code |
-| `treg login` | `--token TOKEN` | agents/CI: use a per-org token directly |
-| `treg logout` | — | clear your stored credentials |
-| `treg onboard` | `--mode guided\|quick` · `--name N` · `--yes` · `--reset` | colourful guided first-run — pick **guided build** (you create the team + invite a teammate, step by step) or **quick demo** (we seed a full demo team + tool + activity), ending on a no-key call. Offered `[Y/n]` after your first login; `--reset` removes demo teammates |
+| `stray config` | `--base-url URL` | show or set the endpoint (prints base URL, email, active org, logged-in) — use `stray org ls` for the full org list |
+| `stray login` | _(none)_ | GitHub browser sign-in (register-or-login), stores one identity token |
+| `stray login` | `--email EMAIL` | email one-time-code sign-in (register-or-login); prompts for the code |
+| `stray login` | `--token TOKEN` | agents/CI: use a per-org token directly |
+| `stray logout` | — | clear your stored credentials |
+| `stray onboard` | `--mode guided\|quick` · `--name N` · `--yes` · `--reset` | colourful guided first-run — pick **guided build** (you create the team + invite a teammate, step by step) or **quick demo** (we seed a full demo team + tool + activity), ending on a no-key call. Offered `[Y/n]` after your first login; `--reset` removes demo teammates |
 
 ```bash
-treg config --base-url https://treg.to
-treg login                                 # GitHub; or:
-treg login --email you@example.com        # emailed 6-digit code (register-or-login)
+stray config --base-url https://treg.to
+stray login                                 # GitHub; or:
+stray login --email you@example.com        # emailed 6-digit code (register-or-login)
 ```
 
 ## Teams / orgs
 
-An **org** (team) owns the tools/secrets. After `treg login` the CLI holds a single **identity token**
-in `~/.treg/config.json` and sends your **active** org as `X-Treg-Org`; `treg org use <slug>` switches
-it. (With `treg login --token`, that per-org token is used directly instead.) Every other command runs
+An **org** (team) owns the tools/secrets. After `stray login` the CLI holds a single **identity token**
+in `~/.stray/config.json` and sends your **active** org as `X-Stray-Org`; `stray org use <slug>` switches
+it. (With `stray login --token`, that per-org token is used directly instead.) Every other command runs
 in your active org. Roles: **owner > admin > member** (a member calls + manages
 only what they created; admin/owner manage anything in the org; admin+ can invite/remove members).
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg org create` | `"NAME"` | create a new org; you become its owner (new token, auto-active) |
-| `treg org ls` | — | list your orgs (marks the active one) |
-| `treg org use` | `SLUG` | switch the active org |
-| `treg org rename` | `--name "NAME"`, `--slug SLUG` | (admin+) rename the active org and/or change its slug; existing keys keep working |
-| `treg org invite` | `EMAIL`, `--role member\|admin` | (admin+) create a one-time invite **code** to share |
-| `treg org members` | — | (admin+) list members + roles |
-| `treg org join` | `CODE`, `--email EMAIL` | redeem a code: registers you if new, joins, saves the org token |
+| `stray org create` | `"NAME"` | create a new org; you become its owner (new token, auto-active) |
+| `stray org ls` | — | list your orgs (marks the active one) |
+| `stray org use` | `SLUG` | switch the active org |
+| `stray org rename` | `--name "NAME"`, `--slug SLUG` | (admin+) rename the active org and/or change its slug; existing keys keep working |
+| `stray org invite` | `EMAIL`, `--role member\|admin` | (admin+) create a one-time invite **code** to share |
+| `stray org members` | — | (admin+) list members + roles |
+| `stray org join` | `CODE`, `--email EMAIL` | redeem a code: registers you if new, joins, saves the org token |
 
 ```bash
 # owner side
-treg org create "Team A"                       # active org is now team-a
-treg org invite bob@company.com --role member  # prints e.g. inv_7Kd9x2LmQpR4 — send it to Bob
+stray org create "Team A"                       # active org is now team-a
+stray org invite bob@company.com --role member  # prints e.g. inv_7Kd9x2LmQpR4 — send it to Bob
 
 # Bob's side (no email is sent; he gets the code over Slack/DM)
-treg config --base-url https://treg.to
-treg org join inv_7Kd9x2LmQpR4 --email bob@company.com   # joins + mints HIS own token
-treg tool ls            # sees only Team A's tools
-treg org use team-a     # switch orgs anytime; one token per org, never mixed
+stray config --base-url https://treg.to
+stray org join inv_7Kd9x2LmQpR4 --email bob@company.com   # joins + mints HIS own token
+stray tool ls            # sees only Team A's tools
+stray org use team-a     # switch orgs anytime; one token per org, never mixed
 ```
 
 ## Secrets (credentials — write-only; the API never returns a stored value)
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg secret add NAME` | `--value V` \| `--file PATH`, `--kind env\|secret_file\|oauth\|cli_auth` | upload a credential (a string value, or a file's contents) |
-| `treg secret ls` | — | list (name / kind / owner) |
-| `treg secret rm ID` | — | delete (blocked while a tool binds it) |
+| `stray secret add NAME` | `--value V` \| `--file PATH`, `--kind env\|secret_file\|oauth\|cli_auth` | upload a credential (a string value, or a file's contents) |
+| `stray secret ls` | — | list (name / kind / owner) |
+| `stray secret rm ID` | — | delete (blocked while a tool binds it) |
 
 ```bash
-treg secret add posthog-key --value "$POSTHOG_API_KEY"
-treg secret add gsc --file ./.secrets/token.json --kind oauth
+stray secret add posthog-key --value "$POSTHOG_API_KEY"
+stray secret add gsc --file ./.secrets/token.json --kind oauth
 ```
 
 ## Tools
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg tool add NAME` | `--base-url URL` (required) | register a tool |
+| `stray tool add NAME` | `--base-url URL` (required) | register a tool |
 | — single-binding | `--secret ID`, `--injector`, `--auth-in`, `--auth-name`, `--auth-format`, `--secret-field` | the common case |
 | — multi-binding (friendly) | `--bind 'secret=ID,injector=,location=,name=,format=,secret_field='` (repeatable) | only `secret=` is required |
 | — multi-binding (raw) | `--binding '<json>'` (repeatable) | full binding dict, advanced |
 | — health probe | `--health '{"path":"me","expect_status":200}'` | optional validation probe |
-| `treg tool ls` | — | list tools + their bindings |
-| `treg tool rm ID` | — | delete |
+| `stray tool ls` | — | list tools + their bindings |
+| `stray tool rm ID` | — | delete |
 
 **Defaults** for a single `--secret` and for each `--bind`:
 `injector=env`, `location`/`auth-in=header`, `name`/`auth-name=Authorization`,
@@ -120,12 +120,12 @@ treg secret add gsc --file ./.secrets/token.json --kind oauth
 
 ```bash
 # single credential
-treg tool add posthog --base-url https://us.posthog.com --secret 3
+stray tool add posthog --base-url https://us.posthog.com --secret 3
 # query-key API instead of a bearer header
-treg tool add gsc --base-url https://searchconsole.googleapis.com --secret 3 \
+stray tool add gsc --base-url https://searchconsole.googleapis.com --secret 3 \
   --injector oauth --secret-field token
 # two credentials on one request (google-ads)
-treg tool add google-ads --base-url https://googleads.googleapis.com \
+stray tool add google-ads --base-url https://googleads.googleapis.com \
   --bind "secret=4,injector=oauth" \
   --bind "secret=5,name=developer-token,format={secret}"
 ```
@@ -134,63 +134,63 @@ treg tool add google-ads --base-url https://googleads.googleapis.com \
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg catalog search` | `"what you want to do"` | find endpoints by capability |
-| `treg catalog get` | `ENDPOINT_ID` | docs, parameters, **the price**, and how you would be served |
-| `treg call ENDPOINT_ID` | `--query K=V`, `--data STR` | call it |
-| `treg --json call ENDPOINT_ID` | same | for scripts: one JSON line `{"result": <body>, "_treg": {http_status, call_id, charged_micro}}` on stdout, nothing on stderr |
-| `treg call ENDPOINT_ID --await` | `--timeout N` (default 900) | a generation call (video/image): submit, poll the provider, print the final response |
-| `treg host FILE` | `--content-type T`, `--json` | host a reference image/audio/video at a public URL a vendor can fetch (30 MB, 7-day TTL, free); prints the URL for `image_urls` / `audio_urls` |
-| `treg catalog request` | `"what's missing"` | searched, not there? file it — requests steer what gets added next |
-| `treg resources list` | `--provider fishaudio --kind voice` | list Fish-account voices with BYOK, otherwise platform-created voices for the active team |
+| `stray catalog search` | `"what you want to do"` | find endpoints by capability |
+| `stray catalog get` | `ENDPOINT_ID` | docs, parameters, **the price**, and how you would be served |
+| `stray call ENDPOINT_ID` | `--query K=V`, `--data STR` | call it |
+| `stray --json call ENDPOINT_ID` | same | for scripts: one JSON line `{"result": <body>, "_stray": {http_status, call_id, charged_micro}}` on stdout, nothing on stderr |
+| `stray call ENDPOINT_ID --await` | `--timeout N` (default 900) | a generation call (video/image): submit, poll the provider, print the final response |
+| `stray host FILE` | `--content-type T`, `--json` | host a reference image/audio/video at a public URL a vendor can fetch (30 MB, 7-day TTL, free); prints the URL for `image_urls` / `audio_urls` |
+| `stray catalog request` | `"what's missing"` | searched, not there? file it — requests steer what gets added next |
+| `stray resources list` | `--provider fishaudio --kind voice` | list Fish-account voices with BYOK, otherwise platform-created voices for the active team |
 
 ```bash
-treg catalog search "instagram profile"
-treg catalog get tikhub.tiktok.user.profile          # shows the price BEFORE you spend
-treg call tikhub.tiktok.user.profile --query uniqueId=tiktok
+stray catalog search "instagram profile"
+stray catalog get tikhub.tiktok.user.profile          # shows the price BEFORE you spend
+stray call tikhub.tiktok.user.profile --query uniqueId=tiktok
 ```
 
 **Video and image generation** (`video-gen` / `image-gen` platforms) are async tasks: the call returns
 a task id, and `--await` polls until it finishes. Stdout is the final response only; stderr gets the
-task id, a resumable `treg call …` command, progress and the result URL. Exit 0 = done, 2 = the
+task id, a resumable `stray call …` command, progress and the result URL. Exit 0 = done, 2 = the
 provider failed the task, 3 = timed out (resume with the printed command). Money is reserved at
 submission and charged only on success; a failed task refunds the hold. Result URLs are time-limited
-(download promptly; treg never stores media). From a coding agent, raise the shell tool's timeout or
-run the call in the background - a video takes 1-5 minutes. `treg audit` shows each task's state.
+(download promptly; stray never stores media). From a coding agent, raise the shell tool's timeout or
+run the call in the background - a video takes 1-5 minutes. `stray audit` shows each task's state.
 
 Fish Audio TTS is synchronous and returns audio bytes. Keep stdout clean and redirect it:
 
 ```bash
-treg call fishaudio.tts.s2-1-pro --method POST --header model=s2.1-pro \
+stray call fishaudio.tts.s2-1-pro --method POST --header model=s2.1-pro \
   --data '{"text":"Hello","format":"mp3"}' > speech.mp3
 ```
 
 Create a voice with repeated `--upload voices=@clip.wav` parts and the fixed private fields shown by
-`treg catalog get fishaudio.voices.create`; then use its id as TTS `reference_id`. Platform-created
-voices appear in `treg resources list --provider fishaudio --kind voice`. With BYOK the same command
+`stray catalog get fishaudio.voices.create`; then use its id as TTS `reference_id`. Platform-created
+voices appear in `stray resources list --provider fishaudio --kind voice`. With BYOK the same command
 lists the connected Fish account instead. Curl callers use
 `GET /orgs/{org_id}/provider-resources?provider=fishaudio&kind=voice`; it returns the same normalized
-rows with `X-Treg-Resource-Source: byok|platform`. BYOK users may also call Fish's raw account-wide
+rows with `X-Stray-Resource-Source: byok|platform`. BYOK users may also call Fish's raw account-wide
 list directly. To choose a reusable Fish-supplied voice, call
 `fishaudio.voices.discover` with `self=false` and an explicit `licensed=true|false`, then pass a
 returned `_id` as the TTS `reference_id`. `licensed=true` selects Fish's rights-secured subset;
-`false` includes the broader public/community catalog. On the platform key, treg verifies that
-non-team ids remain public before synthesis. `treg catalog get fishaudio.tts.s2-1-pro` lists the
+`false` includes the broader public/community catalog. On the platform key, stray verifies that
+non-team ids remain public before synthesis. `stray catalog get fishaudio.tts.s2-1-pro` lists the
 supported generation, prosody, output-format, bitrate, sample-rate, latency, and chunking controls.
 
 **How a catalogued call is served — the credential ladder, in order:**
 
 1. the team registered its own tool for that provider → that tool, that key;
 2. the team stored a secret for the provider → injected through a virtual tool;
-3. neither → **treg's own key**, metered against the team's prepaid balance.
+3. neither → **stray's own key**, metered against the team's prepaid balance.
 
-Rung 3 only applies where treg has both a key and a published price for that endpoint; anything
+Rung 3 only applies where stray has both a key and a published price for that endpoint; anything
 unpriced is refused rather than served, and you are told to connect your own key. Your own key is
 never billed to the balance.
 
 ## Review a catalog call
 
-`treg review <call_id> <useful|partly|not_useful|not_sure> [--reason "text"]` rates a catalog
-call after you have used the result. Phase 1 invites only direct catalog calls served on treg's
+`stray review <call_id> <useful|partly|not_useful|not_sure> [--reason "text"]` rates a catalog
+call after you have used the result. Phase 1 invites only direct catalog calls served on stray's
 own platform key; sampled calls print an invitation on stderr. Routed and own-key catalog calls
 can still be reviewed uninvited. `not_sure` is fine when you cannot tell. The optional reason is
 1-200 characters after trimming. Omit private data and raw payloads. Use `feedback` for anything confusing or wrong, then keep going
@@ -199,67 +199,67 @@ If the call record is not written yet, retry shortly with the same call ID.
 
 ## Feedback
 
-`treg feedback submit <quality|pricing|friction|other> "message"` submits a problem or suggestion to the
+`stray feedback submit <quality|pricing|friction|other> "message"` submits a problem or suggestion to the
 configured registry, under the active team. Add `--call-id ID` (repeatable) or `--endpoint-id ID`
 when available. Message `-` reads a prepared, sanitized description from stdin. The command
 returns a `feedback_id`. Omit private information and raw requests, responses or logs.
-Retrieve a report with `treg feedback get <feedback_id>`.
-See `treg feedback --help` and your registry's `/feedback.md` for details.
+Retrieve a report with `stray feedback get <feedback_id>`.
+See `stray feedback --help` and your registry's `/feedback.md` for details.
 
 ## Balance & top-up
 
-Only calls on **treg's key** (rung 3 above) cost balance. Everything else — your own keys, your own
+Only calls on **stray's key** (rung 3 above) cost balance. Everything else — your own keys, your own
 tools, vendor CLIs — is free of it.
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg balance` | `--limit N`, `--json` | credit left, calls in flight, recent spend |
-| `treg topup` | | add funds, or set up automatic top-ups |
+| `stray balance` | `--limit N`, `--json` | credit left, calls in flight, recent spend |
+| `stray topup` | | add funds, or set up automatic top-ups |
 
 ```bash
-treg whoami                  # the account, the active team and your role, the server
-treg balance                 # every new team starts with $1.00 of free credit
-treg balance --json          # integer micro-USD (1e-6 USD) — the unit the ledger uses
-treg topup
+stray whoami                  # the account, the active team and your role, the server
+stray balance                 # every new team starts with $1.00 of free credit
+stray balance --json          # integer micro-USD (1e-6 USD) — the unit the ledger uses
+stray topup
 ```
 
 Out of balance is an HTTP **402** carrying `balance_micro`, `estimated_cost_micro` and a `topup_url`,
 so an agent can act on it without reading prose. There is also a per-day ceiling on spend against
-treg's keys, so a runaway agent has a bounded blast radius.
+stray's keys, so a runaway agent has a bounded blast radius.
 
-If treg's **own** account for a provider is out, a metered call is refused with HTTP **503**
+If stray's **own** account for a provider is out, a metered call is refused with HTTP **503**
 `provider_capacity_unavailable` before anything is reserved — nothing is charged, the body names
 `resets_at` when known and `alternatives` (other providers for the same capability). Your own key
-for the provider is never affected, and treg does not switch providers on your behalf. treg
+for the provider is never affected, and stray does not switch providers on your behalf. stray
 re-checks the provider about once a minute, so a retry after a minute can succeed.
 
-Where the deployment has the overflow relay on, treg may instead serve the **same endpoint** through a
-treg-owned aggregator account — same request, same response shape, the relay's real price (0% markup),
-`X-Treg-Served-Via: overflow:<name>` on the response. `treg org overflow off` opts your team out (calls
-then get the 503 above); `treg org overflow` shows the setting. Own keys are never relayed.
+Where the deployment has the overflow relay on, stray may instead serve the **same endpoint** through a
+stray-owned aggregator account — same request, same response shape, the relay's real price (0% markup),
+`X-Stray-Served-Via: overflow:<name>` on the response. `stray org overflow off` opts your team out (calls
+then get the 503 above); `stray org overflow` shows the setting. Own keys are never relayed.
 
-### Routed endpoints — let treg choose the provider
+### Routed endpoints — let stray choose the provider
 
-`treg.<capability>` endpoints (today `treg.people.email.find`) are generated from the providers of one
+`stray.<capability>` endpoints (today `stray.people.email.find`) are generated from the providers of one
 capability whose adapters passed verification. Call one like any endpoint:
 
 ```bash
-treg call treg.people.email.find --body '{"full_name": "Patrick Collison", "domain": "stripe.com"}'
-treg call treg.people.email.find --body '{"linkedin_url": "https://www.linkedin.com/in/patrickcollison"}' \
-  --header "X-Treg-Route-Max-Cost: 0.05"     # cap the per-call spend (default ceiling $1)
-treg catalog get treg.people.email.find      # the ranked plan with prices — spends nothing
+stray call stray.people.email.find --body '{"full_name": "Patrick Collison", "domain": "stripe.com"}'
+stray call stray.people.email.find --body '{"linkedin_url": "https://www.linkedin.com/in/patrickcollison"}' \
+  --header "X-Stray-Route-Max-Cost: 0.05"     # cap the per-call spend (default ceiling $1)
+stray catalog get stray.people.email.find      # the ranked plan with prices — spends nothing
 ```
 
-treg runs the best child — your own keys first, then the cheapest expected cost per hit — and
-returns `{output, raw, _treg: {served_by, tried, charged_micro}}` plus `X-Treg-Served-By` and
-`X-Treg-Providers-Tried`. A provider error falls back to the next candidate (at most two extra); a
+stray runs the best child — your own keys first, then the cheapest expected cost per hit — and
+returns `{output, raw, _stray: {served_by, tried, charged_micro}}` plus `X-Stray-Served-By` and
+`X-Stray-Providers-Tried`. A provider error falls back to the next candidate (at most two extra); a
 vendor 4xx is your request's fault and stops. A **miss** tries the next provider too (the waterfall,
-on by default), cheapest first, within `X-Treg-Route-Max-Cost` (default $1 per call); every
-attempt settles at its real price and misses on per-success providers are free. `X-Treg-Route-Waterfall: 0`
-stops at the first miss. `X-Treg-Route-Prefer` / `X-Treg-Route-Exclude` name providers. A filter the serving provider could not apply is named in `X-Treg-Ignored-Filters` (and `_treg.ignored_filters`); `X-Treg-Route-Strict-Filters: 1` refuses such a call with a 422 (unbilled) instead. Vendor endpoints are still relayed verbatim; only `treg.*` rows model an API.
+on by default), cheapest first, within `X-Stray-Route-Max-Cost` (default $1 per call); every
+attempt settles at its real price and misses on per-success providers are free. `X-Stray-Route-Waterfall: 0`
+stops at the first miss. `X-Stray-Route-Prefer` / `X-Stray-Route-Exclude` name providers. A filter the serving provider could not apply is named in `X-Stray-Ignored-Filters` (and `_stray.ignored_filters`); `X-Stray-Route-Strict-Filters: 1` refuses such a call with a 422 (unbilled) instead. Vendor endpoints are still relayed verbatim; only `stray.*` rows model an API.
 
-When a routed child is asynchronous, treg submits and polls it internally for up to 60 seconds. If
-it is still processing, the route returns HTTP 202 with `_treg.outcome: "pending"`, the child call
+When a routed child is asynchronous, stray submits and polls it internally for up to 60 seconds. If
+it is still processing, the route returns HTTP 202 with `_stray.outcome: "pending"`, the child call
 reference and poll descriptor, `reserved_micro`, and `charged_micro: null`. That attempt stops the
 waterfall; it is not safe to start another billable provider while the first may still complete.
 
@@ -267,87 +267,87 @@ waterfall; it is not safe to start another billable provider while the first may
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg call TOOL PATH` | `--method GET`, `--query K=V` (repeatable), `--data STR`, `--file PATH` | proxy a call (named form) |
-| `treg calls` | `--limit N` | audit log (who called which tool, when, status) |
+| `stray call TOOL PATH` | `--method GET`, `--query K=V` (repeatable), `--data STR`, `--file PATH` | proxy a call (named form) |
+| `stray calls` | `--limit N` | audit log (who called which tool, when, status) |
 
 ```bash
-treg call intercom conversations --query per_page=5
-treg call posthog api/projects --method POST --data '{"name":"x"}'
+stray call intercom conversations --query per_page=5
+stray call posthog api/projects --method POST --data '{"name":"x"}'
 ```
 
 **Agent-native (raw HTTP) form** — build the real upstream URL and prefix it; no CLI needed:
 
 ```
 GET https://treg.to/call/https://api.intercom.io/conversations?per_page=5
-    + header:  X-Treg-Token: <your token>
+    + header:  X-Stray-Token: <your token>
 ```
 
-treg resolves the tool by the upstream host, injects the credential, and relays everything
+stray resolves the tool by the upstream host, injects the credential, and relays everything
 faithfully (method, all query params incl. duplicates, headers, cookies, body).
 
 ## Running vendor CLIs
 
-`treg call` proxies **HTTP APIs**. `treg run` is its command-line complement: it runs a **vendor
+`stray call` proxies **HTTP APIs**. `stray run` is its command-line complement: it runs a **vendor
 CLI** (stripe, gh, vercel, gcloud, flyctl…) with the tool's credential injected server-side, so the
 member runs the CLI **without ever holding or logging into the key**. A recipe-only catalog-CLI
-skill (e.g. a `stripe-cli` SKILL.md) auto-becomes runnable — `treg upload` recognises it via the
-provider catalog and wires the credential, so `treg run` works with no `treg.json`.
+skill (e.g. a `stripe-cli` SKILL.md) auto-becomes runnable — `stray upload` recognises it via the
+provider catalog and wires the credential, so `stray run` works with no `stray.json`.
 
 The tool owner opts in per tool for **local** runs (the key reaches the member's machine): the
-dashboard `⌘ run` toggle, or `treg tool update <id> --local-run on|off`. **Server** runs need no
+dashboard `⌘ run` toggle, or `stray tool update <id> --local-run on|off`. **Server** runs need no
 opt-in — the key never leaves the registry, and the server's bin allow-list gates what may execute.
 One `cli` profile on the tool drives both tiers (`bin`, `inject`, `deny`, `enabled`).
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg run TOOL -- <cli args>` | `--local` (default) \| `--server`, `--timeout N` ([--server] only) | run the tool's CLI with its credential injected; everything after `--` goes to the CLI verbatim |
-| `treg runs` | `--limit N` | CLI-run audit log (who ran which tool, when, exit code) |
-| `treg setup-local-run` | `--run-proof VALUE`, `--member USER` | (admin, Linux, `sudo`, once) install the isolated `treg-run` runner |
+| `stray run TOOL -- <cli args>` | `--local` (default) \| `--server`, `--timeout N` ([--server] only) | run the tool's CLI with its credential injected; everything after `--` goes to the CLI verbatim |
+| `stray runs` | `--limit N` | CLI-run audit log (who ran which tool, when, exit code) |
+| `stray setup-local-run` | `--run-proof VALUE`, `--member USER` | (admin, Linux, `sudo`, once) install the isolated `stray-run` runner |
 
 **Two tiers:**
 
-- `--local` (default) — runs on the member's **own machine**. On Linux, an admin runs `sudo treg
-  setup-local-run` **once** so the CLI runs under a dedicated `treg-run` system user and the
+- `--local` (default) — runs on the member's **own machine**. On Linux, an admin runs `sudo stray
+  setup-local-run` **once** so the CLI runs under a dedicated `stray-run` system user and the
   credential never touches the member's own uid; on macOS it's best-effort (runs as the member,
   with a warning). A member may run a tool whose key **they own**; a **shared** (teammate/admin) key
-  requires the isolated runner **and** the server's `TREG_RUN_PROOF` (pass it as `--run-proof` at
+  requires the isolated runner **and** the server's `STRAY_RUN_PROOF` (pass it as `--run-proof` at
   setup).
 - `--server` — runs on the registry **server** (Tier 0); only catalog-known CLIs (or ones in
-  `TREG_RUN_ALLOWED_BINS`) may execute; stdout/stderr + exit code are streamed back. Use this when
+  `STRAY_RUN_ALLOWED_BINS`) may execute; stdout/stderr + exit code are streamed back. Use this when
   the key must never reach the machine at all.
 
 ```bash
-treg run stripe -- get /v1/balance          # local: CLI runs here, key injected, never held
-treg run gh -- pr list
-treg run --server agentmail-cli inboxes list # server-side: key never leaves the registry
-sudo treg setup-local-run --run-proof "$TREG_RUN_PROOF"   # Linux admin, once
-treg runs --limit 20
+stray run stripe -- get /v1/balance          # local: CLI runs here, key injected, never held
+stray run gh -- pr list
+stray run --server agentmail-cli inboxes list # server-side: key never leaves the registry
+sudo stray setup-local-run --run-proof "$STRAY_RUN_PROOF"   # Linux admin, once
+stray runs --limit 20
 ```
 
 ## Catching your own calls
 
-`treg run` covers a vendor **CLI**, and `treg call` covers an HTTP call you ask treg to make. Neither
-helps when a program makes its own request to `api.stripe.com` — treg is invisible to it and it has no
+`stray run` covers a vendor **CLI**, and `stray call` covers an HTTP call you ask stray to make. Neither
+helps when a program makes its own request to `api.stripe.com` — stray is invisible to it and it has no
 key.
 
-### The normal way: `treg <command>`
+### The normal way: `stray <command>`
 
-Put `treg` in front of any command:
+Put `stray` in front of any command:
 
 ```bash
-treg claude                  # a Claude Code session using the team's shared credentials
-treg codex                   # same for Codex
-treg node server.js          # your app, with the team's keys, without holding any
-treg python train.py
-treg with -- npm test        # the explicit form, for anything that confuses the parser
+stray claude                  # a Claude Code session using the team's shared credentials
+stray codex                   # same for Codex
+stray node server.js          # your app, with the team's keys, without holding any
+stray python train.py
+stray with -- npm test        # the explicit form, for anything that confuses the parser
 ```
 
 The proxy needs one compiled package (`cryptography`) to generate this machine's certificate
 authority. The `install.sh` installer includes it; if you installed with plain `pip` and it is
-missing, treg offers to add it the right way for your install the first time you use the feature.
+missing, stray offers to add it the right way for your install the first time you use the feature.
 
-**This is opt-in per command, and that is the point.** treg is the parent process, so the setting
-applies to that command and its children only. `treg claude` uses the team's shared access; plain
+**This is opt-in per command, and that is the point.** stray is the parent process, so the setting
+applies to that command and its children only. `stray claude` uses the team's shared access; plain
 `claude` is completely untouched and uses your own local keys. Nothing is written to any config file,
 so there is nothing to undo and no session is ever changed behind your back.
 
@@ -355,7 +355,7 @@ While it runs, an HTTPS call to a **registered** host goes through the registry,
 credential **on the server**. Every other address — including your agent's own calls to
 `api.anthropic.com` or `api.openai.com` — goes straight out and cannot be read by us.
 
-If a `treg serve` proxy is already running it is used and left alone; otherwise treg starts a private
+If a `stray serve` proxy is already running it is used and left alone; otherwise stray starts a private
 one on a port the operating system picks (so two sessions never collide) and stops it when your command
 exits.
 
@@ -366,19 +366,19 @@ reads the environment (`axios`, `got`, undici's `ProxyAgent`) or upgrade. curl, 
 [`examples/proxy-demo/`](examples/proxy-demo/) that shows both, and explains the workaround for older
 Node.
 
-### The subshell: `treg shell --proxy`
+### The subshell: `stray shell --proxy`
 
-`treg run` covers a vendor **CLI**, and `treg call` covers an HTTP call you ask treg to make. Neither
-helps when an agent writes its own script that talks to `api.stripe.com` directly — treg is invisible to
+`stray run` covers a vendor **CLI**, and `stray call` covers an HTTP call you ask stray to make. Neither
+helps when an agent writes its own script that talks to `api.stripe.com` directly — stray is invisible to
 it and the script has no key.
 
-`treg shell start --proxy` closes that gap. Inside that shell, an HTTPS call to a **registered** host is
+`stray shell start --proxy` closes that gap. Inside that shell, an HTTPS call to a **registered** host is
 routed through the registry, which adds the credential **on the server** and returns the vendor's answer
-unchanged. Your code needs no key and no treg-specific lines:
+unchanged. Your code needs no key and no stray-specific lines:
 
 ```bash
-treg shell start --proxy                 # the banner lists the hosts being captured
-curl https://api.stripe.com/v1/balance   # no key anywhere — treg injected it server-side
+stray shell start --proxy                 # the banner lists the hosts being captured
+curl https://api.stripe.com/v1/balance   # no key anywhere — stray injected it server-side
 python my_script.py                      # same for anything the script calls
 exit                                     # the proxy stops with the shell
 ```
@@ -398,61 +398,61 @@ certificate is ever generated for them.
 | `--proxy-port N` | listen somewhere other than 127.0.0.1:18791 |
 | `--renew-ca` | regenerate this machine's certificate authority before starting |
 
-### As a background service (`treg serve`)
+### As a background service (`stray serve`)
 
 If you would rather keep your own shell than enter a subshell, run the same proxy as a service:
 
 ```bash
-treg serve start                  # starts in the background, prints the next line for you
-eval "$(treg serve env)"          # point THIS terminal at it (repeat in any other terminal)
+stray serve start                  # starts in the background, prints the next line for you
+eval "$(stray serve env)"          # point THIS terminal at it (repeat in any other terminal)
 curl https://api.stripe.com/v1/balance
-treg serve status                 # port, team, and the hosts being captured
-eval "$(treg serve env --unset)"  # stop using it in this terminal
-treg serve stop                   # stop the service
+stray serve status                 # port, team, and the hosts being captured
+eval "$(stray serve env --unset)"  # stop using it in this terminal
+stray serve stop                   # stop the service
 ```
 
-`treg serve start --foreground` stays attached instead of detaching, which is what you want for a
-service manager or when reading its log (`~/.treg/proxy/serve.log`).
+`stray serve start --foreground` stays attached instead of detaching, which is what you want for a
+service manager or when reading its log (`~/.stray/proxy/serve.log`).
 
-One difference worth knowing. `treg shell --proxy` keeps its access token in the subshell's
+One difference worth knowing. `stray shell --proxy` keeps its access token in the subshell's
 environment and both disappear together. A service has to be findable by other terminals, so it writes
-its port and token to `~/.treg/proxy/proxy.json` (owner-readable only, mode `0600`). That file holds
+its port and token to `~/.stray/proxy/proxy.json` (owner-readable only, mode `0600`). That file holds
 the proxy's own token, never a vendor key — but it is a file on disk, which the subshell version does
 not have. Choose accordingly.
 
-Limits worth knowing: a client that pins its certificate will refuse the interception (use `treg run` or
-`treg call` for that one); every captured call takes one extra hop through the registry, so it fails if
+Limits worth knowing: a client that pins its certificate will refuse the interception (use `stray run` or
+`stray call` for that one); every captured call takes one extra hop through the registry, so it fails if
 the registry is down; a **hosted** MCP server makes its calls on someone else's machine, so it is not
-covered. If a call fails, treg says so in its own words — "no tool is registered for this host", "ask an
+covered. If a call fails, stray says so in its own words — "no tool is registered for this host", "ask an
 admin" — rather than leaving you to read a bare 404 as the vendor's answer.
 
 ## Skills (bundles)
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg skill scaffold DIR` | `--out FILE` | walk a skill dir → a manifest stub (recipe + secrets discovered; you fill `base_url` + bindings) |
-| `treg skill push FILE` | — | register a completed manifest (bundle + secrets + tool(s) atomically) |
-| `treg skill ls` | — | list bundles |
-| `treg skill rm ID` | — | delete a bundle (cascades to its tools + secrets) |
+| `stray skill scaffold DIR` | `--out FILE` | walk a skill dir → a manifest stub (recipe + secrets discovered; you fill `base_url` + bindings) |
+| `stray skill push FILE` | — | register a completed manifest (bundle + secrets + tool(s) atomically) |
+| `stray skill ls` | — | list bundles |
+| `stray skill rm ID` | — | delete a bundle (cascades to its tools + secrets) |
 
 ```bash
-treg skill scaffold ~/.claude/skills/intercom --out intercom.json
+stray skill scaffold ~/.claude/skills/intercom --out intercom.json
 #   edit intercom.json: set base_url + bindings
-treg skill push intercom.json
+stray skill push intercom.json
 ```
 
 ## Bulk upload (scan → upload)
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg scan [env\|skills]` | `--dir D`, `--env-file F`, `--skills-dir D` | read-only preview: list the keys & skills upload would register (nothing leaves the machine) |
-| `treg upload [env\|skills]` | `--dir D`, `--select a,b` \| `--all`, `--replace`, `--no-oauth`, `--llm …` | register a `.env`'s provider keys and/or a skills folder in one pass |
+| `stray scan [env\|skills]` | `--dir D`, `--env-file F`, `--skills-dir D` | read-only preview: list the keys & skills upload would register (nothing leaves the machine) |
+| `stray upload [env\|skills]` | `--dir D`, `--select a,b` \| `--all`, `--replace`, `--no-oauth`, `--llm …` | register a `.env`'s provider keys and/or a skills folder in one pass |
 
 ```bash
-treg scan                        # what's here? (keys + skills, read-only)
-treg upload --all                # register everything the scan found
-treg upload env --select openai,stripe
-treg upload skills --dir ~/.claude/skills --all
+stray scan                        # what's here? (keys + skills, read-only)
+stray upload --all                # register everything the scan found
+stray upload env --select openai,stripe
+stray upload skills --dir ~/.claude/skills --all
 ```
 
 Idempotent — re-run any time (skips what's registered; `--replace` updates). Non-interactive
@@ -462,26 +462,26 @@ Idempotent — re-run any time (skips what's registered; `--replace` updates). N
 
 | Command | Options | What it does |
 |---|---|---|
-| `treg oauth connect NAME` | `--client-secret PATH`, `--scopes S1 S2 …` | browser consent → treg captures the first token and stores it as an oauth secret |
-| `treg health` | `--run` | show every credential's status; `--run` re-checks now (refresh oauth, probe tools, alert owners) |
+| `stray oauth connect NAME` | `--client-secret PATH`, `--scopes S1 S2 …` | browser consent → stray captures the first token and stores it as an oauth secret |
+| `stray health` | `--run` | show every credential's status; `--run` re-checks now (refresh oauth, probe tools, alert owners) |
 
 ```bash
 # one-time: add https://treg.to/oauth/callback to your OAuth app's redirect URIs
-treg oauth connect gads --client-secret ./client_secret.json \
+stray oauth connect gads --client-secret ./client_secret.json \
   --scopes https://www.googleapis.com/auth/adwords
-treg health --run
+stray health --run
 ```
 
 ---
 
-## OAuth: two modes (treg owns freshness)
+## OAuth: two modes (stray owns freshness)
 
 - **Auto-refresh** — if the oauth secret carries `refresh_token` + `client_id` + `client_secret`,
-  treg refreshes it before it expires (you never re-upload). The `oauth connect` flow always lands
+  stray refreshes it before it expires (you never re-upload). The `oauth connect` flow always lands
   here.
 - **Manual** — a bare uploaded token is injected as-is; you re-upload when it expires.
 
-Same storage; a credential graduates manual → auto with no migration. `treg health` flags any
+Same storage; a credential graduates manual → auto with no migration. `stray health` flags any
 credential that stops working and webhooks the owner (if a `webhook_url` was set at registration).
 
 ## Auth shapes (per binding `injector`)
@@ -491,7 +491,7 @@ credential that stops working and webhooks the owner (if a `webhook_url` was set
 - `oauth` — a JSON OAuth token; pull `secret_field` (auto-refreshed if refreshable)
 - `cli_auth` — material lifted from a CLI's keychain (placed like a string)
 
-## `treg hub` — publish a tool made of tools (behind `TREG_HUB_ENABLED`)
+## `stray hub` — publish a tool made of tools (behind `STRAY_HUB_ENABLED`)
 
 A hub tool is one your team publishes for other people's agents: a JSON steps recipe, or a
 script in a sandbox. Every step runs through your own tools and keys; a caller pays the metered
@@ -500,31 +500,31 @@ it is published, by id `<team-slug>.<name>`; shared by the page `/hub/<id>`. A n
 search until you list it.
 
 ```
-treg hub init <name> [--script] [--dir D]   write the files: recipe.json, run.js (scripts), check.json, README.md
-treg hub run <dir> --input k=v …            run the folder for real on your token; nothing stored; read the trace
-treg hub publish <dir>                      validate, run check.json once on your balance, live on pass (a new version)
-treg hub ls                                 your team's hub tools, every version, with health and 30-day numbers
-treg hub earnings <id> [--days N] [--csv]   what one tool earned, per day (sales only; never who called)
-treg hub price <id> <usd>                   change the price for later runs; no version bump; 0 = free
-treg hub retire <id>                        every version off the call road; history and earnings stay readable
-treg hub list <id> · treg hub unlist <id>   ask for a place in catalog search (treg approves), or take it out
-treg hub log <id> --public on|off           show or hide the run log on the share page (default on)
+stray hub init <name> [--script] [--dir D]   write the files: recipe.json, run.js (scripts), check.json, README.md
+stray hub run <dir> --input k=v …            run the folder for real on your token; nothing stored; read the trace
+stray hub publish <dir>                      validate, run check.json once on your balance, live on pass (a new version)
+stray hub ls                                 your team's hub tools, every version, with health and 30-day numbers
+stray hub earnings <id> [--days N] [--csv]   what one tool earned, per day (sales only; never who called)
+stray hub price <id> <usd>                   change the price for later runs; no version bump; 0 = free
+stray hub retire <id>                        every version off the call road; history and earnings stay readable
+stray hub list <id> · stray hub unlist <id>   ask for a place in catalog search (stray approves), or take it out
+stray hub log <id> --public on|off           show or hide the run log on the share page (default on)
 ```
 
-**Listing and the public run log.** Neither bumps the version. `list` is a request: once treg
-approves it, the tool is in `treg catalog search` and `catalog_search`, marked `hub` with your team,
+**Listing and the public run log.** Neither bumps the version. `list` is a request: once stray
+approves it, the tool is in `stray catalog search` and `catalog_search`, marked `hub` with your team,
 the price label and the 30-day success rate, ranked by relevance with no boost. A rejection comes
-with a reason (`treg hub ls`, and the dashboard's Listing tab); listing again asks again. An
+with a reason (`stray hub ls`, and the dashboard's Listing tab); listing again asks again. An
 listing belongs to the tool; `unlist` withdraws it. Add
 `"capability": "<a catalog capability id>"` to recipe.json to name the job your tool does: once
-approved, `treg catalog get` on any provider of that job shows your tool beside them. A new tool's
+approved, `stray catalog get` on any provider of that job shows your tool beside them. A new tool's
 success rate starts at 90%, counted as 5 runs, and real runs by other teams replace that estimate.
-Once a tool is listed, every new version and every `treg hub price` waits for treg's review: the
+Once a tool is listed, every new version and every `stray hub price` waits for stray's review: the
 publish answers `review`, callers keep the approved version and price, and you can call the new
 version yourself as `<id>@N`. A rejected update keeps the approved one and tells you why. This
-stays true after `unlist`: once treg has approved a tool, it stays under review, and `list` puts it
-back in search with no new review. A team name that reads as treg, as official or verified, or as a
-catalog provider (look-alike letters included) cannot publish. A tool treg rejects can be called only
+stays true after `unlist`: once stray has approved a tool, it stays under review, and `list` puts it
+back in search with no new review. A team name that reads as stray, as official or verified, or as a
+catalog provider (look-alike letters included) cannot publish. A tool stray rejects can be called only
 by its maker's team. check.json may hold `{"cases": [...]}`, up to 5 samples, all run at publish. An answer with every output field empty pays no seller price. Unlisted,
 unapproved, failed and retired tools never appear. The share page's run log shows the last 20 runs and runs per
 day for 30 days: time, outcome, duration, steps, units and the price paid, and never who called,
@@ -534,8 +534,8 @@ The folder may carry a fifth file, `data.csv` (≤ 50 MB): the script reads it a
 script gets `ctx.inputs`, `ctx.call(target, {method, query, body, headers})`, `ctx.charge(usd, note)`,
 `ctx.csv(text)`, `ctx.data`, `ctx.log(text)`; `target` is a catalog id, one of your own tools as `<tool>/<path>`,
 or a full URL under such a tool's base URL. Never paste a credential into a script: register it
-first (`treg secret add`, `treg tool add`), list the tool in `uses`, name it in `ctx.call`.
-Callers run it with `treg call <id> --data '{…}'`; read its contract with `treg catalog get <id>`.
+first (`stray secret add`, `stray tool add`), list the tool in `uses`, name it in `ctx.call`.
+Callers run it with `stray call <id> --data '{…}'`; read its contract with `stray catalog get <id>`.
 
 **Pricing.** It is your price only: the provider fees (the catalog steps) are billed to the caller
 on top, and a failed run charges nothing.
@@ -548,7 +548,7 @@ on top, and a failed run charges nothing.
 A script's lines can be a fee (`ctx.charge(0.01, "fee")`), per result (`rows.length * 0.002`), a
 margin on a catalog call (`r.cost_usd * 0.2`) or your own vendor's cost. The caller sees the cap
 before the run. Every surface shows callers what recent successful runs cost, low to high, fees and
-your price together. `treg hub price <id> <usd>` sets a recipe's price, or a script's cap, for later
+your price together. `stray hub price <id> <usd>` sets a recipe's price, or a script's cap, for later
 runs.
 ## Anonymous usage analytics
 
@@ -558,6 +558,6 @@ arguments, credentials, request/response content, email or team identifiers. Hel
 parsing errors are not tracked. Analytics adds at most 1 second of waiting at command exit;
 slow or offline delivery may be dropped.
 
-Disable it with `export TREG_TELEMETRY=0` (or `DO_NOT_TRACK=1`). Self-hosted registries default to
-no analytics; set `TREG_CLI_POSTHOG_KEY` and optionally `TREG_CLI_POSTHOG_HOST` to use your own
+Disable it with `export STRAY_TELEMETRY=0` (or `DO_NOT_TRACK=1`). Self-hosted registries default to
+no analytics; set `STRAY_CLI_POSTHOG_KEY` and optionally `STRAY_CLI_POSTHOG_HOST` to use your own
 PostHog project. The random ID is stored in `analytics-id` beside the CLI config file.

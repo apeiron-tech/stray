@@ -33,7 +33,7 @@ function lazy(load: () => Promise<Module>): Lazy {
   }) as Lazy
 }
 
-// Classic scripts that only the Help view reads (`window.TREG_TUTORIAL`, `tregHL`, `TREG_TOUR`).
+// Classic scripts that only the Help view reads (`window.STRAY_TUTORIAL`, `strayHL`, `STRAY_TOUR`).
 // They are served no-cache and shared with the standalone /tutorial and /dashboard-tour pages.
 const scripts = new Map<string, Promise<void>>()
 export function loadScript(src: string): Promise<void> {

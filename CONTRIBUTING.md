@@ -1,24 +1,24 @@
-# Contributing to tools-registry
+# Contributing to stray
 
 Thanks for your interest!
 
 ## Getting set up
 
 ```bash
-git clone https://github.com/superdesigndev/treg
-cd treg
+git clone https://github.com/apeiron-tech/stray
+cd stray
 bash scripts/build-dashboard.sh # Node 22.12+ and npm; compile the browser app
 uv sync                     # install deps (uv >= 0.12, pinned in pyproject - https://docs.astral.sh/uv/)
 uv run --with pytest-xdist pytest -n auto -q   # daily local default (same shape as CI)
 ```
 
 No `.env` needed for dev — every setting has a working default (ephemeral encryption key, local
-sqlite). The `TREG_*` knobs for persistence / a real deployment are documented in the README's
+sqlite). The `STRAY_*` knobs for persistence / a real deployment are documented in the README's
 **Configuration** section (and `docs/context/ops/deploy.md`).
 
 A one-command local stack is in `scripts/dev-local.sh` (`up` / `logs` / `cli` / `reset`).
 It starts Python on :18790 and Vite on :5173; open `http://localhost:18790/app`.
-`TREG_DEV_DB=/absolute/path/to/dev.db` selects a separate local database without resetting another.
+`STRAY_DEV_DB=/absolute/path/to/dev.db` selects a separate local database without resetting another.
 
 The Dashboard source is in `frontend/src/`: `.vue` pages, components and dialogs, feature use cases
 in `state/`, and a typed JSON client in `api.ts`. `frontend/index.html` is only the document entry.
@@ -32,7 +32,7 @@ require a frontend build, so CLI and background-worker development remains indep
 
 ## Project layout
 
-- `src/treg/` — the app (FastAPI API, proxy, CLI, runners). The **design docs** in `docs/context/` explain
+- `src/stray/` — the app (FastAPI API, proxy, CLI, runners). The **design docs** in `docs/context/` explain
   each subsystem and cite the source files they cover — read the relevant fragment before changing code.
 - `tests/` — the test suite (pytest). New behavior needs a test.
 - `docs/context/` — per-subsystem design fragments (the source of truth for "how it works").
@@ -44,7 +44,7 @@ require a frontend build, so CLI and background-worker development remains indep
    Commit messages follow Conventional Commits (`feat(scope): …`, `fix: …`, `docs: …`).
 3. Add or update tests; run `uv run --with pytest-xdist pytest -n auto -q` (all green).
    Serial `uv run --frozen python -m pytest -q` is for debugging one test or order.
-   Against Postgres, set `TREG_TEST_DB_URL`; each xdist worker creates its own database from it.
+   Against Postgres, set `STRAY_TEST_DB_URL`; each xdist worker creates its own database from it.
    Tests must pass in any order. To check, shuffle with a few seeds (pytest-randomly is not a
    project dependency, so CI order stays fixed):
    `uv run --with pytest-xdist --with pytest-randomly pytest -n auto -q -p randomly --randomly-seed=<n>`.

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from httpx import ASGITransport, AsyncClient
 
-from treg.api import app
-from treg.infra.db import reset_db
+from stray.api import app
+from stray.infra.db import reset_db
 
 
 # ---- registration + auth ------------------------------------------------------------------
@@ -70,7 +70,7 @@ async def test_tool_crud_and_duplicate_name(clients: AsyncClient):
 
 # ---- audit --------------------------------------------------------------------------------
 async def test_call_is_audited(clients: AsyncClient):
-    from treg import audit
+    from stray import audit
 
     s = await clients.post("/secrets", json={"name": "k", "value": "sek"})
     sid = s.json()["id"]

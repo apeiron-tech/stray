@@ -1,4 +1,4 @@
-"""The per-agent skills-path registry + target resolution (`treg agents`, skill fan-out).
+"""The per-agent skills-path registry + target resolution (`stray agents`, skill fan-out).
 
 Pure logic over the registry - no DB, no network. Covers: the two-dir default fan-out, all-agents
 targeting, global-scope resolution, install detection, and that env overrides (CLAUDE_CONFIG_DIR,
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from treg import agents as ag
+from stray import agents as ag
 
 
 def test_default_fanout_is_agents_plus_claude():
@@ -62,15 +62,15 @@ def test_claude_config_dir_override(monkeypatch, tmp_path):
 
 
 def test_skill_bootstrap_installs_every_advertised_skill(monkeypatch, tmp_path, capsys):
-    """`treg skill bootstrap` (what install.sh runs) drops the treg skill AND every other skill the
+    """`stray skill bootstrap` (what install.sh runs) drops the stray skill AND every other skill the
     registry's well-known index advertises, and never turns a hostile name into a path."""
     from types import SimpleNamespace
 
-    from treg import cli
+    from stray import cli
 
     pages = {
-        "/skill.md": "---\nname: treg\n---\n",
-        "/.well-known/skills/index.json": {"skills": [{"name": "treg"}, {"name": "lead-signals"}, {"name": "../evil"}]},
+        "/skill.md": "---\nname: stray\n---\n",
+        "/.well-known/skills/index.json": {"skills": [{"name": "stray"}, {"name": "lead-signals"}, {"name": "../evil"}]},
         "/.well-known/skills/lead-signals/SKILL.md": "---\nname: lead-signals\n---\n",
     }
 
@@ -81,8 +81,8 @@ def test_skill_bootstrap_installs_every_advertised_skill(monkeypatch, tmp_path, 
 
     monkeypatch.setattr(cli.httpx, "get", fake_get)
     monkeypatch.setattr(ag, "resolve_targets", lambda **_: [tmp_path / "skills"])
-    monkeypatch.delenv("TREG_TOKEN", raising=False)
+    monkeypatch.delenv("STRAY_TOKEN", raising=False)
     cli.cmd_skill_bootstrap(SimpleNamespace(project=False, all_agents=False), {"base_url": "https://reg.example"})
     installed = sorted(p.parent.name for p in (tmp_path / "skills").glob("*/SKILL.md"))
-    assert installed == ["lead-signals", "treg"]
+    assert installed == ["lead-signals", "stray"]
     assert not (tmp_path / "evil").exists()

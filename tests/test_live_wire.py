@@ -10,19 +10,19 @@ from __future__ import annotations
 
 from httpx import AsyncClient
 
-import treg.api as api_mod
-from treg import sandbox
-from treg.domain.governance import publicdemo as publicdemo_policy
+import stray.api as api_mod
+from stray import sandbox
+from stray.domain.governance import publicdemo as publicdemo_policy
 
 ENV_KEY = "rk_test_ENV_ONLY_KEY"
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 async def _mint(c: AsyncClient) -> dict:
-    r = await c.post("/demo/sandbox", headers={"X-Treg-Token": ""})
+    r = await c.post("/demo/sandbox", headers={"X-Stray-Token": ""})
     assert r.status_code == 200, r.text
     return r.json()
 

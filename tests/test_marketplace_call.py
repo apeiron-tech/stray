@@ -1,9 +1,9 @@
-"""Direct marketplace calls: `treg call <catalog-endpoint-id>` with no registered tool.
+"""Direct marketplace calls: `stray call <catalog-endpoint-id>` with no registered tool.
 
 The credential ladder (docs/context/architecture/catalog.md §platform-eligible, and the header
 comment above `_resolve_marketplace_call`): an org tool for the provider wins (tier 1), else an org credential matching the provider is
-injected via a virtual, never-persisted tool (tier 2), else — for an endpoint treg is willing to spend
-its own money on — TREG'S OWN key, metered against the org's prepaid balance (tier 4), and only then
+injected via a virtual, never-persisted tool (tier 2), else — for an endpoint stray is willing to spend
+its own money on — STRAY'S OWN key, metered against the org's prepaid balance (tier 4), and only then
 the actionable connect/secret error (tier 3).
 
 Tier 4 is the only rung that spends OUR money, so most of what follows is about the fences around it:
@@ -22,18 +22,18 @@ from datetime import datetime, timezone
 import pytest
 from httpx import AsyncClient
 
-from treg import api as A, audit, oauth_providers
-from treg.domain import money as ledger
-from treg.domain.money import settlement as settlement_basis
-from treg.domain.catalog import store as catalog_store
-from treg.application.call import contactout, octen
-from treg.application.call import resolve as call_resolution
-from treg.application.call import settle as call_settle
-from treg.application.call import service as call_service
-from treg.application.call.types import ResolutionFailed, UpstreamResponse
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import Org
+from stray import api as A, audit, oauth_providers
+from stray.domain import money as ledger
+from stray.domain.money import settlement as settlement_basis
+from stray.domain.catalog import store as catalog_store
+from stray.application.call import contactout, octen
+from stray.application.call import resolve as call_resolution
+from stray.application.call import settle as call_settle
+from stray.application.call import service as call_service
+from stray.application.call.types import ResolutionFailed, UpstreamResponse
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import Org
 
 EP = "tikhub.tiktok.video.comments"          # GET /api/v1/tiktok/web/fetch_post_comment, aweme_id required
 EP_PATH = "/api/v1/tiktok/web/fetch_post_comment"
@@ -72,8 +72,8 @@ def _dropleads_response(status: int, doc: dict) -> httpx.Response:
 def platform_on(monkeypatch):
     """Turn tier 4 on the way a deploy does: keys in the environment AND the provider allow-listed."""
     for name, value in PLATFORM_KEYS.items():
-        monkeypatch.setenv(f"TREG_PLATFORM_KEY_{name}", value)
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", ",".join(k.lower() for k in PLATFORM_KEYS))
+        monkeypatch.setenv(f"STRAY_PLATFORM_KEY_{name}", value)
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", ",".join(k.lower() for k in PLATFORM_KEYS))
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -82,8 +82,8 @@ def platform_on(monkeypatch):
 @pytest.fixture
 def diffbot_platform_on(monkeypatch):
     """Enable Diffbot tier 4 without exposing or calling a real provider credential."""
-    monkeypatch.setenv("TREG_PLATFORM_KEY_DIFFBOT", "PLATFORM-DIFFBOT-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "diffbot")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_DIFFBOT", "PLATFORM-DIFFBOT-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "diffbot")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -91,8 +91,8 @@ def diffbot_platform_on(monkeypatch):
 
 @pytest.fixture
 def openmart_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_OPENMART", "PLATFORM-OPENMART")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "openmart")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_OPENMART", "PLATFORM-OPENMART")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "openmart")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -100,8 +100,8 @@ def openmart_platform_on(monkeypatch):
 
 @pytest.fixture
 def trestleiq_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TRESTLEIQ", "PLATFORM-TRESTLEIQ")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "trestleiq")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TRESTLEIQ", "PLATFORM-TRESTLEIQ")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "trestleiq")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -109,9 +109,9 @@ def trestleiq_platform_on(monkeypatch):
 
 @pytest.fixture
 def adyntel_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ADYNTEL", "PLATFORM-ADYNTEL")
-    monkeypatch.setenv("TREG_PLATFORM_EMAIL_ADYNTEL", "platform@example.com")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "adyntel")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ADYNTEL", "PLATFORM-ADYNTEL")
+    monkeypatch.setenv("STRAY_PLATFORM_EMAIL_ADYNTEL", "platform@example.com")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "adyntel")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -155,14 +155,14 @@ async def test_adyntel_byok_pair_wins_and_remains_unmetered(
     assert response.status_code == 200, response.text
     assert captured["api_key"] == "OWN-KEY"
     assert captured["email"] == "own@example.com"
-    assert "X-Treg-Cost-Micro" not in response.headers
+    assert "X-Stray-Cost-Micro" not in response.headers
     assert await _balance(clients) == before
 
 
 @pytest.fixture
 def tavily_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TAVILY", "PLATFORM-TAVILY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tavily")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TAVILY", "PLATFORM-TAVILY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tavily")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -170,8 +170,8 @@ def tavily_platform_on(monkeypatch):
 
 @pytest.fixture
 def firecrawl_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FIRECRAWL", "PLATFORM-FIRECRAWL")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "firecrawl")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FIRECRAWL", "PLATFORM-FIRECRAWL")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "firecrawl")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -183,8 +183,8 @@ async def _balance(clients: AsyncClient) -> int:
 
 
 async def test_litescrape_platform_and_own_key_ladder(clients, monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_LITESCRAPE", "PLATFORM-LITESCRAPE")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "litescrape")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_LITESCRAPE", "PLATFORM-LITESCRAPE")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "litescrape")
     get_settings.cache_clear()
     seen = []
 
@@ -208,7 +208,7 @@ async def test_litescrape_platform_and_own_key_ladder(clients, monkeypatch):
             before = await _balance(clients)
             platform = await clients.get("/call/litescrape.google.serp.organic", params={"q": "example"})
             assert platform.status_code == 200, platform.text
-            assert platform.headers["X-Treg-Cost-Micro"] == "150"
+            assert platform.headers["X-Stray-Cost-Micro"] == "150"
             assert await _balance(clients) == before - 150
             assert seen == ["Bearer PLATFORM-LITESCRAPE"]
 
@@ -221,13 +221,13 @@ async def test_litescrape_platform_and_own_key_ladder(clients, monkeypatch):
             own_before = await _balance(clients)
             own = await clients.get("/call/litescrape.google.serp.organic", params={"q": "example"})
             assert own.status_code == 200, own.text
-            assert "X-Treg-Cost-Micro" not in own.headers
+            assert "X-Stray-Cost-Micro" not in own.headers
             assert await _balance(clients) == own_before
             assert seen[-1] == "Bearer OWN-LITESCRAPE"
             own_screenshot = await clients.get("/call/litescrape.web.screenshot", params={"url": "https://example.com"})
             assert own_screenshot.status_code == 200, own_screenshot.text
             assert own_screenshot.json()["screenshot_url"].endswith("id=sample&bucket=20260929")
-            assert "X-Treg-Cost-Micro" not in own_screenshot.headers
+            assert "X-Stray-Cost-Micro" not in own_screenshot.headers
             own_image = await clients.get("/call/litescrape.web.screenshot.download", params={
                 "id": "sample", "bucket": "20260929",
             })
@@ -258,7 +258,7 @@ async def test_firecrawl_platform_scrape_bills_a_returned_404_and_byok_wins(
             "url": "https://example.com/missing", "formats": ["markdown"], "parsers": [],
         })
         assert response.status_code == 200, response.text
-        assert response.headers["X-Treg-Cost-Micro"] == "5000"
+        assert response.headers["X-Stray-Cost-Micro"] == "5000"
         assert await _balance(clients) == before - 5000
         assert seen == ["Bearer PLATFORM-FIRECRAWL"]
 
@@ -269,7 +269,7 @@ async def test_firecrawl_platform_scrape_bills_a_returned_404_and_byok_wins(
             "url": "https://example.com", "formats": ["markdown"], "parsers": [],
         })
         assert own.status_code == 200, own.text
-        assert "X-Treg-Cost-Micro" not in own.headers
+        assert "X-Stray-Cost-Micro" not in own.headers
         assert await _balance(clients) == own_before
         assert seen[-1] == "Bearer OWN-FIRECRAWL"
 
@@ -290,7 +290,7 @@ async def test_firecrawl_search_settles_reported_credits(
             "query": "example", "limit": 3,
         })
         assert response.status_code == 200, response.text
-        assert response.headers["X-Treg-Cost-Micro"] == "5000"
+        assert response.headers["X-Stray-Cost-Micro"] == "5000"
         assert await _balance(clients) == before - 5000
 
 
@@ -372,8 +372,8 @@ async def test_tier3_no_credential_is_an_actionable_404(clients: AsyncClient):
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 404
     detail = r.json()["detail"]
-    assert "treg connections connect --provider tikhub" in detail
-    assert "treg secret add tikhub" in detail          # tikhub is a pasted-key provider
+    assert "stray connections connect --provider tikhub" in detail
+    assert "stray secret add tikhub" in detail          # tikhub is a pasted-key provider
 
 
 async def test_missing_required_param_fails_before_any_credential(clients: AsyncClient):
@@ -391,7 +391,7 @@ async def test_method_mismatch_is_a_400_hint(clients: AsyncClient):
 
 
 async def test_provider_name_404_points_at_the_marketplace(clients: AsyncClient):
-    """`treg call tikhub /path` (no such tool) keeps failing, but no longer dead-ends."""
+    """`stray call tikhub /path` (no such tool) keeps failing, but no longer dead-ends."""
     r = await clients.get("/call/tikhub/api/v1/foo")
     assert r.status_code == 404
     assert "marketplace provider" in r.json()["detail"]
@@ -435,7 +435,7 @@ async def test_deny_rules_cover_marketplace_calls(clients: AsyncClient):
     assert r.status_code == 403
 
 
-# ---- tier 4: treg's own key, billed to the org balance ------------------------------------------
+# ---- tier 4: stray's own key, billed to the org balance ------------------------------------------
 @pytest.mark.parametrize(("endpoint", "params", "target", "charge_micro"), [
     (
         "diffbot.x.extract-article",
@@ -487,8 +487,8 @@ async def test_diffbot_shared_key_uses_each_catalog_endpoint_host(
 async def test_you_shared_key_reaches_both_api_hosts_and_settles_returned_pages(
     clients: AsyncClient, monkeypatch,
 ):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_YOU", "PLATFORM-YOU-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "you")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_YOU", "PLATFORM-YOU-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "you")
     get_settings.cache_clear()
     outbound = []
 
@@ -532,8 +532,8 @@ async def test_you_shared_key_reaches_both_api_hosts_and_settles_returned_pages(
     ("you.finance.research", {"input": "Explain Apple Inc.", "research_effort": "exhaustive"}),
 ])
 async def test_you_finance_exhaustive_never_reaches_the_shared_key(clients: AsyncClient, monkeypatch, endpoint, body):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_YOU", "PLATFORM-YOU-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "you")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_YOU", "PLATFORM-YOU-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "you")
     get_settings.cache_clear()
     outbound = []
 
@@ -614,13 +614,13 @@ async def test_tier1_shadows_tier4(clients: AsyncClient, platform_on):
 async def test_tier4_off_unless_allow_listed_and_keyed_is_still_tier3(
     clients: AsyncClient, monkeypatch, key, providers,
 ):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", key)
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", providers)
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", key)
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", providers)
     get_settings.cache_clear()
     try:
         r = await clients.get(f"/call/{EP}?aweme_id=7")
         assert r.status_code == 404
-        assert "treg connections connect" in r.json()["detail"]
+        assert "stray connections connect" in r.json()["detail"]
         assert await _balance(clients) == 1_000_000
     finally:
         get_settings.cache_clear()
@@ -634,23 +634,23 @@ async def test_tier4_off_unless_allow_listed_and_keyed_is_still_tier3(
     ("account kind", {"kind": "account"}),
 ])
 async def test_ineligible_endpoints_fall_through_to_tier3(clients: AsyncClient, platform_on, monkeypatch, why, patch):
-    """`platform_eligible` is the fence: treg spends its own money only where the price is
+    """`platform_eligible` is the fence: stray spends its own money only where the price is
     machine-computable, provenanced as verified, and the route has answered for real at least once."""
     cat = A.catalog_store.load()
     ep = dict(cat.by_id[EP])
     ep.update(patch)
     monkeypatch.setitem(cat.by_id, EP, ep)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 404, f"{why} must not be served on treg's key"
+    assert r.status_code == 404, f"{why} must not be served on stray's key"
     assert await _balance(clients) == 1_000_000
 
 
 async def test_caller_max_cost_header_refuses_a_direct_call_before_the_reserve(clients: AsyncClient, platform_on):
-    """`X-Treg-Route-Max-Cost` on a plain /call/: a hard ceiling the caller sets, enforced before any
+    """`X-Stray-Route-Max-Cost` on a plain /call/: a hard ceiling the caller sets, enforced before any
     money moves. Below the price → 402 `route_max_cost` naming both figures, balance untouched; at or
     above it → the call proceeds and is charged as usual; garbage → 400. No default: a direct call
     without the header is uncapped (unlike the routed path's $1)."""
-    hdr = "X-Treg-Route-Max-Cost"
+    hdr = "X-Stray-Route-Max-Cost"
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={hdr: "0.0005"})
     assert r.status_code == 402, r.text
     d = r.json()["detail"]
@@ -663,14 +663,14 @@ async def test_caller_max_cost_header_refuses_a_direct_call_before_the_reserve(c
     assert await _balance(clients) == 1_000_000
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={hdr: "0.001"})
     assert r.status_code == 200, r.text
-    assert r.headers["X-Treg-Cost-Micro"] == str(EP_MICRO)
+    assert r.headers["X-Stray-Cost-Micro"] == str(EP_MICRO)
     assert await _balance(clients) == 1_000_000 - EP_MICRO
 
 
-async def test_a_balance_refusal_is_a_treg_refused_event_not_a_vendor_402(
+async def test_a_balance_refusal_is_a_stray_refused_event_not_a_vendor_402(
     clients: AsyncClient, platform_on, posthog_events,
 ):
-    """treg said no before any upstream trip, and the event says so as data, not as a status code."""
+    """stray said no before any upstream trip, and the event says so as data, not as a status code."""
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:
         await ledger.reserve(db, org_id, "drain", 1_000_000)
@@ -679,11 +679,11 @@ async def test_a_balance_refusal_is_a_treg_refused_event_not_a_vendor_402(
     # The team refilling by hand every hour is the one that should hear auto top-up exists.
     d = r.json()["detail"]
     assert d["autotopup_enabled"] is False
-    assert "treg topup --auto on" in d["message"]
+    assert "stray topup --auto on" in d["message"]
     (e,) = await posthog_events()
     p = e["properties"]
     assert p["status_code"] == 402
-    assert p["outcome"] == "treg_refused" and p["refused_by"] == "balance"
+    assert p["outcome"] == "stray_refused" and p["refused_by"] == "balance"
     assert p["duration_ms"] is None and p["capacity_signal"] is None and p["smoothed"] is None
     assert p["provider"] == "tikhub" and p["tier"] == "platform" and p["call_ref"]
 
@@ -707,7 +707,7 @@ async def test_402_with_autotopup_on_names_the_policy_not_a_missing_card(clients
     assert d["autotopup_enabled"] is True
     assert "auto top-up:    on" in d["message"] and "$20" in d["message"] and "$5" in d["message"]
     assert "--auto on" in d["message"]
-    assert "treg connections connect --provider tikhub" in d["message"]
+    assert "stray connections connect --provider tikhub" in d["message"]
     assert PLATFORM_KEYS["TIKHUB"] not in json.dumps(d), "an error must never carry the key"
     row = await _telemetry(clients)
     assert row["status_code"] == 402 and row["endpoint_id"] == EP, \
@@ -1191,9 +1191,9 @@ def test_tikhub_envelope_no_charge_settles_at_zero():
 
 
 async def test_daily_cap_fails_closed(clients: AsyncClient, platform_on, monkeypatch):
-    """The per-org daily ceiling on treg's keys — the blast radius of a runaway agent. Unlike the soft
+    """The per-org daily ceiling on stray's keys — the blast radius of a runaway agent. Unlike the soft
     per-user call cap, it refuses rather than letting spend through."""
-    monkeypatch.setenv("TREG_PLATFORM_DAILY_CAP_USD", "0.0015")   # 1500 micro = one call, not two
+    monkeypatch.setenv("STRAY_PLATFORM_DAILY_CAP_USD", "0.0015")   # 1500 micro = one call, not two
     get_settings.cache_clear()
     try:
         assert (await clients.get(f"/call/{EP}?aweme_id=7")).status_code == 200
@@ -1214,7 +1214,7 @@ async def test_daily_cap_refuses_when_it_cannot_be_verified(clients: AsyncClient
         raise RuntimeError("ledger unavailable")
 
     monkeypatch.setattr(ledger, "spent_today", _boom)
-    monkeypatch.setenv("TREG_PLATFORM_DAILY_CAP_USD", "1")
+    monkeypatch.setenv("STRAY_PLATFORM_DAILY_CAP_USD", "1")
     get_settings.cache_clear()
     try:
         r = await clients.get(f"/call/{EP}?aweme_id=7")
@@ -1237,7 +1237,7 @@ async def test_no_daily_cap_by_default_and_the_team_can_raise_past_any_deploymen
     assert (await clients.get(f"/call/{EP}?aweme_id=7")).status_code == 200
     monkeypatch.setattr(ledger, "spent_today", real_spent_today)
 
-    monkeypatch.setenv("TREG_PLATFORM_DAILY_CAP_USD", "0.0015")   # default: one call, not two
+    monkeypatch.setenv("STRAY_PLATFORM_DAILY_CAP_USD", "0.0015")   # default: one call, not two
     get_settings.cache_clear()
     try:
         r = await clients.get(f"/call/{EP}?aweme_id=7")
@@ -1299,7 +1299,7 @@ async def test_access_probe_reports_the_platform_tier(clients: AsyncClient, plat
 
 
 async def test_a_user_may_not_forge_a_platform_binding(clients: AsyncClient, platform_on):
-    """The other door onto treg's keys: a tool the caller registers themselves. `relay` resolves
+    """The other door onto stray's keys: a tool the caller registers themselves. `relay` resolves
     `platform_setting` from settings without looking at ownership, so the validator has to refuse it."""
     sid = (await clients.post("/secrets", json={"name": "mine", "value": "X"})).json()["id"]
     r = await clients.post("/tools", json={
@@ -1312,11 +1312,11 @@ async def test_a_user_may_not_forge_a_platform_binding(clients: AsyncClient, pla
 
 
 def test_local_run_cannot_export_a_platform_binding():
-    """`treg run --local` hands credentials to the member's own machine, so it may only ever release
+    """`stray run --local` hands credentials to the member's own machine, so it may only ever release
     secrets the tool BINDS BY ID. A platform binding has no secret_id — there is nothing to resolve,
     and the settings value is never in reach of the grant path."""
-    from treg import localrun
-    from treg.models import Tool
+    from stray import localrun
+    from stray.models import Tool
 
     provider = oauth_providers.get("tikhub")
     tool = Tool(org_id=1, name=EP, base_url=provider.base_url, host="api.tikhub.io",
@@ -1554,7 +1554,7 @@ async def test_tavily_search_settles_per_request_usage_even_for_an_empty_routing
         monkeypatch.setattr(A.app.state, "http", upstream)
         response = await clients.post("/call/tavily.web.search", json=body)
     assert response.status_code == 200, response.text
-    assert response.headers["x-treg-cost-micro"] == str(expected)
+    assert response.headers["x-stray-cost-micro"] == str(expected)
     assert before - await _balance(clients) == expected
 
 
@@ -1636,8 +1636,8 @@ async def _seed_answer(clients: AsyncClient, key: str, *, body: bytes = b'{"seed
 
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall, Membership
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall, Membership
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:
@@ -1666,13 +1666,13 @@ async def test_one_callers_label_is_invisible_to_another(clients: AsyncClient, p
     other_token = made.json().get("token")
     assert other_token, made.text
 
-    prev = clients.headers.get("X-Treg-Token")
-    clients.headers["X-Treg-Token"] = other_token
+    prev = clients.headers.get("X-Stray-Token")
+    clients.headers["X-Stray-Token"] = other_token
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "shared-label"})
     if prev:
-        clients.headers["X-Treg-Token"] = prev
+        clients.headers["X-Stray-Token"] = prev
     assert r.status_code == 200
-    assert "X-Treg-Idempotent-Replay" not in r.headers, "another caller must not read this answer"
+    assert "X-Stray-Idempotent-Replay" not in r.headers, "another caller must not read this answer"
     assert r.json() != {"owner": "first"}
 
 
@@ -1680,11 +1680,11 @@ async def test_one_callers_label_is_invisible_to_another(clients: AsyncClient, p
 
 async def test_an_unmetered_call_is_not_stored(clients: AsyncClient):
     """A team calling on its OWN key is billed by the provider, not by us. There is nothing to
-    protect, and treg has no business holding their response."""
+    protect, and stray has no business holding their response."""
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall
 
     await clients.post("/secrets", json={"name": "tikhub", "value": "OWNKEY"})
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "own-key-call"})
@@ -1705,8 +1705,8 @@ async def test_a_stale_label_reused_later_starts_fresh(clients: AsyncClient, pla
 
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall, Membership
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall, Membership
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:
@@ -1721,7 +1721,7 @@ async def test_a_stale_label_reused_later_starts_fresh(clients: AsyncClient, pla
 
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "nightly-report"})
     assert r.status_code == 200, r.text
-    assert "X-Treg-Idempotent-Replay" not in r.headers, "yesterday's answer must not be served"
+    assert "X-Stray-Idempotent-Replay" not in r.headers, "yesterday's answer must not be served"
     assert r.json() != {"yesterday": True}
 
     async with session_maker() as db:
@@ -1745,8 +1745,8 @@ async def test_the_sweep_clears_labels_NOBODY_COMES_BACK_FOR(clients: AsyncClien
 
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall, Membership
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall, Membership
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:
@@ -1772,8 +1772,8 @@ async def test_the_sweep_clears_labels_NOBODY_COMES_BACK_FOR(clients: AsyncClien
 async def _claim_row(key: str):
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall
 
     async with session_maker() as db:
         return (await db.execute(select(IdempotentCall).where(
@@ -1783,8 +1783,8 @@ async def _claim_row(key: str):
 async def _set_claim(key: str, **values) -> None:
     from sqlalchemy import update
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall
 
     async with session_maker() as db:
         await db.execute(update(IdempotentCall).where(IdempotentCall.key == key).values(**values))
@@ -1799,8 +1799,8 @@ def _ago(**kw):
 async def _ledger(org_id: int, call_id: str, kind: str, reason: str = "", amount: int = 0) -> None:
     import uuid
 
-    from treg.infra.db import session_maker
-    from treg.models import LedgerEntry
+    from stray.infra.db import session_maker
+    from stray.models import LedgerEntry
 
     async with session_maker() as db:
         db.add(LedgerEntry(id=uuid.uuid4().hex, org_id=org_id, kind=kind, amount_micro=amount,
@@ -1814,7 +1814,7 @@ async def test_an_abandoned_claim_is_closed_with_a_stored_410_never_run_again(
     finished: a later child (overflow polling, an async worker) can still settle. So the key is
     never run again; a live lease answers 409, a stale one a stored 410, and no provider call or
     charge happens under it."""
-    from treg.application.call import idempotency
+    from stray.application.call import idempotency
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     await _seed_answer(clients, "stuck-label", status="pending")
@@ -1830,8 +1830,8 @@ async def test_an_abandoned_claim_is_closed_with_a_stored_410_never_run_again(
         r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "stuck-label"})
         assert r.status_code == 410, r.text
         assert r.json()["detail"]["error"] == "idempotency_outcome_unknown"
-        assert "X-Treg-Original-Cost-Micro" not in r.headers, "the original cost is not known"
-        assert r.headers["X-Treg-Call-Id"] == "gone-owner"
+        assert "X-Stray-Original-Cost-Micro" not in r.headers, "the original cost is not known"
+        assert r.headers["X-Stray-Call-Id"] == "gone-owner"
     assert (await clients.get(f"/orgs/{org_id}/balance")).json()["balance_micro"] == balance
     assert (await _claim_row("stuck-label")).call_ref == "gone-owner"
 
@@ -1842,7 +1842,7 @@ async def test_an_abandoned_claim_with_no_proof_of_finishing_fails_closed(
     """No money trail (an unmetered or pre-reserve owner), or a hold the stale-hold reaper released
     while the owner may still have been upstream: the outcome is unknown, so a stored 410 instead
     of a second upstream call."""
-    from treg.application.call import idempotency
+    from stray.application.call import idempotency
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     await _seed_answer(clients, "unknown-label", status="pending")
@@ -1855,7 +1855,7 @@ async def test_an_abandoned_claim_with_no_proof_of_finishing_fails_closed(
         r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "unknown-label"})
         assert r.status_code == 410, r.text
         assert r.json()["detail"]["error"] == "idempotency_outcome_unknown"
-        assert "X-Treg-Original-Cost-Micro" not in r.headers, "the original cost is not known"
+        assert "X-Stray-Original-Cost-Micro" not in r.headers, "the original cost is not known"
 
 
 @pytest.mark.parametrize("task_status", ["settled", "pending"])
@@ -1866,9 +1866,9 @@ async def test_an_async_child_that_settles_after_the_owner_died_is_still_a_charg
     that bills the key again), and a task still pending is money in flight (409)."""
     import uuid
 
-    from treg.application.call import idempotency
-    from treg.infra.db import session_maker
-    from treg.models import AsyncTaskRecord, LedgerEntry
+    from stray.application.call import idempotency
+    from stray.infra.db import session_maker
+    from stray.models import AsyncTaskRecord, LedgerEntry
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     await _seed_answer(clients, "async-label", status="pending")
@@ -1900,8 +1900,8 @@ async def test_a_renewal_between_read_and_close_keeps_the_lease(clients: AsyncCl
     read the stale row keeps its claim."""
     from types import SimpleNamespace
 
-    from treg.application.call import idempotency
-    from treg.infra.db import session_maker
+    from stray.application.call import idempotency
+    from stray.infra.db import session_maker
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     await _seed_answer(clients, "race-label", status="pending")
@@ -1924,8 +1924,8 @@ async def test_an_abandoned_CHARGED_claim_answers_410_and_never_charges_twice(
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     first = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Idempotency-Key": "paid-label"})
     assert first.status_code == 200, first.text
-    owner = first.headers["X-Treg-Call-Id"]
-    from treg.application.call import idempotency
+    owner = first.headers["X-Stray-Call-Id"]
+    from stray.application.call import idempotency
 
     await _set_claim("paid-label", status="pending", response_status=None, response_body=None,
                      charged_micro=0)
@@ -1938,8 +1938,8 @@ async def test_an_abandoned_CHARGED_claim_answers_410_and_never_charges_twice(
         detail = r.json()["detail"]
         assert detail["error"] == "idempotency_response_lost" and detail["call_id"] == owner
         assert detail["charged_micro"] > 0
-        assert r.headers["X-Treg-Call-Id"] == owner
-        assert r.headers["X-Treg-Original-Cost-Micro"] == str(detail["charged_micro"])
+        assert r.headers["X-Stray-Call-Id"] == owner
+        assert r.headers["X-Stray-Original-Cost-Micro"] == str(detail["charged_micro"])
     assert (await clients.get(f"/orgs/{org_id}/balance")).json()["balance_micro"] == balance
 
 
@@ -1947,8 +1947,8 @@ async def test_an_expired_lease_with_money_in_flight_still_answers_409(
         clients: AsyncClient, platform_on):
     """An open hold under the owner's call id (or a child's) means the call or its async worker is
     not finished, however old the lease."""
-    from treg.infra.db import session_maker
-    from treg.models import Hold
+    from stray.infra.db import session_maker
+    from stray.models import Hold
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     await _seed_answer(clients, "busy-label", status="pending")
@@ -1973,7 +1973,7 @@ async def test_a_renewal_during_closing_answers_409_not_a_phantom_410(
         clients: AsyncClient, platform_on, monkeypatch):
     """Through the real replay path: the owner renews while the retry is deciding. The lost swap
     must not leave the retry's loaded row looking closed."""
-    from treg.application.call import idempotency
+    from stray.application.call import idempotency
 
     await _seed_answer(clients, "phantom-label", status="pending")
     await _set_claim("phantom-label", call_ref="alive-owner", created_at=_ago(hours=1))
@@ -1995,7 +1995,7 @@ async def test_the_old_owner_cannot_touch_a_claim_taken_over(clients: AsyncClien
     """After a takeover, the late original call's release and store are fenced out."""
     from types import SimpleNamespace
 
-    from treg.application.call import idempotency
+    from stray.application.call import idempotency
 
     await _seed_answer(clients, "fenced-label", status="pending")
     await _set_claim("fenced-label", call_ref="new-owner")
@@ -2014,7 +2014,7 @@ async def test_marking_a_claim_done_survives_one_pool_timeout(
     """The saturated pool that stranded claims: one timeout is retried on a fresh session."""
     from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
-    from treg.application.call import idempotency
+    from stray.application.call import idempotency
 
     real, failed = idempotency.session_maker, []
 
@@ -2033,7 +2033,7 @@ async def test_marking_a_claim_done_survives_one_pool_timeout(
 
 
 async def test_the_owner_renews_its_lease_and_nobody_else_does(clients: AsyncClient, platform_on):
-    from treg.application.call import idempotency
+    from stray.application.call import idempotency
 
     await _seed_answer(clients, "lease-label", status="pending")
     await _set_claim("lease-label", call_ref="owner", created_at=_ago(hours=1))
@@ -2051,8 +2051,8 @@ async def test_the_sweep_leaves_OTHER_callers_rows_alone(clients: AsyncClient, p
 
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall, Membership
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall, Membership
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     made = await clients.post(f"/orgs/{org_id}/agents", json={"name": "bystander"})
@@ -2084,7 +2084,7 @@ def test_the_billability_truth_table():
     purpose or not at all.
 
     The 429 row is the shared-plan fix: a rate-limit rejection is capacity refusing the request. On a
-    shared plan key it is treg's own saturation, and billing it would charge teams for our
+    shared plan key it is stray's own saturation, and billing it would charge teams for our
     congestion. It also corrects an existing wrong: under `per_call` the old rule billed upstream
     429s, and no vendor bills a request it refused to accept."""
     # The contract widened in PR #122 and the old table was WRONG about one row: it asserted an
@@ -2109,13 +2109,13 @@ def test_the_billability_truth_table():
         assert got is expected, f"({status}, {cost_type}) -> {got}, expected {expected}"
 
 
-# ---- trial pools: $0 on treg's key, capped per team per day (fx.yaml kind: treg_trial) -------
+# ---- trial pools: $0 on stray's key, capped per team per day (fx.yaml kind: stray_trial) -------
 
 @pytest.fixture()
 def trial_on(monkeypatch):
-    """Tier 4 for a TRIAL provider: treg's free-tier key in the env, provider allow-listed."""
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FINNHUB", "trial-pool-test-key")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub,scrapecreators,dataforseo,finnhub")
+    """Tier 4 for a TRIAL provider: stray's free-tier key in the env, provider allow-listed."""
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FINNHUB", "trial-pool-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub,scrapecreators,dataforseo,finnhub")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -2123,8 +2123,8 @@ def trial_on(monkeypatch):
 
 @pytest.fixture()
 def getleadsio_trial_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_GETLEADSIO", "PLATFORM-GETLEADSIO")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "getleadsio")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_GETLEADSIO", "PLATFORM-GETLEADSIO")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "getleadsio")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -2144,7 +2144,7 @@ async def test_the_trial_allowance_bites_at_the_fx_number(clients: AsyncClient, 
     """Seed today's audit at the allowance (50 for finnhub, from fx.yaml) — the next call must be
     refused with the connect-your-own-key hint, unbilled. Failed calls are seeded too and must NOT
     count: a 4xx produced nothing, the same line billability draws."""
-    from treg.models import CallRecord
+    from stray.models import CallRecord
 
     async with session_maker() as db:
         for i in range(50):
@@ -2166,7 +2166,7 @@ async def test_the_trial_allowance_bites_at_the_fx_number(clients: AsyncClient, 
 
 
 async def test_failures_alone_never_exhaust_a_trial(clients: AsyncClient, trial_on, monkeypatch):
-    from treg.models import CallRecord
+    from stray.models import CallRecord
 
     async with session_maker() as db:
         for i in range(60):
@@ -2179,7 +2179,7 @@ async def test_failures_alone_never_exhaust_a_trial(clients: AsyncClient, trial_
 
 async def test_own_key_history_never_consumes_a_later_platform_trial(
         clients: AsyncClient, trial_on, monkeypatch):
-    from treg.models import CallRecord
+    from stray.models import CallRecord
 
     async with session_maker() as db:
         for _ in range(50):
@@ -2197,7 +2197,7 @@ async def test_another_orgs_usage_never_burns_MY_trial(clients: AsyncClient, tri
     """The allowance is per TEAM. Another org's fifty calls must not touch this org's pool — the
     multi-tenancy assertion, and the one failure here that would be unfair rather than merely
     wrong."""
-    from treg.models import CallRecord
+    from stray.models import CallRecord
 
     other = await clients.post("/orgs", json={"name": "another-trial-team"})
     assert other.status_code == 200, other.text
@@ -2221,7 +2221,7 @@ async def test_another_orgs_usage_never_burns_MY_trial(clients: AsyncClient, tri
 ])
 async def test_getleadsio_free_and_paid_calls_keep_separate_trial_allowances(
         clients: AsyncClient, getleadsio_trial_on, seeded, called, body):
-    from treg.models import CallRecord
+    from stray.models import CallRecord
 
     tool_name, path = seeded
     async with session_maker() as db:
@@ -2243,14 +2243,14 @@ async def test_getleadsio_free_and_paid_calls_keep_separate_trial_allowances(
 # the balance said $0.10, which is the one disagreement a published price must never have.
 
 def _x_endpoints():
-    from treg.domain.catalog import store as catalog_store
+    from stray.domain.catalog import store as catalog_store
     return [e for e in catalog_store.load().by_id.values() if e.get("provider") == "x"]
 
 
 def test_x_catalog_price_equals_what_the_meter_charges():
     """For every X route, the price the catalog publishes is the price the proxy reserves. Walked
     over the whole provider rather than a sample, because the failure mode is one stale entry."""
-    from treg import oauth_providers
+    from stray import oauth_providers
     x = oauth_providers.get("x")
     for ep in _x_endpoints():
         method = (ep.get("method") or "GET").upper()
@@ -2265,7 +2265,7 @@ def test_x_catalog_price_equals_what_the_meter_charges():
 def test_a_zero_price_on_a_billed_provider_falls_back_rather_than_billing_zero():
     """Belt and braces for the next stale ingest: if a `free` block ever reappears on X, the meter
     must charge the provider rate rather than serve an upstream we get billed for at $0."""
-    from treg import oauth_providers
+    from stray import oauth_providers
     x = oauth_providers.get("x")
     ep = {"id": "x.x.stale", "provider": "x", "method": "GET", "path": "/2/tweets",
           "cost": {"type": "free", "value": 0, "currency": "USD", "unit": "call"}}
@@ -2308,7 +2308,7 @@ def test_influencersclub_settle_counts_accounts():
     credit per row. unit_micro is ONE CREDIT ($0.598 = 598,000 micro-USD); cost.value is 0.01
     credits per creator, so each creator costs $0.00598 = 5,980 micro-USD."""
     from types import SimpleNamespace
-    from treg.application.call.settle import _observed_cost_micro
+    from stray.application.call.settle import _observed_cost_micro
     # unit_micro = one whole credit = $0.598 = 598,000 micro-USD (from fx.yaml influencersclub rate)
     # estimate_micro = reserve for 10 rows at 0.01 credits each = 10 × 5,980 = 59,800 micro-USD
     mk = SimpleNamespace(cost_type="per_result", unit_micro=598_000, billed_oauth=False,
@@ -2348,7 +2348,7 @@ def test_influencersclub_discovery_billing_regression(endpoint_id, rows, expecte
     of by cost.value × unit_micro (0.01 credits = $0.00598 per row).
     """
     from types import SimpleNamespace
-    from treg.application.call.settle import _observed_cost_micro
+    from stray.application.call.settle import _observed_cost_micro
     # unit_micro = one credit = $0.598 = 598,000 micro-USD
     # estimate_micro = reserve large enough to not cap the result
     mk = SimpleNamespace(
@@ -2366,7 +2366,7 @@ def test_influencersclub_settle_capped_at_hold():
     """Settlement must never exceed the reserve (hold), even if more rows are returned than
     requested. This prevents a rogue response from overbilling the caller."""
     from types import SimpleNamespace
-    from treg.application.call.settle import _observed_cost_micro
+    from stray.application.call.settle import _observed_cost_micro
     mk = SimpleNamespace(
         cost_type="per_result", unit_micro=598_000, billed_oauth=False,
         endpoint_id="influencersclub.creators.search", provider="influencersclub",
@@ -2389,8 +2389,8 @@ async def test_tomba_domain_search_settles_returned_emails(
     clients: AsyncClient, platform_on, monkeypatch, query, count, page_size, credits,
 ):
     """Bill non-empty pages by page size; empty pages are free regardless of total matches."""
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TOMBA', 'SYNTHETIC-TOMBA-KEY')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'tomba')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TOMBA', 'SYNTHETIC-TOMBA-KEY')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'tomba')
     get_settings.cache_clear()
     body = json.dumps({'data': {
         'domain': 'company.example',
@@ -2575,8 +2575,8 @@ def test_oceanio_platform_settles_reported_credits(endpoint, credits, expected):
 async def test_oceanio_shared_key_calls_settle_reported_credits(
     clients, monkeypatch, endpoint, body, expected,
 ):
-    monkeypatch.setenv('TREG_PLATFORM_KEY_OCEANIO', 'PLATFORM-OCEANIO')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'oceanio')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_OCEANIO', 'PLATFORM-OCEANIO')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'oceanio')
     get_settings.cache_clear()
 
     def upstream(request):
@@ -2590,15 +2590,15 @@ async def test_oceanio_shared_key_calls_settle_reported_credits(
             monkeypatch.setattr(A.app.state, 'http', vendor)
             response = await clients.post(f'/call/{endpoint}', json=body)
         assert response.status_code == 200, response.text
-        assert response.headers['x-treg-cost-micro'] == str(expected)
+        assert response.headers['x-stray-cost-micro'] == str(expected)
         assert before - await _balance(clients) == expected
     finally:
         get_settings.cache_clear()
 
 
 async def test_oceanio_own_key_keeps_upstream_search_limit_and_is_unmetered(clients, monkeypatch):
-    monkeypatch.setenv('TREG_PLATFORM_KEY_OCEANIO', 'PLATFORM-OCEANIO')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'oceanio')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_OCEANIO', 'PLATFORM-OCEANIO')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'oceanio')
     get_settings.cache_clear()
     saved = await clients.post('/secrets', json={'name': 'oceanio', 'value': 'OWN-OCEANIO'})
     assert saved.status_code == 200, saved.text
@@ -2614,7 +2614,7 @@ async def test_oceanio_own_key_keeps_upstream_search_limit_and_is_unmetered(clie
             monkeypatch.setattr(A.app.state, 'http', vendor)
             response = await clients.post('/call/oceanio.companies.search', json={'size': 101})
         assert response.status_code == 200, response.text
-        assert 'x-treg-cost-micro' not in response.headers
+        assert 'x-stray-cost-micro' not in response.headers
         assert await _balance(clients) == before
     finally:
         get_settings.cache_clear()
@@ -2881,7 +2881,7 @@ def test_contactout_combined_email_array_is_not_billed_twice():
 @pytest.mark.parametrize("body", [b"", b"not json", b"[]", b"{}", b'{"status_code":200}', b'{"status_code":200,"profile":"unexpected"}'])
 def test_contactout_contact_reveals_require_recognizable_hit_evidence(body):
     from types import SimpleNamespace
-    from treg.application.call.settle import _observed_cost_micro
+    from stray.application.call.settle import _observed_cost_micro
     mk = SimpleNamespace(provider="contactout", endpoint_id="contactout.people.contact.work",
                          cost_type="per_success", unit_micro=0, billed_oauth=False, request_data={})
     assert _observed_cost_micro(mk, body) == 0
@@ -3125,8 +3125,8 @@ def test_icypeas_company_scrape_bills_the_company_rate():
 
 @pytest.fixture
 def openrouter_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_OPENROUTER", "PLATFORM-OPENROUTER")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "openrouter")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_OPENROUTER", "PLATFORM-OPENROUTER")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "openrouter")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -3157,7 +3157,7 @@ async def test_a_sync_usage_settled_call_charges_the_providers_reported_cost(
                                 "criteria": {"true": "x", "false": "not x"}}}})
     assert r.status_code == 200, r.text
     assert r.json() == reply
-    assert r.headers["x-treg-cost-micro"] == "20"
+    assert r.headers["x-stray-cost-micro"] == "20"
     assert before - await _balance(clients) == 20
 
 
@@ -3184,8 +3184,8 @@ def test_apify_call_fee_multiplies_by_each_query_the_actor_starts(body, fee):
 
 @pytest.fixture
 def enrichlayer_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ENRICHLAYER", "PLATFORM-ENRICHLAYER")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "enrichlayer")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ENRICHLAYER", "PLATFORM-ENRICHLAYER")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "enrichlayer")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -3208,14 +3208,14 @@ async def test_enrichlayer_result_count_and_own_key_ladder(
         before = await _balance(clients)
         response = await clients.get("/call/enrichlayer.people.search", params=params)
         assert response.status_code == 200, response.text
-        assert response.headers["x-treg-cost-micro"] == "600000"
+        assert response.headers["x-stray-cost-micro"] == "600000"
         assert before - await _balance(clients) == 600000
 
         await clients.post("/secrets", json={"name": "enrichlayer", "value": "OWN-ENRICHLAYER"})
         before = await _balance(clients)
         own = await clients.get("/call/enrichlayer.people.search", params=params)
         assert own.status_code == 200, own.text
-        assert "x-treg-cost-micro" not in own.headers
+        assert "x-stray-cost-micro" not in own.headers
         assert before == await _balance(clients)
     assert seen == ["Bearer PLATFORM-ENRICHLAYER", "Bearer OWN-ENRICHLAYER"]
 
@@ -3225,8 +3225,8 @@ async def test_enrichlayer_result_count_and_own_key_ladder(
 
 @pytest.fixture
 def octen_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_OCTEN", "PLATFORM-OCTEN")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "octen")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_OCTEN", "PLATFORM-OCTEN")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "octen")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -3252,7 +3252,7 @@ async def test_octen_platform_key_serves_then_own_key_wins_unmetered(
         platform = await clients.post("/call/octen.web.search", json={"query": "x", "count": 1})
         assert platform.status_code == 200, platform.text
         assert platform.json() == document
-        assert platform.headers["x-treg-cost-micro"] == "5000"
+        assert platform.headers["x-stray-cost-micro"] == "5000"
         assert before - await _balance(clients) == 5000
 
         await clients.post("/secrets", json={"name": "octen", "value": "OWN-OCTEN"})
@@ -3260,7 +3260,7 @@ async def test_octen_platform_key_serves_then_own_key_wins_unmetered(
         own = await clients.post("/call/octen.web.search", json={"query": "x", "count": 1})
         assert own.status_code == 200, own.text
         assert own.json() == document
-        assert "x-treg-cost-micro" not in own.headers
+        assert "x-stray-cost-micro" not in own.headers
         assert await _balance(clients) == before
 
     assert seen == ["PLATFORM-OCTEN", "OWN-OCTEN"]
@@ -3374,10 +3374,10 @@ async def test_an_answer_over_the_size_limit_is_not_kept_and_a_retry_never_runs_
     a retry gets a stored 410 with the charge, and the provider is not called a second time."""
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import IdempotentCall
+    from stray.infra.db import session_maker
+    from stray.models import IdempotentCall
 
-    monkeypatch.setenv("TREG_ARCHIVE_MAX_BODY_BYTES", "10")      # any real answer is "large" now
+    monkeypatch.setenv("STRAY_ARCHIVE_MAX_BODY_BYTES", "10")      # any real answer is "large" now
     get_settings.cache_clear()
     calls = []
     real = call_service.relay
@@ -3392,10 +3392,10 @@ async def test_an_answer_over_the_size_limit_is_not_kept_and_a_retry_never_runs_
     assert first.status_code == 200 and len(first.content) > 10, first.text   # the full answer, once
     before = await _balance(clients)
     retry = await clients.get(f"/call/{EP}?aweme_id=big", headers=headers)
-    assert retry.status_code == 410 and retry.headers["X-Treg-Idempotent-Replay"] == "true"
+    assert retry.status_code == 410 and retry.headers["X-Stray-Idempotent-Replay"] == "true"
     detail = retry.json()["detail"]
     assert detail["error"] == "idempotency_response_too_large" and detail["size_bytes"] == len(first.content)
-    assert detail["call_id"] == first.headers["X-Treg-Call-Id"] and detail["charged_micro"] > 0
+    assert detail["call_id"] == first.headers["X-Stray-Call-Id"] and detail["charged_micro"] > 0
     assert len(calls) == 1 and await _balance(clients) == before        # no second run, no second charge
     async with session_maker() as db:
         row = (await db.execute(select(IdempotentCall).where(IdempotentCall.key == "big-answer"))).scalar_one()
@@ -3406,14 +3406,14 @@ async def test_an_answer_over_the_size_limit_is_not_kept_and_a_retry_never_runs_
 async def test_the_call_record_splits_out_the_providers_share_of_the_time(
         clients: AsyncClient, platform_on, monkeypatch):
     """Finding 7 (2026-09-21): only the total existed, including an OAuth refresh that makes its own
-    network request, so a slow call could not be pinned on the provider or on treg. A provider
+    network request, so a slow call could not be pinned on the provider or on stray. A provider
     that takes 300 ms shows it, inside the total."""
     import asyncio
 
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import CallRecord
+    from stray.infra.db import session_maker
+    from stray.models import CallRecord
 
     real = call_service.relay
 
@@ -3427,7 +3427,7 @@ async def test_the_call_record_splits_out_the_providers_share_of_the_time(
     await audit.drain()
     async with session_maker() as db:
         row = (await db.execute(select(CallRecord).where(
-            CallRecord.call_ref == r.headers["X-Treg-Call-Id"]))).scalar_one()
+            CallRecord.call_ref == r.headers["X-Stray-Call-Id"]))).scalar_one()
     assert 300 <= row.upstream_ms < 450, row.upstream_ms
     assert row.duration_ms >= row.upstream_ms, (row.duration_ms, row.upstream_ms)
 
@@ -3435,8 +3435,8 @@ async def test_the_call_record_splits_out_the_providers_share_of_the_time(
 async def test_a_balance_refusal_asks_for_an_auto_top_up(clients: AsyncClient, platform_on, monkeypatch):
     """Only a call that got through used to schedule a refill, so a team at $0 with auto top-up on
     stayed empty until something else ran, refusing every call meanwhile."""
-    from treg.application import billing
-    from treg.models import Org
+    from stray.application import billing
+    from stray.models import Org
 
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:

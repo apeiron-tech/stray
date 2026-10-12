@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { hubOn, hubRun as run, hubTool as tool, signIn } from './helpers'
 
-// The hub is behind TREG_HUB_ENABLED (and TREG_HUB_TEAMS) on the server; the browser-test server
+// The hub is behind STRAY_HUB_ENABLED (and STRAY_HUB_TEAMS) on the server; the browser-test server
 // runs with it off. So the first test proves the entry stays hidden there, and the second answers
 // /meta and the hub routes here, with real shapes captured from a live run.
 

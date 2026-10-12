@@ -38,10 +38,10 @@
     }
   },
   "uses": [
-    "treg.people.search",
-    "treg.people.email.find",
-    "treg.people.email.verify",
-    "treg.people.phone.find"
+    "stray.people.search",
+    "stray.people.email.find",
+    "stray.people.email.verify",
+    "stray.people.phone.find"
   ],
   "script": "run.js",
   "output": {

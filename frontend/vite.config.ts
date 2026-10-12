@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue({ template: { transformAssetUrls: { includeAbsolute: false } } })],
   base: '/app/ui/',
   build: {
-    outDir: fileURLToPath(new URL('../src/treg/web/dashboard', import.meta.url)),
+    outDir: fileURLToPath(new URL('../src/stray/web/dashboard', import.meta.url)),
     emptyOutDir: true,
     rolldownOptions: { output: { codeSplitting: { groups: [{ name: 'vue', test: /node_modules\/(?:@vue|vue)\// }] } } },
   },

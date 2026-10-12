@@ -5,10 +5,10 @@
     "domain": {"type": "string", "example": "linear.app", "note": "a bare domain, no scheme"},
     "source": {"type": "string", "default": "us", "note": "the Google database: us, uk, de, fr, au, ca, in…"}
   },
-  "uses": ["seranking.google.domain.overview", "treg.web.backlinks.summary"],
+  "uses": ["seranking.google.domain.overview", "stray.web.backlinks.summary"],
   "steps": [
     {"name": "overview", "call": "seranking.google.domain.overview", "input": {"domain": "$input.domain", "source": "$input.source"}},
-    {"name": "links", "call": "treg.web.backlinks.summary", "input": {"target": "$input.domain"}}
+    {"name": "links", "call": "stray.web.backlinks.summary", "input": {"target": "$input.domain"}}
   ],
   "output": {
     "domain": "$input.domain",
@@ -24,7 +24,7 @@
     "paid_traffic": "$overview.adv.traffic_sum",
     "backlinks": "$links.output.backlinks",
     "referring_domains": "$links.output.referring_domains",
-    "backlinks_source": "$links._treg.served_by"
+    "backlinks_source": "$links._stray.served_by"
   },
   "pricing": {"price_usd": 0.01}
 }

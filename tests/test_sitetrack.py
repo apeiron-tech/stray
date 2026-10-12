@@ -1,7 +1,7 @@
 """Product analytics on the marketing surface: every page a visitor can land on loads /sitetrack.js.
 
 `/sitetrack.js` is what makes a landing page measurable at all — it boots PostHog with pageviews on
-and sets the first-touch `treg_utm` cookie. A page without it is not "under-tracked": it emits
+and sets the first-touch `stray_utm` cookie. A page without it is not "under-tracked": it emits
 nothing, so its visitors, signups, activations and top-ups cannot be attributed to it, and no
 error ever says so. That is exactly how `/grokbot` shipped: a launch landing page behind its own
 route, hand-written HTML outside the `_page()` shell, carrying `/adtrack.js` and `/gtag.js` but not
@@ -24,7 +24,7 @@ import re
 from pathlib import Path
 
 
-WEB_DIR = Path(__file__).resolve().parents[1] / "src" / "treg" / "web"
+WEB_DIR = Path(__file__).resolve().parents[1] / "src" / "stray" / "web"
 
 # The tag must be root-absolute. `people-search.html` and `fable-gtm.html` shipped with a relative
 # `src="sitetrack.js"`; that resolves at `/fable` but breaks the moment a page is served under a

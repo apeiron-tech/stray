@@ -1,7 +1,7 @@
-<!-- The treg brand mark as a tile: inverse background, two quadrants in the inverse ink. Same
-     geometry as src/treg/web/favicon.svg, so it follows the theme instead of a font's ▚ glyph. -->
+<!-- The stray brand mark as a tile: inverse background, three squares and a strayed one in the inverse ink. Same
+     geometry as src/stray/web/favicon.svg, so it follows the theme instead of a font's ▛ glyph. -->
 <template>
-  <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="149.5" width="140.5" height="140.5" rx="20"/></svg></span>
+  <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="0" width="140.5" height="140.5" rx="20"/><rect x="0" y="149.5" width="140.5" height="140.5" rx="20"/><rect x="220" y="220" width="70" height="70" rx="14"/></svg></span>
 </template>
 
 <style>

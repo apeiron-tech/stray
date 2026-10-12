@@ -7,7 +7,7 @@ export default { setup: useDashboard }
 <div  class="scrim" role="dialog" aria-labelledby="connect-token-dialog-title" aria-modal="true" v-dialog="() => { tokenAsk=null }" @click.self="tokenAsk=null">
       <div class="modal" style="padding:16px">
         <h3 id="connect-token-dialog-title" style="margin:0 0 6px"><span class="plogo-tile"><img class="plogo" :src="'/logos/'+tokenAsk.provider.service+'.svg'" alt="" aria-hidden="true" @error="$event.target.style.visibility='hidden'"></span>{{tokenAsk.conn ? 'Replace your '+tokenAsk.provider.display_name+' key' : 'Connect '+tokenAsk.provider.display_name}}</h3>
-        <p class="sub" style="margin:0 0 12px">You bring your own {{(tokenAsk.provider.token_label||'API key').toLowerCase().startsWith('bot') ? 'bot' : 'key'}}, so it stays yours — treg
+        <p class="sub" style="margin:0 0 12px">You bring your own {{(tokenAsk.provider.token_label||'API key').toLowerCase().startsWith('bot') ? 'bot' : 'key'}}, so it stays yours — stray
           holds it server-side and injects it on every call.</p>
         <a v-if="tokenAsk.provider.setup_url" class="btn sm primary" :href="tokenAsk.provider.setup_url"
            target="_blank" rel="noopener">{{tokenAsk.provider.setup_action_label||'Create the app'}}</a>
@@ -23,7 +23,7 @@ export default { setup: useDashboard }
         <p v-if="tokenAsk.provider.setup_note" class="sub" style="margin:10px 0 0;font-size:11.5px">{{tokenAsk.provider.setup_note}}</p>
         <p v-if="tokenAsk.provider.probe_cost_micro" class="mk-notice" style="margin:10px 0 0">
           Verifying this key makes one provider-billed test call costing {{money(tokenAsk.provider.probe_cost_micro)}}.
-          treg will not reuse this paid request for health checks.
+          stray will not reuse this paid request for health checks.
         </p>
         <div v-if="tokenAsk.err" class="banner" style="margin-top:10px">{{tokenAsk.err}}</div>
         <div style="margin-top:14px;text-align:right;display:flex;gap:8px;justify-content:flex-end">

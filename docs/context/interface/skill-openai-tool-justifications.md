@@ -23,11 +23,11 @@ cautious labelling rather than a convenient one.
 
 ### Read Only is True
 
-It searches treg's own catalog of API endpoints and returns names, descriptions and prices. It creates nothing, changes nothing, and spends nothing. Running it a hundred times leaves the account exactly as it was.
+It searches stray's own catalog of API endpoints and returns names, descriptions and prices. It creates nothing, changes nothing, and spends nothing. Running it a hundred times leaves the account exactly as it was.
 
 ### Open World is False
 
-It reads only treg's internal catalog, which is a fixed dataset we curate and ship. It does not reach any third-party API, follow any URL, or accept a host from the caller. Nothing outside our own service is contacted.
+It reads only stray's internal catalog, which is a fixed dataset we curate and ship. It does not reach any third-party API, follow any URL, or accept a host from the caller. Nothing outside our own service is contacted.
 
 ### Destructive is False
 
@@ -51,7 +51,7 @@ It is a read-only lookup. It has no write path and cannot remove or modify anyth
 
 ## call
 
-These four are the deliberately cautious ones. treg relays to a third-party API on the user's behalf.
+These four are the deliberately cautious ones. stray relays to a third-party API on the user's behalf.
 We do not model what that API does, and we would rather over-warn than let a client assume safety we
 cannot promise.
 
@@ -65,11 +65,11 @@ This is the tool's whole purpose. It calls external APIs across roughly 2,600 ca
 
 ### Destructive is True
 
-We label it destructive because treg cannot see inside the endpoint being called. The catalog includes endpoints that create, update, cancel and delete on third-party systems, and treg relays whatever the caller asks for. Claiming otherwise would be a guess presented as a fact, so we take the cautious label and let the client ask the user first. treg itself never deletes user data. The risk being flagged is the upstream API's, which is exactly the risk the caller cannot otherwise see.
+We label it destructive because stray cannot see inside the endpoint being called. The catalog includes endpoints that create, update, cancel and delete on third-party systems, and stray relays whatever the caller asks for. Claiming otherwise would be a guess presented as a fact, so we take the cautious label and let the client ask the user first. stray itself never deletes user data. The risk being flagged is the upstream API's, which is exactly the risk the caller cannot otherwise see.
 
 ### Idempotent is False
 
-Repeating a call can charge again and can repeat a side effect upstream. Some catalog endpoints are plain lookups, but many are not, and treg has no reliable way to tell them apart, so it does not claim safety it cannot verify.
+Repeating a call can charge again and can repeat a side effect upstream. Some catalog endpoints are plain lookups, but many are not, and stray has no reliable way to tell them apart, so it does not claim safety it cannot verify.
 
 
 ## balance
@@ -80,7 +80,7 @@ It reports the team's prepaid balance and any spend currently in flight. It read
 
 ### Open World is False
 
-It reads treg's own database only. No third-party system is contacted.
+It reads stray's own database only. No third-party system is contacted.
 
 ### Destructive is False
 
@@ -91,11 +91,11 @@ Reporting a number changes nothing. There is no write path from this tool to the
 
 ### Read Only is True
 
-It lists the API tools the user's team has already registered with treg, so the model knows what it may call. It is a directory listing. Nothing is created, changed or removed, and no credential is revealed, only names and base URLs.
+It lists the API tools the user's team has already registered with stray, so the model knows what it may call. It is a directory listing. Nothing is created, changed or removed, and no credential is revealed, only names and base URLs.
 
 ### Open World is False
 
-It reads treg's own database only, scoped to the team the user chose when authorizing. No external system is contacted.
+It reads stray's own database only, scoped to the team the user chose when authorizing. No external system is contacted.
 
 ### Destructive is False
 

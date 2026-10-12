@@ -7,7 +7,7 @@ import base64
 from httpx import ASGITransport, AsyncClient
 from starlette.responses import PlainTextResponse
 
-from treg.bootstrap_http import (
+from stray.bootstrap_http import (
     _BodyDecodeMiddleware,
     _LegacyHostRedirectMiddleware,
     _SecurityHeadersMiddleware,
@@ -98,7 +98,7 @@ async def test_body_decode_delegates_to_the_real_receive_after_replay() -> None:
         "type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1",
         "method": "POST", "scheme": "http", "path": "/call/example", "raw_path": b"/call/example",
         "query_string": b"", "root_path": "",
-        "headers": [(b"host", b"localhost"), (b"x-treg-body-encoding", b"base64")],
+        "headers": [(b"host", b"localhost"), (b"x-stray-body-encoding", b"base64")],
         "client": ("127.0.0.1", 50000), "server": ("127.0.0.1", 8000),
     }
 
@@ -133,7 +133,7 @@ async def test_body_decode_preserves_a_real_mid_body_disconnect() -> None:
         "type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1",
         "method": "POST", "scheme": "http", "path": "/call/example", "raw_path": b"/call/example",
         "query_string": b"", "root_path": "",
-        "headers": [(b"host", b"localhost"), (b"x-treg-body-encoding", b"base64")],
+        "headers": [(b"host", b"localhost"), (b"x-stray-body-encoding", b"base64")],
         "client": ("127.0.0.1", 50000), "server": ("127.0.0.1", 8000),
     }
 

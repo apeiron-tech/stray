@@ -1,40 +1,40 @@
 ---
 title: The tool hub — tools a maker publishes, made of other tools
-status: built (phases 1–10, 2026-09-09/14; pricing flexibility 9.1–9.5 (`docs/hub-pricing-decisions.md`), listing + public run log 10.1–10.5 (`docs/hub-listing-decisions.md`)); behind `hub_enabled` (TREG_HUB_ENABLED), off in production until the final merge
+status: built (phases 1–10, 2026-09-09/14; pricing flexibility 9.1–9.5 (`docs/hub-pricing-decisions.md`), listing + public run log 10.1–10.5 (`docs/hub-listing-decisions.md`)); behind `hub_enabled` (STRAY_HUB_ENABLED), off in production until the final merge
 sources:
-  - src/treg/domain/hub/__init__.py
-  - src/treg/domain/hub/manifest.py
-  - src/treg/domain/hub/refs.py
-  - src/treg/domain/hub/graph.py
-  - src/treg/application/hub/__init__.py
-  - src/treg/application/hub/runner.py
-  - src/treg/application/hub/sandbox.py
-  - src/treg/application/hub/limits.py
-  - src/treg/application/hub/health.py
-  - src/treg/hub_sandbox.py
-  - src/treg/routers/hub.py
-  - src/treg/routers/catalog.py
-  - src/treg/routers/web.py
-  - src/treg/routers/hub_gate.py
-  - src/treg/application/call/service.py
-  - src/treg/domain/money/__init__.py
-  - src/treg/mcp.py
+  - src/stray/domain/hub/__init__.py
+  - src/stray/domain/hub/manifest.py
+  - src/stray/domain/hub/refs.py
+  - src/stray/domain/hub/graph.py
+  - src/stray/application/hub/__init__.py
+  - src/stray/application/hub/runner.py
+  - src/stray/application/hub/sandbox.py
+  - src/stray/application/hub/limits.py
+  - src/stray/application/hub/health.py
+  - src/stray/hub_sandbox.py
+  - src/stray/routers/hub.py
+  - src/stray/routers/catalog.py
+  - src/stray/routers/web.py
+  - src/stray/routers/hub_gate.py
+  - src/stray/application/call/service.py
+  - src/stray/domain/money/__init__.py
+  - src/stray/mcp.py
   - frontend/src/state/hub.js
   - frontend/src/pages/HubPage.vue
   - frontend/src/pages/HubRunPage.vue
-  - src/treg/cli.py
-  - src/treg/worker.py
-  - src/treg/models.py
-  - src/treg/web/index.html
-  - src/treg/web/skill.md
-  - src/treg/web/llms.txt
-  - src/treg/alembic/versions/0044_hub_tools.py
-  - src/treg/alembic/versions/0045_hub_runs.py
-  - src/treg/alembic/versions/0046_hubtool_check_result.py
-  - src/treg/alembic/versions/0047_hubrun_output.py
-  - src/treg/alembic/versions/0048_hubtool_data.py
-  - src/treg/alembic/versions/0049_hubtool_listed_public_log.py
-  - src/treg/alembic/versions/0050_hub_listing.py
+  - src/stray/cli.py
+  - src/stray/worker.py
+  - src/stray/models.py
+  - src/stray/web/index.html
+  - src/stray/web/skill.md
+  - src/stray/web/llms.txt
+  - src/stray/alembic/versions/0044_hub_tools.py
+  - src/stray/alembic/versions/0045_hub_runs.py
+  - src/stray/alembic/versions/0046_hubtool_check_result.py
+  - src/stray/alembic/versions/0047_hubrun_output.py
+  - src/stray/alembic/versions/0048_hubtool_data.py
+  - src/stray/alembic/versions/0049_hubtool_listed_public_log.py
+  - src/stray/alembic/versions/0050_hub_listing.py
   - docs/hub-recipes/data-sheets/run.js
   - docs/hub-recipes/data-csv/run.js
   - docs/hub-recipes/engineering-team-size/run.js
@@ -50,16 +50,16 @@ related:
 
 # The tool hub
 
-A **hub tool** is a tool a maker publishes on treg, made of other tools: either a JSON list of
-steps, or a script that runs in a sandbox. Every step is an ordinary treg call, so identity, the
+A **hub tool** is a tool a maker publishes on stray, made of other tools: either a JSON list of
+steps, or a script that runs in a sandbox. Every step is an ordinary stray call, so identity, the
 access rules, key injection and money already exist once per call; the hub adds the graph, the
 sandbox, the maker's road, the seller's price, and the surfaces. The decisions are in
 `docs/HUB-DECISIONS.md` (50 questions, settled 2026-09-09); the case study (a real Supabase
 table served as a tool, walked by hand) is recorded at the end of this file.
 
-Everything sits behind `hub_enabled` (`TREG_HUB_ENABLED`, default off): with the flag off every
+Everything sits behind `hub_enabled` (`STRAY_HUB_ENABLED`, default off): with the flag off every
 hub route answers 404, the call road never asks the hub, the agent files carry no hub text, and
-the dashboard shows no Hub entry. With the flag on, `TREG_HUB_TEAMS` (a comma-separated list of
+the dashboard shows no Hub entry. With the flag on, `STRAY_HUB_TEAMS` (a comma-separated list of
 team slugs, default empty) is the middle stage between off and open (owner, 2026-09-24): every
 gate that has a caller (`hub_app.enabled_for(slug)`: the hub router, `/call/` of a hub id) answers
 404 to a team outside the list, exactly as with the flag off. The open surfaces follow the READER
@@ -67,10 +67,10 @@ gate that has a caller (`hub_app.enabled_for(slug)`: the hub router, `/call/` of
 share page, the hub sections of `/skill.md` and `/llms.txt`, and the MCP tools `hub_create`,
 `hub_update`, `hub_mine` (`mcp._HubToolsGate` on `tools/list`) resolve the key or session the
 request carries (`routers/hub_gate.reader_team`) and ask `hub_app.visible_to(slug)`; a reader with
-no team sees the hub only when no list is set. `TREG_HUB_USERS` (sign-in emails, owner 2026-09-26)
+no team sees the hub only when no list is set. `STRAY_HUB_USERS` (sign-in emails, owner 2026-09-26)
 is a second list beside the team list: a listed person sees the hub in every team they act for,
 and their teammates who are not listed do not (`enabled_for(slug, email)`, `hub_gate.reader`, the
-caller's email on `/call/` and the hub routes). `treg skill bootstrap` sends the key, so a listed
+caller's email on `/call/` and the hub routes). `stray skill bootstrap` sends the key, so a listed
 reader's agents get the hub sections. Who a credential is, is remembered for 60 s (`hub_gate.remember`,
 keyed by a hash of the key, session and team header; MCP too): while a list is set, each open
 request that carries a key would otherwise cost 3 to 5 database reads. Only visibility rides on it. The static plugin files never carry them (`build_plugin.py`).
@@ -90,7 +90,7 @@ An empty list means every team.
 ## The four files, and the fifth
 
 `recipe.json` (the manifest), `run.js` (script recipes), `check.json`, `README.md`, and
-optionally `data.csv`. `treg hub init <name> [--script]` writes a vendor-neutral skeleton.
+optionally `data.csv`. `stray hub init <name> [--script]` writes a vendor-neutral skeleton.
 `docs/hub-recipes/` holds three worked recipes, each with a matrix test: a public sheet served as a
 tool, an uploaded CSV, and `engineering-team-size`, a script ladder over three catalog tools
 (free identity resolution, CrustData's role headcount, PDL's R&D class) with a $0.15 `ctx.charge` fee.
@@ -140,7 +140,7 @@ references (never declared), refuses cycles and unknown steps, and keeps each st
 
 `POST /call/<team>.<name>` with the inputs as the JSON body. The runner coerces the inputs once
 (defaults, types, ints clamped to `min..max`, unknown or missing required → 422
-`hub_input_invalid` naming the field), reads the ceiling from `X-Treg-Run-Max-Cost`, else from the tool's own `limits.cost_usd` (its
+`hub_input_invalid` naming the field), reads the ceiling from `X-Stray-Run-Max-Cost`, else from the tool's own `limits.cost_usd` (its
 maker knows what one run costs), else $1.00 (price plus steps, counting what is in flight), opens the price hold, then runs the road:
 
 - **JSON road:** every ready step starts, four at a time, waiting on whichever finishes first;
@@ -150,12 +150,12 @@ maker knows what one run costs), else $1.00 (price plus steps, counting what is 
 Each unit is one `execute_call` under the child hold `{run}:s{n}` (`{run}:s{n}.{i}` for an
 item): the same gates, the same key injection, the same reserve-and-settle as a direct call.
 **Two teams meet in one run:** a catalog step runs as the caller (their money, their rules,
-their key if they hold one, else treg's); a step on one of the maker's own tools runs as the
+their key if they hold one, else stray's); a step on one of the maker's own tools runs as the
 maker (their registered key, unmetered), which is how a shared recipe uses a key the caller
 never holds. Two rules from the case study: a step is never answered compressed (the runner
 reads the bytes itself; `Accept-Encoding: identity` on every child), and a script may set
 headers on `ctx.call` minus identity and framing headers (`authorization`, `cookie`, `apikey`,
-`host`, `content-length`, `x-treg-*`; the tool's binding always wins).
+`host`, `content-length`, `x-stray-*`; the tool's binding always wins).
 
 Failure: when a step fails, nothing new starts, in-flight steps finish, and the run answers 424
 `hub_run_failed` with `{error: hub_step_failed | hub_script_failed | hub_output_invalid | hub_step_cap,
@@ -166,23 +166,23 @@ released. Four runs at a time per team (`application/hub/limits.py`, in-process,
 one-process production deploy): the fifth is 429 `hub_busy` with `retry_after_s`.
 
 The reply: `{run_id, recipe: "<id>@<v>", output, usage: {cost_micro, steps_micro, price_micro,
-steps, ms}, trace, log}` with `X-Treg-Run-Id` (= the parent call id), `X-Treg-Steps`,
-`X-Treg-Cost-Micro` (the total). `Idempotency-Key` covers the whole run through the parent's
+steps, ms}, trace, log}` with `X-Stray-Run-Id` (= the parent call id), `X-Stray-Steps`,
+`X-Stray-Cost-Micro` (the total). `Idempotency-Key` covers the whole run through the parent's
 store. `HubRun` (migrations 0042, 0044) keeps one row per run: status, steps, cost, price,
 duration, masked inputs, trace, log, error, and the output of a successful run; deleted with the
 calling team.
 
-## The sandbox (`application/hub/sandbox.py`, `treg/hub_sandbox.py`)
+## The sandbox (`application/hub/sandbox.py`, `stray/hub_sandbox.py`)
 
-`run.js` runs in a separate short-lived process per run, `python -m treg.hub_sandbox`, spawned
+`run.js` runs in a separate short-lived process per run, `python -m stray.hub_sandbox`, spawned
 with `runner.py`'s discipline: a scrubbed environment (never the server's), a private temporary
 HOME, its own process group, POSIX rlimits (CPU, file size, no core, RLIMIT_AS on Linux), a
 wall-clock kill, the whole group killed on every exit. Inside, QuickJS (the `quickjs` package,
 server extra) has no network, no file system, no `require`, no `process`, no timers; the engine's
 heap is capped at 64 MB. The whole surface a script gets: `ctx.inputs`, `ctx.call(target,
-{method, query, body, headers})` → `{status, headers, json, text, truncated, cost_usd}` (the x-treg-*
+{method, query, body, headers})` → `{status, headers, json, text, truncated, cost_usd}` (the x-stray-*
 headers are removed; `cost_usd` is what that call charged, so a script can keep its own budget and
-stop before the ceiling: a run that passes it is stopped by treg and returns nothing), `ctx.charge(usd, label)` → nothing (the script's price, one line at a time, below), `ctx.csv(text)` → rows
+stop before the ceiling: a run that passes it is stopped by stray and returns nothing), `ctx.charge(usd, label)` → nothing (the script's price, one line at a time, below), `ctx.csv(text)` → rows
 keyed by the header (RFC 4180), `ctx.data` → the rows of `data.csv` (≤ 5 MB, parsed once per run in the
 parent), `ctx.log(text)` (50 lines × 2 KB). `ctx.call` crosses to the parent as one JSON line
 over stdin/stdout; the parent enforces `uses` per call (a call outside the list is refused and
@@ -194,8 +194,8 @@ time limit set), a throw as `script`, each one line the maker reads in the run l
 `target` has three shapes: a catalog id; `<tool>/<path>` for an own tool; a full URL, allowed
 only when it starts with the base URL of an own tool named in `uses` (its query merges under the
 call's) and refused for any other host. "My script needs my own server" is answered by that
-door: the server is an own tool (`treg tool add my-api --base-url https://api.mine.com`, secret
-optional; a public Google Sheet needs none); treg makes the request; the sandbox never opens a
+door: the server is an own tool (`stray tool add my-api --base-url https://api.mine.com`, secret
+optional; a public Google Sheet needs none); stray makes the request; the sandbox never opens a
 socket. `ctx.call` returns a promise and does not block the engine: the child keeps pumping the
 job queue and settles each promise when the parent's reply for that id arrives, so five calls in
 one `Promise.all` are five in flight, run by the parent as tasks four at a time (`MAX_PARALLEL`,
@@ -211,7 +211,7 @@ review of the sandbox is scheduled as its own pass before release** (the owner's
 
 A script prices itself: `ctx.charge(usd, note)` bills the caller one line, as many lines as the
 maker needs. A fee (`ctx.charge(0.01, "fee")`), per result (`rows.length * 0.002`), a margin on a
-catalog call (`r.cost_usd * 0.2`), and the cost of an own-key step at a vendor treg cannot see (an
+catalog call (`r.cost_usd * 0.2`), and the cost of an own-key step at a vendor stray cannot see (an
 own-key step costs the caller nothing, rule 1, and the maker real money; a waterfall over such
 vendors costs $0.001 one run and $0.50 the next, and only the script knows which branch ran, so it
 charges after it has seen the answer). The manifest declares `pricing.max_price_usd`, the most all
@@ -233,7 +233,7 @@ normal prices and never the seller's price. Pass (every `check.fields` present a
 `min_rows` met; `health.verdict_from` is the one rule) ⇒ `live`, and the 201 carries the call
 line and the share page; fail ⇒ the version is kept as `failed` with the reason in
 `check_result` (migration 0043). `PUT /hub/tools/{id}` publishes a new version (the name must
-match the id). `POST /hub/run` is the dry run behind `treg hub run .`: the files plus `inputs`,
+match the id). `POST /hub/run` is the dry run behind `stray hub run .`: the files plus `inputs`,
 run for real as the maker, nothing stored, version 0 on every trace. `PATCH /hub/tools/{id}`
 `{price_usd}` changes the newest live version's price for later runs, no version bump. `DELETE
 /hub/tools/{id}` retires every version (off the call road at once; rows kept). `GET
@@ -250,7 +250,7 @@ step: an own tool wins, then a catalog id, then the hub (`application/call/servi
 
 Over MCP (`/mcp/`): `hub_create`, `hub_update`, `hub_mine`; calling stays `call`. `hub_create`'s
 description carries the owner's rule: a credential the team does not hold is never hard-coded
-into a script; register it first, then name the tool. The CLI mirrors it: `treg hub init |
+into a script; register it first, then name the tool. The CLI mirrors it: `stray hub init |
 run | publish | ls | earnings | price | retire`; a refusal prints the field, the rule and the
 fix commands with the missing tool's name, one command per line.
 
@@ -259,7 +259,7 @@ fix commands with the missing tool's name, one command per line.
 Health is derived, never stored: a version is `failing` when its last three runs (callers'
 runs and scheduled checks alike) all failed, `ok` otherwise, `unknown` before any run. A
 failing tool stays callable; the public page, `catalog_get` and the maker's health view say the
-state; the next passing run clears it. `treg-worker hub check` (cron it every 6 hours) runs
+state; the next passing run clears it. `stray-worker hub check` (cron it every 6 hours) runs
 every live tool's newest `check.json` once as its maker: the identity is rebuilt from the
 database (the publisher's membership, else an owner's), the run goes through the runner charged
 to the maker at step prices and never the seller's price, the row is a `HubRun` with
@@ -272,7 +272,7 @@ A maker's price rides the same primitives as a step: one extra hold `{run}:price
 at run start (402 `hub_price_unaffordable` with the amount before any step), settled on success,
 released on any failure or stop. **What is held:** the most the maker can earn on THIS run: a
 recipe's `price_usd`, or a script's `max_price_usd`. **What is settled:** a recipe's price in full;
-a script's sum of ctx.charge lines (`actual_micro`), the rest of the hold refunded. The settle is the one cross-team money movement in treg:
+a script's sum of ctx.charge lines (`actual_micro`), the rest of the hold refunded. The settle is the one cross-team money movement in stray:
 `settle_to_in_transaction(db, call_id, payee_org_id, actual_micro=)` consumes the settled amount
 from the caller's hold, refunds the rest of the hold to the caller, and in the same transaction
 credits the maker's team with an `earned` block of the settled amount (a `settle` entry on the
@@ -283,7 +283,7 @@ runs, the check). `earned` spends after the free kinds and before purchased mone
 (`_KIND_ORDER`). Withdrawal is backlog. The earnings view is sales only (the maker's own runs
 excluded), counts and amounts, never who called; `avg_price_micro` (earned ÷ successful runs, per
 day and overall; `avg_price_usd` in the CSV) is how a maker sees where a variable price lands.
-`treg hub price` sets a recipe's `price_usd` or a script's `max_price_usd` for later runs, no version
+`stray hub price` sets a recipe's `price_usd` or a script's `max_price_usd` for later runs, no version
 bump; a script's amounts change only with a new version of run.js.
 
 ## The surfaces
@@ -292,27 +292,27 @@ bump; a script's amounts change only with a new version of run.js.
   `<!--hub-->…<!--/hub-->` blocks that `routers/web.py` strips while the flag is off (as it
   strips the routed-discovery blocks); `scripts/build_plugin.py` drops the block the same way and
   `--with-hub` keeps it at the final merge. `GET /catalog/endpoints/<id>` (behind `catalog_get`,
-  `treg catalog get`) answers for a hub id with the public contract (`kind: "hub"`, summary,
+  `stray catalog get`) answers for a hub id with the public contract (`kind: "hub"`, summary,
   inputs, output, the price line (`price_range` leads: what recent successful runs cost, steps
   and seller price together, and for a script the seller cap after it ("$0.0103/run so far · seller up to
   $0.02 a run": recent runs may all have charged little), from `application/hub.price_ranges` over 30 days of every successful
   run, runs by other teams only once there are any (else the maker's own, marked), with `price_samples`; before any run the declared worst case plus
   "+ steps"; then `price_label`: the mode and the worst case; `cost.usd` is the
   worst case), health, version, `call_template`, the page URL, the readme);
-  never the script, the maker's tools or a key. Search lists a hub tool only when treg approved its
+  never the script, the maker's tools or a key. Search lists a hub tool only when stray approved its
   listing (a `HubListing` row in state `approved`, below): the newest live version is scored by `catalog_store.score_extra` with the catalog's
   own tokens, aliases, platform boost, idf and admission gate, then merged by score with no boost
   (`merge_by_score`, catalog rows first on a tie). The row is the public contract plus its 30-day ok
   rate from runs by others; unlisted, unapproved, failed and retired never appear.
 - **The listing review** (`docs/hub-listing-decisions.md` round 2, 2026-09-24): `PATCH
-  /hub/tools/{id} {"listed": true}` (`treg hub list`) is a request, a `HubListing` row, one per
+  /hub/tools/{id} {"listed": true}` (`stray hub list`) is a request, a `HubListing` row, one per
   tool and not per version, so the listing stays while each new version is reviewed (below; migration 0050; the old
   per-version `hubtool.listed` column stays unread, expand-only). `set_flags` creates it in state
   `requested`, asks again from `rejected`, leaves `requested` and `approved` alone; `listed: false`
   deletes it. A superadmin reads the queue (`GET /admin/hub/listings?state=`, `pending_listings`:
   summary, price label, uses, check verdict) and decides (`POST /admin/hub/listings/{id}
   {decision: approve|reject, reason}`, `decide_listing`); a rejection needs a reason, which the
-  maker reads in `treg hub list`, `/hub/tools/mine` (`listing: {state, reason}`) and the dashboard's
+  maker reads in `stray hub list`, `/hub/tools/mine` (`listing: {state, reason}`) and the dashboard's
   Listing tab. The dashboard's Admin page carries the queue. `listed` in the maker's view is true
   only when approved; another team's view of a tool never carries the request.
 - **Capability** (round 3): an optional manifest `capability`, a catalog capability id (checked at
@@ -328,7 +328,7 @@ bump; a script's amounts change only with a new version of run.js.
   becomes `review`, not `live` (`_hold_for_review`), so every surface that reads `live` keeps the
   approved version; a newer waiting version makes the older one `superseded`. `tool_for` serves a
   pinned `review` (or `checking`) version only to a CALL by the maker's team; the public views
-  (catalog get, the share page), which name no caller, never show it. `treg hub price` on an approved tool is checked
+  (catalog get, the share page), which name no caller, never show it. `stray hub price` on an approved tool is checked
   and stored as `HubListing.pending_pricing`. The queue is `GET /admin/hub/updates`
   (`pending_updates`: what serves now beside what would replace it); `POST
   /admin/hub/updates/{id} {decision, reason}` (`decide_update`) approves (the version goes live, the
@@ -342,7 +342,7 @@ bump; a script's amounts change only with a new version of run.js.
   the admin changes it by approving the listing again.
 - **Team names** (rounds 5-6): `reserved_reason` judges a name as it reads (`_reads_as`: NFKC,
   lookalike letters and digits mapped to Latin, split into words): refused when it begins with or
-  has a word beginning with `treg`, has a word beginning with `official` or `verified`, or reads as
+  has a word beginning with `stray`, has a word beginning with `official` or `verified`, or reads as
   a catalog provider (a word equal to it, or the whole name beginning with a name of 5+ letters);
   a platform (`=`-marked in `signup.reserved_team_names`, ordinary words like `people`) only as the
   whole name. Such a team cannot be created, renamed to, or publish a hub tool unless a superadmin
@@ -351,8 +351,8 @@ bump; a script's amounts change only with a new version of run.js.
 - **Rejected means not callable** (round 6): `tool_for` serves a tool whose `HubListing.state` is
   `rejected` only to its maker's team (`is_rejected`); another team's call gets 404, the share page
   410, `catalog get` 404. A tool never reviewed stays callable by id.
-- **No relays** (round 6): a team tool's `base_url` may not be treg itself (`points_at_treg`,
-  `treg_hosts`: the public URL's host and `PUBLIC_HOST_ALIASES`), refused at `/tools` and again in
+- **No relays** (round 6): a team tool's `base_url` may not be stray itself (`points_at_stray`,
+  `stray_hosts`: the public URL's host and `PUBLIC_HOST_ALIASES`), refused at `/tools` and again in
   the runner for a tool added before, since it would let a hub tool call other hub tools.
 - **What the reviewer reads** (round 6): the listing queue carries the script (or steps) and the
   own tools' base URLs (`own_tool_urls`); the update queue a unified diff of the code, approved to
@@ -394,18 +394,18 @@ bump; a script's amounts change only with a new version of run.js.
   follows `/meta.hub` the same way. Files are
   read-only in the dashboard: a new version comes from the terminal or the agent. The frozen
   legacy dashboard carries the same view until its retirement.
-- **The CLI:** `treg hub init` scaffolds a `pricing` block (`price_usd` 0 for a recipe; `max_price_usd` 0.05 and one `ctx.charge` line for a script); `treg hub ls` shows the price
-  label; `treg hub earnings` prints the average price per successful run; `treg hub list | unlist`
-  asks for a place in search or withdraws it (`HubListing`, above) and `treg hub log --public
+- **The CLI:** `stray hub init` scaffolds a `pricing` block (`price_usd` 0 for a recipe; `max_price_usd` 0.05 and one `ctx.charge` line for a script); `stray hub ls` shows the price
+  label; `stray hub earnings` prints the average price per successful run; `stray hub list | unlist`
+  asks for a place in search or withdraws it (`HubListing`, above) and `stray hub log --public
   on|off` flips `HubTool.public_log` (migration 0049), both also on the dashboard's Listing tab.
 
 ## The case study (2026-09-09) and what it taught
 
 The owner and the assistant walked the maker's road by hand against a real Supabase table
 (2,592 SEO rank-tracking rows in schema `hubdemo` of the owner's `krew-saas` project) on a local
-server with the flag on: `treg hub init` → the four files written together → a run with no tool
-registered (refused: `uses[0]`, the rule, the fix commands) → `treg secret add` + `treg tool add
-supabase` with two bindings (`Authorization: Bearer` and `apikey`) → `treg hub run .` → `treg hub
+server with the flag on: `stray hub init` → the four files written together → a run with no tool
+registered (refused: `uses[0]`, the rule, the fix commands) → `stray secret add` + `stray tool add
+supabase` with two bindings (`Authorization: Bearer` and `apikey`) → `stray hub run .` → `stray hub
 publish .` (check passed, 0 µ$: the only step ran on the maker's own key) → a second team called
 `unclecode-superdesign-dev.keyword-rankings` and got rows; neither the Supabase URL nor any key
 material appeared in the reply. It found the compression rule and the header rule above, the
@@ -414,7 +414,7 @@ before release: the owner by hand with the CSV recipe, and a Claude Code agent o
 
 ## Backlog (owner's order)
 
-Templates for more data providers incl. `treg hub init --from <template>`; withdrawal; the
+Templates for more data providers incl. `stray hub init --from <template>`; withdrawal; the
 listing road (pull request + verification); a private-to-team switch; a platform fee; a script
 editor in the dashboard; live polling of a run; billing compute; Crawl4AI as a built-in; a
 benchmark/auditor; job queue, recipe-calls-recipe, retry, live progress, team sandbox.
@@ -427,7 +427,7 @@ the rest went to the backlog. What is different since: the price hold closes on 
 `hub_run_crashed`, never a 500 with an open hold); a step's answer is read into memory up to
 1 MB and the stream is closed beyond it (`truncated` on the script's reply, a failed step on
 the JSON road); the child's cost comes from the call record, never from an upstream
-`X-Treg-Cost-Micro`; a child call never resolves to a hub tool (`CallInput.child_of`) and an
+`X-Stray-Cost-Micro`; a child call never resolves to a hub tool (`CallInput.child_of`) and an
 own tool named with a dot cannot be in `uses` (no nested runs); the caller's trace carries the
 kind of tool and no upstream error body, on the 200 body, the 424 detail and the idempotent
 replay; `GET /hub/tools/{id}` on another team's tool returns the public contract only; the

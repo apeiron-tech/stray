@@ -5,8 +5,8 @@
 
 公共机制：进程内假供应商（行为由 `X-Fake-*` 请求头点菜，记录每次收到的请求）；
 故障注入传输层（模拟超时/断连/断流）；每个用例跑完统一核对“四本账”——
-HTTP 响应（状态码、`X-Treg-Call-Id` 恒在、计量时 `X-Treg-Cost-Micro`、
-`X-Treg-Error` 的有无）、账本（余额、流水原因、无悬挂预留）、审计行
+HTTP 响应（状态码、`X-Stray-Call-Id` 恒在、计量时 `X-Stray-Cost-Micro`、
+`X-Stray-Error` 的有无）、账本（余额、流水原因、无悬挂预留）、审计行
 （状态、refused_by、费用列）、上游命中数（假供应商实际收到几次请求）。
 金额断言一律经 `with_margin()` 计算，不硬编码供应商原价。
 
@@ -14,7 +14,7 @@ HTTP 响应（状态码、`X-Treg-Call-Id` 恒在、计量时 `X-Treg-Cost-Micro
 
 | # | 用例 | 布置与动作 | 评估什么 |
 |---|---|---|---|
-| A1 | 自有工具 GET | 注册 header 型密钥 + echo 工具；GET 调用 | 凭证被服务端注入（上游收到 Bearer）；响应逐字节回传；有 Call-Id、无 X-Treg-Error；**账本零变化**；审计 200；上游命中 1 |
+| A1 | 自有工具 GET | 注册 header 型密钥 + echo 工具；GET 调用 | 凭证被服务端注入（上游收到 Bearer）；响应逐字节回传；有 Call-Id、无 X-Stray-Error；**账本零变化**；审计 200；上游命中 1 |
 | A2 | 自有工具 POST | 带 body + 重复 query 参数（?tag=a&tag=b）调用 | body 与重复参数原样到达上游；仍零计费——保真基线 |
 | A3 | 目录调用 tier-4 | 开平台 key；调 tikhub 端点（$0.001 per_success）；上游 200 无实报费用 | 预扣→结算全链：`Cost-Micro` = 加毛利后的估价；余额减同额；hold 关闭；审计带完整遥测（endpoint/provider/tier=platform） |
 | A4 | 自有 key 遮蔽 tier-4 | org 存入自己的 tikhub key；调同一端点 | **凭证阶梯**：上游收到的是 org 的 key 不是平台 key；零扣费；tier=own——“自有 key 永远赢”是产品承诺 |
@@ -23,7 +23,7 @@ HTTP 响应（状态码、`X-Treg-Call-Id` 恒在、计量时 `X-Treg-Cost-Micro
 
 | # | 用例 | 布置与动作 | 评估什么 |
 |---|---|---|---|
-| B1 | per_success 上游 500 | tier-4 调用，假供应商回 500 | 预扣**全退**（流水 reason=call_failed_500）；500 原样转给调用方；**无** X-Treg-Error（是供应商说不，不是 treg 拒绝） |
+| B1 | per_success 上游 500 | tier-4 调用，假供应商回 500 | 预扣**全退**（流水 reason=call_failed_500）；500 原样转给调用方；**无** X-Stray-Error（是供应商说不，不是 stray 拒绝） |
 | B2 | per_success 上游 404 | 同上，404（查无结果） | “成功才计费”：未命中免费，全退 |
 | B3 | per_call 上游 400，供应商未报价 | 换 per_call 计费型端点，上游 400，响应体无计费字段 | **退款**（reason=rejected_unbilled_400）——2026-09-07 起，调用方之错的 4xx 只按供应商自报的费用结算，从不按估价；估价定的是“已服务”的价 |
 | B3b | per_call 上游 400，供应商报了费 | 同上，但响应体带 `credits_charged: 1` | **按自报费用计费**——供应商说它收了，调用方就付那么多，不多不少 |
@@ -54,7 +54,7 @@ HTTP 响应（状态码、`X-Treg-Call-Id` 恒在、计量时 `X-Treg-Cost-Micro
 ## E 组 · 拒绝（5 例）— 上游零字节 + 必留审计痕
 
 每例公共断言：**假供应商命中数 = 0**（所有闸门都在转发之前生效）、
-响应带 `X-Treg-Error: 1`（treg 拒绝的标志，与 B 组“供应商说不”相对）、审计行带 refused_by。
+响应带 `X-Stray-Error: 1`（stray 拒绝的标志，与 B 组“供应商说不”相对）、审计行带 refused_by。
 
 | # | 用例 | 布置与动作 | 评估什么 |
 |---|---|---|---|
@@ -70,7 +70,7 @@ HTTP 响应（状态码、`X-Treg-Call-Id` 恒在、计量时 `X-Treg-Cost-Micro
 |---|---|---|---|
 | F1 | 重复 query 参数 | ?tag=a&tag=b | 上游按原顺序收到两个 tag——多值参数不丢不并 |
 | F2 | 路径里的 %2f | /call/<tool>/a%2fb | 上游 raw_path 保留 %2f 不被解码——npm scoped 包类路径的保真 |
-| F3 | cookie 清洗与头保真 | 请求带 treg_session cookie + 自定义头；上游回 Set-Cookie: treg_session=evil | 自定义头到达、**treg 会话 cookie 被扣下**（不泄给上游）；上游试图种 treg 会话 cookie 被拦（防会话固定） |
+| F3 | cookie 清洗与头保真 | 请求带 stray_session cookie + 自定义头；上游回 Set-Cookie: stray_session=evil | 自定义头到达、**stray 会话 cookie 被扣下**（不泄给上游）；上游试图种 stray 会话 cookie 被拦（防会话固定） |
 
 ## G 组 · 并发（1 例）— 数据库裁决最后一分钱
 

@@ -1,8 +1,8 @@
 // A PUBLIC Google Sheet (File → Share → Anyone with the link) exports as CSV at
 //   https://docs.google.com/spreadsheets/d/<sheet_id>/export?format=csv&gid=<gid>
 // The team registers that host once as its own tool, with no secret:
-//   treg tool add sheets --base-url https://docs.google.com
-// and lists "sheets" in `uses`. The script names the tool; treg makes the request.
+//   stray tool add sheets --base-url https://docs.google.com
+// and lists "sheets" in `uses`. The script names the tool; stray makes the request.
 export default async function run(ctx) {
   const { sheet_id, gid, column, equals, search, limit } = ctx.inputs;
   const r = await ctx.call("sheets/spreadsheets/d/" + sheet_id + "/export", {

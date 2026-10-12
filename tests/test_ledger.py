@@ -19,15 +19,15 @@ from sqlmodel import select
 
 from conftest import make_upstream, verified_signup
 
-from treg.domain import money as ledger
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import CreditBlock, Hold, LedgerEntry, Org
+from stray.domain import money as ledger
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import CreditBlock, Hold, LedgerEntry, Org
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 @pytest.fixture
@@ -113,7 +113,7 @@ async def test_two_deliveries_of_one_payment_credit_once(c: AsyncClient):
 
     Each task needs its OWN session: two coroutines sharing one AsyncSession is a different bug.
     """
-    from treg.models import AdConversion
+    from stray.models import AdConversion
 
     org_id, _ = await _org(c)
     promo = get_settings().promo_grant_micro
@@ -211,8 +211,8 @@ async def test_concurrent_sweeps_pay_a_referral_once(c: AsyncClient):
     """
     from datetime import timedelta
 
-    from treg.domain import referrals
-    from treg.models import Referral
+    from stray.domain import referrals
+    from stray.models import Referral
 
     r = await verified_signup(c, json={"email": "referrer@superdesign.dev"})
     referrer_org, referrer_user = r.json()["org_id"], r.json()["id"]
@@ -259,8 +259,8 @@ async def test_sweep_grants_and_stamps_commit_together(c: AsyncClient, monkeypat
     where each grant committed itself, leaves the referee's money durable with no stamp."""
     from datetime import timedelta
 
-    from treg.domain import referrals
-    from treg.models import Referral
+    from stray.domain import referrals
+    from stray.models import Referral
 
     r = await verified_signup(c, json={"email": "atomic-ref@superdesign.dev"})
     referrer_org, referrer_user = r.json()["org_id"], r.json()["id"]
@@ -305,8 +305,8 @@ async def test_referee_instant_grant_failure_after_staging_never_raises(
     (MissingGreenlet), which broke the never-raises contract exactly when it mattered."""
     import logging as _logging
 
-    from treg.domain import referrals
-    from treg.models import Referral
+    from stray.domain import referrals
+    from stray.models import Referral
 
     r = await verified_signup(c, json={"email": "ref-boom-a@superdesign.dev"})
     referrer_user = r.json()["id"]
@@ -326,9 +326,9 @@ async def test_referee_instant_grant_failure_after_staging_never_raises(
 
     monkeypatch.setattr(ledger, "grant", grant_then_boom)
     # Alembic's fileConfig (disable_existing_loggers=True) elsewhere in the suite disables the
-    # "treg" logger; re-enable it so caplog sees the warning regardless of test order.
-    monkeypatch.setattr(_logging.getLogger("treg"), "disabled", False)
-    with caplog.at_level(_logging.WARNING, logger="treg"):
+    # "stray" logger; re-enable it so caplog sees the warning regardless of test order.
+    monkeypatch.setattr(_logging.getLogger("stray"), "disabled", False)
+    with caplog.at_level(_logging.WARNING, logger="stray"):
         async with session_maker() as db:
             row = (await db.execute(select(Referral))).scalars().first()
             await referrals._grant_referee(db, row)  # must swallow, never raise
@@ -348,8 +348,8 @@ async def test_sweep_grant_failure_after_staging_never_raises(c: AsyncClient, mo
     import logging as _logging
     from datetime import timedelta
 
-    from treg.domain import referrals
-    from treg.models import Referral
+    from stray.domain import referrals
+    from stray.models import Referral
 
     r = await verified_signup(c, json={"email": "sweep-boom-ref@superdesign.dev"})
     referrer_user = r.json()["id"]
@@ -371,8 +371,8 @@ async def test_sweep_grant_failure_after_staging_never_raises(c: AsyncClient, mo
         raise RuntimeError("grant broke after staging")
 
     monkeypatch.setattr(ledger, "grant", grant_then_boom)
-    monkeypatch.setattr(_logging.getLogger("treg"), "disabled", False)  # see the referee test
-    with caplog.at_level(_logging.WARNING, logger="treg"):
+    monkeypatch.setattr(_logging.getLogger("stray"), "disabled", False)  # see the referee test
+    with caplog.at_level(_logging.WARNING, logger="stray"):
         async with session_maker() as db:
             paid = await referrals.sweep(db)  # must swallow both failures, never raise
     assert paid == 0
@@ -392,8 +392,8 @@ async def test_referrals_page_survives_a_sweep_rollback(c: AsyncClient, monkeypa
     the user row and `user.id` in the handler would 500 the page it protects."""
     import logging as _logging
 
-    from treg.domain import referrals
-    from treg.application import referrals as referrals_app
+    from stray.domain import referrals
+    from stray.application import referrals as referrals_app
 
     r = await verified_signup(c, json={"email": "page-boom@superdesign.dev"})
     user_id = r.json()["id"]
@@ -404,8 +404,8 @@ async def test_referrals_page_survives_a_sweep_rollback(c: AsyncClient, monkeypa
         raise RuntimeError("sweep broke")
 
     monkeypatch.setattr(referrals, "sweep", sweep_boom)
-    monkeypatch.setattr(_logging.getLogger("treg"), "disabled", False)  # see the referee test
-    with caplog.at_level(_logging.WARNING, logger="treg"):
+    monkeypatch.setattr(_logging.getLogger("stray"), "disabled", False)  # see the referee test
+    with caplog.at_level(_logging.WARNING, logger="stray"):
         summary = await referrals_app.get_referral_summary(user_id)  # must not raise
     assert "referral sweep failed for user" in caplog.text
     assert summary["code"]  # the page still renders
@@ -417,10 +417,10 @@ async def test_signup_promo_and_its_conversion_land_or_fail_together(c: AsyncCli
     makes both durable in one commit."""
     from sqlalchemy.ext.asyncio import AsyncSession as SAAsyncSession
 
-    from treg import adsconv
-    from treg.application import signup
-    from treg.models import AdConversion, User
-    from treg.timeutil import utcnow_naive
+    from stray import adsconv
+    from stray.application import signup
+    from stray.models import AdConversion, User
+    from stray.timeutil import utcnow_naive
 
     monkeypatch.setattr(adsconv, "enabled", lambda: True)
     async with session_maker() as db:
@@ -469,8 +469,8 @@ async def test_a_grant_failure_after_staging_still_returns_the_signup(c: AsyncCl
     signup doors must still answer with the fields they promised, and the referral must still be
     attributed - the never-500-the-signup contract does not stop at objects that now need a
     reload."""
-    from treg.routers.signup_cookies import REFERRAL_COOKIE
-    from treg.models import Referral
+    from stray.routers.signup_cookies import REFERRAL_COOKIE
+    from stray.models import Referral
 
     _, ann_token = await _org(c, "ref-ann@superdesign.dev")
     code = (await c.post("/referrals/code", headers=_h(ann_token))).json()["code"]
@@ -741,7 +741,7 @@ async def test_margin_is_applied_at_reserve_and_settle(c: AsyncClient, monkeypat
     org_id, _ = await _org(c)
     promo = get_settings().promo_grant_micro
     get_settings.cache_clear()
-    monkeypatch.setenv("TREG_PLATFORM_MARGIN", "0.5")
+    monkeypatch.setenv("STRAY_PLATFORM_MARGIN", "0.5")
     try:
         assert ledger.with_margin(1_000) == 1_500
         assert ledger.with_margin(3) == 5  # rounds UP: never charge less than the call cost us
@@ -752,7 +752,7 @@ async def test_margin_is_applied_at_reserve_and_settle(c: AsyncClient, monkeypat
             entry = [e for e in await ledger.entries_of(db, org_id) if e.kind == "settle"][0]
         assert entry.meta["margin"] == 0.5 and entry.meta["observed_micro"] == 1_000
     finally:
-        monkeypatch.delenv("TREG_PLATFORM_MARGIN")
+        monkeypatch.delenv("STRAY_PLATFORM_MARGIN")
         get_settings.cache_clear()
     assert await _assert_invariant(org_id) == promo - 1_500
 
@@ -809,7 +809,7 @@ async def test_balance_endpoint_paginates_entries(c: AsyncClient):
 async def test_balance_shows_the_wallet_to_members_and_the_history_to_admins(c: AsyncClient):
     """POLICY CHANGE (2026-08, from Jason's report): this route used to be admin-only, which meant a
     machine identity could not read the balance it was spending — while every 402 already handed it
-    `balance_micro`, and both llms.txt and skill.md tell an agent to run `treg balance` after a call.
+    `balance_micro`, and both llms.txt and skill.md tell an agent to run `stray balance` after a call.
     Refusing the number here while shipping it in an error was incoherent.
 
     So the split is by WHAT, not by who: the wallet (figure + in-flight holds) is every member's; the
@@ -838,9 +838,9 @@ async def test_balance_shows_the_wallet_to_members_and_the_history_to_admins(c: 
 
 # ---- CLI ---------------------------------------------------------------------------------------
 def test_cli_balance_renders_credit_holds_and_ledger(monkeypatch, capsys):
-    """`treg balance` is a rendered table, so it must show sub-cent amounts as money (a call costs
+    """`stray balance` is a rendered table, so it must show sub-cent amounts as money (a call costs
     ~$0.0006 — rounding to $0.00 would read as free) and keep held money separate from spent."""
-    from treg import cli
+    from stray import cli
 
     body = {
         "org_id": 1, "balance_micro": 987_400, "balance_usd": 0.9874,
@@ -888,7 +888,7 @@ async def test_demo_orgs_get_no_promo_credit(c: AsyncClient):
         await ledger._add_balance(db, org_id, -org.balance_micro)  # zero it as a demo org would be
         await db.commit()
         # the hook is what enforces this — a demo org that somehow reaches it gets nothing
-        from treg.application.signup import _grant_signup_promo
+        from stray.application.signup import _grant_signup_promo
         await _grant_signup_promo(db, await db.get(Org, org_id), user_id=-1)
         assert await ledger.balance_of(db, org_id) == 0
 

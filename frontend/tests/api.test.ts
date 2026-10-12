@@ -6,9 +6,9 @@ afterEach(() => vi.unstubAllGlobals())
 test('cookie and team headers accompany a JSON request', async () => {
   const fetcher = vi.fn().mockResolvedValue(Response.json({ ok: true }))
   vi.stubGlobal('fetch', fetcher)
-  expect(await requestJson('/tools', {}, { 'X-Treg-Org': 'team' }, vi.fn(), () => true)).toEqual({ ok: true })
+  expect(await requestJson('/tools', {}, { 'X-Stray-Org': 'team' }, vi.fn(), () => true)).toEqual({ ok: true })
   expect(fetcher).toHaveBeenCalledWith('/tools', expect.objectContaining({
-    credentials: 'include', headers: { 'X-Treg-Org': 'team' },
+    credentials: 'include', headers: { 'X-Stray-Org': 'team' },
   }))
 })
 
@@ -18,11 +18,11 @@ test('a WAF HTML rejection retries a Unicode body once with base64', async () =>
     .mockResolvedValueOnce(Response.json({ ok: true }))
   vi.stubGlobal('fetch', fetcher)
   const body = JSON.stringify({ recipe: '你好 🌍' })
-  await requestJson('/skills', { method: 'POST', body }, { 'X-Treg-Token': 'test' }, vi.fn(), () => false)
+  await requestJson('/skills', { method: 'POST', body }, { 'X-Stray-Token': 'test' }, vi.fn(), () => false)
   expect(fetcher).toHaveBeenCalledTimes(2)
   const retry = fetcher.mock.calls[1]![1]
   expect(Buffer.from(retry.body, 'base64').toString()).toBe(body)
-  expect(retry.headers).toMatchObject({ 'X-Treg-Token': 'test', 'X-Treg-Body-Encoding': 'base64' })
+  expect(retry.headers).toMatchObject({ 'X-Stray-Token': 'test', 'X-Stray-Body-Encoding': 'base64' })
 })
 
 test('an upstream JSON refusal is never retried', async () => {

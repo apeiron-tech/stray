@@ -54,11 +54,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import yaml  # noqa: E402
 
-from treg.application import catalog_find, find_index  # noqa: E402
-from treg.config import get_settings  # noqa: E402
-from treg.domain.catalog import store  # noqa: E402
-from treg.infra import embed as embed_infra  # noqa: E402
-from treg.infra import judge as judge_infra  # noqa: E402
+from stray.application import catalog_find, find_index  # noqa: E402
+from stray.config import get_settings  # noqa: E402
+from stray.domain.catalog import store  # noqa: E402
+from stray.infra import embed as embed_infra  # noqa: E402
+from stray.infra import judge as judge_infra  # noqa: E402
 
 TASK_VERDICTS = ("strong", "closest")
 
@@ -188,7 +188,7 @@ class Answer:
 
 
 def _provider_display(service: str) -> str:
-    from treg.routers.catalog import _provider_display as display
+    from stray.routers.catalog import _provider_display as display
     return display(service)
 
 
@@ -496,7 +496,7 @@ def cached_apis(cache: Path | None):
     if not s.typesafe_api_key:
         s.typesafe_api_key = os.environ.get("TYPESAFE_API_KEY", "")
     if not s.typesafe_api_key:
-        raise SystemExit("the judge needs TYPESAFE_API_KEY (or TREG_TYPESAFE_API_KEY)")
+        raise SystemExit("the judge needs TYPESAFE_API_KEY (or STRAY_TYPESAFE_API_KEY)")
     disk = DiskJudge(cache / "jev" if cache else None, judge_infra.judge)
     embed = DiskEmbed(cache / "embed" if cache else None, embed_infra.embed_query)
     judge_infra.judge, embed_infra.embed_query = disk, embed
@@ -529,7 +529,7 @@ async def run_all(engine, cases: list[Case], tier: str, concurrency: int,
 
 
 def _index(cat: store.Catalog):
-    from treg.domain.catalog import find_recall
+    from stray.domain.catalog import find_recall
     return find_recall.index(cat)
 
 

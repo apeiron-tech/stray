@@ -1,7 +1,7 @@
-"""OAuth-billed metering: providers whose upstream bill lands on treg's app (X's pay-per-use).
+"""OAuth-billed metering: providers whose upstream bill lands on stray's app (X's pay-per-use).
 
-A registry X connect is the org's own credential (tier 1/2), but every call on it spends treg's
-prepaid X credits — so with the provider allow-listed (`TREG_OAUTH_BILLED_PROVIDERS=x`) the call
+A registry X connect is the org's own credential (tier 1/2), but every call on it spends stray's
+prepaid X credits — so with the provider allow-listed (`STRAY_OAUTH_BILLED_PROVIDERS=x`) the call
 runs the same reserve→relay→settle path as tier 4. The fences under test: the kill switch defaults
 OFF (today's free behavior), a BYO-app connection is never metered (its upstream bill is the
 org's own), reads settle against the RESOURCES RETURNED (X bills per resource), writes price up
@@ -17,17 +17,17 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import update
 
-from treg.application.call import resolve as call_resolution
-from treg.application.call import service as call_service
-from treg import crypto
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import Org, Secret, Tool
+from stray.application.call import resolve as call_resolution
+from stray.application.call import service as call_service
+from stray import crypto
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import Org, Secret, Tool
 
 POSTS = "x.x.user.posts"        # GET /2/users/{id}/tweets — per_result $0.005/post
 POST_MICRO = 5_000
 # GET /2/users/me — one User resource at $0.010. NOT the $0.001 "owned read": X grants that rate
-# only when the caller owns the developer app, and on a registry connect the app is treg's, so a
+# only when the caller owns the developer app, and on a registry connect the app is stray's, so a
 # member reading their own profile pays the ordinary rate. This said 1_000 until 2026-08-18.
 PROFILE_MICRO = 10_000
 CREATE_MICRO = 15_000           # POST /2/tweets — per_call $0.015…
@@ -37,7 +37,7 @@ CREATE_LINK_MICRO = 200_000     # …but $0.20 when the text carries a URL
 @pytest.fixture
 def billed_on(monkeypatch):
     """Opt the deployment into charging for X, the way a deploy does."""
-    monkeypatch.setenv("TREG_OAUTH_BILLED_PROVIDERS", "x")
+    monkeypatch.setenv("STRAY_OAUTH_BILLED_PROVIDERS", "x")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -78,12 +78,12 @@ async def _connect_x(clients: AsyncClient, *, provider: str = "x", org_id: int |
 
 # ---- the kill switch and the BYO exemption -----------------------------------------------------
 async def test_kill_switch_off_stays_free(clients: AsyncClient):
-    """Default deploy = no TREG_OAUTH_BILLED_PROVIDERS: an X connect call is served and nothing
+    """Default deploy = no STRAY_OAUTH_BILLED_PROVIDERS: an X connect call is served and nothing
     touches the ledger — exactly today's behavior."""
     await _connect_x(clients)
     r = await clients.get(f"/call/{POSTS}?id=42&max_results=5")
     assert r.status_code == 200, r.text
-    assert "x-treg-cost-micro" not in {k.lower() for k in r.headers}
+    assert "x-stray-cost-micro" not in {k.lower() for k in r.headers}
     kinds = {e["kind"] for e in await _entries(clients)}
     assert "reserve" not in kinds and "settle" not in kinds
 
@@ -93,7 +93,7 @@ async def test_byo_connection_never_metered(clients: AsyncClient, billed_on):
     await _connect_x(clients, provider="")
     r = await clients.get(f"/call/{POSTS}?id=42&max_results=5")
     assert r.status_code == 200, r.text
-    assert "x-treg-cost-micro" not in {k.lower() for k in r.headers}
+    assert "x-stray-cost-micro" not in {k.lower() for k in r.headers}
     kinds = {e["kind"] for e in await _entries(clients)}
     assert "reserve" not in kinds and "settle" not in kinds
 
@@ -107,7 +107,7 @@ async def test_read_settles_per_resource_returned(clients: AsyncClient, billed_o
     before = await _balance(clients)
     r = await clients.get(f"/call/{POSTS}?id=42&max_results=10")
     assert r.status_code == 200, r.text
-    charged = int(r.headers["x-treg-cost-micro"])
+    charged = int(r.headers["x-stray-cost-micro"])
     assert charged == 2 * POST_MICRO
     assert await _balance(clients) == before - charged
     entries = await _entries(clients)
@@ -124,7 +124,7 @@ async def test_empty_page_settles_at_zero(clients: AsyncClient, billed_on, monke
     before = await _balance(clients)
     r = await clients.get(f"/call/{POSTS}?id=42&max_results=10")
     assert r.status_code == 200, r.text
-    assert int(r.headers["x-treg-cost-micro"]) == 0
+    assert int(r.headers["x-stray-cost-micro"]) == 0
     assert await _balance(clients) == before
 
 
@@ -149,7 +149,7 @@ async def test_url_passthrough_is_priced_off_the_matched_endpoint(
     monkeypatch.setattr(call_service, "relay", _stub_relay(200, b'{"data": {"id": "1"}}'))
     r = await clients.get("/call/https://api.x.com/2/users/me")
     assert r.status_code == 200, r.text
-    assert int(r.headers["x-treg-cost-micro"]) == PROFILE_MICRO
+    assert int(r.headers["x-stray-cost-micro"]) == PROFILE_MICRO
     settle = next(e for e in await _entries(clients) if e["kind"] == "settle")
     assert settle["endpoint_id"] == "x.x.user.profile"
 
@@ -157,13 +157,13 @@ async def test_url_passthrough_is_priced_off_the_matched_endpoint(
 async def test_unmatched_passthrough_gets_the_default_read_rate(
     clients: AsyncClient, billed_on, monkeypatch
 ):
-    """A route the catalog doesn't know still costs treg money — the provider-level default
+    """A route the catalog doesn't know still costs stray money — the provider-level default
     ($0.005/result) covers it, settled against the resources that actually came back."""
     await _connect_x(clients)
     monkeypatch.setattr(call_service, "relay", _stub_relay(200, b'{"data": [{}, {}, {}]}'))
     r = await clients.get("/call/https://api.x.com/2/nonexistent/route?max_results=50")
     assert r.status_code == 200, r.text
-    assert int(r.headers["x-treg-cost-micro"]) == 3 * POST_MICRO
+    assert int(r.headers["x-stray-cost-micro"]) == 3 * POST_MICRO
     settle = next(e for e in await _entries(clients) if e["kind"] == "settle")
     assert settle["endpoint_id"] == "x.passthrough"
 
@@ -181,7 +181,7 @@ async def test_post_create_is_per_call_and_a_link_prices_13x(clients: AsyncClien
     monkeypatch.setattr(call_service, "relay", _stub_relay(201, reply))
     r = await clients.post("/call/x.x.post.create", json={"text": text})
     assert r.status_code == 201, r.text
-    assert int(r.headers["x-treg-cost-micro"]) == micro
+    assert int(r.headers["x-stray-cost-micro"]) == micro
 
 
 # ---- the money fences --------------------------------------------------------------------------
@@ -218,7 +218,7 @@ def test_billed_endpoint_match_prefers_exact_over_template():
 def _stub_relay(status_code: int, body: bytes):
     """A relay stand-in returning a fixed upstream outcome (same shape as
     test_marketplace_call._fake_relay — duplicated to keep the two files importable alone)."""
-    from treg.application.call.types import UpstreamResponse
+    from stray.application.call.types import UpstreamResponse
 
     async def _relay(request, upstream_url, tool, secrets, client, drop_params=None, force_identity=False):
         async def _stream():
@@ -232,10 +232,10 @@ def _stub_relay(status_code: int, body: bytes):
     return _relay
 
 
-# ---- the archive: an org token riding treg's app is metered, but the data is the org's ----------
+# ---- the archive: an org token riding stray's app is metered, but the data is the org's ----------
 @pytest.fixture
 def archive_serve(billed_on, monkeypatch):
-    from treg.domain.catalog import store as catalog_store
+    from stray.domain.catalog import store as catalog_store
     monkeypatch.setattr(get_settings(), "archive_mode", "serve")
     monkeypatch.setattr(get_settings(), "archive_serve_endpoints", "*")
     monkeypatch.setattr(get_settings(), "archive_serve_percent", 100)
@@ -246,34 +246,34 @@ def archive_serve(billed_on, monkeypatch):
 
 async def test_billed_oauth_answers_are_the_orgs_own_in_the_archive(
         clients: AsyncClient, archive_serve, monkeypatch):
-    """Metered (treg's app pays X) but fetched with the org's OWN token: keyed to the org,
+    """Metered (stray's app pays X) but fetched with the org's OWN token: keyed to the org,
     served back to the org at the repeat price, never to a stranger."""
     from sqlalchemy import select
     from conftest import verified_signup
-    from treg import archive
-    from treg.models import ArchiveSnapshot
+    from stray import archive
+    from stray.models import ArchiveSnapshot
     await _connect_x(clients)
     monkeypatch.setattr(call_service, "relay", _stub_relay(200, b'{"data": [{}, {}]}'))
     r1 = await clients.get(f"/call/{POSTS}?id=42&max_results=10")
-    assert r1.status_code == 200 and int(r1.headers["x-treg-cost-micro"]) == 2 * POST_MICRO
+    assert r1.status_code == 200 and int(r1.headers["x-stray-cost-micro"]) == 2 * POST_MICRO
     await archive.drain()
     async with session_maker() as db:
         snap = (await db.execute(select(ArchiveSnapshot))).scalars().one()
     assert snap.origin_org_id == await _org_id(clients)
     r2 = await clients.get(f"/call/{POSTS}?id=42&max_results=10")
-    assert r2.headers["X-Treg-Cache"] == "hit" and r2.content == r1.content
-    assert int(r2.headers["x-treg-cost-micro"]) == 2 * POST_MICRO * 10 // 100   # metered: repeat
+    assert r2.headers["X-Stray-Cache"] == "hit" and r2.content == r1.content
+    assert int(r2.headers["x-stray-cost-micro"]) == 2 * POST_MICRO * 10 // 100   # metered: repeat
     events = []
     monkeypatch.setattr(call_service.analytics, "capture",
                         lambda who, event, props, **kw: events.append((event, props)))
     other = await verified_signup(clients, json={"email": "stranger@example.com"})
-    headers = {"X-Treg-Token": other.json()["token"]}
+    headers = {"X-Stray-Token": other.json()["token"]}
     stranger_org = (await clients.get("/orgs", headers=headers)).json()[0]["org_id"]
     await _connect_x(clients, org_id=stranger_org)             # their own token, same question
     monkeypatch.setattr(call_service, "relay", _stub_relay(200, b'{"data": [{}]}'))
     r3 = await clients.get(f"/call/{POSTS}?id=42&max_results=10", headers=headers)
-    assert r3.status_code == 200 and "x-treg-cache" not in r3.headers
-    assert int(r3.headers["x-treg-cost-micro"]) == POST_MICRO   # X answered them, at full price
+    assert r3.status_code == 200 and "x-stray-cache" not in r3.headers
+    assert int(r3.headers["x-stray-cost-micro"]) == POST_MICRO   # X answered them, at full price
     props = [p for e, p in events if e == "tool_called"][-1]
     assert props["cache_outcome"] == "key_missing"             # their org key has nothing
     assert props["cache_sharing"] == "org"                      # any_account: the org's question
@@ -282,8 +282,8 @@ async def test_billed_oauth_answers_are_the_orgs_own_in_the_archive(
 async def test_billed_oauth_answer_echoing_the_token_is_never_recorded(
         clients: AsyncClient, archive_serve, monkeypatch):
     from sqlalchemy import select
-    from treg import archive
-    from treg.models import ArchiveSnapshot
+    from stray import archive
+    from stray.models import ArchiveSnapshot
     await _connect_x(clients)
     monkeypatch.setattr(call_service, "relay",
                         _stub_relay(200, b'{"data": [{"token": "XTOK"}]}'))

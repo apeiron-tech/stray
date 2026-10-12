@@ -10,14 +10,14 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
-from treg import api
-from treg.domain.identity import session as sess
-from treg.__main__ import _prepare_serve
-from treg.api import LOCAL_ORG_NAME, LOCAL_USER_EMAIL, app
-from treg.config import Settings, get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import Membership, Org, User
-from treg.routers import web
+from stray import api
+from stray.domain.identity import session as sess
+from stray.__main__ import _prepare_serve
+from stray.api import LOCAL_ORG_NAME, LOCAL_USER_EMAIL, app
+from stray.config import Settings, get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import Membership, Org, User
+from stray.routers import web
 
 
 def _settings(**kw) -> Settings:
@@ -80,7 +80,7 @@ async def test_a_deleted_token_file_is_re_minted(local):
 
 async def test_the_minted_token_actually_works(local):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:
-        r = await c.get("/tools", headers={"X-Treg-Token": local.read_text().strip()})
+        r = await c.get("/tools", headers={"X-Stray-Token": local.read_text().strip()})
     assert r.status_code == 200, r.text
 
 
@@ -114,5 +114,5 @@ async def test_selfhost_script_is_served_and_templated():
         r = await c.get("/selfhost.sh")
     assert r.status_code == 200
     assert "{BASE}" not in r.text, "the serving domain must be templated in"
-    assert "TREG_SINGLE_USER=true" in r.text
+    assert "STRAY_SINGLE_USER=true" in r.text
     assert r.headers["content-type"].startswith("text/x-shellscript")

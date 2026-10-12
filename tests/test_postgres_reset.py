@@ -7,11 +7,11 @@ import os
 import pytest
 from sqlalchemy import text
 
-from treg.infra.db import _engine, reset_db
+from stray.infra.db import _engine, reset_db
 
 
 @pytest.mark.skipif(
-    not os.environ.get("TREG_TEST_DB_URL"), reason="requires the Postgres test database",
+    not os.environ.get("STRAY_TEST_DB_URL"), reason="requires the Postgres test database",
 )
 async def test_repeated_reset_keeps_postgres_table_identity() -> None:
     """A test boundary clears rows and sequences, not tables, constraints, and indexes."""

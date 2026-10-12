@@ -3,10 +3,10 @@
 
     python3 build_preview.py seo [outfile]
 
-Takes src/treg/web/usecase-<key>.html and makes it self-contained:
+Takes src/stray/web/usecase-<key>.html and makes it self-contained:
   - inlines usecase.css (the artifact host has no /usecase.css to fetch)
   - drops the Google Fonts <link> (the host's CSP blocks font CDNs, so it would fail silently —
-    the page falls back through treg's own stack: Georgia / system-ui / ui-monospace)
+    the page falls back through stray's own stack: Georgia / system-ui / ui-monospace)
   - rewrites root-relative hrefs to https://treg.to/... so every link in the preview goes somewhere real
   - strips the doctype/html/head/body wrapper, which the artifact host supplies itself
 
@@ -15,7 +15,7 @@ What survives is the real page: same markup, same tokens, same copy, working cop
 import re, sys, pathlib, base64
 
 HERE = pathlib.Path(__file__).parent
-WEB = HERE.parent.parent / "src" / "treg" / "web"
+WEB = HERE.parent.parent / "src" / "stray" / "web"
 
 
 def inline_logos(markup):
@@ -31,7 +31,7 @@ def inline_logos(markup):
             return m.group(0)
         b64 = base64.b64encode(f.read_bytes()).decode()
         return f'src="data:image/svg+xml;base64,{b64}"'
-    return re.sub(r'src="(?:https://treg\.to)?/logos/([a-z0-9-]+)\.svg"', sub, markup)
+    return re.sub(r'src="(?:https://stray\.to)?/logos/([a-z0-9-]+)\.svg"', sub, markup)
 
 
 def build(key, dest):

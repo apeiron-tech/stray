@@ -13,7 +13,7 @@ const LIST = [
 ]
 
 // A platform shelf, read at two levels: the shelf (the capabilities several providers serve, then
-// every other tool) and one comparison (let treg pick, or compare the providers). A tool opens in a drawer over either,
+// every other tool) and one comparison (let stray pick, or compare the providers). A tool opens in a drawer over either,
 // so a comparison never loses its table. The look is the landing page's: surfaces, not boxes.
 export default {
   components: { ToolDrawer, FindAnswer, CatalogSearch, DataTable, ProviderLogo },
@@ -57,7 +57,7 @@ export default {
               <span class="pl-stack" aria-hidden="true"><ProviderLogo v-for="s in t.logos" :key="s" :service="s" /></span>
               <span v-if="t.range" class="pl-job-p">{{t.range}}</span>
             </span>
-            <span class="pl-meta">{{t.provN}} providers<template v-if="t.routed"> · <span class="pl-job-auto" title="One call: treg picks the provider for you">auto-route</span></template></span>
+            <span class="pl-meta">{{t.provN}} providers<template v-if="t.routed"> · <span class="pl-job-auto" title="One call: stray picks the provider for you">auto-route</span></template></span>
           </a>
           <button v-else class="pl-card pl-job" :class="{on:drawerTool===t.id}" :title="t.e.summary||t.title" @click="openTool(t.id)">
             <b>{{t.title}}</b>
@@ -109,12 +109,12 @@ export default {
         <p v-if="platCapRow.title && platCapRow.title!==platCapRow.description" class="pl-lede">{{platCapRow.description}}</p>
       </header>
 
-      <!-- treg's own answer first when there is one: one call, and nobody has to choose. -->
+      <!-- stray's own answer first when there is one: one call, and nobody has to choose. -->
       <section v-if="platComparison.routed" class="pl-autocard">
         <div class="pl-auto-t">
           <p class="pl-eyebrow">Auto-route</p>
           <h2>{{platComparison.provN}} providers, one call.</h2>
-          <p>treg picks the best match for what you send and tries the next if one comes back empty.
+          <p>stray picks the best match for what you send and tries the next if one comes back empty.
             Your own keys always go first.</p>
           <ul class="pl-auto-f">
             <li><b>{{costShort(platComparison.routed.cost)}}</b>starting price</li>
@@ -139,7 +139,7 @@ export default {
                    :selected="drawerTool" interactive variant="plain" surface @row-click="r => openTool(r.id)">
           <template #cell-provider="{ row: r }"><div class="c-prov-i">
             <ProviderLogo :service="r.e.provider" large />
-            <span class="c-name"><b>{{r.e.provider_display||r.e.provider}}<span v-if="!r.e.verified" class="c-unv" title="Documented, but treg has not called it with a live key yet">unverified</span></b>
+            <span class="c-name"><b>{{r.e.provider_display||r.e.provider}}<span v-if="!r.e.verified" class="c-unv" title="Documented, but stray has not called it with a live key yet">unverified</span></b>
               <span v-if="r.twin" class="c-sub">{{clip(r.e.name||r.e.summary, 52)}}</span></span>
           </div></template>
           <template #cell-takes="{ row: r }"><span v-for="t in r.takes" :key="t" class="pl-tag">{{t}}</span><span v-if="!r.takes.length" class="c-none">—</span></template>

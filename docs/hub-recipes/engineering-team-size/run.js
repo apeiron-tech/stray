@@ -1,4 +1,4 @@
-// Engineering team size, as a cost-ordered ladder. Every tier is one ordinary treg call; the
+// Engineering team size, as a cost-ordered ladder. Every tier is one ordinary stray call; the
 // first tier that returns a count above zero wins. A reported 0 is treated as "the provider
 // could not classify this company", never as "no engineers".
 //

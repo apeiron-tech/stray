@@ -5,9 +5,9 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from treg.application import arena_insights
-from treg.application.arena_verification_insights import build_snapshot, publish_snapshot
-from treg.infra.db import session_maker
+from stray.application import arena_insights
+from stray.application.arena_verification_insights import build_snapshot, publish_snapshot
+from stray.infra.db import session_maker
 
 
 def aggregate():

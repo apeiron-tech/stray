@@ -3,21 +3,21 @@ title: Instagram OAuth — direct Login and optional Facebook Page tools
 status: built; Meta configuration and live verification pending
 sources:
   - scripts/catalog_ingest.py
-  - src/treg/application/call/access.py
-  - src/treg/application/call/resolve.py
-  - src/treg/application/call/service.py
-  - src/treg/catalog/instagram.yaml
-  - src/treg/catalog/instagram.extended.yaml
-  - src/treg/cli.py
-  - src/treg/domain/catalog/store.py
-  - src/treg/domain/connections/authorization.py
-  - src/treg/domain/connections/oauth_flow.py
-  - src/treg/infra/oauth_exchange.py
-  - src/treg/mcp.py
-  - src/treg/routers/call.py
+  - src/stray/application/call/access.py
+  - src/stray/application/call/resolve.py
+  - src/stray/application/call/service.py
+  - src/stray/catalog/instagram.yaml
+  - src/stray/catalog/instagram.extended.yaml
+  - src/stray/cli.py
+  - src/stray/domain/catalog/store.py
+  - src/stray/domain/connections/authorization.py
+  - src/stray/domain/connections/oauth_flow.py
+  - src/stray/infra/oauth_exchange.py
+  - src/stray/mcp.py
+  - src/stray/routers/call.py
   - frontend/src/state/connections.js
   - frontend/src/pages/ProviderPage.vue
-  - src/treg/alembic/versions/0010_oauth_authorization_method.py
+  - src/stray/alembic/versions/0010_oauth_authorization_method.py
   - tests/test_instagram_oauth_architecture.py
 related:
   - architecture/auth-secrets.md
@@ -40,7 +40,7 @@ related:
 - `facebook-page` uses a Facebook Page token and `graph.facebook.com`. The selected Instagram
   Professional account must be linked to that Page.
 
-`TREG_OAUTH_REVIEW_PENDING` controls the rollout without a code edit. The generic registry rules give
+`STRAY_OAUTH_REVIEW_PENDING` controls the rollout without a code edit. The generic registry rules give
 these three states:
 
 - `instagram-login,page-messages`: plain Connect uses Page `page-tools`; warnings and the optional
@@ -146,7 +146,7 @@ is a Business or Creator account and connect again. The provider requests run af
 session closes.
 
 The Page grant keeps the existing Page and Business discovery. The user selects the linked
-Instagram account. Treg derives and stores the Page token inside the encrypted OAuth blob. The
+Instagram account. Stray derives and stores the Page token inside the encrypted OAuth blob. The
 dashboard's **Add account** action presents the two grants as a single-choice method picker. Its
 recommended method, conditional review copy, and effective capability choices all come from the same
 registry review state. With both keys pending, Facebook Page tools is recommended and opens a core or
@@ -171,10 +171,10 @@ endpoint as callable; its access check returns the `page-messages` upgrade comma
 
 For a dual-method endpoint, callers can select `instagram-login` or `facebook-page`. The dashboard
 shows a selector; the CLI uses `--authorization-method`; MCP tools use the
-`authorization_method` argument; and direct API calls use `X-Treg-Authorization-Method`. Selection
+`authorization_method` argument; and direct API calls use `X-Stray-Authorization-Method`. Selection
 also controls which path and inputs are shown. If omitted, the endpoint's first declared method is
 the deterministic default (Instagram Login for shared endpoints). The control header is consumed by
-treg and never relayed upstream. Shared clients accept method ids and display labels from registry
+stray and never relayed upstream. Shared clients accept method ids and display labels from registry
 metadata. `POST /oauth/start` returns the selected method description as `connect_guidance`, which
 lets the CLI explain the grant without provider-specific code.
 
@@ -192,14 +192,14 @@ No repository task changes Meta settings. A human must do these steps:
 3. Set the production redirect URI to `https://treg.to/oauth/callback`. For local testing, set
    `https://<your-tunnel-host>/oauth/callback` only while that tunnel is active.
 4. Copy the separate Instagram App ID and Instagram App Secret into local `.env` as
-   `TREG_INSTAGRAM_CLIENT_ID` and `TREG_INSTAGRAM_CLIENT_SECRET`. Do not put these values in chat or
+   `STRAY_INSTAGRAM_CLIENT_ID` and `STRAY_INSTAGRAM_CLIENT_SECRET`. Do not put these values in chat or
    source control.
 5. Request Advanced Access for `instagram_business_basic`,
    `instagram_business_manage_insights`, `instagram_business_content_publish`,
    `instagram_business_manage_comments`, and `instagram_business_manage_messages` when users will
    connect accounts that the app owner does not manage.
-6. Keep the existing Meta app credentials in `TREG_META_CLIENT_ID` and
-   `TREG_META_CLIENT_SECRET` for `page-tools`. Confirm its Page and Instagram permissions in App
+6. Keep the existing Meta app credentials in `STRAY_META_CLIENT_ID` and
+   `STRAY_META_CLIENT_SECRET` for `page-tools`. Confirm its Page and Instagram permissions in App
    Review, including `instagram_shopping_tag_products` if product tools remain enabled.
 7. Verify one Business account and one Creator account with no linked Page through the direct flow.
    Then verify a linked Page account through `page-tools`. Run a safe read from each class. Test
@@ -207,4 +207,4 @@ No repository task changes Meta settings. A human must do these steps:
 
 App Review is required for production access to accounts that the app owner does not own or manage.
 Development-mode tests with app-role accounts do not prove that review is complete. Change
-`TREG_OAUTH_REVIEW_PENDING` only after Meta marks the related access as approved.
+`STRAY_OAUTH_REVIEW_PENDING` only after Meta marks the related access as approved.

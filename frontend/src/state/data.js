@@ -13,7 +13,7 @@ export default function data(){
       bootReady: false, bootFailed: false,
       bootStartedAt: performance.now(),  // ms since navigation: where the loader's animations already are (App.vue)
       sessionChecked: false,  // /auth/me has answered (a page drawn before boot finishes waits on this for sign-in state)
-      theme: storageGet('treg-theme')||'light',
+      theme: storageGet('stray-theme')||'light',
       mobileNav: false,  // mobile sidebar toggle
       // True when this load is a PUBLIC catalog URL (/catalog, /catalog/<slug>). The catalog API is
       // unauthenticated, so the same marketplace views render for a signed-out visitor — that is
@@ -40,7 +40,7 @@ export default function data(){
       denyRules:[], denyForm:{host:'',path_prefix:'',method:'',user_id:null,project_id:null,note:''}, denyBusy:false, confirmDeny:null, cliDeny:[],
       bootVersion:'', newVersion:false,
       usage:null, usageDays:30, myUsage:null, actTab:'feed', buildTab:'vendor',  // Activity page: 'feed' | 'usage'
-      tagUsage:{}, tagKeys:[],   // spend per X-Treg-Meta key: {customer:{…}, workspace:{…}}
+      tagUsage:{}, tagKeys:[],   // spend per X-Stray-Meta key: {customer:{…}, workspace:{…}}
   // usage-metering: rollups + the member's own used/cap
       // Billing (Stripe top-ups). `billing` null = not loaded / not an admin; billing.configured
       // false = this deployment sells no balance, so the whole block stays hidden.
@@ -64,7 +64,7 @@ export default function data(){
       newTool:false, toolBusy:false, toolErr:'', confirmDelTool:null, confirmDelSecret:null,
       tForm:{id:null, name:'', base_url:'', bindings:[]},
       addToolMenu:false,  // the ＋ Add tool [endpoint | cli] chooser
-      // Connections: registry OAuth connects (see oauth_providers.py). `providers` is what treg
+      // Connections: registry OAuth connects (see oauth_providers.py). `providers` is what stray
       // holds an approved app for; `connections` is what this org has actually connected.
       providers:[], connections:[], connErr:'', connBusy:false, confirmDisc:null, resPick:null,
       mkService:null,  // the open provider page
@@ -93,7 +93,7 @@ export default function data(){
       platComparisonSort:{key:'price', dir:'asc'},   // the comparison's order (DataTable v-model:sort)
       mkTools:null,        // {service, loading, err, data} from /catalog/providers/<service>
       platEx:{},           // endpoint id → {open, loading, err, text} for the lazily-fetched example
-      platCopied:'',       // endpoint id whose `treg call` line was just copied
+      platCopied:'',       // endpoint id whose `stray call` line was just copied
       capAsk:null,  // the access question, asked when a one-method provider has several scope levels
       methodAsk:null,  // separate grants behind one provider: one selected method, then Continue
       tokenAsk:null,  // bring-your-own-bot setup (Slack): a form, not a redirect
@@ -108,7 +108,7 @@ export default function data(){
       catalogClis:null,  // bin → catalog default deny patterns (lazy, from /providers.json)
       newSkill:false, skillJson:'', skillBusy:false, skillErr:'', skillMode:'folder',
       skillFiles:[], detected:null, skillSel:{}, skillVals:{}, skillResults:null,
-      sessionMode:false, activeSlug: storageGet('treg-active')||null, meta:{github:false, public_url:location.origin},
+      sessionMode:false, activeSlug: storageGet('stray-active')||null, meta:{github:false, public_url:location.origin},
       view:'tools', q:'', err:'', loading:false, toolTab:'all', bundles:[], confirmDelBundle:null, installCopied:null,
       copyRecipe:null, recipeTab:'cURL', viewRecipe:null, recipeSaved:false,
       // detail pages (shareable /app/skills/<name> + /app/tools/<name> deep links)

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from treg.infra.db import session_maker
-from treg.models import CallRecord, Org, RunRecord
+from stray.infra.db import session_maker
+from stray.models import CallRecord, Org, RunRecord
 from test_tag_billing import _mint_agent, _org_id
 
 T = datetime(2026, 9, 30, 12)
@@ -66,7 +66,7 @@ async def test_a_pinned_agent_pages_only_its_own_rows(clients):
     org = await _org_id(clients)
     await _seed(org, org)
     token = await _mint_agent(clients, org, "a", role="viewer", pinned_tags={"customer": "a"})
-    rows = (await clients.get("/activity", headers={"X-Treg-Token": token})).json()["rows"]
+    rows = (await clients.get("/activity", headers={"X-Stray-Token": token})).json()["rows"]
     assert [r["tags"] for r in rows] == [{"customer": "a"}]
 
 

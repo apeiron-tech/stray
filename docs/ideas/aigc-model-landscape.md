@@ -4,7 +4,7 @@
 数据来源：ThankYouAI 公开模型目录（`GET https://api.thankyouai.com/open/v1/models`，105 个模型）、
 Replicate collections（text-to-video 94 个、text-to-image 79 个）。价格与型号时效性强，评估时需复核。
 
-配套设计文档：`docs/AIGC-PLAN-CN.md`。treg 接入的单位是 **provider（模型厂商）**，不是单个模型：
+配套设计文档：`docs/AIGC-PLAN-CN.md`。stray 接入的单位是 **provider（模型厂商）**，不是单个模型：
 接入一家即获得其全系模型（model 是请求体里的一个参数）。因此本文先给厂商族汇总（决策用），
 再附两个平台的原始全量清单（查漏用）。
 
@@ -37,7 +37,7 @@ Replicate collections（text-to-video 94 个、text-to-image 79 个）。价格�
 | 字节 Seedream | 5 · 5-lite · 4.5 | ✅ 火山方舟 | Bearer | Replicate、ThankYouAI(经 novita) | 与 Seedance 同账号，接入边际成本低 |
 | Recraft | v4.1 · v4 (pro/svg) · v3 (svg) | ✅ | Bearer | Replicate | M1 同步类候选；SVG 独有 |
 | Ideogram | v3 (turbo/balanced/quality) | ✅ | key | Replicate | 排版强项；同步 |
-| Midjourney | v7 (fast/turbo/upscale/variation) | ❌ **无官方 API** | - | ThankYouAI(经 youchuan 转售) | 只能靠非官方转售，treg 不宜直listing |
+| Midjourney | v7 (fast/turbo/upscale/variation) | ❌ **无官方 API** | - | ThankYouAI(经 youchuan 转售) | 只能靠非官方转售，stray 不宜直listing |
 | 阿里 | wan 2.7 image (pro) · Qwen-Image (edit) | ✅ DashScope | Bearer | Replicate、ThankYouAI | |
 | Stability | SD 3.5 (large/turbo/medium) · SDXL | ✅ | key | Replicate | |
 | MiniMax | image-01 | ✅ | Bearer | Replicate、ThankYouAI | 与视频同账号 |
@@ -52,7 +52,7 @@ fish-audio TTS · ElevenLabs sound-effect · vits-svc 变声。将来若开 `aud
 ## 四、聚合器本身作为 provider 的路线
 
 盘点中发现的结构性事实：ThankYouAI 自己也在转售聚合器（大量模型 vendor=novita；Midjourney 经
-youchuan）。对 treg 的含义：**接一家聚合器 = 一次拿到整个长尾**。
+youchuan）。对 stray 的含义：**接一家聚合器 = 一次拿到整个长尾**。
 
 | 聚合器 | 特点 | 与描述符的适配 |
 |---|---|---|

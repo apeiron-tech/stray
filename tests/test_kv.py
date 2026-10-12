@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from treg.config import get_settings
-from treg.infra import kv
+from stray.config import get_settings
+from stray.infra import kv
 
 
 async def test_local_window_counts_then_expires(monkeypatch):
@@ -57,14 +57,14 @@ def test_store_follows_configuration(monkeypatch):
 async def test_admin_kv_reports_the_fallback(clients, monkeypatch):
     assert (await clients.get('/admin/kv')).status_code in (401, 403)
     monkeypatch.setattr(get_settings(), 'admin_token', 'kv-admin')
-    response = await clients.get('/admin/kv', headers={'X-Treg-Token': 'kv-admin'})
+    response = await clients.get('/admin/kv', headers={'X-Stray-Token': 'kv-admin'})
     assert response.json() == {'configured': False, 'reachable': True}
 
 
-@pytest.mark.skipif(not os.environ.get('TREG_TEST_KV_URL'), reason='set TREG_TEST_KV_URL to a scratch Redis')
+@pytest.mark.skipif(not os.environ.get('STRAY_TEST_KV_URL'), reason='set STRAY_TEST_KV_URL to a scratch Redis')
 async def test_real_redis_window():
-    store = kv.RedisStore(os.environ['TREG_TEST_KV_URL'])
-    key = f'treg-test:{time.time_ns()}'
+    store = kv.RedisStore(os.environ['STRAY_TEST_KV_URL'])
+    key = f'stray-test:{time.time_ns()}'
     try:
         assert await store.ping()
         assert [await store.take(key, 2, 5) for _ in range(3)] == [True, True, False]

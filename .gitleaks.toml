@@ -1,4 +1,4 @@
-# gitleaks config for tools-registry.
+# gitleaks config for stray.
 # We run gitleaks in CI (see .github/workflows/ci.yml) so no real secret can be committed. The entries
 # below allowlist the handful of OBVIOUSLY-FAKE placeholder strings the code and tests use on purpose
 # (redaction fixtures + the sandbox demo values) so they don't trip the scanner.
@@ -11,14 +11,14 @@ description = "Fake, non-secret placeholders used by tests and the demo sandbox"
 regexTarget = "line"
 regexes = [
   # Deliberately invalid ContactOut connect-test token; also present in branch history.
-  '''"token": "treg-intentionally-invalid-20260908",\s*$''',
-  '''sk_live_DEMO0000PLACEHOLDER''',      # src/treg/sandbox.py — demo starter (credential to nothing)
-  '''phx_DEMO0000PLACEHOLDER''',          # src/treg/sandbox.py — demo starter (credential to nothing)
+  '''"token": "stray-intentionally-invalid-20260908",\s*$''',
+  '''sk_live_DEMO0000PLACEHOLDER''',      # src/stray/sandbox.py — demo starter (credential to nothing)
+  '''phx_DEMO0000PLACEHOLDER''',          # src/stray/sandbox.py — demo starter (credential to nothing)
   '''sk_live_ABCDEFGHIJKLMNOP1234''',     # tests/test_localrun.py — proves output redaction masks a key
   '''sk_test_123''',                      # tests/*.py — generic fake test key
   # IndexNow site keys are PUBLIC BY DESIGN: the protocol requires publishing the key at
   # https://<site>/<key>.txt, so anyone can read it — proving site ownership is its whole job.
-  # The scanner reads every fetched branch, so the seo branch carrying treg's key as a constant
+  # The scanner reads every fetched branch, so the seo branch carrying stray's key as a constant
   # turned the WHOLE repository's CI red. Shape-anchored to the IndexNow names/context only — a
   # random new high-entropy constant elsewhere still fails the scan.
   '''INDEXNOW_KEY\s*=''',
@@ -29,7 +29,7 @@ regexes = [
   '''eyJhbGciOi\.JIUzI1NiIsInR5cCI6''',   # tests/test_error_capture.py — a JWT-shaped string, not a real token
 ]
 
-# The catalog's captured example responses (src/treg/catalog/examples/) are real provider replies,
+# The catalog's captured example responses (src/stray/catalog/examples/) are real provider replies,
 # and providers hand back long opaque identifiers by the hundred: video ids, request ids, CDN
 # paths, ranking hints. Entropy alone cannot tell those from a credential, so the generic entropy
 # rules fire on ordinary data there.
@@ -43,7 +43,7 @@ regexes = [
 [[rules]]
 id = "generic-api-key"
 [rules.allowlist]
-paths = ['''src/treg/catalog/examples/.*\.json''']
+paths = ['''src/stray/catalog/examples/.*\.json''']
 # The IndexNow key (scripts/indexnow_submit.py, routers/web.py) is PUBLIC by design: the protocol
 # proves domain ownership by serving the key at https://<host>/<key>.txt, so anyone can read it and
 # it authorises nothing but "submit URLs for this host". Matched by the line, not the value, so a
@@ -59,9 +59,9 @@ regexes = [
 # `feat/error-capture` carried it in `e2e-server.sh`. That branch now generates a fresh key per run
 # — the harness deletes its database between runs, so it never needed a constant — and the value has
 # been purged from its history, so the rule has nothing left to fire on. Removed as that entry's own
-# comment instructed. The value is still burned: rotate it in the `treg-dev-server` wrapper.)
+# comment instructed. The value is still burned: rotate it in the `stray-dev-server` wrapper.)
 
 [[rules]]
 id = "linkedin-client-id"
 [rules.allowlist]
-paths = ['''src/treg/catalog/.*''']
+paths = ['''src/stray/catalog/.*''']

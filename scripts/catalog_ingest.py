@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bulk-ingest a provider's FULL endpoint surface into `src/treg/catalog/<provider>.extended.yaml`.
+"""Bulk-ingest a provider's FULL endpoint surface into `src/stray/catalog/<provider>.extended.yaml`.
 
     uv run python scripts/catalog_ingest.py tikhub
     uv run python scripts/catalog_ingest.py dataforseo justoneapi
@@ -14,7 +14,7 @@ Properties this script guarantees (they are why it exists instead of a one-off s
   - **re-runnable**: same upstream in, byte-identical file out. Endpoints sort by (platform, path);
     nothing carries a timestamp except `source.ingested`, which only moves when the data does.
   - **core wins**: any (method, path) already in the provider's core yaml is skipped, never duplicated.
-  - **cached**: downloads land in ~/.cache/treg-catalog-ingest (override TREG_INGEST_CACHE);
+  - **cached**: downloads land in ~/.cache/stray-catalog-ingest (override STRAY_INGEST_CACHE);
     `--refresh` re-fetches. Nothing is cached inside the repo.
   - **secret-safe**: generated files never contain credentials. Replicate's official collection
     requires `REPLICATE_API_TOKEN`; the token is used only as a request header.
@@ -38,14 +38,14 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "src" / "treg" / "catalog"
-CACHE = Path(os.environ.get("TREG_INGEST_CACHE") or (Path.home() / ".cache" / "treg-catalog-ingest"))
+CATALOG = ROOT / "src" / "stray" / "catalog"
+CACHE = Path(os.environ.get("STRAY_INGEST_CACHE") or (Path.home() / ".cache" / "stray-catalog-ingest"))
 
 def pricing_evidence_file(name: str) -> Path:
     """Read operator-supplied evidence without depending on a private checkout."""
-    directory = os.environ.get("TREG_CATALOG_EVIDENCE_DIR")
+    directory = os.environ.get("STRAY_CATALOG_EVIDENCE_DIR")
     if not directory:
-        raise ValueError("Set TREG_CATALOG_EVIDENCE_DIR to your pricing evidence directory")
+        raise ValueError("Set STRAY_CATALOG_EVIDENCE_DIR to your pricing evidence directory")
     path = Path(directory).expanduser() / name
     if not path.is_file():
         raise FileNotFoundError(f"Missing pricing evidence: {path}")
@@ -1255,7 +1255,7 @@ def ingest_replicate(refresh: bool) -> tuple[Path, dict]:
 # ---------------------------------------------------------------------------------------------
 # anyapi
 
-# AnyAPI's SKU prefix -> treg platform slug. Absent = the prefix is already a platform slug.
+# AnyAPI's SKU prefix -> stray platform slug. Absent = the prefix is already a platform slug.
 # The left-hand side is the first dotted segment of an AnyAPI SKU id (`twitter.profile`).
 ANYAPI_PLATFORM = {
     "twitter": "x",
@@ -1618,7 +1618,7 @@ INGESTERS = {
 # credential actually DO?". Three things are therefore different here and are worth stating once:
 #
 #   - **Scope gaps are data, not a filter.** A method whose Google/X scopes are NOT covered by what
-#     treg's OAuth apps request is still listed, carrying `scope_gap:` naming the missing scope.
+#     stray's OAuth apps request is still listed, carrying `scope_gap:` naming the missing scope.
 #     Dropping them would hide exactly the list someone needs in order to decide which scopes to
 #     add to the registered apps. Nothing generated here is callable-by-default in the way a
 #     scraper route is, so "listed" never implies "works today".
@@ -1630,7 +1630,7 @@ INGESTERS = {
 #     of silently producing paths that 404 against the provisioned tool.
 #   - **No test_request, no verification.** These call a real business's own account; a generated
 #     test request would need a property id, a customer id or a Page id that no spec can supply.
-#     A later wave replays them through `--via-treg` with a live connection.
+#     A later wave replays them through `--via-stray` with a live connection.
 #
 # Core-wins dedup compares paths with their placeholders NORMALISED ({property} == {property_id}),
 # because a hand-curated core file and a machine spec never agree on placeholder spelling — the
@@ -1714,7 +1714,7 @@ def _scope_gap(needed: list[str], granted: set[str]) -> str:
     if not needed or set(needed) & granted:
         return ""
     short = [s.rsplit("/", 1)[-1] for s in needed]
-    return ("treg's OAuth app does not request this; needs one of: " + ", ".join(sorted(short)))
+    return ("stray's OAuth app does not request this; needs one of: " + ", ".join(sorted(short)))
 
 
 def google_entry(
@@ -1760,7 +1760,7 @@ def google_flat_path_params(entry: dict) -> dict:
 
     Discovery describes hierarchical routes semantically as one ``parent``/``path``/``name``
     resource, while ``flatPath`` expands that resource into placeholders such as ``accountsId`` and
-    ``containersId``. treg intentionally percent-encodes each catalog placeholder as one path
+    ``containersId``. stray intentionally percent-encodes each catalog placeholder as one path
     segment, so advertising the semantic resource name would both generate an unusable command and
     encode its hierarchy as ``%2F``. Keep the flattened route and expose its atomic ids instead.
 
@@ -1825,7 +1825,7 @@ def ingest_google_search_console(refresh: bool) -> tuple[Path, dict]:
         "`v1/…` ones (URL Inspection, the Mobile-Friendly Test). Both are served by",
         "searchconsole.googleapis.com, so every path here is relative to the provider's base_url.",
         "",
-        "treg requests webmasters.readonly by default and webmasters for the `write` capability, so",
+        "stray requests webmasters.readonly by default and webmasters for the `write` capability, so",
         "every method is reachable — sites.add/delete and sitemaps.submit/delete need `write`.",
         "urlTestingTools.mobileFriendlyTest.run declares NO scope: it is a public tool that happens to",
         "live on this host, so it is marked scope any_account.",
@@ -1869,11 +1869,11 @@ def ingest_google_analytics(refresh: bool) -> tuple[Path, dict]:
         f"The {admin} Admin API entries below carry `host: analyticsadmin.googleapis.com` and their",
         "`path` is relative to THAT host. They are listed rather than dropped because the same OAuth",
         "token calls both and they are most of what a connected GA4 account can do — but the tool",
-        "treg auto-provisions is bound to analyticsdata, so calling one needs a second tool bound to",
-        "the admin host (or `treg connections resources`, which already does the property listing).",
+        "stray auto-provisions is bound to analyticsdata, so calling one needs a second tool bound to",
+        "the admin host (or `stray connections resources`, which already does the property listing).",
         "Every entry WITHOUT a `host:` is callable through the provisioned google-analytics tool.",
         "",
-        "treg requests analytics.readonly only. Every Admin write method (create/update/delete/",
+        "stray requests analytics.readonly only. Every Admin write method (create/update/delete/",
         "archive) therefore carries `scope_gap:` naming analytics.edit — that list is the answer to",
         "'which scope would make GA4 writable'.",
     ]
@@ -1913,12 +1913,12 @@ def ingest_google_tag_manager(refresh: bool) -> tuple[Path, dict]:
     notes = [
         "",
         "ONE HOST. Every path is relative to https://tagmanager.googleapis.com, the OAuth",
-        "provider's base_url. treg's cumulative read/write/manage capabilities grant readonly,",
+        "provider's base_url. stray's cumulative read/write/manage capabilities grant readonly,",
         "edit.containers, edit.containerversions, and publish respectively.",
         "",
         "Methods that require tagmanager.delete.containers, tagmanager.manage.users, or",
         "tagmanager.manage.accounts remain listed with `scope_gap:` for discoverability, but are",
-        "intentionally unavailable: treg does not request destructive container deletion or account",
+        "intentionally unavailable: stray does not request destructive container deletion or account",
         "administration access.",
     ]
     return write_extended(provider, _oauth_source(
@@ -2007,7 +2007,7 @@ def ingest_google_business_profile(refresh: bool) -> tuple[Path, dict]:
         "suspicion than the rest. (The core file's two review endpoints have the same origin.)",
         "",
         "No scope_gap anywhere: the My Business discovery documents declare no scopes at all, so",
-        "coverage cannot be computed from the spec. business.manage — what treg requests — is in",
+        "coverage cannot be computed from the spec. business.manage — what stray requests — is in",
         "practice the single scope the whole family uses. The real gate on this provider is not the",
         "scope but Google's separate Business Profile API quota grant, which starts every project at",
         "zero requests per day.",
@@ -2202,7 +2202,7 @@ def ingest_google_ads(refresh: bool) -> tuple[Path, dict]:
         "HTML rather than JSON, so this must be bumped in all three places together.",
         "",
         "Every call needs BOTH the OAuth bearer and a developer-token header from an approved manager",
-        "(MCC) account — see OAuthProvider.extra_credential_note. The adwords scope treg requests",
+        "(MCC) account — see OAuthProvider.extra_credential_note. The adwords scope stray requests",
         "covers the whole API, so there are no scope gaps here; the gate is the developer token's",
         "access level (Basic caps the account at 15,000 operations/day).",
     ]
@@ -2216,7 +2216,7 @@ def ingest_google_ads(refresh: bool) -> tuple[Path, dict]:
 # --- x ------------------------------------------------------------------------------------------
 
 X_OPENAPI = "https://api.twitter.com/2/openapi.json"
-# treg's X app requests these across its read + write capabilities. Anything else is a scope gap.
+# stray's X app requests these across its read + write capabilities. Anything else is a scope gap.
 X_GRANTED = {"tweet.read", "tweet.write", "users.read", "offline.access"}
 # Path fragments that make a route act on the CONNECTED account rather than read public data.
 X_OWN = re.compile(
@@ -2224,7 +2224,7 @@ X_OWN = re.compile(
     r"|account_activity|webhooks|reverse_chronological)\b")
 
 
-# X PRICING IS PAY-PER-USE AND THE BILL LANDS ON TREG's APP, so an extended entry that says "free"
+# X PRICING IS PAY-PER-USE AND THE BILL LANDS ON STRAY's APP, so an extended entry that says "free"
 # is not a cosmetic slip — it is a price we published and then charged against.
 #
 # X publishes a RATE CARD PER RESOURCE TYPE, not one read price and one write price
@@ -2233,9 +2233,9 @@ X_OWN = re.compile(
 # mapping can be audited against it line by line, and every route names the row it was priced from.
 #
 # OWNED READS ($0.001/resource) DO NOT APPLY TO US. The discount needs the authenticated user to be
-# "the owner of the developer app" — on a registry connect the app is treg's and the user is a
+# "the owner of the developer app" — on a registry connect the app is stray's and the user is a
 # stranger to it, so a connected member reading their own timeline pays the ordinary Posts rate.
-# Pricing those routes at $0.001 would have under-billed the calls treg is charged the most for.
+# Pricing those routes at $0.001 would have under-billed the calls stray is charged the most for.
 X_PRICING_URL = "https://docs.x.com/x-api/getting-started/pricing"
 X_PRICE_CHECKED = "2026-08-18"
 
@@ -2271,13 +2271,13 @@ X_RATES = {
 # The rate a route earns when the card names no row for its resource (webhooks, subscriptions,
 # connections, stream rules, media upload, compliance jobs, analytics). It is the figure
 # `api._oauth_billed_estimate` falls back to, so the published price still equals the metered one —
-# `inferred` says we are quoting treg's fallback, not a rate X published.
+# `inferred` says we are quoting stray's fallback, not a rate X published.
 X_FALLBACK_READ, X_FALLBACK_WRITE = "posts", "post_create"
 
 # (methods, path regex, rate key, confidence). FIRST MATCH WINS, so the specific rows precede the
 # families they sit inside. `documented` means the card names this resource; `inferred` means the
 # route's resource type is a judgement call (a route returning the users who liked a post could be
-# read as User: Read or Like: Read — it takes the dearer reading, since treg pays the difference).
+# read as User: Read or Like: Read — it takes the dearer reading, since stray pays the difference).
 X_ROUTE_RATES: list[tuple[str, str, str, str]] = [
     # --- writes: the specific actions first -----------------------------------------------------
     ("POST",            r"^/2/lists$",                              "list_create", "documented"),
@@ -2332,7 +2332,7 @@ _X_COMPILED = [(set(ms.split("|")), re.compile(rx), key, conf) for ms, rx, key, 
 def _x_cost(method: str, path: str, scope: str = "") -> dict:
     """The rate `api._oauth_billed_estimate` will actually charge this route, written down.
 
-    Never returns `free`: nothing on X's v2 API is free to treg any more, and a `free` block here
+    Never returns `free`: nothing on X's v2 API is free to stray any more, and a `free` block here
     both misleads the catalog reader and is skipped by the meter (its `usd` is 0, which is falsy),
     so the two numbers silently disagree — the display says $0 and the balance says otherwise."""
     key = conf = None
@@ -2347,7 +2347,7 @@ def _x_cost(method: str, path: str, scope: str = "") -> dict:
     note = (f"X's rate card, {key.replace('_', ' ')}: ${value:g} "
             f"{'per resource returned' if ctype == 'per_result' else 'per request'}")
     if conf == "inferred":
-        note = (f"X publishes no rate for this route's resource, so treg meters it at ${value:g} "
+        note = (f"X publishes no rate for this route's resource, so stray meters it at ${value:g} "
                 f"{'per resource' if ctype == 'per_result' else 'per request'} — the same figure "
                 f"the proxy falls back to") if key in (X_FALLBACK_READ, X_FALLBACK_WRITE) else \
                (f"{note}; which row applies is a judgement call, and this takes the dearer reading")
@@ -2397,7 +2397,7 @@ def ingest_x(refresh: bool) -> tuple[Path, dict]:
             needed = _x_scopes(op)
             if needed and not set(needed) <= X_GRANTED:
                 gaps += 1
-                entry["scope_gap"] = ("treg's OAuth app does not request this; needs: "
+                entry["scope_gap"] = ("stray's OAuth app does not request this; needs: "
                                       + ", ".join(sorted(set(needed) - X_GRANTED)))
             params = {}
             for p in op.get("parameters") or []:
@@ -2428,7 +2428,7 @@ def ingest_x(refresh: bool) -> tuple[Path, dict]:
         "api.x.com host serves the same API). Its declared server is https://api.x.com, which is",
         "exactly OAuthProvider.base_url, so every path here is already relative to it.",
         "",
-        f"SCOPE GAPS ARE THE STORY. treg's X app requests only {', '.join(sorted(X_GRANTED))};",
+        f"SCOPE GAPS ARE THE STORY. stray's X app requests only {', '.join(sorted(X_GRANTED))};",
         f"{gaps} of these routes need something else — likes, follows, lists, spaces, bookmarks, mutes,",
         "blocks, DMs and media upload each have their own scope. They are listed with `scope_gap:`",
         "rather than omitted, because that list IS the decision of which scopes to add to the app.",
@@ -2437,7 +2437,7 @@ def ingest_x(refresh: bool) -> tuple[Path, dict]:
         "express — the OpenAPI document lists the whole surface, not what one app may reach.",
         "",
         "EVERY ENTRY IS PRICED, AND NONE OF THEM ARE FREE. X bills the APP OWNER per use (prepaid",
-        "credits, no plan tiers since Feb 2026), so a call on a registry connect spends treg's money",
+        "credits, no plan tiers since Feb 2026), so a call on a registry connect spends stray's money",
         "and is metered from the team balance. Reads are per resource RETURNED — posts $0.005, users",
         "$0.010 — an own-account read is $0.001, and a write is $0.015 per request ($0.20 when a",
         "post's text carries a URL). The rates are documented; which one a route earns is read off",
@@ -2458,7 +2458,7 @@ def ingest_x(refresh: bool) -> tuple[Path, dict]:
 # nothing versioned we could diff. The only source is the HTML reference index, one page per node
 # type. Transcribing hundreds of routes from HTML is precisely what catalog.md step 1 warns
 # against ("that is how typos ship"), so these three files are deliberately MODEST and
-# hand-curated: the edges of the node types treg's scopes can actually reach, each one read off
+# hand-curated: the edges of the node types stray's scopes can actually reach, each one read off
 # the official reference page for that node. Accuracy over volume.
 #
 # Every path is relative to base_url, which already ends in /v25.0 — do NOT prefix the version.
@@ -2678,7 +2678,7 @@ def ingest_meta(service: str, refresh: bool) -> tuple[Path, dict]:
         }
         if gap:
             gaps += 1
-            entry["scope_gap"] = f"treg's OAuth app does not request this; {gap}"
+            entry["scope_gap"] = f"stray's OAuth app does not request this; {gap}"
         endpoints.append(entry)
     notes = [
         "",
@@ -2692,13 +2692,13 @@ def ingest_meta(service: str, refresh: bool) -> tuple[Path, dict]:
         "Paths are relative to base_url, which ALREADY ENDS IN /v25.0 — no entry repeats the version.",
         "Bumping the Graph version is a base_url change in oauth_providers.py, not an edit here.",
         "",
-        f"treg's app requests {granted}.",
+        f"stray's app requests {granted}.",
         f"{gaps} entr{'ies' if gaps != 1 else 'y'} need a scope beyond that and carry `scope_gap:`. Meta gates most of those behind",
         "App Review with a screencast per permission, so a scope gap here is a product decision, not",
         "a config change.",
         "",
         "Graph ids are opaque and account-specific ({page_id}, {ad_account_id} — the latter includes",
-        "its `act_` prefix), so nothing here carries a test_request; `treg connections resources`",
+        "its `act_` prefix), so nothing here carries a test_request; `stray connections resources`",
         "supplies the id for the connected account.",
     ]
     return write_extended(service, _oauth_source(

@@ -30,7 +30,7 @@ facts_used: [F-01, F-02, F-03, F-04, F-05, F-06, F-07, F-08, F-09, F-10, F-11, F
 ### Social Data MCP: Reddit, Instagram, TikTok, YouTube
 
 ```text
-Using treg, find 20 TikTok creators posting about home espresso with 50k to 500k
+Using stray, find 20 TikTok creators posting about home espresso with 50k to 500k
 followers. For the top 3 by engagement, pull their recent videos and comments.
 ```
 
@@ -44,10 +44,10 @@ followers. For the top 3 by engagement, pull their recent videos and comments.
 
 ## The old way vs. the treg.to way
 
-| | The old way | With treg |
+| | The old way | With stray |
 |---|---|---|
 | **What you pay for** | X API at $200/mo, plus a social listening seat, to answer a question you have once a week | One prepaid balance. Most social calls are $0.001 |
-| **Keys** | A developer account per platform: and TikTok's is invite-only, Instagram's needs app review, LinkedIn's is partner-only | One treg token. Every tool in the catalog answers to it |
+| **Keys** | A developer account per platform: and TikTok's is invite-only, Instagram's needs app review, LinkedIn's is partner-only | One stray token. Every tool in the catalog answers to it |
 | **Picking a provider** | Whichever platform approved you | `catalog get` lists every provider serving that platform with price, measured success rate and median speed |
 | **Commitment** | Monthly platform fees and quota tiers before you know if the data answers your question | No subscription. Ask one question for a fraction of a cent |
 | **The workflow** | Five browser tabs, manual scrolling, screenshots into a doc | One agent run across five platforms, deduplicated into one brief |
@@ -271,4 +271,4 @@ paste the setup line from `/llms.txt` into Grok and it can use the treg.to catal
 
 # Ad and creator kit
 
-Campaign material is maintained in treg-internal.
+Campaign material is maintained in stray-internal.

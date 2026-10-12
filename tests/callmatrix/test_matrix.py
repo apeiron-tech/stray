@@ -13,14 +13,14 @@ from sqlmodel import select
 
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
-from treg.api import app
-from treg.application.call import service as call_service
-from treg import audit
-from treg.domain.identity import access as identity_access
-from treg.domain import money as ledger
-from treg.infra.db import session_maker
-from treg.domain.money import with_margin
-from treg.models import CallRecord
+from stray.api import app
+from stray.application.call import service as call_service
+from stray import audit
+from stray.domain.identity import access as identity_access
+from stray.domain import money as ledger
+from stray.infra.db import session_maker
+from stray.domain.money import with_margin
+from stray.models import CallRecord
 
 from test_marketplace_call import (
     EP,
@@ -204,7 +204,7 @@ async def test_e1_insufficient_balance(
         matrix_clients, fake_provider, response, before,
         Expect(
             status=402,
-            treg_error=True,
+            stray_error=True,
             audit={
                 "endpoint_id": EP,
                 "provider": "tikhub",
@@ -246,7 +246,7 @@ async def test_e2_daily_member_cap(
         matrix_clients, fake_provider, response, before,
         Expect(
             status=429,
-            treg_error=True,
+            stray_error=True,
             # Current implementation detail: this early gate has no marketplace telemetry.
             audit={"refused_by": "cap", "cost_charged_micro": None},
             upstream_hits=0,
@@ -272,7 +272,7 @@ async def test_e3_deny_rule_blocks_resolved_upstream(
         matrix_clients, fake_provider, response, before,
         Expect(
             status=403,
-            treg_error=True,
+            stray_error=True,
             # Current implementation detail: this early gate has no marketplace telemetry.
             audit={"refused_by": "policy", "cost_charged_micro": None},
             upstream_hits=0,
@@ -285,23 +285,23 @@ async def test_e4_member_tool_acl(
 ) -> None:
     await _register_echo(matrix_clients)
     org_id = (await matrix_clients.get("/orgs")).json()[0]["org_id"]
-    owner_token = matrix_clients.headers["X-Treg-Token"]
+    owner_token = matrix_clients.headers["X-Stray-Token"]
     agent = await matrix_clients.post(
         f"/orgs/{org_id}/agents", json={"name": "matrix-e4", "tool_access": []},
     )
     assert agent.status_code in (200, 201), agent.text
     before = await snapshot(matrix_clients, fake_provider)
-    matrix_clients.headers["X-Treg-Token"] = agent.json()["token"]
+    matrix_clients.headers["X-Stray-Token"] = agent.json()["token"]
     try:
         response = await matrix_clients.get("/call/echo/blocked")
     finally:
-        matrix_clients.headers["X-Treg-Token"] = owner_token
+        matrix_clients.headers["X-Stray-Token"] = owner_token
 
     await assert_outcome(
         matrix_clients, fake_provider, response, before,
         Expect(
             status=403,
-            treg_error=True,
+            stray_error=True,
             # Current implementation detail: this early gate has no marketplace telemetry.
             audit={"refused_by": "policy", "cost_charged_micro": None},
             upstream_hits=0,
@@ -315,19 +315,19 @@ async def test_e5_public_demo_catalog_call_is_resolution_refusal(
     org_id = (await matrix_clients.get("/orgs")).json()[0]["org_id"]
     published = await matrix_clients.post(f"/orgs/{org_id}/public-token")
     assert published.status_code == 200, published.text
-    owner_token = matrix_clients.headers["X-Treg-Token"]
+    owner_token = matrix_clients.headers["X-Stray-Token"]
     before = await snapshot(matrix_clients, fake_provider)
-    matrix_clients.headers["X-Treg-Token"] = published.json()["token"]
+    matrix_clients.headers["X-Stray-Token"] = published.json()["token"]
     try:
         response = await matrix_clients.get(f"/call/{EP}?aweme_id=7")
     finally:
-        matrix_clients.headers["X-Treg-Token"] = owner_token
+        matrix_clients.headers["X-Stray-Token"] = owner_token
 
     await assert_outcome(
         matrix_clients, fake_provider, response, before,
         Expect(
             status=404,
-            treg_error=True,
+            stray_error=True,
             audit={"refused_by": "resolution", "cost_charged_micro": None},
             upstream_hits=0,
         ),
@@ -357,9 +357,9 @@ async def test_d1_same_key_replays_original_response(
             upstream_hits=0,
         ),
     )
-    assert replay.headers["X-Treg-Call-Id"] == first.headers["X-Treg-Call-Id"]
-    assert replay.headers["X-Treg-Idempotent-Replay"] == "true"
-    assert replay.headers["X-Treg-Original-Cost-Micro"] == str(with_margin(EP_MICRO))
+    assert replay.headers["X-Stray-Call-Id"] == first.headers["X-Stray-Call-Id"]
+    assert replay.headers["X-Stray-Idempotent-Replay"] == "true"
+    assert replay.headers["X-Stray-Original-Cost-Micro"] == str(with_margin(EP_MICRO))
 
 
 async def test_d2_concurrent_same_key_loser_gets_409(
@@ -383,7 +383,7 @@ async def test_d2_concurrent_same_key_loser_gets_409(
         first_task.cancel()  # a failure above must not leave the winner running into teardown
 
     assert loser.status_code == 409, loser.text
-    assert loser.headers["X-Treg-Error"] == "1"
+    assert loser.headers["X-Stray-Error"] == "1"
     await assert_outcome(
         matrix_clients, fake_provider, winner, before,
         Expect(
@@ -398,10 +398,10 @@ async def test_d2_concurrent_same_key_loser_gets_409(
     rows = (await matrix_clients.get("/calls")).json()
     loser_row = next(row for row in rows if row["status_code"] == 409)
     assert loser_row["refused_by"] == "request"
-    loser_call_id = loser.headers.get("X-Treg-Call-Id")
+    loser_call_id = loser.headers.get("X-Stray-Call-Id")
     if loser_call_id is not None:
         assert loser_row["call_ref"] == loser_call_id
-    assert loser_call_id, "every /call response must carry X-Treg-Call-Id"
+    assert loser_call_id, "every /call response must carry X-Stray-Call-Id"
 
 
 async def test_d3_same_key_with_different_request_is_refused(
@@ -418,7 +418,7 @@ async def test_d3_same_key_with_different_request_is_refused(
         matrix_clients, fake_provider, response, before,
         Expect(
             status=422,
-            treg_error=True,
+            stray_error=True,
             audit={"refused_by": "request"},
             upstream_hits=0,
         ),
@@ -615,7 +615,7 @@ async def test_b5_read_timeout_refunds_and_keeps_evidence(
         Expect(
             status=502,
             cost_micro=0,
-            treg_error=True,
+            stray_error=True,
             ledger_kinds=("release", "reserve"),
             ledger_reason="call_failed_502",
             audit={"refused_by": None, "cost_charged_micro": 0},
@@ -641,7 +641,7 @@ async def test_b6_connect_error_refunds_and_keeps_evidence(
         Expect(
             status=502,
             cost_micro=0,
-            treg_error=True,
+            stray_error=True,
             ledger_kinds=("release", "reserve"),
             ledger_reason="call_failed_502",
             audit={"refused_by": None, "cost_charged_micro": 0},
@@ -667,7 +667,7 @@ async def test_b7_metered_stream_interruption_is_call_failed(
         Expect(
             status=502,
             cost_micro=0,
-            treg_error=True,
+            stray_error=True,
             ledger_kinds=("release", "reserve"),
             ledger_reason="call_failed_502",
             audit={"refused_by": None, "cost_charged_micro": 0},
@@ -810,7 +810,7 @@ async def test_c5_gzip_4xx_body_is_decoded_for_evidence(
     assert record.error_response and "compressed bad request" in record.error_response
 
 
-# F group: the relay preserves caller bytes while stripping treg's own session boundary.
+# F group: the relay preserves caller bytes while stripping stray's own session boundary.
 
 
 async def test_f2_encoded_slash_survives_in_raw_path(
@@ -828,7 +828,7 @@ async def test_f2_encoded_slash_survives_in_raw_path(
     assert fake_provider.hits[-1].raw_path.lower() == b"/a%2fb"
 
 
-async def test_f3_treg_cookie_is_scrubbed_both_directions(
+async def test_f3_stray_cookie_is_scrubbed_both_directions(
     matrix_clients: AsyncClient, fake_provider: FakeProvider,
 ) -> None:
     await _register_echo(matrix_clients)
@@ -837,9 +837,9 @@ async def test_f3_treg_cookie_is_scrubbed_both_directions(
     response = await matrix_clients.get(
         "/call/echo/cookies",
         headers={
-            "Cookie": "treg_session=caller-secret; ordinary=keep-me",
+            "Cookie": "stray_session=caller-secret; ordinary=keep-me",
             "X-Custom-Proof": "kept",
-            "X-Fake-Set-Cookie": "treg_session=evil; Path=/; HttpOnly",
+            "X-Fake-Set-Cookie": "stray_session=evil; Path=/; HttpOnly",
         },
     )
 
@@ -850,8 +850,8 @@ async def test_f3_treg_cookie_is_scrubbed_both_directions(
     hit = fake_provider.hits[-1]
     assert hit.headers["x-custom-proof"] == "kept"
     assert "ordinary=keep-me" in hit.headers["cookie"]
-    assert "treg_session" not in hit.headers["cookie"]
-    assert all("treg_session" not in value.lower() for value in response.headers.get_list("set-cookie"))
+    assert "stray_session" not in hit.headers["cookie"]
+    assert all("stray_session" not in value.lower() for value in response.headers.get_list("set-cookie"))
 
 
 # G group: the balance's conditional update chooses exactly three winners under concurrency.
@@ -894,9 +894,9 @@ async def test_g1_ten_concurrent_calls_compete_for_three_call_balance(
 
     statuses = Counter(response.status_code for response in responses)
     assert statuses == Counter({402: 7, 200: 3})
-    assert all(response.headers.get("X-Treg-Error") != "1" for response in responses if response.status_code == 200)
-    assert all(response.headers.get("X-Treg-Error") == "1" for response in responses if response.status_code == 402)
-    assert all(response.headers.get("X-Treg-Cost-Micro") == str(charged)
+    assert all(response.headers.get("X-Stray-Error") != "1" for response in responses if response.status_code == 200)
+    assert all(response.headers.get("X-Stray-Error") == "1" for response in responses if response.status_code == 402)
+    assert all(response.headers.get("X-Stray-Cost-Micro") == str(charged)
                for response in responses if response.status_code == 200)
     assert await _balance(matrix_clients) == remaining - 3 * charged
 
@@ -910,8 +910,8 @@ async def test_g1_ten_concurrent_calls_compete_for_three_call_balance(
     assert Counter(row["status_code"] for row in rows) == Counter({402: 7, 200: 3})
     assert all(row["cost_charged_micro"] == charged for row in rows if row["status_code"] == 200)
     assert all(row["cost_charged_micro"] == 0 for row in rows if row["status_code"] == 402)
-    assert all(response.headers.get("X-Treg-Call-Id") for response in responses), (
-        "every concurrent outcome must carry X-Treg-Call-Id")
+    assert all(response.headers.get("X-Stray-Call-Id") for response in responses), (
+        "every concurrent outcome must carry X-Stray-Call-Id")
 
 
 # H group: the exits that answer a call without ever reaching call_tool's own bookkeeping.
@@ -933,22 +933,22 @@ async def test_h1_saturation_503_still_carries_a_call_id_and_a_row(
     monkeypatch.setattr(call_service, "_resolve_call", _no_slot)
     before = await snapshot(matrix_clients, fake_provider)
 
-    with caplog.at_level(logging.WARNING, logger="treg.audit"):
+    with caplog.at_level(logging.WARNING, logger="stray.audit"):
         response = await matrix_clients.get("/call/echo/ping")
     await audit.drain()
 
     assert response.status_code == 503
-    assert response.json()["treg_saturated"] is True
+    assert response.json()["stray_saturated"] is True
     assert response.headers["Retry-After"] == "2"
-    call_id = response.headers.get("X-Treg-Call-Id")
-    assert call_id, "a saturation 503 must still carry X-Treg-Call-Id"
+    call_id = response.headers.get("X-Stray-Call-Id")
+    assert call_id, "a saturation 503 must still carry X-Stray-Call-Id"
     assert len(fake_provider.hits) == before.hit_count, "nothing was relayed"
 
     rows = (await matrix_clients.get("/calls")).json()
     row = next(row for row in rows if row["status_code"] == 503)
     assert row["call_ref"] == call_id
     assert row["tool_name"] == "echo"
-    # A 5xx is treg failing, not treg refusing — `_refusal_kind` maps it to None.
+    # A 5xx is stray failing, not stray refusing — `_refusal_kind` maps it to None.
     assert row["refused_by"] is None
     (event,) = await posthog_events()
     assert event["distinct_id"] == "tim@superdesign.dev"
@@ -966,7 +966,7 @@ async def test_h1_saturation_503_still_carries_a_call_id_and_a_row(
     assert "dropping unknown CallRecord telemetry keys" not in caplog.text
 
 
-async def test_h2_unexpected_500_is_reported_once_as_treg_owned(
+async def test_h2_unexpected_500_is_reported_once_as_stray_owned(
     matrix_clients: AsyncClient, fake_provider: FakeProvider, monkeypatch, posthog_events,
 ) -> None:
     """A bug inside the call pipeline is still one attempted call in the product funnel. Exercise
@@ -978,7 +978,7 @@ async def test_h2_unexpected_500_is_reported_once_as_treg_owned(
     async with AsyncClient(
         transport=ASGITransport(app=app, raise_app_exceptions=False),
         base_url="http://registry",
-        headers={"X-Treg-Token": matrix_clients.headers["X-Treg-Token"]},
+        headers={"X-Stray-Token": matrix_clients.headers["X-Stray-Token"]},
     ) as remote_client:
         response = await remote_client.get("/call/tikhub.tiktok.video.comments")
 
@@ -1019,11 +1019,11 @@ async def test_h3_pool_saturation_before_identity_uses_an_intake_event(
     response = await matrix_clients.get(path)
 
     assert response.status_code == 503
-    assert response.json()["treg_saturated"] is True
-    assert response.headers.get("X-Treg-Call-Id")
+    assert response.json()["stray_saturated"] is True
+    assert response.headers.get("X-Stray-Call-Id")
     assert await posthog_events() == []
     (event,) = await posthog_events("call_intake_failed")
-    assert event["distinct_id"] == "treg-server"
+    assert event["distinct_id"] == "stray-server"
     expected = {
         "status_code": 503,
         "outcome": "gateway_failed",
@@ -1060,14 +1060,14 @@ async def test_h4_catalog_saturation_releases_idempotency_claim(
     await audit.drain()
 
     assert first.status_code == 503
-    assert first.json()["treg_saturated"] is True
-    assert first.headers.get("X-Treg-Call-Id")
+    assert first.json()["stray_saturated"] is True
+    assert first.headers.get("X-Stray-Call-Id")
     assert second.status_code == 200, second.text
     assert len(fake_provider.hits) == 1
     rows = (await matrix_clients.get("/calls")).json()
     failed = next(row for row in rows if row["status_code"] == 503)
     assert failed["tool_name"] == EP
-    assert failed["call_ref"] == first.headers["X-Treg-Call-Id"]
+    assert failed["call_ref"] == first.headers["X-Stray-Call-Id"]
     (event,) = [
         event for event in await posthog_events()
         if event["properties"].get("failure_kind") == "db_pool"

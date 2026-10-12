@@ -4,7 +4,7 @@ import json
 import httpx
 import pytest
 
-from treg import cli
+from stray import cli
 
 
 def client(monkeypatch, handler):
@@ -63,16 +63,16 @@ def test_cli_review_rejects_invalid_fields_locally(monkeypatch, capsys, args):
     assert json.loads(capsys.readouterr().out)['error'].startswith('invalid_')
 
 
-CALL = {'X-Treg-Call-Id': 'call-id'}
+CALL = {'X-Stray-Call-Id': 'call-id'}
 
 
 @pytest.mark.parametrize('headers,expect', [
-    ({**CALL, 'X-Treg-Hint': 'review'}, 'treg review call-id'),
-    ({**CALL, 'X-Treg-Review': 'requested'}, 'treg review call-id'),  # a pre-0.19 registry
-    ({**CALL, 'X-Treg-Hint': 'feedback'}, 'treg feedback submit <quality|pricing|friction|other> "what you saw" --call-id call-id'),
-    ({**CALL, 'X-Treg-Hint': 'unknown-kind'}, None),
+    ({**CALL, 'X-Stray-Hint': 'review'}, 'stray review call-id'),
+    ({**CALL, 'X-Stray-Review': 'requested'}, 'stray review call-id'),  # a pre-0.19 registry
+    ({**CALL, 'X-Stray-Hint': 'feedback'}, 'stray feedback submit <quality|pricing|friction|other> "what you saw" --call-id call-id'),
+    ({**CALL, 'X-Stray-Hint': 'unknown-kind'}, None),
     (CALL, None),
-    ({'X-Treg-Hint': 'feedback'}, None),  # an invitation needs a call id
+    ({'X-Stray-Hint': 'feedback'}, None),  # an invitation needs a call id
 ])
 def test_invitation_only_on_stderr(capsys, headers, expect):
     response = httpx.Response(200, content=b'raw upstream text', headers=headers)
@@ -85,8 +85,8 @@ def test_invitation_only_on_stderr(capsys, headers, expect):
 def test_invitation_preserves_pretty_printed_json(capsys):
     body = '{"items": [1,  2]}\n'
     cli._show_call_response(httpx.Response(200, text=body, headers={
-        'content-type': 'application/json', 'X-Treg-Call-Id': 'call-id', 'X-Treg-Review': 'requested',
+        'content-type': 'application/json', 'X-Stray-Call-Id': 'call-id', 'X-Stray-Review': 'requested',
     }))
     output = capsys.readouterr()
     assert output.out == json.dumps(json.loads(body), indent=2) + "\n"
-    assert 'treg review call-id' in output.err
+    assert 'stray review call-id' in output.err

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from treg.infra.upstream.injectors import inject
+from stray.infra.upstream.injectors import inject
 
 
 def _b(**kw) -> dict:
@@ -81,7 +81,7 @@ def test_bad_binding_or_secret_raises(binding, secret, error):
 def test_base64_encode_raw_login_password():
     """A raw `login:password` must be Base64-encoded when token_encode='base64' is set.
 
-    Secrets added via `treg secret add dataforseo` bypass the connect flow that would encode them,
+    Secrets added via `stray secret add dataforseo` bypass the connect flow that would encode them,
     so the injector must detect and encode a raw value to produce the correct `Basic <b64>` header.
     """
     import base64
@@ -95,7 +95,7 @@ def test_base64_encode_raw_login_password():
 def test_base64_already_encoded_value_is_not_double_encoded():
     """A value that is already Base64-encoded must NOT be encoded again.
 
-    Secrets added via `treg connections connect` are encoded at paste time. The injector must
+    Secrets added via `stray connections connect` are encoded at paste time. The injector must
     detect this and pass the value through unchanged, avoiding double-encoding.
     """
     import base64

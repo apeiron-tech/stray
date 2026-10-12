@@ -9,8 +9,8 @@ from pydantic import ValidationError
 from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError
 
-from treg import config
-from treg.infra import db as infra_db
+from stray import config
+from stray.infra import db as infra_db
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ async def load_database(monkeypatch):
     def load(read_url="", overrides="", *, primary_url=None):
         settings = config.Settings(_env_file=None, database_url=primary_url or infra_db._db_url,
                                    read_database_url=read_url, db_pool_overrides=overrides)
-        spec = importlib.util.spec_from_file_location("treg.infra._replica_test", infra_db.__file__)
+        spec = importlib.util.spec_from_file_location("stray.infra._replica_test", infra_db.__file__)
         module = importlib.util.module_from_spec(spec)
         with monkeypatch.context() as patch:
             patch.setattr(config, "get_settings", lambda: settings)
@@ -36,9 +36,9 @@ async def load_database(monkeypatch):
 
 @pytest.mark.parametrize("scheme", ["postgres", "postgresql", "postgresql+asyncpg"])
 def test_replica_url_normalizes_the_async_driver(monkeypatch, scheme):
-    monkeypatch.setenv("TREG_READ_DATABASE_URL", f"{scheme}://reader:example@replica.invalid/treg")
+    monkeypatch.setenv("STRAY_READ_DATABASE_URL", f"{scheme}://reader:example@replica.invalid/stray")
     settings = config.Settings(_env_file=None)
-    assert settings.read_database_url == "postgresql+asyncpg://reader:example@replica.invalid/treg"
+    assert settings.read_database_url == "postgresql+asyncpg://reader:example@replica.invalid/stray"
 
 
 @pytest.mark.parametrize("url", [
@@ -51,7 +51,7 @@ def test_sqlite_read_urls_are_preserved(url):
 
 
 @pytest.mark.parametrize("url", [
-    "mysql://replica/treg", "sqlite:///replica.db", "postgresql+psycopg://replica/treg", "replica",
+    "mysql://replica/stray", "sqlite:///replica.db", "postgresql+psycopg://replica/stray", "replica",
 ])
 def test_read_datasource_rejects_unsupported_drivers(url):
     with pytest.raises(ValidationError, match="must use sqlite\\+aiosqlite or postgresql\\+asyncpg"):
@@ -68,7 +68,7 @@ def test_unconfigured_reads_reuse_the_primary_without_an_extra_pool(load_databas
 
 async def test_configured_reads_have_their_own_pool_and_budget(load_database):
     # A username containing "sqlite" must not disable the PostgreSQL pool bounds.
-    db = load_database("postgresql://sqlite-reader:example@replica.invalid/treg", "read.pool_size=4")
+    db = load_database("postgresql://sqlite-reader:example@replica.invalid/stray", "read.pool_size=4")
     async with db.read_session_maker() as reader, db.session_maker() as writer:
         assert reader.bind is db._read_engine
         assert writer.bind is db._engine
@@ -80,7 +80,7 @@ async def test_configured_reads_have_their_own_pool_and_budget(load_database):
 
 
 async def test_replica_connection_failure_never_falls_back_to_primary(load_database):
-    db = load_database("postgresql://reader:example@replica.invalid/treg")
+    db = load_database("postgresql://reader:example@replica.invalid/stray")
 
     @event.listens_for(db._read_engine.sync_engine, "do_connect")
     def fail_replica(dialect, connection_record, args, kwargs):
@@ -97,7 +97,7 @@ async def test_replica_connection_failure_never_falls_back_to_primary(load_datab
 
 
 @pytest.mark.parametrize("read_url", [
-    "", "postgresql://reader:example@replica.invalid/treg", "sqlite+aiosqlite:///:memory:",
+    "", "postgresql://reader:example@replica.invalid/stray", "sqlite+aiosqlite:///:memory:",
 ])
 async def test_shutdown_disposes_each_pool_once(load_database, read_url):
     db = load_database(read_url)

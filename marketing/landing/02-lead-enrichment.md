@@ -30,7 +30,7 @@ facts_used: [F-01, F-02, F-03, F-04, F-05, F-06, F-07, F-08, F-09, F-10, F-11, F
 ### Waterfall Enrichment: Find and Verify Work Emails
 
 ```text
-Using treg, build me a lead list: 50 US software companies with 51 to 200 staff
+Using stray, build me a lead list: 50 US software companies with 51 to 200 staff
 that raised a Series A. For each one find the VP or Head of Marketing, find their
 work email, verify it, and pull the latest news so I have an opener.
 ```
@@ -45,10 +45,10 @@ work email, verify it, and pull the latest news so I have an opener.
 
 ## The old way vs. the treg.to way
 
-| | The old way | With treg |
+| | The old way | With stray |
 |---|---|---|
 | **What you pay for** | Apollo $59/seat + Hunter $34/mo + Lusha $49/mo, and a credit pool that expires monthly | One prepaid balance. A found email is $0.0245, and a miss costs nothing |
-| **Keys** | One account, one login and one API key per provider, spread across machines and `.env` files | One treg token. Every tool in the catalog answers to it |
+| **Keys** | One account, one login and one API key per provider, spread across machines and `.env` files | One stray token. Every tool in the catalog answers to it |
 | **Picking a provider** | You use whichever tool the team bought last year | `catalog get` lists all eleven company-search providers with price, measured success rate and median speed |
 | **Commitment** | Seat minimums and annual contracts before you know whether the data covers your market | No subscription. Test the coverage for cents, then decide |
 | **The workflow** | Export from the prospecting tool, paste into the enrichment tool, upload to the verifier, reconcile three CSVs | One agent run: find, enrich, verify, deduplicate: in one pass |
@@ -247,4 +247,4 @@ Run the complete lead generation workflow that produced the numbers on this page
 
 # Ad and creator kit
 
-Campaign material is maintained in treg-internal.
+Campaign material is maintained in stray-internal.

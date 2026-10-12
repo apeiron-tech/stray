@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "name": "treg",
-  "displayName": "treg",
+  "name": "stray",
+  "displayName": "stray",
   "version": "0.22.0",
   "description": "OpenRouter for tools - 2,896 agent-friendly tools, pay for the usage, not subscription. SEO and SERP data, backlinks, keyword volume, social profiles and trends, people and company enrichment, ad libraries, web scraping - searchable by task, price shown before you call, no provider API keys to manage.",
   "author": "Superdesign dev, Inc.",
@@ -15,6 +15,6 @@
   "apps": [],
   "mcpServers": [],
   "skills": [
-    "skills/treg/SKILL.md"
+    "skills/stray/SKILL.md"
   ]
 }

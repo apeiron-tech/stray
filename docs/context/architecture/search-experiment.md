@@ -2,12 +2,12 @@
 title: Discovery experiment — a relevance judge behind catalog search, measured on what the caller does next; the job-first answer served to agents
 status: building
 sources:
-  - src/treg/application/catalog_search.py
-  - src/treg/application/search_experiment.py
-  - src/treg/domain/catalog/interleave.py
-  - src/treg/infra/judge.py
-  - src/treg/alembic/versions/0041_searchlog.py
-  - src/treg/alembic/versions/0056_searchlog_verdict.py
+  - src/stray/application/catalog_search.py
+  - src/stray/application/search_experiment.py
+  - src/stray/domain/catalog/interleave.py
+  - src/stray/infra/judge.py
+  - src/stray/alembic/versions/0041_searchlog.py
+  - src/stray/alembic/versions/0056_searchlog_verdict.py
   - scripts/search_experiment_report.sql
   - scripts/search_agent_bench.py
   - tests/test_search_experiment.py
@@ -36,7 +36,7 @@ Three layers, imports pointing inward:
   least one required token, lexical score order, cut at `search_experiment_candidates` (30). It is
   safe to be this loose only because nothing here is shown without the judge's answer. Routed
   parents are left out and put back by `with_routed_parents` (shared with `search`), so the judged
-  page steers to `treg.<capability>` exactly as the baseline does.
+  page steers to `stray.<capability>` exactly as the baseline does.
 - **`infra/judge.py`** — TypeSafe's System One API (Jev). One request carries the query and every
   candidate as `state`, and one Noul question per candidate; the answer is a probability per row.
   It never raises: timeout, non-200, malformed body all return `probs=None` with a reason, and the

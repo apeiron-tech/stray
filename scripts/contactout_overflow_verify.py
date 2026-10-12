@@ -18,10 +18,10 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 import httpx
-from treg.config import get_settings
-from treg.domain.catalog import store
-from treg.domain.capacity import routes as R, verify as V
-from treg.application.call.contactout import estimate
+from stray.config import get_settings
+from stray.domain.catalog import store
+from stray.domain.capacity import routes as R, verify as V
+from stray.application.call.contactout import estimate
 
 
 async def main(args):
@@ -102,7 +102,7 @@ async def main(args):
             elif verdict == 'failed':
                 failed.append(row)
     if args.apply:
-        from treg.infra.db import session_maker, verify_db
+        from stray.infra.db import session_maker, verify_db
         await verify_db()
         async with session_maker() as db:
             # Retain standard sync behavior; failures are withheld so they cannot keep serving.

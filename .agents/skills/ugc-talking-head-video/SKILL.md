@@ -1,6 +1,6 @@
 ---
 name: ugc-talking-head-video
-description: "Turn a locked character image (from portrait-clone) into a UGC-style 9:16 talking-head video: pick a voice-reference clip, size the script to the duration, write the Seedance 2.5 prompt, generate through treg (reAPI or PiAPI), then burn a static emoji header and phrase captions with code. Use after portrait-clone when the user wants the character to speak a script on camera."
+description: "Turn a locked character image (from portrait-clone) into a UGC-style 9:16 talking-head video: pick a voice-reference clip, size the script to the duration, write the Seedance 2.5 prompt, generate through stray (reAPI or PiAPI), then burn a static emoji header and phrase captions with code. Use after portrait-clone when the user wants the character to speak a script on camera."
 ---
 
 # UGC talking-head video
@@ -8,19 +8,19 @@ description: "Turn a locked character image (from portrait-clone) into a UGC-sty
 Input: one character image (the frame you and the user picked from `portrait-clone`) and a script.
 Output: `take_N.mp4` (raw) and `take_N_captioned.mp4`, plus the request JSON that made it.
 
-Model: **Seedance 2.5 through treg**, reAPI route by default, PiAPI as the alternative (`scripts/seedance_treg.py`). No vendor key on this machine. Captions: **ffmpeg + PIL** (`scripts/caption_burn.py`).
+Model: **Seedance 2.5 through stray**, reAPI route by default, PiAPI as the alternative (`scripts/seedance_stray.py`). No vendor key on this machine. Captions: **ffmpeg + PIL** (`scripts/caption_burn.py`).
 Both scripts are self-contained; read their docstrings before changing them.
 
 ## Prerequisites
 
-- **treg.** Every generation call, reference upload and status poll goes through `treg call`; the vendor
-  key is injected server-side and the charge lands on the team's prepaid treg balance. If `treg --version`
+- **stray.** Every generation call, reference upload and status poll goes through `stray call`; the vendor
+  key is injected server-side and the charge lands on the team's prepaid stray balance. If `stray --version`
   fails, install and sign in first:
   ```bash
   curl -fsSL https://treg.to/install.sh | sh
-  treg login
+  stray login
   ```
-  Then `treg balance` to confirm there is credit for the run (a take costs a few dollars, § Run).
+  Then `stray balance` to confirm there is credit for the run (a take costs a few dollars, § Run).
 - **A character image.** If the user has no locked character yet, generate one first with the
   `portrait-clone` skill (sibling folder `.agents/skills/portrait-clone/`, or the published copy at
   https://raw.githubusercontent.com/agentara/skills/refs/heads/main/skills/aigc/portrait-clone/SKILL.md).
@@ -32,7 +32,7 @@ Both scripts are self-contained; read their docstrings before changing them.
 1. Lock the script and duration (§ Script and duration). Show the user the word count and the proposed seconds before anything else.
 2. Get a voice-reference clip (§ Voice reference). Never generate without one.
 3. Write the prompt from the template (§ Prompt). Paste the whole thing to the user before the first run.
-4. Run `seedance_treg.py`. Quote the estimated cost in the same message you announce the run.
+4. Run `seedance_stray.py`. Quote the estimated cost in the same message you announce the run.
 5. Verify with the checks in § Verify, send the raw clip, and only then caption.
 6. Caption with `caption_burn.py` using hand-written phrases.
 
@@ -65,9 +65,9 @@ prompt full of beat-by-beat pacing directions moved the pace by a few percent at
 introduced whispering and long dead pauses the user hated.
 
 1. Ask the user for a video whose delivery they like. If they have none, find candidates through
-   treg and let them choose. Use the routed endpoints and say what you want, not a vendor:
-   `catalog_search("instagram reels search by keyword")` -> `treg.instagram.search.reels`
-   (measured 86% success), or `catalog_search("tiktok search videos")` / `treg.douyin.search.videos`.
+   stray and let them choose. Use the routed endpoints and say what you want, not a vendor:
+   `catalog_search("instagram reels search by keyword")` -> `stray.instagram.search.reels`
+   (measured 86% success), or `catalog_search("tiktok search videos")` / `stray.douyin.search.videos`.
    Search the niche ("money tips talking head", "creator secret"), pick 3-5 results with a
    play URL, send the links, and ask which voice and pace they want. Do not pick for them.
 2. Extract a **2-15 s** slice, mono mp3. PiAPI rejects longer references (reAPI allows up to 30 s). Choose the most
@@ -113,12 +113,12 @@ Why each line is there:
 ## Run
 
 ```bash
-python3 .claude/skills/ugc-talking-head-video/scripts/seedance_treg.py \
+python3 .claude/skills/ugc-talking-head-video/scripts/seedance_stray.py \
   --image char.jpg --audio voice_ref.mp3 --prompt-file prompt.txt --duration 18 --out take_1.mp4
 ```
 
-- Everything goes through `treg call`; the charge lands on the team's treg balance and the vendor
-  key never touches this machine. `treg catalog get reapi.video-gen.seedance-2-5.unrestricted`
+- Everything goes through `stray call`; the charge lands on the team's stray balance and the vendor
+  key never touches this machine. `stray catalog get reapi.video-gen.seedance-2-5.unrestricted`
   shows the live price table.
 - Cost at 720p: reAPI $0.267/s on both tiers (18 s = $4.80); PiAPI $0.35/s standard, $0.385/s
   less-restriction (18 s = $6.30 / $6.93). Say the number before running. `--provider piapi` only
@@ -126,12 +126,12 @@ python3 .claude/skills/ugc-talking-head-video/scripts/seedance_treg.py \
 - `--tier relaxed` (default) is the route that accepts a real person's face and a voice clip. If a
   standard-tier run fails with a moderation error ("quit your job" scripts do), rerun relaxed. A
   failed task is never charged.
-- References are hosted with `treg host <file>` (public URL, 7-day TTL, byte-exact). The script does
-  it for you and falls back to `host_file.py` only on a registry too old to have `treg host`. Never
+- References are hosted with `stray host <file>` (public URL, 7-day TTL, byte-exact). The script does
+  it for you and falls back to `host_file.py` only on a registry too old to have `stray host`. Never
   hand a vendor a paste-host link: catbox was unreachable from reAPI's probe, tmpfiles served HTML on
   its download link, uguu timed out, and a `replicate.delivery` URL 404'd for PiAPI. Five dead
   submissions across two builds.
-- Poll with `treg call reapi.tasks.get --query id=<task>` (or `piapi.task.get --query task_id=`).
+- Poll with `stray call reapi.tasks.get --query id=<task>` (or `piapi.task.get --query task_id=`).
   A catalog id takes its parameters in `--query` or `--data`, never as a URL path.
 - There is no seed. Every run is a fresh roll for gestures and expression. Fix one thing per rerun
   and tell the user a rerun can regress something else.
@@ -190,8 +190,8 @@ python3 .claude/skills/ugc-talking-head-video/scripts/caption_burn.py \
 10. Chose the reference audio slice by reading Whisper segments, which worked, but forgot the 15 s
     cap once and had to recut. The script now asserts it.
 11. Hosted references on paste hosts. reAPI's probe rejected catbox, tmpfiles and uguu in turn; four
-    dead submissions before one landed. `treg host` now, host_file.py only as a fallback.
-12. Polled with `treg call reapi.tasks.get tasks/<id>` and got "no tool in this org": a catalog id
+    dead submissions before one landed. `stray host` now, host_file.py only as a fallback.
+12. Polled with `stray call reapi.tasks.get tasks/<id>` and got "no tool in this org": a catalog id
     takes `--query id=<id>`, never a path. The registry now says so in the error.
 13. Held a PiAPI key in `.env` and called the vendor directly, which is the credential-holding
-    pattern treg exists to remove. The runner now goes through `treg call` only.
+    pattern stray exists to remove. The runner now goes through `stray call` only.

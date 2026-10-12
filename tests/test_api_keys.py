@@ -10,21 +10,21 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from treg import audit, cli, crypto
-from treg.api import app
-from treg.domain.identity import api_keys as managed_keys
-from treg.infra.db import reset_db, session_maker
-from treg.models import ApiKey, ApiKeyEvent, Membership, User
+from stray import audit, cli, crypto
+from stray.api import app
+from stray.domain.identity import api_keys as managed_keys
+from stray.infra.db import reset_db, session_maker
+from stray.models import ApiKey, ApiKeyEvent, Membership, User
 
 
 def _h(token: str) -> dict[str, str]:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 @pytest.fixture
 def sent_otps(monkeypatch):
     """Capture sign-in codes through the email boundary, as a real inbox would."""
-    from treg import email as email_mod
+    from stray import email as email_mod
 
     sent = {}
 
@@ -85,7 +85,7 @@ async def test_additional_key_is_shown_once_and_keeps_membership_access(clients)
     assert created.headers["cache-control"] == "no-store"
     body = created.json()
     secret = body["secret"]
-    assert secret.startswith("treg_")
+    assert secret.startswith("stray_")
     assert body["safe_prefix"] == secret[:12]
 
     listed = (await clients.get(f"/orgs/{org_id}/api-keys")).json()
@@ -338,7 +338,7 @@ async def test_agent_key_uses_readable_name_and_admin_metadata_actions(clients):
     rows = (await clients.get(f"/orgs/{org_id}/api-keys")).json()
     row = next(item for item in rows if item["user_id"] == agent["user_id"])
     assert row["assigned_name"] == "readable-worker"
-    assert row["identity"].endswith("@agents.treg.local")
+    assert row["identity"].endswith("@agents.stray.local")
     assert row["created_at"] and row["created_by"]
     assert row["can_rename"] is True and row["can_hide"] is True
     assert (await clients.patch(
@@ -361,7 +361,7 @@ async def test_every_token_bearing_response_is_no_store(clients, sent_otps):
     orgs = (await clients.get("/orgs")).json()
     org = next(row for row in orgs if row["org_id"] == org_id)
 
-    default = await clients.get("/auth/cli-token", headers={"X-Treg-Org": org["slug"]})
+    default = await clients.get("/auth/cli-token", headers={"X-Stray-Org": org["slug"]})
     assert default.json()["token"] and default.headers["cache-control"] == "no-store"
     legacy = await clients.post("/orgs", json={"name": "No store legacy"})
     assert legacy.json()["token"] and legacy.headers["cache-control"] == "no-store"
@@ -596,11 +596,11 @@ async def test_default_key_rotation_is_team_specific_and_not_revocable(sent_otps
 
         disabled = await client.post(
             f"/orgs/{first['org_id']}/api-keys/{default['id']}/disable",
-            headers={"X-Treg-Org": first["org"]},
+            headers={"X-Stray-Org": first["org"]},
         )
         assert disabled.status_code == 200, disabled.text
         issued = (await client.get(
-            "/auth/cli-token", headers={"X-Treg-Org": first["org"]},
+            "/auth/cli-token", headers={"X-Stray-Org": first["org"]},
         )).json()
         assert issued["default_key_id"] == default["id"]
         assert issued["default_key_state"] == managed_keys.DISABLED

@@ -23,7 +23,7 @@ import urllib.request
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-CATALOG = ROOT / "src" / "treg" / "catalog"
+CATALOG = ROOT / "src" / "stray" / "catalog"
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options", "trace"}
 
 # TikHub's origin has historically truncated openapi.json mid-document. Its `paths` map precedes
@@ -102,7 +102,7 @@ def provider_endpoints(provider: str, catalog_dir: Path = CATALOG) -> list[dict]
 def fetch(url: str) -> str:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "treg-catalog-drift/1", "Accept": "application/json, text/yaml, */*"},
+        headers={"User-Agent": "stray-catalog-drift/1", "Accept": "application/json, text/yaml, */*"},
     )
     with urllib.request.urlopen(request, timeout=60) as response:
         return response.read().decode("utf-8", "replace")

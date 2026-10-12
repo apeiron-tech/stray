@@ -19,7 +19,7 @@ export default { components: { OwnToolsHeader, ProviderLogo, FilterBox, DataTabl
 <template>
 <div class="pl own">
   <OwnToolsHeader current="resources">
-    Reusable items created for this team through treg's platform providers. Resources made with your own account stay with that account.
+    Reusable items created for this team through stray's platform providers. Resources made with your own account stay with that account.
   </OwnToolsHeader>
 
   <div v-if="teamResourceErr" class="banner err cn-banner"><span>{{teamResourceErr}}</span><button class="btn sm ico" @click="teamResourceErr=''" aria-label="Dismiss">✕</button></div>

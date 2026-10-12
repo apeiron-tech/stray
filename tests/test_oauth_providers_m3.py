@@ -14,22 +14,22 @@ import pytest
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg import oauth
-from treg import oauth_providers as P
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import PendingOAuth
+from stray import oauth
+from stray import oauth_providers as P
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import PendingOAuth
 
 
 @pytest.fixture
 def all_apps(monkeypatch):
     for k in ("GOOGLE", "SLACK", "X", "TIKTOK"):
-        monkeypatch.setenv(f"TREG_{k}_CLIENT_ID", f"{k.lower()}-cid")
-        monkeypatch.setenv(f"TREG_{k}_CLIENT_SECRET", f"{k.lower()}-csec")
-    monkeypatch.setenv("TREG_META_CLIENT_ID", "meta-cid")
-    monkeypatch.setenv("TREG_META_CLIENT_SECRET", "meta-csec")
-    monkeypatch.setenv("TREG_INSTAGRAM_CLIENT_ID", "instagram-cid")
-    monkeypatch.setenv("TREG_INSTAGRAM_CLIENT_SECRET", "instagram-csec")
+        monkeypatch.setenv(f"STRAY_{k}_CLIENT_ID", f"{k.lower()}-cid")
+        monkeypatch.setenv(f"STRAY_{k}_CLIENT_SECRET", f"{k.lower()}-csec")
+    monkeypatch.setenv("STRAY_META_CLIENT_ID", "meta-cid")
+    monkeypatch.setenv("STRAY_META_CLIENT_SECRET", "meta-csec")
+    monkeypatch.setenv("STRAY_INSTAGRAM_CLIENT_ID", "instagram-cid")
+    monkeypatch.setenv("STRAY_INSTAGRAM_CLIENT_SECRET", "instagram-csec")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -151,8 +151,8 @@ def test_satisfied_capabilities_detects_a_scope_gap():
 
 
 async def test_unconfigured_providers_are_listed_but_flagged(clients: AsyncClient, monkeypatch):
-    monkeypatch.setenv("TREG_X_CLIENT_ID", "")
-    monkeypatch.setenv("TREG_X_CLIENT_SECRET", "")
+    monkeypatch.setenv("STRAY_X_CLIENT_ID", "")
+    monkeypatch.setenv("STRAY_X_CLIENT_SECRET", "")
     get_settings.cache_clear()
     try:
         rows = {p["service"]: p for p in (await clients.get("/oauth/providers")).json()}
@@ -192,8 +192,8 @@ async def test_byo_connection_has_no_capability_fields(clients: AsyncClient):
 
 
 async def test_linkedin_does_not_get_googles_consent_params(clients: AsyncClient, monkeypatch):
-    monkeypatch.setenv("TREG_LINKEDIN_CLIENT_ID", "li-cid")
-    monkeypatch.setenv("TREG_LINKEDIN_CLIENT_SECRET", "li-csec")
+    monkeypatch.setenv("STRAY_LINKEDIN_CLIENT_ID", "li-cid")
+    monkeypatch.setenv("STRAY_LINKEDIN_CLIENT_SECRET", "li-csec")
     get_settings.cache_clear()
     try:
         d = (await clients.post("/oauth/start", json={"provider": "linkedin"})).json()

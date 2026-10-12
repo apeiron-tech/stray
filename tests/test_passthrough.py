@@ -1,6 +1,6 @@
 """URL-passthrough + faithful relay.
 
-The agent passes the REAL upstream URL (it already knows the API); treg resolves the tool by
+The agent passes the REAL upstream URL (it already knows the API); stray resolves the tool by
 host + longest base_url prefix, injects, and relays everything verbatim (methods, all query
 params incl. duplicates, arbitrary headers, cookies, body) — touching only transport headers,
 our control token, and the injected credential.
@@ -14,7 +14,7 @@ import httpx
 import pytest
 from httpx import AsyncClient
 
-from treg.api import app
+from stray.api import app
 
 
 class _CloseTrackingStream(httpx.AsyncByteStream):
@@ -55,7 +55,7 @@ async def test_passthrough_resolves_by_url_and_injects(clients: AsyncClient):
     r = await clients.get("/call/https://api.intercom.io/echo?per_page=5")
     assert r.status_code == 200, r.text
     d = r.json()
-    assert d["auth"] == "Bearer SEK"          # credential injected by treg
+    assert d["auth"] == "Bearer SEK"          # credential injected by stray
     assert d["query"]["per_page"] == "5"      # caller's real query preserved
 
 
@@ -91,7 +91,7 @@ async def test_completed_relay_closes_the_upstream_response(clients: AsyncClient
                 if body_chunks == 5:
                     five_chunks_sent.set()
 
-        token = clients.headers["X-Treg-Token"].encode("latin-1")
+        token = clients.headers["X-Stray-Token"].encode("latin-1")
         scope = {
             "type": "http",
             "asgi": {"version": "3.0", "spec_version": "2.3"},
@@ -102,7 +102,7 @@ async def test_completed_relay_closes_the_upstream_response(clients: AsyncClient
             "raw_path": b"/call/tracked/resource",
             "query_string": b"",
             "root_path": "",
-            "headers": [(b"host", b"registry"), (b"x-treg-token", token)],
+            "headers": [(b"host", b"registry"), (b"x-stray-token", token)],
             "client": ("127.0.0.1", 50000),
             "server": ("registry", 80),
         }
@@ -158,23 +158,23 @@ async def test_interrupted_relay_closes_the_upstream_response_once(clients: Asyn
         await tracked.aclose()
 
 
-async def test_control_infra_headers_and_treg_cookie_stripped(clients: AsyncClient):
+async def test_control_infra_headers_and_stray_cookie_stripped(clients: AsyncClient):
     await _register(clients, "sec", "https://api.sec.com")
     active_org = next(row["slug"] for row in (await clients.get("/orgs")).json() if row["active"])
     r = await clients.get(
         "/call/https://api.sec.com/echo",
         headers={
-            "X-Treg-Org": active_org, "ngrok-skip-browser-warning": "1", "X-Treg-Key-Protocol": "1",
+            "X-Stray-Org": active_org, "ngrok-skip-browser-warning": "1", "X-Stray-Key-Protocol": "1",
             "X-Forwarded-For": "1.2.3.4", "X-Forwarded-Proto": "https", "Via": "1.1 edge",
-            "X-Keep": "yes", "Cookie": "treg_session=SECRET; keep=1; treg_oauth_state=xyz",
+            "X-Keep": "yes", "Cookie": "stray_session=SECRET; keep=1; stray_oauth_state=xyz",
         },
     )
     h = r.json()["headers"]
-    for leak in ("x-treg-org", "ngrok-skip-browser-warning", "x-forwarded-for", "x-forwarded-proto", "via"):
+    for leak in ("x-stray-org", "ngrok-skip-browser-warning", "x-forwarded-for", "x-forwarded-proto", "via"):
         assert leak not in h, f"{leak} leaked upstream"
-    assert "x-treg-token" not in h     # our control header never leaks upstream
+    assert "x-stray-token" not in h     # our control header never leaks upstream
     assert h["x-keep"] == "yes"        # unrelated caller header preserved
-    assert h["cookie"] == "keep=1"     # treg's own cookies scrubbed, other cookies kept
+    assert h["cookie"] == "keep=1"     # stray's own cookies scrubbed, other cookies kept
 
 
 async def test_longest_prefix_wins(clients: AsyncClient):
@@ -196,24 +196,24 @@ async def test_ambiguous_host_409(clients: AsyncClient):
 
 async def test_encoded_slash_preserved_passthrough_form(clients: AsyncClient):
     await _register(clients, "npmreg2", "https://registry.npm2.test")
-    r = await clients.put("/call/https://registry.npm2.test/@superdesign%2ftreg", content=b"{}")
+    r = await clients.put("/call/https://registry.npm2.test/@apeiron-tech%2fstray", content=b"{}")
     assert r.status_code == 200, r.text
-    assert r.json()["raw_path"].endswith("/@superdesign%2ftreg")
+    assert r.json()["raw_path"].endswith("/@apeiron-tech%2fstray")
 
 
-async def test_treg_marks_its_own_call_errors(clients: AsyncClient):
-    """A caller cannot otherwise tell treg's 404 ("no tool registered for that host") from the
-    vendor's own 404 — both are a status and some JSON. `X-Treg-Error` is the distinction the local
+async def test_stray_marks_its_own_call_errors(clients: AsyncClient):
+    """A caller cannot otherwise tell stray's 404 ("no tool registered for that host") from the
+    vendor's own 404 — both are a status and some JSON. `X-Stray-Error` is the distinction the local
     proxy needs to explain a failure without ever rewriting a real vendor response. It is only ever
     ADDED: the status and body are unchanged."""
     r = await clients.get("/call/https://api.nobody-registered.com/thing")
     assert r.status_code == 404
-    assert r.headers.get("x-treg-error") == "1"
+    assert r.headers.get("x-stray-error") == "1"
     assert r.json()["detail"]                       # the original body is untouched
 
     await _register(clients, "marked", "https://api.marked.com")
     ok = await clients.get("/call/https://api.marked.com/echo")
-    assert ok.status_code == 200 and "x-treg-error" not in ok.headers   # a real relay is not tagged
+    assert ok.status_code == 200 and "x-stray-error" not in ok.headers   # a real relay is not tagged
 
     other = await clients.get("/tools/by-name/ghost")                   # not a /call/ path
-    assert other.status_code == 404 and "x-treg-error" not in other.headers
+    assert other.status_code == 404 and "x-stray-error" not in other.headers

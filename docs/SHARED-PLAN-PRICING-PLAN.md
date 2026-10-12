@@ -9,11 +9,11 @@
 | Real credits (Hunter: $49 / 2,000) | vendor price ÷ credits. Exists today, unchanged |
 | A monthly request cap ($10 / 10,000) | fee ÷ cap. Same arithmetic, also effectively exists |
 | A rate limit only ($49.99 at 75 req/min) | fee ÷ theoretical max is the FLOOR; the real price sits above it at a stated break-even |
-| Unlimited | no anchor, so a treg-set price with the break-even printed next to it |
+| Unlimited | no anchor, so a stray-set price with the break-even printed next to it |
 | All flat-fee rows | reviewed monthly against our own call counts |
 
 The honesty rule that makes the last two rungs defensible: we never claim these are vendor prices.
-The vendor has no per-call price. What treg sells on those rungs is its own service — holding the
+The vendor has no per-call price. What stray sells on those rungs is its own service — holding the
 subscription, custody of the key, sharing the rate limit — at a **published** rate whose fee and
 break-even volume are printed beside it. And the price is not only cost recovery: on a shared key it
 is congestion control. At $0, one looping agent exhausts the rate limit for every team at once.
@@ -22,7 +22,7 @@ is congestion control. At $0, one looping agent exhausts the rate limit for ever
 
 The first design had a new cost type, new `cost_view` logic, and a new fx.yaml section feeding it.
 Reading the code first killed most of that: **a flat-fee provider can be modelled as a credit
-provider whose credit is "one call on treg's shared plan."**
+provider whose credit is "one call on stray's shared plan."**
 
 - fx.yaml already re-prices a whole provider from one rate line
 - endpoints already carry `{type, value, currency: credit}` costs
@@ -32,18 +32,18 @@ provider whose credit is "one call on treg's shared plan."**
 So Alpha Vantage becomes: every endpoint costs 1 credit, and fx.yaml says the credit is worth
 $0.001, with a basis line reading like the PDL one does today:
 
-    alphavantage: {usd: 0.001, kind: treg_shared_plan,
-      basis: "treg shared-plan rate. Vendor sells flat $49.99/mo at 75 req/min (= 3.24M calls/mo
+    alphavantage: {usd: 0.001, kind: stray_shared_plan,
+      basis: "stray shared-plan rate. Vendor sells flat $49.99/mo at 75 req/min (= 3.24M calls/mo
               capacity; floor $0.0000154/call). Rate set for break-even at 50k calls/mo (1.5%
               utilization); reviewed monthly against audited volume",
       source: "https://www.alphavantage.co/premium/", checked: "2026-08-13"}
 
 What actually changes:
 
-1. **A `kind: treg_shared_plan` marker** on such fx.yaml entries, and the block documented. It is
-   what separates "the vendor's rate card" from "treg's rate card" everywhere downstream.
+1. **A `kind: stray_shared_plan` marker** on such fx.yaml entries, and the block documented. It is
+   what separates "the vendor's rate card" from "stray's rate card" everywhere downstream.
 2. **The validator** learns the marker and requires a fee + break-even in the basis of any entry
-   carrying it. A treg-set price with no printed break-even is exactly the dishonesty this design
+   carrying it. A stray-set price with no printed break-even is exactly the dishonesty this design
    exists to avoid.
 3. **`price_drift` must skip these providers.** The drift detector compares our estimate against the
    provider's observed charge; a flat-fee provider reports no charge, and treating "no observed
@@ -100,7 +100,7 @@ one endpoint at a time, and no pricing model removes it.
 
 ## Order, with a stop after each
 
-1. fx.yaml `treg_shared_plan` convention + validator rules + ONE pilot entry (apollo or a market-data
+1. fx.yaml `stray_shared_plan` convention + validator rules + ONE pilot entry (apollo or a market-data
    provider), no endpoints repriced yet. **Stop for review.**
 2. The 429 billability fix, with tests that bill a 402→ no, 429 → no, 400 per_call → yes. **Stop.**
 3. The recovery report in reconcile, with a test on synthetic audit rows. **Stop.**
@@ -110,11 +110,11 @@ one endpoint at a time, and no pricing model removes it.
 
 ## What could go wrong, and where I would look first
 
-- **The marker not propagating.** If nothing downstream can tell a treg rate from a vendor rate, some
+- **The marker not propagating.** If nothing downstream can tell a stray rate from a vendor rate, some
   future surface will present our price as the vendor's. The validator rule and the basis wording are
-  the guard; a test should assert every `treg_shared_plan` entry names a fee and a break-even.
+  the guard; a test should assert every `stray_shared_plan` entry names a fee and a break-even.
 - **Double-charging a team on its own key.** Tier 2 is already unmetered, so a team bringing its own
   Alpha Vantage key must never see our shared-plan rate. Existing behaviour, but it gets a test,
-  because this is the first time a provider has a treg price AND an obvious own-key path.
+  because this is the first time a provider has a stray price AND an obvious own-key path.
 - **The recovery loop becoming automatic pricing.** It stays a report. An auto-adjusting price would
   surprise agents mid-session and turn a published rate card into a moving target.

@@ -14,7 +14,7 @@ export default { setup: useDashboard }
             <div class="exrow"><span v-for="(ex,exi) in copyTool.examples" :key="exi" class="exchip" :class="{on:exPath===ex.path}" @click="pickEx(ex)"><span class="m">{{ex.method||'GET'}}</span>{{ex.note||ex.path}}</span></div>
           </div>
           <pre class="code" v-html="snip.html"></pre>
-          <div style="margin-top:12px;display:flex;gap:10px;align-items:center"><button class="btn primary" @click="copy(snip.text)">⧉ {{copied?'Copied!':'Copy'}}</button><span class="sub" style="font-size:12px;margin:0"><template v-if="myToken">Your token is included - paste and run.</template><template v-else><span class="mono">$TREG_TOKEN</span> is a placeholder - set it to your token.</template></span></div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center"><button class="btn primary" @click="copy(snip.text)">⧉ {{copied?'Copied!':'Copy'}}</button><span class="sub" style="font-size:12px;margin:0"><template v-if="myToken">Your token is included - paste and run.</template><template v-else><span class="mono">$STRAY_TOKEN</span> is a placeholder - set it to your token.</template></span></div>
         </div></div>
     </div>
 </template>

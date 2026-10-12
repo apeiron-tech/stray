@@ -72,9 +72,9 @@ async def test_meta_reports_the_released_version(clients: AsyncClient):
 
     Both are kept because they answer different questions."""
     body = (await clients.get("/meta")).json()
-    assert body["treg_version"], "a release check must be able to read the version from outside"
-    assert body["treg_version"] != body["app_version"], "these are different questions"
-    assert body["treg_version"][0].isdigit(), f"expected a version, got {body['treg_version']!r}"
+    assert body["stray_version"], "a release check must be able to read the version from outside"
+    assert body["stray_version"] != body["app_version"], "these are different questions"
+    assert body["stray_version"][0].isdigit(), f"expected a version, got {body['stray_version']!r}"
 
 
 def test_the_pool_cannot_outnumber_postgres_during_a_deploy():
@@ -85,7 +85,7 @@ def test_the_pool_cannot_outnumber_postgres_during_a_deploy():
 
     Counts EVERY primary pool, not just the API's: splitting one pool into three is a fine way to protect
     the API and a fine way to walk back into this outage, and only the sum tells the two apart."""
-    from treg.infra import db
+    from stray.infra import db
 
     assert db.POOL_SPECS, "expected explicit pool bounds for the postgres path"
     per_instance = db.connection_budget(workers=1)["per_instance"]
@@ -101,7 +101,7 @@ def test_migrations_fail_fast_rather_than_queueing_the_world():
     migrations so a contended deploy fails cleanly instead."""
     from importlib.resources import files
 
-    env_src = files("treg").joinpath("alembic", "env.py").read_text()
+    env_src = files("stray").joinpath("alembic", "env.py").read_text()
     assert "lock_timeout = '5s'" in env_src
     assert "statement_timeout = '120s'" in env_src
     assert env_src.index("lock_timeout = '5s'") < env_src.index("run_sync(_run_migrations)"), (

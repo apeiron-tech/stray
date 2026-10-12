@@ -10,7 +10,7 @@ provider**.
 
 ## Read this first: the category does not price the way our others do
 
-Every existing treg provider is **credit-priced**. Hunter sells 2,000 credits for $49, an endpoint
+Every existing stray provider is **credit-priced**. Hunter sells 2,000 credits for $49, an endpoint
 declares how many credits it costs, and `fx.yaml` turns that into dollars per call. That is how the
 catalogue produces an honest per-call price.
 
@@ -33,8 +33,8 @@ exactly the "$10/month for unlimited" case, and it forces a decision we have not
 
 ### The three options, and what each costs us
 
-**A. Price them at $0 (`type: free`).** Once treg pays the monthly fee, the marginal cost of one more
-call really is zero, so this is *honest*. It also means treg absorbs the subscription with no
+**A. Price them at $0 (`type: free`).** Once stray pays the monthly fee, the marginal cost of one more
+call really is zero, so this is *honest*. It also means stray absorbs the subscription with no
 per-call recovery — at 0% margin that is a straight monthly expense, roughly **$150–250/mo** for a
 reasonable spread of the providers above.
 
@@ -44,7 +44,7 @@ number in the catalogue that is not traceable to a provider's own rate card, whi
 that has kept our pricing defensible.
 
 **C. Leave them unpriced and own-key only.** They join the 55: callable with the user's own key,
-never on treg's. Costs nothing, and the category still has real value — but the headline feature
+never on stray's. Costs nothing, and the category still has real value — but the headline feature
 ("no key of your own") would not apply to it.
 
 **My read:** start with **C** for the expensive ones and **A** for one or two cheap, high-value
@@ -57,7 +57,7 @@ The one clean exception is below.
 
 ## The shortlist
 
-Ordered by how well they fit treg, not by how good the data is.
+Ordered by how well they fit stray, not by how good the data is.
 
 ### Tier 1 — fits the model cleanly
 
@@ -75,7 +75,7 @@ The strongest data of the group. Note the 2026 rebrand to Massive; the domain mo
 
 **3. Finnhub** — real-time quotes, company fundamentals, news sentiment, alternative data. Free tier
 is the most generous of any (60 calls/min). Auth: `X-Finnhub-Token` header or `?token=`. Free tier is
-non-commercial, which we must read carefully before serving it on treg's key.
+non-commercial, which we must read carefully before serving it on stray's key.
 
 **4. Twelve Data** — equities, forex, crypto, 800 free calls/day. Auth `?apikey=`. Uses the word
 "credits" but sells them per minute, not as a pool, so it is still a flat fee.
@@ -90,7 +90,7 @@ Auth `?apikey=`. Distinct from the quote-focused ones: this is the fundamentals 
 Fills *global + historical*, which the US-centric ones do not.
 
 **8. Marketstack** — cheapest at $9.99/mo, global stock prices, simple. Auth `?access_key=`. A good
-low-cost candidate if we do pick one to serve on treg's key.
+low-cost candidate if we do pick one to serve on stray's key.
 
 **9. Tiingo** — equities, news, fundamentals, 30+ years of history. $30/mo. Auth
 `Authorization: Token <key>` header. Free tier limited to 500 symbols/month.
@@ -157,8 +157,8 @@ confirmed:
    and it needs `token_verify_field` rather than a status check. **Alpha Vantage is a known offender
    here** — it commonly answers 200 with a note.
 2. **A free probe endpoint** for each that a valid key passes and an invalid key fails.
-3. **Whether the free tier's terms permit serving it through treg** — Finnhub's free tier is
-   explicitly non-commercial, and that matters if treg's key is the one being used.
+3. **Whether the free tier's terms permit serving it through stray** — Finnhub's free tier is
+   explicitly non-commercial, and that matters if stray's key is the one being used.
 
 None of that is research; it is the live test, and it is the next step once you have picked.
 
@@ -169,7 +169,7 @@ None of that is research; it is the live test, and it is the next step once you 
 1. **A, B or C** on pricing — the structural question, and it applies to the whole category.
 2. **Which of the ten** to take forward, and how many.
 3. Whether to pay for any subscription at all right now, or ship the category **own-key only** and
-   add treg-key serving later once there is demand to justify the spend.
+   add stray-key serving later once there is demand to justify the spend.
 
 Sources: the providers' own pricing pages, plus 2026 comparison write-ups; every price above is from
 the vendor's published rate card except Finnhub's range, which came from a third-party summary and

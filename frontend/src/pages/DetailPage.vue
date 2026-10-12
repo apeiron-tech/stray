@@ -46,7 +46,7 @@ export default { setup: useDashboard }
               <pre class="code" style="white-space:pre-wrap;max-height:34vh;overflow:auto">{{detailPrompt}}</pre>
               <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                 <button class="btn primary" @click="copyDetail(detailPrompt,'prompt')">⧉ {{detailCopied==='prompt'?'Copied!':'Copy prompt'}}</button>
-                <button class="btn" @click="copyDetail('treg skill install '+detail.name,'cli')" title="Just the CLI command, if treg is already set up">{{detailCopied==='cli'?'✓ copied':'treg skill install '+detail.name}}</button>
+                <button class="btn" @click="copyDetail('stray skill install '+detail.name,'cli')" title="Just the CLI command, if stray is already set up">{{detailCopied==='cli'?'✓ copied':'stray skill install '+detail.name}}</button>
               </div>
             </div>
             <div v-if="(detailData.tools||[]).length || (detailData.secrets||[]).length" style="max-width:860px;margin:0 0 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -88,9 +88,9 @@ export default { setup: useDashboard }
               </template>
               <template v-if="detailData.cli">
                 <div class="lbl">CLI</div>
-                <p class="sub" style="margin:2px 0 12px"><span class="mono">treg run {{detail.name}} -- &lt;args&gt;</span>
+                <p class="sub" style="margin:2px 0 12px"><span class="mono">stray run {{detail.name}} -- &lt;args&gt;</span>
                   <span class="chip ok" v-if="detailData.server_runnable" title="Runs on the server — the key is injected there, never on a member's machine">server</span>
-                  <span class="chip" v-else title="Local only — this CLI authenticates from the member's own machine (treg run --local)">local-only</span>
+                  <span class="chip" v-else title="Local only — this CLI authenticates from the member's own machine (stray run --local)">local-only</span>
                   <span class="chip run" v-if="!detailData.cli.enabled" title="The owner has local runs switched off for this tool">⌘ run off</span>
                 </p>
                 <template v-if="(detailData.cli.deny||[]).length">
@@ -100,7 +100,7 @@ export default { setup: useDashboard }
               </template>
               <template v-if="detailParentSkill">
                 <div class="lbl">From skill</div>
-                <p style="margin:2px 0 0"><a :href="'/app/skills/'+encodeURIComponent(detailParentSkill.name)" @click.prevent="openDetail('skill',detailParentSkill.name)">▚ {{detailParentSkill.name}}</a> — the recipe + files that registered this tool.</p>
+                <p style="margin:2px 0 0"><a :href="'/app/skills/'+encodeURIComponent(detailParentSkill.name)" @click.prevent="openDetail('skill',detailParentSkill.name)">▛ {{detailParentSkill.name}}</a> — the recipe + files that registered this tool.</p>
               </template>
             </div>
           </template>

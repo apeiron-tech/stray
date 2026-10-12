@@ -2,62 +2,62 @@
 title: The API — the only brain (FastAPI)
 status: shipped
 sources:
-  - src/treg/routers/media.py
-  - src/treg/web/sitetrack.js
-  - src/treg/api.py
-  - src/treg/bootstrap_handlers.py
-  - src/treg/bootstrap_http.py
-  - src/treg/call_surface.py
-  - src/treg/caller_metadata.py
-  - src/treg/client_identity.py
-  - src/treg/application/auth.py
-  - src/treg/application/provider_resources.py
-  - src/treg/application/call/access.py
-  - src/treg/application/call/authorize.py
-  - src/treg/application/call/idempotency.py
-  - src/treg/application/call/intake.py
-  - src/treg/application/call/resolve.py
-  - src/treg/application/call/reserve.py
-  - src/treg/application/call/settle.py
-  - src/treg/application/call/evidence.py
-  - src/treg/application/call/service.py
-  - src/treg/application/call/types.py
-  - src/treg/infra/upstream/relay.py
-  - src/treg/application/connect.py
-  - src/treg/application/onboard/__init__.py
-  - src/treg/application/referrals.py
-  - src/treg/application/signup.py
-  - src/treg/routers/__init__.py
-  - src/treg/routers/activity.py
-  - src/treg/routers/admin.py
-  - src/treg/routers/auth.py
-  - src/treg/routers/auth_helpers.py
-  - src/treg/routers/billing.py
-  - src/treg/routers/call.py
-  - src/treg/routers/catalog.py
-  - src/treg/routers/connections.py
-  - src/treg/routers/onboard.py
-  - src/treg/routers/orgs.py
-  - src/treg/routers/provider_resources.py
-  - src/treg/routers/api_keys.py
-  - src/treg/routers/resources.py
-  - src/treg/routers/referrals.py
-  - src/treg/routers/signup_cookies.py
-  - src/treg/routers/web.py
-  - src/treg/domain/identity/access.py
-  - src/treg/domain/identity/api_keys.py
-  - src/treg/domain/governance/teams.py
-  - src/treg/domain/governance/access.py
-  - src/treg/domain/governance/budgets.py
-  - src/treg/domain/governance/publicdemo.py
-  - src/treg/domain/governance/usage.py
-  - src/treg/domain/identity/mcp_oauth.py
-  - src/treg/domain/identity/session.py
-  - src/treg/timeutil.py
-  - src/treg/domain/catalog/store.py
-  - src/treg/email.py
-  - src/treg/runner.py
-  - src/treg/ratestore.py
+  - src/stray/routers/media.py
+  - src/stray/web/sitetrack.js
+  - src/stray/api.py
+  - src/stray/bootstrap_handlers.py
+  - src/stray/bootstrap_http.py
+  - src/stray/call_surface.py
+  - src/stray/caller_metadata.py
+  - src/stray/client_identity.py
+  - src/stray/application/auth.py
+  - src/stray/application/provider_resources.py
+  - src/stray/application/call/access.py
+  - src/stray/application/call/authorize.py
+  - src/stray/application/call/idempotency.py
+  - src/stray/application/call/intake.py
+  - src/stray/application/call/resolve.py
+  - src/stray/application/call/reserve.py
+  - src/stray/application/call/settle.py
+  - src/stray/application/call/evidence.py
+  - src/stray/application/call/service.py
+  - src/stray/application/call/types.py
+  - src/stray/infra/upstream/relay.py
+  - src/stray/application/connect.py
+  - src/stray/application/onboard/__init__.py
+  - src/stray/application/referrals.py
+  - src/stray/application/signup.py
+  - src/stray/routers/__init__.py
+  - src/stray/routers/activity.py
+  - src/stray/routers/admin.py
+  - src/stray/routers/auth.py
+  - src/stray/routers/auth_helpers.py
+  - src/stray/routers/billing.py
+  - src/stray/routers/call.py
+  - src/stray/routers/catalog.py
+  - src/stray/routers/connections.py
+  - src/stray/routers/onboard.py
+  - src/stray/routers/orgs.py
+  - src/stray/routers/provider_resources.py
+  - src/stray/routers/api_keys.py
+  - src/stray/routers/resources.py
+  - src/stray/routers/referrals.py
+  - src/stray/routers/signup_cookies.py
+  - src/stray/routers/web.py
+  - src/stray/domain/identity/access.py
+  - src/stray/domain/identity/api_keys.py
+  - src/stray/domain/governance/teams.py
+  - src/stray/domain/governance/access.py
+  - src/stray/domain/governance/budgets.py
+  - src/stray/domain/governance/publicdemo.py
+  - src/stray/domain/governance/usage.py
+  - src/stray/domain/identity/mcp_oauth.py
+  - src/stray/domain/identity/session.py
+  - src/stray/timeutil.py
+  - src/stray/domain/catalog/store.py
+  - src/stray/email.py
+  - src/stray/runner.py
+  - src/stray/ratestore.py
 related:
   - interface/cli.md
   - architecture/proxy-model.md
@@ -104,11 +104,11 @@ quota, 403 sandbox. Not metered. See [media](../architecture/media.md).
 Its default `source=auto` uses a connected Fish account for the Fish voice inventory and otherwise
 returns the team's platform-created rows. `source=platform` always returns the durable rows owned by
 the organization; the dashboard's Team resources tab uses that explicit view so BYOK account objects
-are never presented as treg-owned team resources.
+are never presented as stray-owned team resources.
 Ordinary providers read the organization's local rows. For `provider=fishaudio&kind=voice`, a team
 Fish credential makes the same route relay Fish's `self=true` account list and normalize it to the
-local resource shape; without BYOK it returns only voices owned by that treg organization. The
-`X-Treg-Resource-Source` response header is `byok` or `platform`. The raw
+local resource shape; without BYOK it returns only voices owned by that stray organization. The
+`X-Stray-Resource-Source` response header is `byok` or `platform`. The raw
 `/call/fishaudio.voices.list` route remains a faithful BYOK-only upstream relay.
 
 ## Composition
@@ -120,13 +120,13 @@ HTTP call over this. The factory lifespan runs read-only `verify_db()` and creat
 `httpx.AsyncClient` at `app.state.http` (and `audit.drain()`s on shutdown). It also starts the Google Ads conversion uploader (`adsconv.worker`) as
 a background task, but only when `adsconv.enabled()` - see
 [ads-conversions](../architecture/ads-conversions.md).
-Content-driven provider companion backfills run in the explicit `python -m treg upgrade` release
-phase, outside every app role's lifespan. The default `python -m treg` entrypoint also provisions the
+Content-driven provider companion backfills run in the explicit `python -m stray upgrade` release
+phase, outside every app role's lifespan. The default `python -m stray` entrypoint also provisions the
 guarded local single-user identity before Uvicorn starts.
 
 ## Instagram authorization strategy
 
-`POST /oauth/start` keeps the same request shape. `TREG_OAUTH_REVIEW_PENDING` is the single operational
+`POST /oauth/start` keeps the same request shape. `STRAY_OAUTH_REVIEW_PENDING` is the single operational
 switch for incomplete reviews; provider-registry metadata maps its keys to fallback capabilities,
 conditional warnings, and method defaults. With both Instagram keys pending, `provider=instagram`
 uses the approved Facebook Page core flow. `capability=manage` selects direct Instagram Login, and
@@ -134,7 +134,7 @@ uses the approved Facebook Page core flow. `capability=manage` selects direct In
 removed, plain Connect first expands to Page messages and then returns to direct Instagram Login.
 The response returns capability-specific `connect_guidance`, so clients need no provider-specific
 review logic. Connection rows include authorization method and setup health.
-Catalog calls accept `X-Treg-Authorization-Method` to select one of an endpoint's declared methods;
+Catalog calls accept `X-Stray-Authorization-Method` to select one of an endpoint's declared methods;
 the header is an internal routing control and is stripped before the faithful upstream relay.
 
 Catalog calls can fail before relay with HTTP 428. Its `detail` object has a stable error code,
@@ -142,11 +142,11 @@ provider, endpoint id, required method, capability and scopes, explanation, CLI 
 dashboard action. This distinguishes a missing grant, missing resource, missing scope, and expired
 grant. See [instagram-oauth](../architecture/instagram-oauth.md).
 
-## WAF escape hatch - `X-Treg-Body-Encoding`
+## WAF escape hatch - `X-Stray-Body-Encoding`
 Some hosting edges (Cloudflare, including Render's) 403 any request whose **body** matches an
 injection signature - a skill recipe or a proxied `call` that legitimately carries SQL/HTML. The
 pure-ASGI `_BodyDecodeMiddleware` (registered via `app.add_middleware`) lets a client smuggle such a
-body past the edge: send it base64/gzip-encoded and set `X-Treg-Body-Encoding: base64` (or
+body past the edge: send it base64/gzip-encoded and set `X-Stray-Body-Encoding: base64` (or
 `gzip`, or `base64+gzip`). The middleware calls `_decode_request_body()` to restore the real bytes,
 fixes `content-length`, and hands the decoded body to routing - so both the Pydantic JSON endpoints
 (e.g. `POST /skills`) and the `/call` proxy (which relays `request.body()` upstream) see plaintext. A
@@ -158,28 +158,28 @@ only a real `http.disconnect`. If the client disconnects before the encoded body
 middleware skips decoding and replays each consumed partial-body message followed by that real
 disconnect.
 
-## `503 provider_capacity_unavailable` - treg's own account is out
+## `503 provider_capacity_unavailable` - stray's own account is out
 
-A metered (tier-4) call whose provider treg's own account cannot serve right now (a confirmed
+A metered (tier-4) call whose provider stray's own account cannot serve right now (a confirmed
 balance/quota signal, or the capacity sweep) is refused **before any hold** with a typed 503:
 `{"detail": {"error": "provider_capacity_unavailable", "provider", "endpoint_id", "resets_at" | null,
-"alternatives": [...], "message"}}`, `X-Treg-Error: 1`, no `X-Treg-Cost-Micro`, `refused_by="capacity"`
+"alternatives": [...], "message"}}`, `X-Stray-Error: 1`, no `X-Stray-Cost-Micro`, `refused_by="capacity"`
 on the audit row. The caller's own key for the provider is never affected (tiers 1/2 win first), and
-treg does not call an alternative on the caller's behalf - it names them. A lock set by the call
+stray does not call an alternative on the caller's behalf - it names them. A lock set by the call
 path or an exhausted reading from the sweep lets one call a minute through as a probe and lifts on
 its 2xx, so the `message` says a retry in a minute may succeed; otherwise it lasts until `resets_at`. Not the pool-saturation 503
-(`treg_saturated`), which is a different exit. See `architecture/proxy-model.md` § Platform capacity.
+(`stray_saturated`), which is a different exit. See `architecture/proxy-model.md` § Platform capacity.
 
-## `X-Treg-Served-Via` - this answer came through an overflow relay
+## `X-Stray-Served-Via` - this answer came through an overflow relay
 
 `GET/PATCH /orgs/{id}/settings` carries `platform_overflow` (default `true`); `false` opts the team out -
 such calls get the `503 provider_capacity_unavailable` below instead of a relay.
 
-`overflow:<aggregator>` on a metered call that treg served through a treg-owned aggregator account
+`overflow:<aggregator>` on a metered call that stray served through a stray-owned aggregator account
 because its own account for the provider was out. Same request, same vendor body shape (routes are
-verified for that), the caller paid the aggregator's real price (`X-Treg-Cost-Micro`), and
-`X-Treg-Call-Id` is the parent call's. Absent on every direct call. Off by default
-(`TREG_OVERFLOW_MODE`). See `architecture/proxy-model.md` § Overflow.
+verified for that), the caller paid the aggregator's real price (`X-Stray-Cost-Micro`), and
+`X-Stray-Call-Id` is the parent call's. Absent on every direct call. Off by default
+(`STRAY_OVERFLOW_MODE`). See `architecture/proxy-model.md` § Overflow.
 
 The same fact reaches surfaces that cannot read headers: the MCP `call` result (team and directory
 servers alike) carries `served_via: "overflow:<aggregator>"` and a one-line `hint` naming the relay
@@ -187,33 +187,33 @@ and the exhausted provider, and `GET /catalog/endpoints/{id}` / `catalog_get` ca
 `overflow_price_usd`, `overflow_price_unit` and `overflow_via` on a platform-eligible endpoint the
 deployment can relay - the price a "free" endpoint may actually bill, stated before the call.
 
-## `X-Treg-Smoothed` - the call waited for treg's own rate limit
+## `X-Stray-Smoothed` - the call waited for stray's own rate limit
 
 On platform calls, including owned free polling: `wait=<ms>` when the call was spaced behind other callers on the
 same platform key, `retry=1` when a burst-429 with a short `retry-after` was re-sent once (body-less GET/HEAD only). Informational; the status and body are the provider's. See
 `architecture/proxy-model.md` § Burst smoothing.
 
-## `X-Treg-Error` - whose refusal is this?
-`bootstrap_handlers._mark_treg_own_errors` tags treg's **own**
-refusals on `/call/`, `/catalog/call/` and `/table/` paths with `X-Treg-Error: 1`, then answers exactly as
+## `X-Stray-Error` - whose refusal is this?
+`bootstrap_handlers._mark_stray_own_errors` tags stray's **own**
+refusals on `/call/`, `/catalog/call/` and `/table/` paths with `X-Stray-Error: 1`, then answers exactly as
 before - the status and body
 are untouched, and a client that ignores the header sees what it always saw. Without it a caller cannot
-tell treg's 404 ("no tool registered for that host") from the vendor's own 404: both are a status and
+tell stray's 404 ("no tool registered for that host") from the vendor's own 404: both are a status and
 some JSON. The [local proxy](../architecture/local-proxy.md) needs that distinction to explain a failure
 without ever rewriting a real vendor response. `application.call` failures carry a mechanism `kind`
 and separately mapped `blame`; the compatibility header remains the literal `1`.
 
-`routers.auth_helpers.require_managed_cli` also sets `X-Treg-Error: 1` on its HTTP 426
-update response. Released CLIs therefore identify this as a treg refusal instead of a provider
+`routers.auth_helpers.require_managed_cli` also sets `X-Stray-Error: 1` on its HTTP 426
+update response. Released CLIs therefore identify this as a stray refusal instead of a provider
 response. The response remains `Cache-Control: no-store` and precedes any login or team mutation.
 
-`response_buffer_limit` is a treg-attributed 502 with a structured `detail.error` of the same
+`response_buffer_limit` is a stray-attributed 502 with a structured `detail.error` of the same
 name. It means response evidence exceeded the 8 MiB settlement buffer before delivery; the new
 call is not charged and its hold/idempotency claim is released. On an endpoint declaring
 `spooled_response` the same error means the body passed `spool_max_bytes` (64 MiB) or the
 process's concurrent spool budget; the latter is temporary (its message says so) and clears as other
 calls finish, so unlike an oversized answer it is worth retrying. A successful spooled
-answer carries the usual exact `X-Treg-Cost-Micro`, but it is not stored for idempotent replay: a
+answer carries the usual exact `X-Stray-Cost-Micro`, but it is not stored for idempotent replay: a
 retry with the same key calls the provider again and is charged again. Authorized free final GET fetches
 needing no body evidence stream without that limit and return zero cost; their retries read the
 provider again. See `proxy-model.md` for the eligibility and close-once lifecycle.
@@ -224,7 +224,7 @@ falls through and finds no usable marketplace credential. A genuine URL-passthro
 with the names of the colliding usable tools and the explicit `/call/<name>/<path>` escape hatch.
 
 ## Auth
-`require_member()` reads the `X-Treg-Token` header, hashes it
+`require_member()` reads the `X-Stray-Token` header, hashes it
 (`crypto.hash_token`), looks up the
 `Membership` by `token_hash`, and returns a `Caller` (`membership, user, org` + `org_id`/`email`/`role`);
 401 on missing/invalid. Every scoped endpoint depends on it **except** `POST /users` + `POST
@@ -264,14 +264,14 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   account can claim credit once when creating an eligible team; old accounts cannot reclaim it.
   The dashboard/CLI login doors do NOT go
   through it (they create the user only, no auto org). Both this door and `create_org` read the
-  first-party `treg_ad` cookie (`_ad_attribution_from`) and, when conversion tracking is enabled,
+  first-party `stray_ad` cookie (`_ad_attribution_from`) and, when conversion tracking is enabled,
   stamp `Org.ad_gclid`/`ad_click_id_type`/`ad_landing`/`ad_click_at` on the new org when present - see
   [ads-conversions](../architecture/ads-conversions.md).
   `create_org` (`POST /orgs`, `require_identity` so a
   zero-org user can make their first team; HTTP 403 when already owning 10 teams) + `list_orgs` (`GET /orgs`,
   each org carries a `tool_count` - one grouped query - so the dashboard can land on the org with tools;
-  its `active` flag follows `require_member`'s precedence - per-org membership token, else `X-Treg-Org`,
-  else a team-pinned identity token's own `org` claim - so `treg login --token <pinned key>` lands on the
+  its `active` flag follows `require_member`'s precedence - per-org membership token, else `X-Stray-Org`,
+  else a team-pinned identity token's own `org` claim - so `stray login --token <pinned key>` lands on the
   baked-in team instead of the caller's first membership);
   invites via `create_invite` (`POST /orgs/{id}/invites`, admin+) → one-time code (**emailed** via
   `email.send_invite`, best-effort, along with a separate inbox-only `email_token` sign-in link - the
@@ -312,7 +312,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   (`GET`) and `delete_deny_rule` (`DELETE …/{rule_id}`, 404 across orgs). Enforced on the proxy and
   both run tiers - see [proxy-model](../architecture/proxy-model.md). `GET /orgs/{id}/policy/cli-deny`
   (admin+, read-only) reports each CLI tool's effective argv deny patterns with their source (skill
-  `treg.json` vs catalog) so the Policy screen shows every deny layer in one place.
+  `stray.json` vs catalog) so the Policy screen shows every deny layer in one place.
 - **Usage metering + caps** (usage-metering v1, `docs/USAGE-METERING-PLAN.md`): `org_usage`
   (`GET /orgs/{id}/usage?days=`, admin+) rolls up `CallRecord` + `RunRecord` since the window start into
   **by-user** (with a `call`/`local_run`/`server_run` split), **by-tool**, **by-day**, and totals - pure
@@ -334,7 +334,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
 - **Super-admin (cross-tenant, `require_superadmin`):** `/admin/stats|orgs|orgs/{id}|users|tools|calls|
   errors|health` (reads - `errors` is failed calls across every credential tier with captured,
   admin-only request/response evidence, supports a `tier` filter, and withholds evidence past the
-  14-day retention window, which the `treg-worker admin purge-evidence` cron blanks; see [super-admin](../architecture/super-admin.md))
+  14-day retention window, which the `stray-worker admin purge-evidence` cron blanks; see [super-admin](../architecture/super-admin.md))
   + `/admin/users/{id}/superadmin|suspend`, `DELETE /admin/users/{id}`,
   `/admin/orgs/{id}/suspend`, `DELETE /admin/orgs/{id}` (Phase-2). See
   [super-admin](../architecture/super-admin.md).
@@ -357,30 +357,30 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   - **No SSRF at registration.** `_require_public_base_url` (reusing `health.safe_webhook_url`) rejects a
     `base_url` pointing at loopback / private / link-local / cloud-metadata hosts - including numeric IP
     encodings (decimal/hex/octal/short forms) - on `create_tool`, `update_tool`, and each imported skill
-    tool, so a member can't turn `treg call` into a request to an internal address. The proxy also
+    tool, so a member can't turn `stray call` into a request to an internal address. The proxy also
     **re-resolves** the host at call time (`health.host_is_public`) to defeat DNS rebinding - see
     [proxy-model](../architecture/proxy-model.md).
-- **Local runs (`treg run --local`, see [local-run](../architecture/local-run.md)):** `grant_local_run`
+- **Local runs (`stray run --local`, see [local-run](../architecture/local-run.md)):** `grant_local_run`
   (`POST /tools/{name}/grant`) is the one audited, owner-opt-in exception to "values are never returned" -
   member+ only (a viewer may call but not extract a value). It matches the catalog profile
   (`providers.match_skill`), server-side deny-checks the argv, renders the credential (oauth → leaf only),
   and writes a synchronous `GRANT`/`DENY` audit row (argv redacted of key-shaped tokens by `_redact_argv`).
   **Runner-proof gate:** returning a secret the caller does **not** own (a shared-key tool they may run but
-  not read) requires the header `X-Treg-Run-Proof` to equal `TREG_RUN_PROOF` - the value held only by the
-  isolated `treg-run` runner, which the member's own uid can't read. A caller who owns the injected secret
+  not read) requires the header `X-Stray-Run-Proof` to equal `STRAY_RUN_PROOF` - the value held only by the
+  isolated `stray-run` runner, which the member's own uid can't read. A caller who owns the injected secret
   (or is an admin) skips the gate. On refusal a `DENY` audit row is written and the grant is 403'd, so a
   direct member call can never read a teammate's key value. The grant response also carries
   **`redact_output`** (true exactly when the caller doesn't own the key, i.e. the runner-proof case) - the
   client then scrubs the injected value from the CLI's output (see [local-run](../architecture/local-run.md)).
   `report_local_run` (`POST /tools/{name}/run-report`) takes the client's verdict enum (never raw output);
   `credential_invalid` marks the injected secret(s) invalid via the health fields, skipping `param` kind.
-- **Server runs (`treg run --server`):** `POST /run` accepts `{tool, args, timeout_s}` and
+- **Server runs (`stray run --server`):** `POST /run` accepts `{tool, args, timeout_s}` and
   executes the org-scoped tool's `Tool.cli` profile through `runner.run_tool`. Secrets enter a
   scrubbed child environment, argv is an array, and the process gets its own temporary home.
   A profile is server-runnable without local-run opt-in, but tool/project ACL, deny rules, member
   usage caps, global/per-user concurrency limits and the executable allowlist still apply.
   `runner.resolve_exec_bin` is shared by validation and execution; allowed commands come from
-  the catalog or `TREG_RUN_ALLOWED_BINS`. The sandbox cannot run commands.
+  the catalog or `STRAY_RUN_ALLOWED_BINS`. The sandbox cannot run commands.
 
   The response is `{stdout, stderr, exit_code, timed_out}`; a nonzero child exit is a normal 200,
   startup/configuration errors are 4xx, and exhausted run slots return 429. `RunRecord.bundle_name`
@@ -390,21 +390,21 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   - **Resource-limit sandbox (`runner.py`, the DoS half of the server-run sandbox):** every server-run
     child is spawned with POSIX rlimits via a `preexec_fn` (`_spawn_preexec`/`_rlimit_preexec`) - a
     CPU-seconds cap, a max-file-size cap, and core dumps disabled (a core would spill the injected secret
-    to disk). Env-gated (`TREG_RUN_RLIMITS` on by default; `TREG_RUN_CPU_SECONDS`, `TREG_RUN_FSIZE_MB`),
+    to disk). Env-gated (`STRAY_RUN_RLIMITS` on by default; `STRAY_RUN_CPU_SECONDS`, `STRAY_RUN_FSIZE_MB`),
     a no-op where `resource` is unavailable. Deliberately **no** address-space or process-count cap - a
     virtual-memory cap crashes Go CLIs (gh/stripe/doctl) and `RLIMIT_NPROC` is per-uid, shared with the
     server. Full **filesystem/network** isolation needs a container deploy and is a planned follow-up.
-- **Meta:** `meta` (`GET /meta`, open) → `{public_url, github, google, app_version, treg_version,
+- **Meta:** `meta` (`GET /meta`, open) → `{public_url, github, google, app_version, stray_version,
   posthog_key/posthog_host, intercom_app_id, hub, referral}` for the dashboard. `referral` carries the
   two configured reward amounts so the top-bar entry can name them without `GET /referrals`. `hub`
-  is `TREG_HUB_ENABLED`, so the dashboard asks no hub route that could only answer 404. The last three are the opt-in
+  is `STRAY_HUB_ENABLED`, so the dashboard asks no hub route that could only answer 404. The last three are the opt-in
   third-party keys (analytics, support chat): empty on a deployment that didn't set them, so
   self-hosted pages load neither PostHog nor the Intercom Messenger. `intercom_app_id` is paired
   server-side with `intercom_secret`, which never leaves the server: `_intercom_user_hash` (HMAC-SHA256
   of the email, keyed by the secret) is added to `GET /auth/me` as `intercom_user_hash` - Intercom
   identity verification, so a third party who knows an email can't impersonate that user in chat.
 - **Provider catalog:** `providers_catalog` (`GET /providers.json`, open) → `{version, providers}` - the
-  catalog `treg upload` uses to detect env keys → tools; served so the CLI can refresh centrally. See
+  catalog `stray upload` uses to detect env keys → tools; served so the CLI can refresh centrally. See
   [env-import](env-import.md).
 - **Catalog discovery and inspection:** open routes use `catalog_store`; full matching, pricing,
   ranking and grouping rules live in [catalog](../architecture/catalog.md).
@@ -413,7 +413,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   |---|---|
   | `GET /catalog/platforms` | Non-empty platforms with capability/endpoint counts and providers, ordered by endpoint count; `providers` names every browsable vendor |
   | `GET /catalog/platforms/{slug}` | Capabilities, extended endpoints, dashboard domain rows (a row whose capability at least two providers serve there carries `compare`, its URL key) and provider metadata; an endpoint teams' agents have reviewed carries `reviews` (`architecture/feedback.md`: scored past five teams, quoted as early before), and every endpoint its `observed` calls (the same snapshot search ranks on); unknown slug is 404 |
-  | `GET /catalog/search?q=&limit=` | Ranked endpoint views, count/total and hints; default 25, maximum 100. Listed hub tools merge into the same ranking by score (see [hub](../architecture/hub.md)); a hub row's run hint is its own `treg call <id> --data` line, since it has no catalog row or provider key |
+  | `GET /catalog/search?q=&limit=` | Ranked endpoint views, count/total and hints; default 25, maximum 100. Listed hub tools merge into the same ranking by score (see [hub](../architecture/hub.md)); a hub row's run hint is its own `stray call <id> --data` line, since it has no catalog row or provider key |
   | `GET /catalog/find?q=` | Find tools for a described job: NDJSON stream of `candidates` then `judged` (verdict + kept rows with probabilities; a bare platform or provider name gets verdict `name` and its endpoints, unjudged; under `find_engine=v2` the recall is by job and the events add `units`, `reason`, `platform`, `engine`, and rows `fit_from` / `children_hidden`, see architecture/find.md); `&platform=<slug>` scopes recall and the keyword fallback (ranked among that shelf's rows, catalog-wide idf) and a bare provider name to that shelf (unknown slug is 404); rate limited per IP, 503 without a judge key |
   | `GET /catalog/providers/{service}` | Every tool one provider serves, by platform; a tool whose capability several providers serve on its platform carries `compare` (capability, URL key, provider count); reviewed endpoints carry `reviews`; unknown provider is 404 |
   | `GET /catalog/endpoints/{id}` | Endpoint, provider, capability siblings (each with `observed` and, where reviewed, `reviews`), call template, inline example and next-step hints; `observed_pending: true` when the observation cache had not read some of these endpoints yet (ask again shortly); `overflow_price_usd` / `overflow_price_unit` / `overflow_via` on the endpoint when the deployment can relay it |
@@ -439,7 +439,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   Unknown endpoint ids return `{error, hint, did_you_mean[]}`, using provider-local segment
   matching. Retired/broken entries remain inspectable with `status_note` and `superseded_by`,
   disappear from discovery, and return 410 on call/access checks. `platform_blocked` entries
-  remain discoverable for BYOK but cannot use treg's key.
+  remain discoverable for BYOK but cannot use stray's key.
 
   A platform access check normally estimates the default page size. Openmart is the provider-specific
   exception: its runnable catalog example is priced with the same whole-credit request formula used
@@ -454,7 +454,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
 - **Identity doors:** GitHub, Google and email OTP share first-proof user provisioning. They create
   a user without an automatic org; new users name their first team through onboarding or the CLI
   login picker. Suspended users are refused at every door, and so is any address on a domain listed
-  in `TREG_BLOCKED_EMAIL_DOMAINS` (the whole blocklist — nothing is blocked when it is unset;
+  in `STRAY_BLOCKED_EMAIL_DOMAINS` (the whole blocklist — nothing is blocked when it is unset;
   subdomains included): the OTP start and verify, both social callbacks, the emailed invite link,
   plus `POST /users`, `POST /orgs` and `POST /invites/accept`, all with the same 403 `this address
   cannot be used to sign in` the machine-identity guard uses. See
@@ -466,7 +466,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   - Email: `POST /auth/email/start` and `/verify`. Six-digit codes, attempt counts and per-email/
     per-IP start limits live in DB-backed `Ephemeral` state. `expose_dev_code` permits response/
     log disclosure only on guarded local SQLite; other deployments email the code. An email listed
-    in `TREG_FIXED_LOGIN_CODES` (an account with no inbox, such as a directory reviewer's demo
+    in `STRAY_FIXED_LOGIN_CODES` (an account with no inbox, such as a directory reviewer's demo
     account) is issued its configured code hash instead and nothing is sent; attempts, TTL and
     start limits are unchanged. Verification issues an identity token and session cookie.
   - Invite sign-in: the admin-visible invite code is join-only. An independent inbox-only
@@ -500,12 +500,12 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   `POST /onboarding/start` + `GET /onboarding` + `POST /onboarding/answer`; see [onboarding](onboarding.md).
 
   The shared dependencies resolve a membership token, a team Default key, a legacy identity bearer
-  plus `X-Treg-Org`, or a session cookie plus `X-Treg-Org`. Bootstrap credentials cannot access team
-  resources even when a caller supplies `X-Treg-Org`. Identity and session validation live in
+  plus `X-Stray-Org`, or a session cookie plus `X-Stray-Org`. Bootstrap credentials cannot access team
+  resources even when a caller supplies `X-Stray-Org`. Identity and session validation live in
   `domain.identity.session`; authorization belongs to `domain.identity.access`.
 
 - **Static (dashboard + tutorials):** `dashboard` (`GET /`, `FileResponse` + `Cache-Control: no-cache`),
-  `tutorial_js` (`GET /tutorial.js` - shared `window.TREG_TUTORIAL` + `hl()`), `tutorial_page`
+  `tutorial_js` (`GET /tutorial.js` - shared `window.STRAY_TUTORIAL` + `hl()`), `tutorial_page`
   (`GET /tutorial` - standalone CLI tutorial). The **dashboard tour** is a `StaticFiles(html=True)` mount
   at `/dashboard-tour/` (serves `web/tour/` - `tour.js`, the standalone `index.html`, and the WebP
   `img/`). **Package-generated front-end runtimes** are an `_ImmutableStatic` mount at `/vendor/` (serves
@@ -516,9 +516,9 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   agent-onboarding file (call protocol + discovery + auth + CLI + skills + doc links). See [dashboard](dashboard.md).
   `install_sh` (`GET /install.sh`, `{BASE}`-templated) serves the CLI installer (`web/install.sh`).
   `sitetrack_js` (`GET /sitetrack.js`, no-cache) serves `web/sitetrack.js` with `{POSTHOG_KEY}` /
-  `{POSTHOG_HOST}` templated from settings: the always-on first-party `treg_utm` first-touch cookie
+  `{POSTHOG_HOST}` templated from settings: the always-on first-party `stray_utm` first-touch cookie
   (utm_* + referring host, read by `_utm_attribution_from` / `_stamp_utm` in BOTH signup doors, `/users`
-  and `/orgs`), the first-touch `treg_landing` path cookie (read by the first-run onboarding as
+  and `/orgs`), the first-touch `stray_landing` path cookie (read by the first-run onboarding as
   ranking evidence) plus the PostHog bootstrap with pageviews ON. Loaded by every public page - landing,
   use-case pages, resources, tutorial, and the SPA - so analytics sees the visitor's first hop rather
   than the post-OAuth `/app` landing. Without a key the analytics half is inert (empty string).
@@ -527,7 +527,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   disabled, so unconfigured deployments do not collect advertising cookies. See
   [ads-conversions](../architecture/ads-conversions.md).
   `well_known_skills_index` (`GET /.well-known/skills/index.json`) + `well_known_skill_md`
-  (`GET /.well-known/skills/treg/SKILL.md`) advertise treg's own skill under the agentskills.io
+  (`GET /.well-known/skills/stray/SKILL.md`) advertise stray's own skill under the agentskills.io
   convention, making **this host** a skill source with no registry in between (Hermes reads it
   directly). The index's `description` comes from the skill's frontmatter at request time via
   `_skill_frontmatter()` - never a second copy - and the SKILL.md route is the same `_serve_md` as
@@ -587,7 +587,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
     server-chosen fields only).
 - **Public demo token (publishable, call-only credential):** `create_public_token`
   (`POST /orgs/{id}/public-token`, owner-only) flips the org to `public_demo` and mints a **viewer-role**
-  token bound to a dedicated can't-log-in identity (`pub-<slug>@public-demo.treg.local`) - safe to print
+  token bound to a dedicated can't-log-in identity (`pub-<slug>@public-demo.stray.local`) - safe to print
   on a web page. Re-POSTing **rotates** (instant revocation of the old one); `delete_public_token`
   (`DELETE …`) revokes and lifts the lockdown. **Lockdown is centralized in the auth deps:** when
   `org.public_demo` and the role is below admin, `require_member` allows only `/call/*` + GET/HEAD/OPTIONS
@@ -603,7 +603,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   `delete_bundle` (cascades; it 409s if a bundle secret is referenced by a tool **outside** the bundle -
   now guarding both an outside HTTP binding **and** an outside `cli.inject` entry, matching
   `delete_secret`, so a local-run tool can't be left with a dangling secret_id), and `update_bundle`
-  (`PATCH /bundles/{id}`, creator/admin only) edits the bundle recipe; execution settings belong to `Tool.cli`. `_bundle_view`. **Folder importer** (dashboard mirror of `treg upload skills`):
+  (`PATCH /bundles/{id}`, creator/admin only) edits the bundle recipe; execution settings belong to `Tool.cli`. `_bundle_view`. **Folder importer** (dashboard mirror of `stray upload skills`):
   `analyze_skill_folder` (`POST /skills/analyze`) writes uploaded files to a temp dir and runs the CLI's
   own `skills.scan_skills`/`_classify` to classify each (recipe-only / contract / generated) **without**
   registering; `import_skill_folder` (`POST /skills/import`) scans + `build_payload`s + registers the
@@ -630,11 +630,11 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   `connect_guidance`; `oauth_callback`
   (`GET /oauth/callback`, open) exchanges the code and creates/updates the oauth secret; `oauth_status`
   polls. **Two modes** (`OAuthStartIn`): **BYO** (supply `client_id`/`client_secret`/`auth_uri`/
-  `token_uri`/`scopes`) or **REGISTRY** (supply `provider` + optional `capability`) where treg fills
+  `token_uri`/`scopes`) or **REGISTRY** (supply `provider` + optional `capability`) where stray fills
   everything from **its own approved OAuth app** - the marketplace. `oauth_providers_list`
-  (`GET /oauth/providers`) lists the providers treg holds an app for, each flagged `configured` (false
+  (`GET /oauth/providers`) lists the providers stray holds an app for, each flagged `configured` (false
   when this deployment hasn't set that provider's client credentials) and `metered` (true when the
-  provider's upstream bills treg's app per use AND this deployment charges for it - then
+  provider's upstream bills stray's app per use AND this deployment charges for it - then
   `billed_rates` carries the default prices, so the UI can show them before consent; see
   [auth-secrets](../architecture/auth-secrets.md) on `platform_billed`). In registry mode `oauth_start`
   reads the provider from `oauth_providers.get`, resolves scopes via `scopes_for(capability)`, and
@@ -649,7 +649,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   space-joined, sets `expires_at` (`oauth.expiry_of`), then `_autoprovision_provider_tool` binds the
   fresh credential to the provider's API as a callable tool (idempotent by (org, name); a token-kind
   provider gets an `env` header binding, an oauth one gets a `Bearer {access_token}` binding; a provider
-  needing treg's own second credential - Google Ads' developer token - also gets a **platform binding**,
+  needing stray's own second credential - Google Ads' developer token - also gets a **platform binding**,
   see [proxy-model](../architecture/proxy-model.md)) and `_record_connected_identity` best-effort asks
   the provider who connected. `_upsert_provider_extra_tools` is shared by this connect path and the
   startup backfill, so companions use the same `(org_id, name)` upsert and binding shape in both cases.
@@ -687,10 +687,10 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   dashboard's ready-made base64 blob - a blob is detected (strict-decodes to printable text with a `:`)
   and kept as-is instead of being double-encoded. See
   [auth-secrets](../architecture/auth-secrets.md). `set_extra_credential` (`POST /connections/{id}/extra-credential`) stores
-  the second credential a provider needs when treg does NOT hold it centrally (Tomba's `X-Tomba-Secret`)
+  the second credential a provider needs when stray does NOT hold it centrally (Tomba's `X-Tomba-Secret`)
   and finishes the tool with BOTH bindings - the primary half built by `_provider_bindings`, so it
   follows the provider's own auth shape (pasted key or OAuth) rather than assuming a bearer token. `revoke_connection` (`DELETE /connections/{id}`) deletes the credential and
-  cleans up: it removes the tool treg auto-provisioned for the provider and drops the dead binding from
+  cleans up: it removes the tool stray auto-provisioned for the provider and drops the dead binding from
   any user-built tool, leaving that tool's other bindings intact. `rename_connection`
   (`PATCH /connections/{id}`) renames a connected account, which is the tool name an agent calls
   (`instagram-2` → `instagram-acme`): the secret, the main tool and `{name}-{suffix}` companion tools
@@ -702,7 +702,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   change on a provider connection for the same reason. All `require_can_register`
   (member+). Helpers: `_owned_connection`, `_dig` (dotted-path walk).
 - **Health:** `run_health` (`POST /health/run`) → `health.run_all`; `get_health` (`GET /health`) now
-  returns `health._view(s)` plus a `needs_reconnect` flag (`health.needs_reconnect`) so a credential treg
+  returns `health._view(s)` plus a `needs_reconnect` flag (`health.needs_reconnect`) so a credential stray
   can't renew announces itself before it dies.
 - **The proxy:** `routers.call.call_tool` (`* /call/{rest:path}`) captures a framework-neutral
   `CallInput` → `application.call.service.execute_call` → `application.call.resolve` → (on a dotted 404,
@@ -710,7 +710,7 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   deny, per-user cap, then public-demo rate cap) → load secrets
   (+ `ensure_fresh`) → **`db.commit()` - the DB phase ends here; a call in flight holds no pooled
   connection** → `relay()` → `audit.record_call`. A pool that has no slot within 5 s answers
-  `503 {"treg_saturated": true}` + `Retry-After: 2` (`_pool_saturated`, the handler for
+  `503 {"stray_saturated": true}` + `Retry-After: 2` (`_pool_saturated`, the handler for
   `sqlalchemy.exc.TimeoutError`) rather than a 30 s wait and an anonymous 500. The adapter also calls
   `analytics.capture_fault(component="db_pool")`: saturation is a handled, typed response for the caller
   but remains an infrastructure fault for PostHog alerting. After identity resolution it also emits
@@ -741,8 +741,8 @@ validated before resolving the shared HTTP client. `/auth/logout` remains an HTT
   no team-balance entry is written. The relay preserves caller headers, so a caller-supplied provider
   key can still be charged by that provider.
 
-  A resolved catalog endpoint with an async descriptor adds one treg-owned response header:
-  `X-Treg-Async`, containing compact JSON for the already-known effective descriptor. The router
+  A resolved catalog endpoint with an async descriptor adds one stray-owned response header:
+  `X-Stray-Async`, containing compact JSON for the already-known effective descriptor. The router
   attaches it after catalog resolution and before Starlette begins streaming; no provider response
   bytes are read, parsed, or rewritten.
 
@@ -762,11 +762,11 @@ surfaced by `GET /tools` / `/bundles/{id}`).
 
 - **Legacy-host redirect:** `_LegacyHostRedirectMiddleware` 301s GET/HEAD marketing pages (`_REDIRECT_PATHS`)
   from the legacy hosts (`config.LEGACY_PUBLIC_HOSTS`) to the canonical `public_url` host (`treg.to`)
-  - but only for **anonymous** visitors: a `treg_session` cookie is host-scoped, so a signed-in
+  - but only for **anonymous** visitors: a `stray_session` cookie is host-scoped, so a signed-in
   browser (e.g. the invite flow landing on `/?invite_org=…`) is served in place. The auth entries
   `/auth/github`, `/auth/google` and GET `/oauth/authorize` (`_REDIRECT_ALWAYS`) redirect
   unconditionally and with a **302** (one-shot OAuth params must not be cached as permanent) -
-  each parks a host-scoped cookie (CSRF state / `treg_oauth_return`) that the flow's continuation
+  each parks a host-scoped cookie (CSRF state / `stray_oauth_return`) that the flow's continuation
   on `public_url` must be able to read. Everything else is served in
   place on BOTH hosts, forever: installed CLIs/skills hold tokens pointed at the legacy host, HTTP
   clients strip `Authorization` on a cross-host redirect, `/vendor-listing` is fetched by agents,
@@ -781,10 +781,10 @@ surfaced by `GET /tools` / `/bundles/{id}`).
   (SQLite's 64-bit INTEGER); `_host_of`/`_resolve_call` guard `urlsplit` `ValueError` (malformed
   `base_url`/passthrough) into a `422`/`400`.
 - **CSRF/redirect:** `auth_logout` rejects a cross-`Origin` request (forced-logout CSRF); `oauth_start`
-  pins `redirect_uri` to treg's own `/oauth/callback` (consent-phishing guard).
+  pins `redirect_uri` to stray's own `/oauth/callback` (consent-phishing guard).
 - **Destructive routes name their target:** `DELETE /orgs/{id}` requires `?confirm=<slug>` and 422s
   without it. It is irreversible and sits one path segment above every other org route, so any client
-  that normalizes `..` turns `DELETE /orgs/{id}/<anything>/..` into it - `treg org unpin ..` really
+  that normalizes `..` turns `DELETE /orgs/{id}/<anything>/..` into it - `stray org unpin ..` really
   did delete a team in testing, because httpx rewrites the path before the request is sent. Server-
   side validation cannot see that, so the defence is the confirmation, plus keeping user-supplied
   values out of path segments (the pin capability moved to a query parameter for the same reason).
@@ -808,7 +808,7 @@ why that widening must be kept out of the schema.
 
 ## OAuth + MCP routes
 
-treg is an OAuth authorization server for its own MCP endpoint. Detail in
+stray is an OAuth authorization server for its own MCP endpoint. Detail in
 `architecture/mcp-oauth.md`; this is the surface.
 
     GET  /.well-known/oauth-protected-resource      what guards /mcp/ (served at BOTH v1 lookup paths)
@@ -830,17 +830,17 @@ treg is an OAuth authorization server for its own MCP endpoint. Detail in
     GET  /connectors/claude                         setup, scope, pricing, data flow and removal docs
 
 The V2 metadata and transport routes are available only when
-`TREG_CLAUDE_CONNECTOR_ENABLED=true`. The metadata route returns 404 when V2 is disabled. New V2
+`STRAY_CLAUDE_CONNECTOR_ENABLED=true`. The metadata route returns 404 when V2 is disabled. New V2
 OAuth grants and catalog-only calls are also refused.
 
 ### Cost and asynchronous-task headers
 
-`X-Treg-Cost-Micro` reports the metered call's charge. On an async submission it reports the
-reservation (an idempotent replay reports 0 and echoes it as `X-Treg-Original-Cost-Micro`); the CLI labels it "generation reservation".
+`X-Stray-Cost-Micro` reports the metered call's charge. On an async submission it reports the
+reservation (an idempotent replay reports 0 and echoes it as `X-Stray-Original-Cost-Micro`); the CLI labels it "generation reservation".
 Final charge and task status come from `/calls` or `/calls/{ref}`.
 
 An owned free platform poll explicitly returns zero. Own-key/tool calls omit the header because
-their upstream charge is outside treg's billing. `X-Treg-Async` carries the effective catalog
+their upstream charge is outside stray's billing. `X-Stray-Async` carries the effective catalog
 descriptor, without parsing or rewriting the provider's response.
 
 ## `Idempotency-Key` on `/call/`
@@ -849,9 +849,9 @@ A caller-supplied label that makes a retry free. Sent on `/call/`, honoured only
 caller who omits it sees byte-identical behaviour to before the feature existed.
 
     Idempotency-Key: <caller's label>        → replay if we already answered this label
-    X-Treg-Idempotent-Replay: true           → on the response, when it came from store
-    X-Treg-Cost-Micro: 0                     → a replay charges nothing, so client sums stay true
-    X-Treg-Original-Cost-Micro: <charge>     → what the FIRST call cost (or reserved)
+    X-Stray-Idempotent-Replay: true           → on the response, when it came from store
+    X-Stray-Cost-Micro: 0                     → a replay charges nothing, so client sums stay true
+    X-Stray-Original-Cost-Micro: <charge>     → what the FIRST call cost (or reserved)
 
 Refusals: `422` when a key is reused for a different request (a caller bug, and answering it would
 hand them a response to a question they did not ask), `409` while the first call with that key is
@@ -864,28 +864,28 @@ Reasoning, storage rules and the concurrency guard: `architecture/money.md`.
 
 ## Caller tags, budgets and per-tag usage
 
-For a builder embedding treg in their own product and billing their own users. Design and rationale:
+For a builder embedding stray in their own product and billing their own users. Design and rationale:
 [money](../architecture/money.md).
 
 **Tag a call.** Set the header from your backend - never from a model, which will eventually omit it:
 
 ```
-X-Treg-Meta: customer=cust_8123, workspace=ws_9, feature=email-finder
+X-Stray-Meta: customer=cust_8123, workspace=ws_9, feature=email-finder
 ```
 
 Up to 5 pairs; keys `[a-z0-9_]{1,32}`, values ≤128 chars, whole header ≤512 bytes. Any violation is a
 **422 before anything is relayed** (so a malformed bag costs nothing and does not burn an
 `Idempotency-Key`). Values containing `@` are refused: tags land in an append-only ledger.
 
-Every relayed response on either call surface carries **`X-Treg-Call-Id`**, and so does every refusal
-treg raises before the relay, plus the saturation 503 (`_stamp_call_exit` mints it for the exits that never reach
+Every relayed response on either call surface carries **`X-Stray-Call-Id`**, and so does every refusal
+stray raises before the relay, plus the saturation 503 (`_stamp_call_exit` mints it for the exits that never reach
 `call_tool`'s own bookkeeping). The same id is written to the audit row, making it the join key for
 your own records. An unexpected fault raised by `execute_call` is answered by Starlette as a bare 500.
-The response has no id because Starlette owns it, but treg records the row and one matching
+The response has no id because Starlette owns it, but stray records the row and one matching
 `tool_called` event before re-raising. Failures before `execute_call`, plus body-stream failures after
 the handler returns its `StreamingResponse`, are not covered by that compensation path.
 
-A direct metered `/call/` honours **`X-Treg-Route-Max-Cost: <usd>`** as a hard per-call ceiling
+A direct metered `/call/` honours **`X-Stray-Route-Max-Cost: <usd>`** as a hard per-call ceiling
 (`service._set_caller_max_cost` and `reserve._platform_reserve`): when the reserve with margin would exceed it the
 call is refused **402** `error: route_max_cost` (`max_cost_micro`, `estimated_cost_micro`, no charge,
 audited `refused_by=balance` like every 402) — the same header and body shape the routed path uses,
@@ -895,7 +895,7 @@ a 400. Routed children receive the unspent part of the route ceiling, including 
 this same reservation check also applies to overflow at its own price. Refusing a child cannot
 undo earlier paid attempts. Asked for by a customer whose runner approved $0.23 and was billed $0.56 (2026-09-04).
 
-Metered responses also carry `X-Treg-Cost-Micro`; a reserved call that fails before a provider answer
+Metered responses also carry `X-Stray-Cost-Micro`; a reserved call that fails before a provider answer
 carries an explicit `0`. That `0` is what the call ends up costing, but the **balance can lag it**:
 if returning the hold itself fails, the money comes back when the hold is reaped rather than at once
 (see [money](../architecture/money.md)).
@@ -904,8 +904,8 @@ if returning the hold itself fails, the money comes back when the hold is reaped
 |---|---|
 | `GET /calls?days=&before_id=&limit=` | this team's calls, windowed and pageable. Analytics - **not** an invoice source |
 | `GET /activity?before=&limit=&api_key_id=` | the dashboard's feed: calls, server runs and local runs merged newest first, `{rows, next}`; each row says its `source` (`call`/`run`); pass `next` as `before` for the page after, null on the last |
-| `GET /calls/{call_ref}` | one call by its `X-Treg-Call-Id`, plus the ledger entries for it and its `async_task` view when it was a metered generation |
-| `GET /calls/{id}/result` | `id` is the row id or the `X-Treg-Call-Id`; what one call asked and what came back - the archive's copy; recorded catalog 2xx only (platform or own key), `stored: false` + `note` otherwise |
+| `GET /calls/{call_ref}` | one call by its `X-Stray-Call-Id`, plus the ledger entries for it and its `async_task` view when it was a metered generation |
+| `GET /calls/{id}/result` | `id` is the row id or the `X-Stray-Call-Id`; what one call asked and what came back - the archive's copy; recorded catalog 2xx only (platform or own key), `stored: false` + `note` otherwise |
 | `GET /orgs/{id}/usage/by-tag?key=&days=` | per-value spend for one tag key. **Money from the ledger**; admin+ |
 | `GET/PUT/DELETE /orgs/{id}/budgets[/{dim}/{val}]` | per-tag limits and blocking; admin+ |
 | `PATCH /orgs/{id}` | (admin+) rename the team: `name` and/or `slug`; the old slug stays an alias so existing keys keep working |
@@ -927,7 +927,7 @@ Caps are **advisory**: concurrent calls can overshoot slightly. Your balance is 
 **`usage/by-tag` reconciles.** `attributed_micro + unattributed_micro == total_micro`, for every key.
 Untagged traffic shows up as `unattributed_micro` rather than being dropped.
 
-**Isolation.** `treg org agent-new <name> --pin customer=cust_A` mints a token pinned to one tag value;
+**Isolation.** `stray org agent-new <name> --pin customer=cust_A` mints a token pinned to one tag value;
 the pin beats the header and a mismatch is a 403. Call history, archived results, call references,
 runs and shared-provider async ownership require every pinned tag. Foreign and unattributed ids
 return 404 to pinned callers. Unpinned org readers retain their existing access; BYOK provider
@@ -941,7 +941,7 @@ for legacy rows and ledger-only reads. Rule of thumb: **tag for counting, token 
 
 **`require_identity`, not `require_member`.** A referral belongs to a PERSON, not to one of their
 teams (`User.referral_code`). The reward does land in an org, but *which* org is our decision -
-the oldest one they own - so nothing on these routes is scoped by `X-Treg-Org`.
+the oldest one they own - so nothing on these routes is scoped by `X-Stray-Org`.
 
 **`GET /referrals` returns the referred person's full email**, which makes it the one route here
 where a scoping mistake leaks another user's data rather than merely miscounting. It is scoped in
@@ -950,10 +950,10 @@ the query itself (`referrer_user_id == caller.id`), never filtered afterwards, a
 
 **`/?ref=CODE` is the one query string the landing route serves.** `GET /` deliberately treats any
 query string as the SPA's and falls through to the dashboard - which for a referral link would send
-a stranger who has never heard of treg to an empty app shell instead of the pitch. So a `ref` alone
+a stranger who has never heard of stray to an empty app shell instead of the pitch. So a `ref` alone
 or with only `utm_*` tags counts as parameterless (a sponsor's short link appends those, and the SPA
 never parks the code; anything else alongside it still belongs to the SPA), and the code is parked in
-`treg_ref` - httponly, lax, 30 days, and revalidated on read exactly like `_take_oauth_return`,
+`stray_ref` - httponly, lax, 30 days, and revalidated on read exactly like `_take_oauth_return`,
 because a cookie is attacker-supplied and this value reaches a query.
 
 Redemption happens at **first team creation**, in both org-creating doors (`POST /orgs` and the
@@ -968,7 +968,7 @@ credit, never the signup response or the referral attribution.
 
 `POST /billing/topup` also accepts `checkout_source` alongside `amount_usd`. The dashboard sends
 `arena` for an Arena credit-link arrival and `app` otherwise. The server separately reads the
-first-observed `treg_entry_surface` cookie; both values are normalized to the fixed product-surface
+first-observed `stray_entry_surface` cookie; both values are normalized to the fixed product-surface
 allowlist (missing or invalid is `unknown`). They travel through Stripe metadata to payment
 analytics and ledger provenance only, never affecting the charged amount or authorization.
 Email OTP and OAuth callbacks read the same cookie for new-account signup analytics after commit.

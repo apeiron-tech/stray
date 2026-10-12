@@ -43,15 +43,15 @@ Per engager, fully enriched with a funding check: **about $0.05**. A hundred eng
 ```bash
 # commenters.sh — everyone who commented on a post, scored against the ICP
 POST_URL="$1"
-treg call scrapecreators.x.v1-linkedin-post --query "url=$POST_URL" \
+stray call scrapecreators.x.v1-linkedin-post --query "url=$POST_URL" \
   | jq -r '.comments[].linkedinUrl' | sort -u > commenters.txt
 
 while read -r P; do
-  PROFILE=$(treg call scrapecreators.linkedin.user.profile --query "url=$P")
+  PROFILE=$(stray call scrapecreators.linkedin.user.profile --query "url=$P")
   TITLE=$(echo "$PROFILE" | jq -r '.headline'); CO=$(echo "$PROFILE" | jq -r '.current_company.url')
-  COMPANY=$(treg call scrapecreators.x.v1-linkedin-company --query "url=$CO")
+  COMPANY=$(stray call scrapecreators.x.v1-linkedin-company --query "url=$CO")
   SIZE=$(echo "$COMPANY" | jq -r '.employee_count'); DOMAIN=$(echo "$COMPANY" | jq -r '.website')
-  RAISED=$(treg call aviato.companies.funding_rounds --query "domain=$DOMAIN" | jq -r '.rounds[0].date // ""')
+  RAISED=$(stray call aviato.companies.funding_rounds --query "domain=$DOMAIN" | jq -r '.rounds[0].date // ""')
   echo -e "$P\t$TITLE\t$SIZE\t$RAISED"
 done < commenters.txt > scored.tsv
 ```

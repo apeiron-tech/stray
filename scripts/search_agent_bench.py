@@ -46,9 +46,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.find_bench import _frac, _provider_display, cached_apis, judge_cost, warm_semantic  # noqa: E402
-from treg.application import catalog_find, catalog_search  # noqa: E402
-from treg.config import get_settings  # noqa: E402
-from treg.domain.catalog import store  # noqa: E402
+from stray.application import catalog_find, catalog_search  # noqa: E402
+from stray.config import get_settings  # noqa: E402
+from stray.domain.catalog import store  # noqa: E402
 
 PAGES = ("v2", "baseline", "judged")
 

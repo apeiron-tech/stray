@@ -1,4 +1,4 @@
-import * as TregAgentSetup from '../agent-setup/data'
+import * as StrayAgentSetup from '../agent-setup/data'
 
 
 export default {
@@ -14,7 +14,7 @@ async copyToken(){ if(!this.myToken) return; if(!(await this.toClipboard(this.my
     // token, the team, permission to run things, and "do it now". `kind` is ignored (call sites keep
     // their argument) so there is a single text to keep true.
     buildAgentPrompt(kind, inclToken){  // ONE line — llms.txt carries the whole setup flow (auth included)
-      return TregAgentSetup.command(this.proxy);
+      return StrayAgentSetup.command(this.proxy);
     },
 async copyAgentPrompt(){ if(!(await this.toClipboard(this.agentPromptText))) return; this.agentGuideCopied=true; setTimeout(()=>this.agentGuideCopied=false,1500); },
 async copyVendorPrompt(){ if(!(await this.toClipboard(this.vendorPromptText))) return; this.vendorCopied=true; setTimeout(()=>this.vendorCopied=false,1500); },

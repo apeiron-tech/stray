@@ -76,7 +76,7 @@ async def test_bundle_get_and_delete_cascades(clients: AsyncClient):
 
 async def test_recipe_only_bundle_round_trips(clients: AsyncClient):
     """A recipe-only skill (no secrets/tools) registers as a bundle and its recipe reads back exactly
-    — the basis for `treg skill install` distributing knowledge skills."""
+    — the basis for `stray skill install` distributing knowledge skills."""
     recipe = "---\nname: seo-writer\n---\n# SEO writer\nWrite great blogs.\n"
     r = await clients.post("/skills", json={"name": "seo-writer", "recipe": recipe})
     assert r.status_code == 200, r.text
@@ -117,19 +117,19 @@ async def test_skill_files_roundtrip_and_sanitize(clients: AsyncClient):
 
 
 def test_collect_files_excludes_secrets_junk_and_recipe(tmp_path):
-    from treg import skills as sk
+    from stray import skills as sk
     (tmp_path / "SKILL.md").write_text("# recipe")
     (tmp_path / "gaql.py").write_text("code")
     (tmp_path / "reference").mkdir(); (tmp_path / "reference" / "f.md").write_text("doc")
     (tmp_path / ".secrets").mkdir(); (tmp_path / ".secrets" / "token.json").write_text("SECRET")
-    (tmp_path / "treg.json").write_text("{}")
+    (tmp_path / "stray.json").write_text("{}")
     (tmp_path / ".DS_Store").write_text("junk")
     got = sk.collect_files(tmp_path)
-    assert got == {"gaql.py": "code", "reference/f.md": "doc"}  # no SKILL.md/secrets/treg.json/junk
+    assert got == {"gaql.py": "code", "reference/f.md": "doc"}  # no SKILL.md/secrets/stray.json/junk
 
 
 def test_write_bundle_files_rejects_escaping_paths(tmp_path):
-    from treg import cli
+    from stray import cli
     dest = tmp_path / "skills" / "myskill"
     dest.mkdir(parents=True)
     n = cli._write_bundle_files(dest, {

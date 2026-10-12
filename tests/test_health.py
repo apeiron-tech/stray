@@ -12,9 +12,9 @@ import json
 from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
 
-from treg import crypto
-from treg.health import _probe
-from treg.models import Secret, Tool
+from stray import crypto
+from stray.health import _probe
+from stray.models import Secret, Tool
 
 
 async def test_probe_marks_ok(clients: AsyncClient):
@@ -77,10 +77,10 @@ async def test_oauth_refresh_ok_marks_ok(clients: AsyncClient):
 async def test_owner_webhook_alerted_on_invalid(clients: AsyncClient):
     # register a second user WITH a webhook that the upstream RECORDS; their bad cred must trigger a
     # real POST to that webhook (not merely land in the invalid list).
-    from treg.api import app
+    from stray.api import app
     r = await clients.post("/users", json={"email": "owner2@x.dev", "webhook_url": "http://upstream/hook"})
     tok = r.json()["token"]
-    h2 = {"X-Treg-Token": tok}
+    h2 = {"X-Stray-Token": tok}
     blob = json.dumps({"access_token": "X", "refresh_token": "RT", "client_id": "c", "client_secret": "s",
                        "token_uri": "http://upstream/nope", "expires_at": 0})
     sid = (await clients.post("/secrets", headers=h2, json={"name": "o2", "kind": "oauth", "value": blob})).json()["id"]
@@ -94,11 +94,11 @@ async def test_owner_webhook_alerted_on_invalid(clients: AsyncClient):
 async def test_team_org_invalid_credential_still_alerts(clients: AsyncClient):
     # A team org's memberships carry no webhook_url (only the personal org gets one at registration);
     # an invalid team credential must still alert via the org owner's webhook fallback.
-    from treg.api import app
+    from stray.api import app
     owner = await clients.post("/users", json={"email": "team-owner@x.dev", "webhook_url": "http://upstream/hook"})
     ot = owner.json()["token"]
-    team = (await clients.post("/orgs", headers={"X-Treg-Token": ot}, json={"name": "Team"})).json()
-    th = {"X-Treg-Token": team["token"]}  # a team-org token — its membership has NO webhook_url
+    team = (await clients.post("/orgs", headers={"X-Stray-Token": ot}, json={"name": "Team"})).json()
+    th = {"X-Stray-Token": team["token"]}  # a team-org token — its membership has NO webhook_url
     blob = json.dumps({"access_token": "X", "refresh_token": "RT", "client_id": "c", "client_secret": "s",
                        "token_uri": "http://upstream/nope", "expires_at": 0})
     sid = (await clients.post("/secrets", headers=th, json={"name": "tc", "kind": "oauth", "value": blob})).json()["id"]
@@ -110,10 +110,10 @@ async def test_team_org_invalid_credential_still_alerts(clients: AsyncClient):
 async def test_malformed_health_check_does_not_500_the_batch(clients: AsyncClient):
     """A single tool in a bad state (here: a health_check stored as a string, not a dict) must NOT
     crash the whole batch — run_all isolates each tool and marks it 'unknown'. Regression: prod
-    `treg health --run` 500'd batch-wide on one weird tool."""
+    `stray health --run` 500'd batch-wide on one weird tool."""
     from sqlmodel import update
-    from treg.infra.db import session_maker
-    from treg.models import Tool
+    from stray.infra.db import session_maker
+    from stray.models import Tool
     good = (await clients.post("/secrets", json={"name": "good", "value": "V"})).json()["id"]
     bad = (await clients.post("/secrets", json={"name": "weird", "value": "V"})).json()["id"]
     await clients.post("/tools", json={"name": "healthy", "base_url": "http://upstream",

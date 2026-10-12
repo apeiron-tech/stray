@@ -1,8 +1,8 @@
-# tools-registry (`treg`) - guide for every coding agent
+# stray - guide for every coding agent
 
 <!-- Editors: CLAUDE.md imports this file; Codex and Cursor read it directly. -->
 
-treg is the tool catalog for an agent: one base URL, one token, and the agent can call a curated
+stray is the tool catalog for an agent: one base URL, one token, and the agent can call a curated
 catalog of external endpoints plus its own team's tools without ever holding an API key. The
 load-bearing mechanic is a proxy that makes the caller's **real upstream request**, injects the
 credential server-side when one is required, and relays the answer verbatim. A catalog endpoint
@@ -11,36 +11,36 @@ upstream API.
 
 ## Paired treg.to checkout
 
-For work on the hosted treg.to service, clone the public `treg` repository and private
-`treg-internal` repository as siblings with those exact directory names. When `../treg-internal`
+For work on the hosted treg.to service, clone the public `stray` repository and private
+`stray-internal` repository as siblings with those exact directory names. When `../stray-internal`
 exists, treat both repositories as one operational workspace:
 
-- `treg` owns public product code, portable behavior and self-hosting documentation.
-- `treg-internal` owns live production configuration, operational runbooks, incident evidence and
+- `stray` owns public product code, portable behavior and self-hosting documentation.
+- `stray-internal` owns live production configuration, operational runbooks, incident evidence and
   private admin tools.
 - Read both repositories before changing production behavior, but never copy credentials, live
   environment exports, customer data or raw logs between them.
 - Everything committed here is public, comments and commit messages included: describe treg.to
   only by mechanism, never by its numbers, dates, hosts, instance counts or schedules. Those go to
-  `../treg-internal`.
+  `../stray-internal`.
 - Commit and open PRs separately. State the merge order whenever one PR links to or depends on the
   other.
 
-Do not clone `treg-internal` inside this repository and do not make it a Git submodule. Start agents
+Do not clone `stray-internal` inside this repository and do not make it a Git submodule. Start agents
 from the repository that owns the task; the sibling path supplies the other half of treg.to context.
 
 ## Non-negotiables
 
 Everything else in this file is guidance; these are the contract, and they win over any other passage.
 
-1. A team's own key always wins over treg's, is never metered, and is never routed or overflowed.
+1. A team's own key always wins over stray's, is never metered, and is never routed or overflowed.
 2. A hold (the balance `reserve` sets aside for one call) is settled or released exactly once, on
    every path: timeout, cancellation and exceptions included.
 3. A request holds zero database connections while upstream or object-storage I/O is in flight.
    Keep `reserve` and `settle` separate; read archive pointers, close the session, then fetch bytes.
 4. Plain `/call/` is a faithful relay: the injected credential, the transport headers listed in
-   `src/treg/infra/upstream/relay.py`, and (on treg's shared key only) the per-org and, for pinned
-   agents, per-pin re-scoping of the caller's `Idempotency-Key` and treg's own `User-Agent` in place
+   `src/stray/infra/upstream/relay.py`, and (on stray's shared key only) the per-org and, for pinned
+   agents, per-pin re-scoping of the caller's `Idempotency-Key` and stray's own `User-Agent` in place
    of the caller's are the only rewrites. A credential
    binding with `location: "json"` explicitly parses and reserializes the top-level JSON object; it
    is not byte-faithful and must never be used with an upstream that signs or hashes the raw body.
@@ -66,19 +66,19 @@ agents then built against a constitution that was wrong.
 ## Where the truth lives
 
 - **Design docs are fragments.** `docs/context/` holds one per subsystem, each naming its
-  `src/treg/*` sources in frontmatter; `docs/context/README.md` is the generated index and
+  `src/stray/*` sources in frontmatter; `docs/context/README.md` is the generated index and
   `docs/context/foundation/charter.md` the start. Read the fragment before changing an area (the
-  `tools-registry-context` skill in `.agents/skills/` loads it).
-- **Before pushing:** `bash .agents/skills/tools-registry-context/scripts/drift.sh` maps changed
+  `stray-context` skill in `.agents/skills/` loads it).
+- **Before pushing:** `bash .agents/skills/stray-context/scripts/drift.sh` maps changed
   sources to fragments. Update them and commit the docs **in the same commit as the code**.
-- **Agent-facing files are the product's front door**, not documentation: `src/treg/web/llms.txt`
-  and `src/treg/web/skill.md` (installed into every agent by `install.sh`). They, `README.md` and
-  this file must agree on how treg works; a behavior change asks whether all four move.
-- **Three files move together** or they drift: `src/treg/web/tutorial.js` (the only interactive
-  source) and its hand-kept prose mirrors `src/treg/web/tutorial.md` and `docs/TUTORIAL.md`.
+- **Agent-facing files are the product's front door**, not documentation: `src/stray/web/llms.txt`
+  and `src/stray/web/skill.md` (installed into every agent by `install.sh`). They, `README.md` and
+  this file must agree on how stray works; a behavior change asks whether all four move.
+- **Three files move together** or they drift: `src/stray/web/tutorial.js` (the only interactive
+  source) and its hand-kept prose mirrors `src/stray/web/tutorial.md` and `docs/TUTORIAL.md`.
 - `README.md` is the overview and quickstart, `USAGE.md` the CLI reference, `CONTRIBUTING.md` the
   dev setup, `SECURITY.md` required reading before touching the proxy, runners, auth or secrets.
-- If available, `../treg-internal` holds private operational configuration and tools; read its
+- If available, `../stray-internal` holds private operational configuration and tools; read its
   `README.md` before changing production settings. Public development does not depend on it.
 
 ## Architecture
@@ -117,14 +117,14 @@ agents then built against a constitution that was wrong.
 - **Feedback handling.** This repo owns `FeedbackHandling` and `FeedbackHandlingEvent` models and
   migrations; the private admin service is their only runtime writer. Original reports remain
   owned by the feedback domain. See `docs/context/architecture/feedback.md`.
-- **The call runtime is self-contained.** `src/treg/application/call/` depends on no management
+- **The call runtime is self-contained.** `src/stray/application/call/` depends on no management
   code (routes, login, OAuth consent, Stripe top-up), reads only membership, deny rules,
   credentials, catalog prices and balances, and writes only what `tests/test_call_architecture.py`
   allowlists (the ledger entries, idempotency claims, OAuth refresh, audit and telemetry, first-call
   markers, tag budgets, capacity marks, overflow spend, the member's daily-cap slot, the per-team
   archive-question marks, and durable provider-resource ownership). Extend the
   test's allowlist in the same PR as any new write, and expect the reviewer to ask why.
-- **The tool hub** (`application/hub/`, behind `TREG_HUB_ENABLED`) runs a maker's recipe as ordinary
+- **The tool hub** (`application/hub/`, behind `STRAY_HUB_ENABLED`) runs a maker's recipe as ordinary
   calls: every step goes through `execute_call` under its own hold, a catalog step as the caller and
   an own-tool step as the maker; the seller's price is one more hold, settled to the maker as an
   `earned` block in one transaction (`money.settle_to_in_transaction`, the only cross-team money
@@ -132,7 +132,7 @@ agents then built against a constitution that was wrong.
   prices itself with `ctx.charge(usd, note)` lines, so the cap is held and the sum of the lines is
   settled, the rest refunded (`docs/hub-pricing-decisions.md`). A script runs in a separate process
   with no network; `ctx.call` is its only road out and `uses` in the manifest names every host it
-  may reach. A hub tool is out of catalog search until its maker asks and treg approves (`HubListing`); once
+  may reach. A hub tool is out of catalog search until its maker asks and stray approves (`HubListing`); once
   approved it stays under review for good, unlisted or not, and its share
   page shows a run log of outcomes only unless the maker turns `public_log` off
   (`docs/hub-listing-decisions.md`). See `docs/context/architecture/hub.md`.
@@ -152,21 +152,21 @@ agents then built against a constitution that was wrong.
 
 `expose_dev_code` (dev OTP only on a local sqlite database, `config.py`), the call-time SSRF check
 (`infra/upstream/ssrf.py`), the fail-loud missing-Fernet-key check in `verify_db`, and the
-`treg run` allow-list and rlimits (`runner.py`). Read the fragment before touching any of them.
+`stray run` allow-list and rlimits (`runner.py`). Read the fragment before touching any of them.
 
 ## Development
 
 ```bash
 uv run --with pytest-xdist pytest -n auto -q   # daily local default (same shape as CI)
 uv run --frozen python -m pytest -q            # serial: debugging one test, or order
-uv run treg --help                             # the CLI from this checkout
-uv run python -m treg                          # the server
+uv run stray --help                             # the CLI from this checkout
+uv run python -m stray                          # the server
 uv run lint-imports                            # the import-linter contracts (CI runs this too)
 scripts/dev-local.sh up                        # live dev stack on :18790 with its own sqlite DB
 ```
 
 xdist is pulled via `--with`, not the lockfile — same as CI. Every test process gets its own
-database (a sqlite file per pid; under `TREG_TEST_DB_URL`, a Postgres database per xdist worker),
+database (a sqlite file per pid; under `STRAY_TEST_DB_URL`, a Postgres database per xdist worker),
 so parallel runs and side-by-side runs never share one.
 
 - **Dependencies change through `uv add` or `uv lock`, never by hand.** `pyproject.toml` pins
@@ -176,15 +176,15 @@ so parallel runs and side-by-side runs never share one.
   top of a CLI-path module; the "Lightweight CLI modules" import-linter contract lists them and
   fails the build.
 - **The dashboard** lives in `frontend/` (Vue components, TypeScript entry/transport, Vite).
-  Build with `bash scripts/build-dashboard.sh`; generated assets in `src/treg/web/dashboard/`
+  Build with `bash scripts/build-dashboard.sh`; generated assets in `src/stray/web/dashboard/`
   ship with Python. Run `npm --prefix frontend test` and `npm --prefix frontend run test:e2e`.
   Existing Options API use cases live in `frontend/src/state/`; preserve their session and
   navigation behavior when narrowing component state. Never put dashboard logic back into HTML.
   Manage third-party browser libraries through pinned npm packages or version-pinned CDN URLs;
   do not commit copied library builds. Keep critical app runtimes available from the npm build.
-- **Schema.** Alembic owns it (`src/treg/alembic/versions/`); every schema change is a revision.
+- **Schema.** Alembic owns it (`src/stray/alembic/versions/`); every schema change is a revision.
   Startup only verifies the revision and refuses to boot when behind; migrations run only via
-  `python -m treg upgrade`.
+  `python -m stray upgrade`.
 
 ## Working agreement
 
@@ -194,7 +194,7 @@ so parallel runs and side-by-side runs never share one.
 - `/mcp/` and `/mcp/v2/` differ on purpose. A change to either or to shared MCP code is reviewed
   against both; do not unify them in passing.
 - **A catalog data PR is a few rows and a PR body.** Cache admission, comparison declarations,
-  adapters and contracts are rows in `src/treg/catalog/`; each declaration carries a one-line
+  adapters and contracts are rows in `src/stray/catalog/`; each declaration carries a one-line
   reason and nothing more. The evidence (traffic, byte sizes, change observations, bodies read)
   goes in the PR body, never into a fragment or a comment. A fragment moves only when a mechanism
   changes; `drift.sh` naming one is a prompt to check it, not an obligation to write. No dated
@@ -219,5 +219,5 @@ now do, not what we store. Never use a count of endpoints or providers in this f
 changes weekly and every stale number is a lie.
 
 **Do not document what is not built.** An agent that believes a feature exists fails in a way
-nobody can debug. Provider choice is the easiest thing to overstate: treg compares providers, and
+nobody can debug. Provider choice is the easiest thing to overstate: stray compares providers, and
 chooses only in the two disclosed cases of non-negotiable 4.

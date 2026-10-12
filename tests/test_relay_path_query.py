@@ -10,9 +10,9 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from treg.application.call.types import UpstreamRequest
-from treg.infra.upstream import relay as relay_module
-from treg.models import Tool
+from stray.application.call.types import UpstreamRequest
+from stray.infra.upstream import relay as relay_module
+from stray.models import Tool
 
 
 async def _relayed_url(monkeypatch, query_items) -> httpx.URL:

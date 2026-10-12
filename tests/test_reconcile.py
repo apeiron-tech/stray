@@ -17,26 +17,26 @@ from httpx import ASGITransport, AsyncClient
 
 from conftest import make_upstream
 
-from treg import reconcile
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import CallRecord, LedgerEntry
+from stray import reconcile
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import CallRecord, LedgerEntry
 
 ADMIN = "ENV-ADMIN-SECRET"
 
 
 def _h(t: str) -> dict:
-    return {"X-Treg-Token": t}
+    return {"X-Stray-Token": t}
 
 
 def _a() -> dict:
-    return {"X-Treg-Token": ADMIN}
+    return {"X-Stray-Token": ADMIN}
 
 
 @pytest.fixture
 async def c(monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
     get_settings.cache_clear()
     await reset_db()
     app.state.http = AsyncClient(transport=ASGITransport(app=make_upstream()), base_url="http://upstream")
@@ -168,7 +168,7 @@ async def test_spend_ignores_non_settle_entries_and_the_window(c: AsyncClient):
 
 async def test_spend_backs_the_margin_out_of_the_charge(c: AsyncClient, monkeypatch):
     """`provider_cost_est_micro` is the invoice comparison, so it must be the charge WITHOUT margin."""
-    monkeypatch.setenv("TREG_PLATFORM_MARGIN", "0.25")
+    monkeypatch.setenv("STRAY_PLATFORM_MARGIN", "0.25")
     get_settings.cache_clear()
     await _settles([{"amount": 1250}])
     async with session_maker() as db:

@@ -1,19 +1,19 @@
 ---
-title: The shippable tools-registry skill (3 personas)
+title: The shippable stray skill (3 personas)
 status: shipped
 sources:
-  - src/treg/web/skill.md
-  - src/treg/web/skills/make-ugc/SKILL.md
-  - src/treg/web/skills/lead-signals/SKILL.md
-  - src/treg/web/skills/jev-memory/SKILL.md
+  - src/stray/web/skill.md
+  - src/stray/web/skills/make-ugc/SKILL.md
+  - src/stray/web/skills/lead-signals/SKILL.md
+  - src/stray/web/skills/jev-memory/SKILL.md
   - examples/claude-code-mods/jev-memory/hooks/jev-memory.mjs
-  - src/treg/routers/web.py
-  - src/treg/mcp_install.py
+  - src/stray/routers/web.py
+  - src/stray/mcp_install.py
   - scripts/build_plugin.py
   - .claude-plugin/plugin.json
   - .claude-plugin/marketplace.json
   - plugin/.codex-plugin/plugin.json
-  - plugins/treg/.cursor-plugin/plugin.json
+  - plugins/stray/.cursor-plugin/plugin.json
   - package.json
   - dsh/cordis.patch.yml
   - dsh/index.js
@@ -26,11 +26,11 @@ related:
   - interface/skill-openai-tool-justifications.md
 ---
 
-# The `tools-registry` skill
+# The `stray` skill
 
-`src/treg/web/skill.md` is the **product** skill that ships to consumers — the agent's whole interface to the
-registry (distinct from `.claude/skills/tools-registry-context/`, which maintains *these* design docs).
-Its frontmatter `name: treg` + `description` make it loadable by a coding agent.
+`src/stray/web/skill.md` is the **product** skill that ships to consumers — the agent's whole interface to the
+registry (distinct from `.claude/skills/stray-context/`, which maintains *these* design docs).
+Its frontmatter `name: stray` + `description` make it loadable by a coding agent.
 
 The feedback section encourages proactive reports of small annoyances and concrete friction and workarounds even when a task succeeds,
 asks for observations rather than a proven bug, and names MCP `call_ids` / CLI `--call-id`.
@@ -40,23 +40,23 @@ usefulness choices and CLI/MCP forms, and directs problems to feedback.
 One skill, three personas:
 - **consumer** — discover + call tools with no credentials locally. Teaches the agent-native
   **URL-passthrough** first: take the real upstream URL and prefix it with `{BASE}/call/`
-  + the `X-Treg-Token` header; `treg call <tool> <path>` is the CLI shorthand. Its
+  + the `X-Stray-Token` header; `stray call <tool> <path>` is the CLI shorthand. Its
   generation task distinguishes synchronous MiniMax voice generation from asynchronous video and
   image generation. Voice callers discover current system voice IDs through
   `minimax.voice-gen.voices.list`, then call the HD or Turbo endpoint for a temporary audio URL.
-  Video/image callers learn `--await`, the `X-Treg-Async` descriptor and lazy 30-60 s polling for
+  Video/image callers learn `--await`, the `X-Stray-Async` descriptor and lazy 30-60 s polling for
   MCP agents, the shell-timeout warning (video takes 1-5 minutes), reserve-then-settle money with
-  releases on failure, and expiring result URLs that treg never stores.
-- **creator** — turn a local skill into a shared tool: `treg secret add`, `treg tool add` (single-key or
-  `--bind` multi-credential), the `treg skill scaffold → push` bundle flow, and `treg oauth connect` for
+  releases on failure, and expiring result URLs that stray never stores.
+- **creator** — turn a local skill into a shared tool: `stray secret add`, `stray tool add` (single-key or
+  `--bind` multi-credential), the `stray skill scaffold → push` bundle flow, and `stray oauth connect` for
   browser-consent tokens. Documents the two OAuth modes (auto-refresh vs manual) and the four auth shapes.
-- **admin** — inventory + monitor: `treg tool/secret/skill ls`, `treg calls`, and `treg health [--run]`
+- **admin** — inventory + monitor: `stray tool/secret/skill ls`, `stray calls`, and `stray health [--run]`
   (with the per-tool `health_check` probe).
 
 **Distribution:** the file is `{BASE}`-templated and served at **`GET /skill.md`**
 (`routers.web.skill_md`, via `_serve_md`), and `install.sh` best-effort drops it into
-`~/.claude/skills/treg/SKILL.md` right after installing the CLI — so `curl {BASE}/install.sh | sh`
-gives a machine both the `treg` command AND the skill that teaches an agent to use it. It restates the
+`~/.claude/skills/stray/SKILL.md` right after installing the CLI — so `curl {BASE}/install.sh | sh`
+gives a machine both the `stray` command AND the skill that teaches an agent to use it. It restates the
 invariants (secrets are write-only, use-without-hold, the proxy relays the upstream's truth) and links
 `{BASE}/llms.txt` + `{BASE}/tutorial`. It mirrors the surfaces in [api.md](api.md) + [cli.md](cli.md);
 keep the three in sync when the API/CLI change.
@@ -74,28 +74,28 @@ served**, because a second copy of the product's most-read page is a copy that r
 
 | door | artifact | who reaches it |
 |---|---|---|
-| the installer | `install.sh` → `treg skill bootstrap` → every detected agent's skills dir, the treg skill plus every workflow skill in `/.well-known/skills/index.json` | people who ran the curl one-liner |
-| Claude Code plugin | `.claude-plugin/` + generated `skills/treg/SKILL.md` (repo root) | `/plugin marketplace add superdesigndev/treg` |
-| Codex/ChatGPT plugin | `plugin/.codex-plugin/` + generated `plugin/skills/treg/SKILL.md` | the directory ChatGPT and Codex share. Submission runbook: [private submission runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/distribution/PLUGIN-SUBMISSION.md), test cases: [skill-openai-test-cases.md](skill-openai-test-cases.md), per-tool justifications: [skill-openai-tool-justifications.md](skill-openai-tool-justifications.md) |
-| Cursor plugin | `.cursor-plugin/marketplace.json` + generated `plugins/treg/skills/treg/SKILL.md` | the Cursor marketplace (plugin root is never the repo root) |
-| DeepSeek Harness bundle | root `package.json` (`dsh.bundle`) + `dsh/cordis.patch.yml` + generated `dsh/skills/treg/SKILL.md` | `dsh plugin --profile <name> add github:superdesigndev/treg` |
-| MiniMax plugin | `plugins/minimax/.minimax-plugin/plugin.json` + generated `plugins/minimax/skills/treg/SKILL.md`; `scripts/minimax_plugin.py` pre-runs their validator and builds the ZIP | the MiniMax Plugin Marketplace (MiniMax Code + MiniMax Agent), submitted by form as GitHub subdir `plugins/minimax`; skills-only because the package may hold no credential and the bootstrap omits `treg mcp install`, which cannot write a MiniMax config. See [docs/MINIMAX-PLUGIN.md](../../MINIMAX-PLUGIN.md) |
-| the domain itself | `GET /.well-known/skills/index.json` + `/.well-known/skills/treg/SKILL.md` | anything speaking the agentskills.io convention (Hermes reads this directly) |
-| a workflow skill | `GET /skills/ugc/SKILL.md` (also `/.well-known/skills/make-ugc/SKILL.md`, second entry in the index): `make-ugc`, the `/ugc` workflow as a file to follow. Source `src/treg/web/skills/make-ugc/SKILL.md`; `.agents/skills/make-ugc` is a symlink to it so the repo's own agents and the served copy never drift. It delegates to `portrait-clone` and `ugc-talking-head-video` by URL rather than repeating them | anyone the /ugc page or the onboarding "Make UGC videos" card sends here |
-| a workflow skill | `GET /skills/lead-signals/SKILL.md` (also `/.well-known/skills/lead-signals/SKILL.md`, third entry in the index): `lead-signals`, the `/leads-signals` workflow as a file to follow: detect, qualify, contact, keep watching. It names signal families and the words to search the catalog with, never endpoint ids, because the catalog changes weekly; the schedule and the diff against the last list are the agent's, not treg's. Source `src/treg/web/skills/lead-signals/SKILL.md`; `.agents/skills/lead-signals` is a symlink to it. | anyone pointed at the URL |
-| a workflow skill | `GET /skills/jev-memory/SKILL.md`, **opt-in**: not in the index and no `/.well-known/` copy, so `install.sh` (`treg skill bootstrap`) never installs it; `npx skills add superdesigndev/treg --skill jev-memory` or the URL does. `jev-memory`, a memory for Claude Code. It installs the Claude Code mod in `examples/claude-code-mods/jev-memory` (a sparse clone registered as the one-plugin local marketplace `treg-mods`, because the root marketplace stays the single `treg` plugin) or hands the user one prompt to build the same mod. The mod judges each prompt after the turn with one `openrouter.ai-judge.decide` call through the treg CLI and saves sentences at 0.8 or higher to `.claude/jev-memory.md`. Source `src/treg/web/skills/jev-memory/SKILL.md`; the mod carries its own `claude plugin test` suite. | anyone the Claude Code mods video points here |
+| the installer | `install.sh` → `stray skill bootstrap` → every detected agent's skills dir, the stray skill plus every workflow skill in `/.well-known/skills/index.json` | people who ran the curl one-liner |
+| Claude Code plugin | `.claude-plugin/` + generated `skills/stray/SKILL.md` (repo root) | `/plugin marketplace add apeiron-tech/stray` |
+| Codex/ChatGPT plugin | `plugin/.codex-plugin/` + generated `plugin/skills/stray/SKILL.md` | the directory ChatGPT and Codex share. Submission runbook: [private submission runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/distribution/PLUGIN-SUBMISSION.md), test cases: [skill-openai-test-cases.md](skill-openai-test-cases.md), per-tool justifications: [skill-openai-tool-justifications.md](skill-openai-tool-justifications.md) |
+| Cursor plugin | `.cursor-plugin/marketplace.json` + generated `plugins/stray/skills/stray/SKILL.md` | the Cursor marketplace (plugin root is never the repo root) |
+| DeepSeek Harness bundle | root `package.json` (`dsh.bundle`) + `dsh/cordis.patch.yml` + generated `dsh/skills/stray/SKILL.md` | `dsh plugin --profile <name> add github:apeiron-tech/stray` |
+| MiniMax plugin | `plugins/minimax/.minimax-plugin/plugin.json` + generated `plugins/minimax/skills/stray/SKILL.md`; `scripts/minimax_plugin.py` pre-runs their validator and builds the ZIP | the MiniMax Plugin Marketplace (MiniMax Code + MiniMax Agent), submitted by form as GitHub subdir `plugins/minimax`; skills-only because the package may hold no credential and the bootstrap omits `stray mcp install`, which cannot write a MiniMax config. See [docs/MINIMAX-PLUGIN.md](../../MINIMAX-PLUGIN.md) |
+| the domain itself | `GET /.well-known/skills/index.json` + `/.well-known/skills/stray/SKILL.md` | anything speaking the agentskills.io convention (Hermes reads this directly) |
+| a workflow skill | `GET /skills/ugc/SKILL.md` (also `/.well-known/skills/make-ugc/SKILL.md`, second entry in the index): `make-ugc`, the `/ugc` workflow as a file to follow. Source `src/stray/web/skills/make-ugc/SKILL.md`; `.agents/skills/make-ugc` is a symlink to it so the repo's own agents and the served copy never drift. It delegates to `portrait-clone` and `ugc-talking-head-video` by URL rather than repeating them | anyone the /ugc page or the onboarding "Make UGC videos" card sends here |
+| a workflow skill | `GET /skills/lead-signals/SKILL.md` (also `/.well-known/skills/lead-signals/SKILL.md`, third entry in the index): `lead-signals`, the `/leads-signals` workflow as a file to follow: detect, qualify, contact, keep watching. It names signal families and the words to search the catalog with, never endpoint ids, because the catalog changes weekly; the schedule and the diff against the last list are the agent's, not stray's. Source `src/stray/web/skills/lead-signals/SKILL.md`; `.agents/skills/lead-signals` is a symlink to it. | anyone pointed at the URL |
+| a workflow skill | `GET /skills/jev-memory/SKILL.md`, **opt-in**: not in the index and no `/.well-known/` copy, so `install.sh` (`stray skill bootstrap`) never installs it; `npx skills add apeiron-tech/stray --skill jev-memory` or the URL does. `jev-memory`, a memory for Claude Code. It installs the Claude Code mod in `examples/claude-code-mods/jev-memory` (a sparse clone registered as the one-plugin local marketplace `stray-mods`, because the root marketplace stays the single `stray` plugin) or hands the user one prompt to build the same mod. The mod judges each prompt after the turn with one `openrouter.ai-judge.decide` call through the stray CLI and saves sentences at 0.8 or higher to `.claude/jev-memory.md`. Source `src/stray/web/skills/jev-memory/SKILL.md`; the mod carries its own `claude plugin test` suite. | anyone the Claude Code mods video points here |
 
 `scripts/build_plugin.py` renders every plugin copy from the one source and `--check` fails if any is
-stale (`tests/test_plugin.py`). It also writes real copies of the workflow skills (`src/treg/web/skills/*`) to
-`skills/<name>/SKILL.md`, because `npx skills add superdesigndev/treg` (skills.sh) reads `skills/` and
+stale (`tests/test_plugin.py`). It also writes real copies of the workflow skills (`src/stray/web/skills/*`) to
+`skills/<name>/SKILL.md`, because `npx skills add apeiron-tech/stray` (skills.sh) reads `skills/` and
 skips symlinks; repo-tooling skills under `.agents/skills` and `.claude/skills` carry
 `metadata.internal: true` so that command offers only what a user should install. The Codex plugin is the exception: it ships an MCP connector, and OpenAI's plugin review refuses a skill
 that downloads or runs code outside the package, so it carries a short connector-only skill (`CODEX_SKILL`)
 instead of the served page, with no CLI and no `install.sh`. The other variants differ **only** in their prepended bootstrap; the Claude plugin declares **no connector in its
 manifest** — so it installs with no token and nothing waits on a directory review — and its bootstrap
-does the opposite, walking the agent through `install.sh` → `treg login` → `treg mcp install` so the
+does the opposite, walking the agent through `install.sh` → `stray login` → `stray mcp install` so the
 first run ends with the CLI *and* the tools. Skills-only is a property of the manifest, not of the
-end state; the order in that bootstrap is load-bearing, because `treg mcp install` exits without
+end state; the order in that bootstrap is load-bearing, because `stray mcp install` exits without
 writing when it runs before there is a token. The Claude copy also gets a `version:` stamped into its
 frontmatter, which ClawHub requires and Claude Code ignores; that stamp is what lets one file satisfy
 both registries.
@@ -103,11 +103,11 @@ both registries.
 **DeepSeek Harness** is the odd one out, and the only door that ships the connector *and* the CLI
 path in one zero-config install. dsh reads no manifest: it installs an npm package whose
 `package.json` declares `dsh.bundle`, pointing at a config layer that composes into the user's
-profile. That layer carries a treg MCP row whose `disabled` expression is evaluated at boot, so it
-stays off until `TREG_TOKEN` is in the environment — the same "no always-on tools that 401" stance as
+profile. That layer carries a stray MCP row whose `disabled` expression is evaluated at boot, so it
+stays off until `STRAY_TOKEN` is in the environment — the same "no always-on tools that 401" stance as
 the Claude manifest, but expressible as a row rather than an omission. Its bootstrap is its own for
-two reasons the others do not have: the tools are namespaced (`mcp__treg__call`, not `call`), and
-`treg mcp install` cannot help here (it writes Claude Code / Cursor / opencode / Codex configs, never a dsh
+two reasons the others do not have: the tools are namespaced (`mcp__stray__call`, not `call`), and
+`stray mcp install` cannot help here (it writes Claude Code / Cursor / opencode / Codex configs, never a dsh
 profile), so `mcp_install.py` reports dsh as a MANUAL agent pointing at the bundle. See
 [docs/DSH-PLUGIN.md](../../DSH-PLUGIN.md).
 
@@ -135,8 +135,8 @@ points share the contract in [feedback](../architecture/feedback.md).
 ## `/integrate.md` - the BUILDER skill
 
 A second, separate skill for the other side of the relationship. `skill.md` teaches an agent to **use**
-treg; `integrate.md` is pasted into a builder's own repo and pointed at their coding agent so they can
-**embed** treg and bill their own customers for it.
+stray; `integrate.md` is pasted into a builder's own repo and pointed at their coding agent so they can
+**embed** stray and bill their own customers for it.
 
 It leads with the per-customer billing model rather than the call syntax, deliberately: tagging has to
 happen at the one place your backend already sets `Authorization`, and a builder who writes the
@@ -149,7 +149,7 @@ The things it insists on, each because getting them wrong is expensive and silen
 - **Invoice from `usage/by-tag` (the ledger), never from `/calls`** — audit rows are shed under load.
 - **Assert `attributed + unattributed == total`**, and drive `unattributed_micro` to zero; anything
   left is a call site that forgot to tag.
-- **Branch on `X-Treg-Error`, not the status code** — a provider's own 4xx is relayed verbatim.
+- **Branch on `X-Stray-Error`, not the status code** — a provider's own 4xx is relayed verbatim.
 - **Never forward a team-level 402/429 to an end user** — those carry the builder's balance and a
   top-up link. The tag-scoped refusals are safe to surface and carry nothing about the team.
 - **Per-customer caps are advisory**, so they must not be sold to end users as exact.

@@ -10,7 +10,7 @@ every hub tool was unlisted by decision), and a public log of the calls a tool h
 decisions, approved by the owner on 2026-09-16 from the mockup.
 
 **1. Listing is a switch on the tool, not a field in recipe.json.**
-Default off. The maker flips it with `treg hub list <id>` / `treg hub unlist <id>`,
+Default off. The maker flips it with `stray hub list <id>` / `stray hub unlist <id>`,
 `PATCH /hub/tools/{id} {"listed": true}`, or the dashboard switch. No version bump, like a price
 change. It is a distribution choice, not part of the recipe contract.
 
@@ -31,11 +31,11 @@ failures is not a log.
 `/hub/<id>.md` carries the run table, so an agent can judge a tool before calling it, the same
 way it reads the price.
 
-## Round 2 — treg approves the listing (2026-09-24, owner + Jason)
+## Round 2 — stray approves the listing (2026-09-24, owner + Jason)
 
-Jason's maker page puts search behind treg's approval. Decided:
+Jason's maker page puts search behind stray's approval. Decided:
 
-**1. `treg hub list` is a request.** The tool enters catalog search only when a superadmin approves
+**1. `stray hub list` is a request.** The tool enters catalog search only when a superadmin approves
 it, in the dashboard's Admin page or `POST /admin/hub/listings/{id}`. A rejection carries a reason
 the maker reads; listing again asks again; unlisting withdraws the request or the approval.
 
@@ -48,12 +48,12 @@ caller who picks it. Review keeps search worth trusting until run evidence can d
 
 ## Round 3 — capability: the tool beside the providers of its job (2026-09-24, owner + Jason)
 
-**1. The maker names the job; treg approves it.** `"capability"` in recipe.json is a catalog
+**1. The maker names the job; stray approves it.** `"capability"` in recipe.json is a catalog
 capability id. It is a proposal: it takes effect with the listing approval, and the admin may
 change or clear it.
 
 **2. Beside, never instead.** An approved job puts the tool in `catalog_get`'s siblings for every
-provider of that job, and those providers beside it on its own page. treg does not route to it; the
+provider of that job, and those providers beside it on its own page. stray does not route to it; the
 agent compares and picks.
 
 **3. A seed, because a new tool has no runs.** Its success rate starts at 90%, counted as 5 runs,
@@ -61,13 +61,13 @@ and runs by other teams move it; after about 20 the seed barely counts. Until th
 marked `estimated`. The owner chose a seed over hiding new tools: hidden, a tool never gets the runs
 that would prove it.
 
-## Round 4 — every update to a listed tool goes through treg (2026-09-24, owner + Jason)
+## Round 4 — every update to a listed tool goes through stray (2026-09-24, owner + Jason)
 
 Jason: a maker could get a tool approved, then publish a version that charges more or returns
 worse data. Decided:
 
 **1. Any update to a listed tool waits for review:** a new version and a price change. The approved
-version and price keep serving callers, search and the place beside providers until treg approves.
+version and price keep serving callers, search and the place beside providers until stray approves.
 This replaces round 2's "an approval stays across new versions".
 
 **2. The maker can still try it.** A waiting version answers `<id>@N` for the maker's team only.
@@ -76,7 +76,7 @@ This replaces round 2's "an approval stays across new versions".
 and gives the maker the reason.
 
 **4. Unlisted tools stay self-serve.** A tool nobody can find publishes and prices without review.
-(Round 5 changes this for a tool treg has approved once: it stays under review after unlisting.)
+(Round 5 changes this for a tool stray has approved once: it stays under review after unlisting.)
 
 ## Round 5 — what a cheating seller found (2026-09-25, owner, after hub simulation run 2)
 
@@ -89,7 +89,7 @@ version, and listing it again needs no new review. A rejection that takes an app
 the review too.
 
 **2. Reserved team names.** A team slug is the first half of every hub tool id. Names that read as
-treg, as official, or as a catalog provider or platform are refused, for creating, renaming and
+stray, as official, or as a catalog provider or platform are refused, for creating, renaming and
 publishing, unless a superadmin acts.
 
 **3. An empty answer pays no seller price**, and the price line names the provider-fee limit and
@@ -108,9 +108,9 @@ Run 2's holes held. New ones, decided:
 reviewed stays callable by id, so makers can build and share before asking for search.
 
 **2. Names are judged as they read:** lookalike letters, digits and separators do not get round the
-reserved names (`trеg-hub`, `tregg`, `hunter-io`, `Hunter.io data`, `apol1o`, `verified-partner`).
+reserved names (`strаy-hub`, `strayy`, `hunter-io`, `Hunter.io data`, `apol1o`, `verified-partner`).
 
-**3. No relays:** a team tool may not point at treg itself.
+**3. No relays:** a team tool may not point at stray itself.
 
 **4. The reviewer reads the code:** the script or steps, a diff for an update, and the own tools'
 addresses. check.json may carry several cases. A maker cannot review its own tool.

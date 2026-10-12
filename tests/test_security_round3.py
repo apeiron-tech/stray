@@ -4,7 +4,7 @@ from __future__ import annotations
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg.health import host_is_public, safe_webhook_url
+from stray.health import host_is_public, safe_webhook_url
 
 
 def test_ssrf_blocks_numeric_ip_encodings():
@@ -37,7 +37,7 @@ async def _member_in_owner_org(clients: AsyncClient, email="m3b@x.dev"):
 
 async def test_update_tool_grandfathers_an_admin_added_shared_binding(clients: AsyncClient):
     _, tokB = await _member_in_owner_org(clients)
-    hb = {"X-Treg-Token": tokB}
+    hb = {"X-Stray-Token": tokB}
     # member B (creator) makes a tool binding B's OWN secret
     sB = (await clients.post("/secrets", json={"name": "b-key", "kind": "env", "value": "K"}, headers=hb)).json()["id"]
     tid = (await clients.post("/tools", json={"name": "b-tool", "base_url": "https://api.example.com",
@@ -58,8 +58,8 @@ async def test_update_tool_grandfathers_an_admin_added_shared_binding(clients: A
 
 
 async def test_delete_org_removes_run_records(clients: AsyncClient):
-    from treg.infra.db import session_maker
-    from treg.models import RunRecord
+    from stray.infra.db import session_maker
+    from stray.models import RunRecord
     # a server-runnable tool + a server run → writes a RunRecord
     await clients.post("/skills", json={"name": "r3", "recipe": "r", "secrets": [],
                                         "tools": [{"name": "r3", "base_url": "https://api.example.com",

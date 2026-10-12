@@ -74,7 +74,7 @@ catalog_get, then call
 
 The model states the price (0.004 USD) before calling, then returns real Google search results with
 domains, titles and ranks. The response includes cost_usd with the amount actually charged, and the
-team's prepaid balance drops by that amount. The user never supplies a DataForSEO key: treg injects
+team's prepaid balance drops by that amount. The user never supplies a DataForSEO key: stray injects
 its own server-side and bills the team.
 
 
@@ -86,7 +86,7 @@ Check the prepaid balance
 
 **User prompt**
 
-What is my treg balance right now?
+What is my stray balance right now?
 
 **Tool triggered**
 
@@ -114,7 +114,7 @@ my_tools
 
 **Expected output**
 
-A list of the tools this team registered with treg, each with its name and base URL. Credentials are
+A list of the tools this team registered with stray, each with its name and base URL. Credentials are
 never included, only what can be called. On the demo account this list may be empty, which is the
 correct answer for a team that has registered nothing, and the model should say so rather than invent
 entries.
@@ -122,7 +122,7 @@ entries.
 
 # Negative test cases
 
-Prompts where the model may think treg is relevant and it is not. The plugin should stay out of the
+Prompts where the model may think stray is relevant and it is not. The plugin should stay out of the
 way for all three.
 
 
@@ -138,7 +138,7 @@ What is the difference between REST and GraphQL?
 
 **Why it should not trigger**
 
-This is explanatory knowledge the model already has. treg calls third-party APIs and would spend
+This is explanatory knowledge the model already has. stray calls third-party APIs and would spend
 money to answer nothing. No tool should be invoked.
 
 
@@ -155,7 +155,7 @@ Write me a Python function that calls the Stripe API to list customers.
 **Why it should not trigger**
 
 The user wants source code, not live data. Nothing should be called and no balance should be spent.
-treg is for fetching real data, not for generating examples about APIs.
+stray is for fetching real data, not for generating examples about APIs.
 
 
 ## Negative Test Case 3
@@ -170,5 +170,5 @@ Help me write a polite reply to my colleague's email about moving our meeting.
 
 **Why it should not trigger**
 
-There is no external data to fetch. The word "email" may look related to treg's people and email
+There is no external data to fetch. The word "email" may look related to stray's people and email
 enrichment endpoints, but the task is composition, which the model does alone.

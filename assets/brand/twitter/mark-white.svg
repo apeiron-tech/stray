@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 290" width="290" height="290">
-  <!-- the treg brand mark: ▚ — upper-left + lower-right quadrants. Transparent, pure white. -->
+  <!-- the stray brand mark: ▛ — three squares in formation, the fourth strayed to the corner. Transparent, pure white. -->
   <rect x="0" y="0" width="140.5" height="140.5" rx="20" fill="#ffffff"/>
-  <rect x="149.5" y="149.5" width="140.5" height="140.5" rx="20" fill="#ffffff"/>
+  <rect x="149.5" y="0" width="140.5" height="140.5" rx="20" fill="#ffffff"/>
+  <rect x="0" y="149.5" width="140.5" height="140.5" rx="20" fill="#ffffff"/>
+  <rect x="220" y="220" width="70" height="70" rx="14" fill="#ffffff"/>
 </svg>

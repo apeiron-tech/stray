@@ -10,8 +10,8 @@ import pytest
 from httpx import AsyncClient
 from conftest import funded_user
 
-from treg import audit
-from treg.config import get_settings
+from stray import audit
+from stray.config import get_settings
 
 from test_marketplace_call import EP, EP_MICRO, _balance, _entries, platform_on  # noqa: F401
 
@@ -25,7 +25,7 @@ BODY = {"data": {"domain": "figma.com", "id": 7}, "rows": [{"e": "a@x"}, {"e": "
 def hub_on(monkeypatch):
     """Through the ENVIRONMENT, like platform_on: that fixture clears the settings cache, and a
     value patched onto the old settings object would vanish with it."""
-    monkeypatch.setenv("TREG_HUB_ENABLED", "1")
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "1")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -47,8 +47,8 @@ async def _publish(clients: AsyncClient, manifest) -> str:
     assert r.status_code == 201, r.text
     tool_id = r.json()["tool_id"]
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     async with session_maker() as s:                # the check run is phase 4; flip by hand here
         await s.execute(update(HubTool).where(HubTool.tool_id == tool_id).values(status="live"))
         await s.commit()
@@ -75,9 +75,9 @@ async def test_two_waves_data_flows_and_the_four_books(
     assert body["output"] == {"name": "figma.com", "n": 3, "people": {"domain": "figma.com", "id": 7}}
     assert body["usage"]["steps"] == 3 and body["usage"]["cost_micro"] == 3 * EP_MICRO
     assert [(e["wave"], e["name"], e["outcome"], e["key"]) for e in body["trace"]] == [
-        (0, "company", "ok", "treg"), (0, "news", "ok", "treg"), (1, "people", "ok", "treg")]
-    assert r.headers["X-Treg-Cost-Micro"] == str(3 * EP_MICRO)
-    assert r.headers["X-Treg-Steps"] == "3" and r.headers["X-Treg-Run-Id"] == r.headers["X-Treg-Call-Id"]
+        (0, "company", "ok", "stray"), (0, "news", "ok", "stray"), (1, "people", "ok", "stray")]
+    assert r.headers["X-Stray-Cost-Micro"] == str(3 * EP_MICRO)
+    assert r.headers["X-Stray-Steps"] == "3" and r.headers["X-Stray-Run-Id"] == r.headers["X-Stray-Call-Id"]
     # the provider book: three hits, and step 3 carried step 1's answer in its query
     hits = fake_provider.hits[before.hit_count:]
     assert len(hits) == 3
@@ -92,8 +92,8 @@ async def test_two_waves_data_flows_and_the_four_books(
     assert (await matrix_clients.get(f"/orgs/{org}/balance")).json()["holds"] == []
     # the run record
     from sqlalchemy import select
-    from treg.infra.db import session_maker
-    from treg.models import HubRun
+    from stray.infra.db import session_maker
+    from stray.models import HubRun
     async with session_maker() as s:
         run = (await s.execute(select(HubRun).where(HubRun.run_id == body["run_id"]))).scalars().one()
     assert run.status == "ok" and run.steps == 3 and run.cost_micro == 3 * EP_MICRO and run.inputs == {"domain": "figma.com", "limit": 2}
@@ -119,7 +119,7 @@ async def test_for_each_skip_if_empty_and_the_item_scope(
     assert body["output"]["count"] == 3 and body["output"]["verified"][1] is None
     assert len(fake_provider.hits) - before.hit_count == 3     # the skipped item never left
     assert {("aweme_id", "a@x"), ("aweme_id", "c@x")} <= {q for h in fake_provider.hits[before.hit_count:] for q in h.query}
-    assert r.headers["X-Treg-Cost-Micro"] == str(3 * EP_MICRO)
+    assert r.headers["X-Stray-Cost-Micro"] == str(3 * EP_MICRO)
 
 
 async def test_a_failed_step_stops_the_run_and_keeps_the_money_already_spent(
@@ -140,7 +140,7 @@ async def test_a_failed_step_stops_the_run_and_keeps_the_money_already_spent(
     d = r.json()["detail"]
     assert d["error"] == "hub_step_failed" and d["step"] == "first" and d["status"] == 500
     assert [e["outcome"] for e in d["trace"]] == ["failed"]        # nothing new started
-    assert r.headers.get("x-treg-error") == "1"
+    assert r.headers.get("x-stray-error") == "1"
     assert len(fake_provider.hits) - before.hit_count == 1
     assert await _balance(matrix_clients) == before.balance_micro   # released, not charged
 
@@ -170,7 +170,7 @@ async def test_the_ceiling_stops_the_run_before_the_step_that_would_pass_it(
         output={"x": "$b.data"}))
     before = await snapshot(matrix_clients, fake_provider)
     r = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "figma.com"},
-                                  headers={**FAKE, "X-Treg-Run-Max-Cost": "0.0015"})   # room for one step
+                                  headers={**FAKE, "X-Stray-Run-Max-Cost": "0.0015"})   # room for one step
     assert r.status_code == 402, r.text
     d = r.json()["detail"]
     assert d["error"] == "hub_run_max_cost" and d["step"] == "b" and d["charged_micro"] == EP_MICRO
@@ -202,7 +202,7 @@ async def test_an_own_tool_step_runs_on_the_makers_key_unmetered(
     r = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "e"}, headers=FAKE)
     assert r.status_code == 200, r.text
     assert r.json()["trace"][0]["key"] == "team" and r.json()["trace"][0]["cost_micro"] == 0
-    assert r.headers["X-Treg-Cost-Micro"] == "0"
+    assert r.headers["X-Stray-Cost-Micro"] == "0"
     hit = fake_provider.hits[-1]
     assert hit.path == "/sb/rest/v1/leads" and ("select", "e") in hit.query
     assert hit.headers["authorization"] == "Bearer MAKER-SB-KEY"
@@ -219,7 +219,7 @@ async def test_idempotency_key_covers_the_whole_run(
     r1 = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "figma.com"}, headers=h)
     r2 = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "figma.com"}, headers=h)
     assert r1.status_code == 200 and r2.status_code == 200
-    assert r2.headers.get("X-Treg-Idempotent-Replay") == "true"
+    assert r2.headers.get("X-Stray-Idempotent-Replay") == "true"
     assert r2.json()["run_id"] == r1.json()["run_id"]
     assert len(fake_provider.hits) - hits_before == 1
 
@@ -247,8 +247,8 @@ async def _publish_script(clients: AsyncClient, script: str, uses, fields) -> st
     assert r.status_code == 201, r.text
     tool_id = r.json()["tool_id"]
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     async with session_maker() as s:
         await s.execute(update(HubTool).where(HubTool.tool_id == tool_id).values(status="live"))
         await s.commit()
@@ -269,12 +269,12 @@ async def test_a_script_runs_a_catalog_call_and_an_own_tool_call(
     assert body["log"] == ["company status 200"]
     assert body["usage"]["steps"] == 2 and body["usage"]["cost_micro"] == EP_MICRO
     # the caller reads the KIND of tool per step, never the maker's recipe (8.1 review)
-    assert [(e["call"], e["key"], e["cost_micro"]) for e in body["trace"]] == [("a catalog tool", "treg", EP_MICRO), ("the maker's own tool", "team", 0)]
+    assert [(e["call"], e["key"], e["cost_micro"]) for e in body["trace"]] == [("a catalog tool", "stray", EP_MICRO), ("the maker's own tool", "team", 0)]
     assert all("error" not in e for e in body["trace"])
     # the maker's own run row keeps the real calls
     mine = (await matrix_clients.get(f"/hub/runs/{body['run_id']}")).json()
     assert [e["call"] for e in mine["trace"]] == [EP, "supabase/rest/v1/leads"]
-    assert r.headers["X-Treg-Cost-Micro"] == str(EP_MICRO)
+    assert r.headers["X-Stray-Cost-Micro"] == str(EP_MICRO)
     hits = fake_provider.hits[before.hit_count:]
     assert len(hits) == 2
     assert hits[1].path == "/sb/rest/v1/leads" and ("select", "figma.com") in hits[1].query
@@ -334,7 +334,7 @@ async def test_a_script_header_reaches_the_upstream_but_identity_headers_do_not(
 export default async function run(ctx) {
   const r = await ctx.call("supabase/rest/v1/keyword_rankings", {
     query: { select: "keyword" },
-    headers: { "Accept-Profile": "hubdemo", "Authorization": "Bearer STOLEN", "X-Treg-Token": "nope", "apikey": "x" },
+    headers: { "Accept-Profile": "hubdemo", "Authorization": "Bearer STOLEN", "X-Stray-Token": "nope", "apikey": "x" },
   });
   return { n: r.json.rows.length };
 }""", ["supabase"], ["n"])
@@ -343,7 +343,7 @@ export default async function run(ctx) {
     hit = fake_provider.hits[-1]
     assert hit.headers.get("accept-profile") == "hubdemo"
     assert hit.headers["authorization"] == "Bearer MAKER-SB-KEY"      # the tool's binding, never the script's
-    assert "x-treg-token" not in hit.headers and hit.headers.get("apikey") != "x"
+    assert "x-stray-token" not in hit.headers and hit.headers.get("apikey") != "x"
 
 
 async def test_a_step_never_accepts_a_compressed_answer(
@@ -365,8 +365,8 @@ async def test_a_step_never_accepts_a_compressed_answer(
 
 async def _invariant(org_id: int) -> None:
     from sqlalchemy import func, select
-    from treg.infra.db import session_maker
-    from treg.models import CreditBlock, Hold, Org
+    from stray.infra.db import session_maker
+    from stray.models import CreditBlock, Hold, Org
     async with session_maker() as s:
         bal = (await s.execute(select(Org.balance_micro).where(Org.id == org_id))).scalar_one()
         blocks = (await s.execute(select(func.coalesce(func.sum(CreditBlock.remaining_micro), 0))
@@ -379,7 +379,7 @@ async def _invariant(org_id: int) -> None:
 async def _second_team(clients: AsyncClient, email: str) -> tuple[dict, int]:
     """A stranger with their own token and the $1 welcome credit."""
     token = (await funded_user(clients, email))["token"]
-    h = {"X-Treg-Token": token}
+    h = {"X-Stray-Token": token}
     org_id = (await clients.get("/orgs", headers=h)).json()[0]["org_id"]
     return h, org_id
 
@@ -403,7 +403,7 @@ async def test_a_paid_run_moves_the_price_to_the_maker_as_earned_credit(
     assert r.status_code == 200, r.text
     u = r.json()["usage"]
     assert u == {**u, "steps_micro": EP_MICRO, "price_micro": 10_000, "cost_micro": EP_MICRO + 10_000}
-    assert r.headers["X-Treg-Cost-Micro"] == str(EP_MICRO + 10_000)
+    assert r.headers["X-Stray-Cost-Micro"] == str(EP_MICRO + 10_000)
     # the caller paid the step and the price; the maker earned the price, whole
     assert (await _balance_of(matrix_clients, caller_h, caller_org))["balance_micro"] == caller_before - EP_MICRO - 10_000
     assert await _balance(matrix_clients) == maker_before + 10_000
@@ -450,8 +450,8 @@ async def test_the_maker_never_pays_their_own_price_and_the_check_is_free_of_it(
 async def test_earned_credit_is_spent_before_purchased_money(
     matrix_clients: AsyncClient, fake_provider: FakeProvider, platform_on, hub_on,
 ):
-    from treg.domain import money as ledger
-    from treg.infra.db import session_maker
+    from stray.domain import money as ledger
+    from stray.infra.db import session_maker
     maker_org = (await matrix_clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as s:                     # the maker also holds purchased money
         await ledger.topup(s, maker_org, 500_000, "pi_test_hub_6")
@@ -476,7 +476,7 @@ async def test_the_ceiling_counts_the_price(
         steps=[{"name": "a", "call": EP, "input": {"aweme_id": "x"}}], output={"x": "$a.data"}, price_usd=0.05))
     caller_h, caller_org = await _second_team(matrix_clients, "stranger4@example.com")
     r = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "x"},
-                                  headers={**FAKE, **caller_h, "X-Treg-Run-Max-Cost": "0.05"})   # room for the price, not the step
+                                  headers={**FAKE, **caller_h, "X-Stray-Run-Max-Cost": "0.05"})   # room for the price, not the step
     assert r.status_code == 402 and r.json()["detail"]["error"] == "hub_run_max_cost"
     assert (await _balance_of(matrix_clients, caller_h, caller_org))["holds"] == []          # the price hold was released
 
@@ -600,11 +600,11 @@ async def test_the_engineering_team_size_recipe_reads_the_crustdata_role_headcou
     import json as _json
     from pathlib import Path
     folder = Path(__file__).resolve().parents[2] / "docs" / "hub-recipes" / "engineering-team-size"
-    # the recipe's two providers are not in platform_on's roster: give them treg keys the same way
+    # the recipe's two providers are not in platform_on's roster: give them stray keys the same way
     import os
-    monkeypatch.setenv("TREG_PLATFORM_KEY_PDL", "PLATFORM-PDL-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_CRUSTDATA", "PLATFORM-CRUSTDATA-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", os.environ["TREG_PLATFORM_PROVIDERS"] + ",pdl,crustdata")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_PDL", "PLATFORM-PDL-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_CRUSTDATA", "PLATFORM-CRUSTDATA-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", os.environ["STRAY_PLATFORM_PROVIDERS"] + ",pdl,crustdata")
     get_settings.cache_clear()
 
     def body(request, headers):
@@ -616,8 +616,8 @@ async def test_the_engineering_team_size_recipe_reads_the_crustdata_role_headcou
             return _json.dumps({"status": 200, "name": "acme", "linkedin_url": "linkedin.com/company/acme"}).encode()
         return _json.dumps({"status": 200, "employee_count": 200}).encode()   # pdl.companies.enrich, no class data
     monkeypatch.setattr(FakeProvider, "_response_body", staticmethod(body))
-    from treg.domain import money as ledger
-    from treg.infra.db import session_maker
+    from stray.domain import money as ledger
+    from stray.infra.db import session_maker
     org = (await matrix_clients.get("/orgs")).json()[0]["org_id"]
     async with session_maker() as db:                                   # CrustData reserves ~$1.20 a call
         await ledger.grant(db, org, amount_micro=10_000_000, kind="promotional", once=False)
@@ -626,7 +626,7 @@ async def test_the_engineering_team_size_recipe_reads_the_crustdata_role_headcou
         "manifest": _json.loads((folder / "recipe.json").read_text()), "script": (folder / "run.js").read_text(),
         "check": _json.loads((folder / "check.json").read_text()), "readme": (folder / "README.md").read_text()})
     assert pub.status_code == 201 and pub.json()["status"] == "live", pub.text
-    ceiling = {"X-Treg-Run-Max-Cost": "3"}                             # CrustData alone estimates over the $1 default
+    ceiling = {"X-Stray-Run-Max-Cost": "3"}                             # CrustData alone estimates over the $1 default
     r = await matrix_clients.post(f"/call/{pub.json()['tool_id']}", json={"domain": "https://www.Acme.com/about"}, headers=ceiling)
     assert r.status_code == 200, r.text
     out = r.json()["output"]
@@ -657,27 +657,27 @@ async def test_hostile_bodies_and_headers_are_4xx_never_500(
     tool_id = await _publish(matrix_clients, _manifest(
         steps=[{"name": "a", "call": EP, "input": {"aweme_id": "x"}}], output={"x": "$a.data"}, price_usd=0.01))
     buyer = (await funded_user(matrix_clients, "hostile@example.com"))["token"]
-    h = {**FAKE, "X-Treg-Token": buyer}
+    h = {**FAKE, "X-Stray-Token": buyer}
     bomb = "[" * 100_000 + "]" * 100_000
     r = await matrix_clients.post(f"/call/{tool_id}", content=bomb, headers={**h, "content-type": "application/json"})
     assert r.status_code == 422 and r.json()["detail"]["field"] == "body"
     r = await matrix_clients.post(f"/call/{tool_id}", content=b'{"domain": NaN}', headers={**h, "content-type": "application/json"})
     assert r.status_code == 422
     for v in ("1e308", "NaN", "abc", "-5", "5000"):
-        r = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers={**h, "X-Treg-Run-Max-Cost": v})
-        assert r.status_code == 422 and r.json()["detail"]["field"] == "X-Treg-Run-Max-Cost", (v, r.text)
-    bal = (await matrix_clients.get(f"/orgs/{(await matrix_clients.get('/orgs', headers={'X-Treg-Token': buyer})).json()[0]['org_id']}/balance", headers={"X-Treg-Token": buyer})).json()
+        r = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "x"}, headers={**h, "X-Stray-Run-Max-Cost": v})
+        assert r.status_code == 422 and r.json()["detail"]["field"] == "X-Stray-Run-Max-Cost", (v, r.text)
+    bal = (await matrix_clients.get(f"/orgs/{(await matrix_clients.get('/orgs', headers={'X-Stray-Token': buyer})).json()[0]['org_id']}/balance", headers={"X-Stray-Token": buyer})).json()
     assert bal["holds"] == []                                       # nothing was held on any refusal
 
 
 async def test_a_crash_inside_the_run_closes_the_price_hold_and_answers_424(
     matrix_clients: AsyncClient, fake_provider: FakeProvider, platform_on, hub_on, monkeypatch,
 ):
-    from treg.application.hub import runner
+    from stray.application.hub import runner
     tool_id = await _publish(matrix_clients, _manifest(
         steps=[{"name": "a", "call": EP, "input": {"aweme_id": "x"}}], output={"x": "$a.data"}, price_usd=0.05))
     buyer = (await funded_user(matrix_clients, "crash@example.com"))["token"]
-    h = {"X-Treg-Token": buyer}
+    h = {"X-Stray-Token": buyer}
     org = (await matrix_clients.get("/orgs", headers=h)).json()[0]["org_id"]
     before = (await matrix_clients.get(f"/orgs/{org}/balance", headers=h)).json()["balance_micro"]
 
@@ -693,7 +693,7 @@ async def test_a_crash_inside_the_run_closes_the_price_hold_and_answers_424(
 async def test_a_step_answer_over_the_cap_is_cut_not_buffered(
     matrix_clients: AsyncClient, fake_provider: FakeProvider, platform_on, hub_on, monkeypatch,
 ):
-    from treg.application.hub import runner
+    from stray.application.hub import runner
 
     class _Resp:
         def __init__(self, chunks): self._c = chunks; self.status = 200; self.raw_headers = []
@@ -730,7 +730,7 @@ async def test_an_own_tool_named_like_a_catalog_id_cannot_be_used_and_a_child_ne
         "check": {"inputs": {"domain": "x"}, "fields": ["x"]}, "readme": "x"})
     assert bad.status_code == 422 and bad.json()["detail"]["field"] == "uses[0]" and "dot" in bad.json()["detail"]["rule"]
     # a child call carries child_of and is never resolved as a hub id
-    from treg.application.call.types import CallInput
+    from stray.application.call.types import CallInput
     assert "child_of" in CallInput.__dataclass_fields__
 
 
@@ -740,7 +740,7 @@ async def test_a_caller_never_reads_the_recipe_or_an_upstream_error_body(
     tool_id = await _publish(matrix_clients, _manifest(
         steps=[{"name": "a", "call": EP, "input": {"aweme_id": "x"}}], output={"x": "$a.data"}))
     buyer = (await funded_user(matrix_clients, "reader2@example.com"))["token"]
-    h = {"X-Treg-Token": buyer}
+    h = {"X-Stray-Token": buyer}
     r = await matrix_clients.post(f"/call/{tool_id}", json={"domain": "x"},
                                   headers={**h, "X-Fake-Status": "500", "X-Fake-Body": '{"vendor": "SECRET-UPSTREAM-BODY"}'})
     assert r.status_code == 424
@@ -796,18 +796,18 @@ async def test_a_version_under_check_is_invisible_to_strangers_and_a_crashed_che
     matrix_clients: AsyncClient, fake_provider: FakeProvider, platform_on, hub_on, monkeypatch,
 ):
     from sqlalchemy import update
-    from treg.infra.db import session_maker
-    from treg.models import HubTool
+    from stray.infra.db import session_maker
+    from stray.models import HubTool
     tool_id = await _publish(matrix_clients, _manifest(
         steps=[{"name": "a", "call": EP, "input": {"aweme_id": "x"}}], output={"x": "$a.data"}))
     async with session_maker() as s:
         await s.execute(update(HubTool).where(HubTool.tool_id == tool_id).values(status="checking"))
         await s.commit()
     buyer = (await funded_user(matrix_clients, "guess@example.com"))["token"]
-    assert (await matrix_clients.post(f"/call/{tool_id}@1", json={"domain": "x"}, headers={**FAKE, "X-Treg-Token": buyer})).status_code == 404
+    assert (await matrix_clients.post(f"/call/{tool_id}@1", json={"domain": "x"}, headers={**FAKE, "X-Stray-Token": buyer})).status_code == 404
     assert (await matrix_clients.post(f"/call/{tool_id}@1", json={"domain": "x"}, headers=FAKE)).status_code == 200   # the maker's own check pins it
     # a crashed check: the version ends `failed`, never `checking` forever
-    from treg.application.hub import health as hub_health
+    from stray.application.hub import health as hub_health
     def boom(*a, **k):
         raise RuntimeError("simulated crash inside the check")
     monkeypatch.setattr(hub_health, "verdict_from", boom)

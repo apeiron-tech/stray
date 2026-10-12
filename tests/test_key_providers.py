@@ -9,18 +9,18 @@ from __future__ import annotations
 
 import json
 import httpx
-from treg.api import app
+from stray.api import app
 import dataclasses
 import pytest
 
 from httpx import AsyncClient
 
-from treg import oauth_providers as P
+from stray import oauth_providers as P
 
 
 # ---- registry shape ----------------------------------------------------------------------
 def test_key_providers_are_offerable_without_deployment_credentials():
-    """The user brings the key, so treg holds no app of its own — a key provider must be offerable,
+    """The user brings the key, so stray holds no app of its own — a key provider must be offerable,
     not shown as 'not configured' the way an unset OAuth provider is."""
     keyed = [p for p in P.REGISTRY.values() if p.auth_kind == "key"]
     assert keyed
@@ -139,7 +139,7 @@ async def test_adyntel_connect_collects_both_credentials_before_provisioning(cli
         assert request.method == "POST"
         assert request.url.path == "/facebook"
         assert json.loads(request.content) == {
-            "company_domain": "treg-credential-check.invalid",
+            "company_domain": "stray-credential-check.invalid",
             "api_key": "own-key",
         }
         return httpx.Response(422, json={"detail": "email is required"})
@@ -337,7 +337,7 @@ async def test_key_connection_lists_and_revokes(clients: AsyncClient, monkeypatc
 
 # ---- HTTP Basic providers: paste a raw pair OR a ready-made Base64 blob ----------------------
 async def test_basic_provider_encodes_a_raw_login_password_once(clients: AsyncClient, monkeypatch):
-    """DataForSEO/Moz take HTTP Basic. Pasting the raw `login:password`, treg Base64s it once and the
+    """DataForSEO/Moz take HTTP Basic. Pasting the raw `login:password`, stray Base64s it once and the
     upstream sees `Basic <b64(login:password)>`."""
     import base64
     monkeypatch.setitem(P.REGISTRY, "dataforseo", dataclasses.replace(
@@ -350,7 +350,7 @@ async def test_basic_provider_encodes_a_raw_login_password_once(clients: AsyncCl
 
 async def test_basic_provider_accepts_a_ready_made_base64_blob(clients: AsyncClient, monkeypatch):
     """The DataForSEO and Moz dashboards ALSO hand out a ready-made Base64 credential, and users paste
-    that at least as often as the raw pair. treg must NOT Base64 it a second time — the upstream has to
+    that at least as often as the raw pair. stray must NOT Base64 it a second time — the upstream has to
     receive exactly `Basic <the pasted blob>`, decoding back to the original `login:password`."""
     import base64
     blob = base64.b64encode(b"login:pw").decode()
@@ -363,12 +363,12 @@ async def test_basic_provider_accepts_a_ready_made_base64_blob(clients: AsyncCli
 
 
 async def test_secret_add_raw_basic_credential_encodes_at_injection(clients: AsyncClient, monkeypatch):
-    """Secrets added via `treg secret add dataforseo` bypass the connect flow and store the raw value.
+    """Secrets added via `stray secret add dataforseo` bypass the connect flow and store the raw value.
     The injector must detect and Base64-encode a raw `login:password` to produce a valid Basic header.
 
     Regression test for feedback #294 / #276 / #280-282: DataForSEO Lighthouse returned 40100
-    (401 Unauthorized) through treg while the same credential worked via direct curl. The cause
-    was that `treg secret add dataforseo --env-var` stored raw `login:password`, but the injector
+    (401 Unauthorized) through stray while the same credential worked via direct curl. The cause
+    was that `stray secret add dataforseo --env-var` stored raw `login:password`, but the injector
     used it verbatim as `Basic login:password` instead of `Basic <base64(login:password)>`.
     """
     import base64

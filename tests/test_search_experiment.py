@@ -12,11 +12,11 @@ import json
 
 import httpx
 
-from treg.application import search_experiment as se
-from treg.config import get_settings
-from treg.domain.catalog import interleave
-from treg.domain.catalog import store as catalog_store
-from treg.infra import judge as judge_infra
+from stray.application import search_experiment as se
+from stray.config import get_settings
+from stray.domain.catalog import interleave
+from stray.domain.catalog import store as catalog_store
+from stray.infra import judge as judge_infra
 
 
 # ---- domain: recall, merge, credit ----------------------------------------------------------------
@@ -284,14 +284,14 @@ async def test_run_interleaves_and_owns_rows_and_pure_arms_get_pure_pages(monkey
     assert out.arm == se.ARM_JUDGED
     # (the test's `_finish` skips routed grouping, so only membership is asserted here — the MCP
     # wiring's finish groups the parent above its children exactly as the baseline page does)
-    assert {ep["id"] for ep, _ in out.shown} == {"treg.stocks.eod.history", "tiingo.daily.prices"}
+    assert {ep["id"] for ep, _ in out.shown} == {"stray.stocks.eod.history", "tiingo.daily.prices"}
     assert all(score < se._BUCKET_LIFT for _, score in out.shown)   # the bucket lift never reaches the caller
 
     monkeypatch.setattr(get_settings(), "search_experiment_holdout_percent", 0, raising=False)
     out = await se.run(q, cat, baseline=baseline, baseline_total=1, limit=8, caller="anyone", finish=_finish)
     assert out.arm == se.ARM_INTERLEAVE
-    assert {ep["id"] for ep, _ in out.shown} == {other["id"], "treg.stocks.eod.history", "tiingo.daily.prices"}
-    assert out.owners == {other["id"]: "baseline", "treg.stocks.eod.history": "judged", "tiingo.daily.prices": "judged"}
+    assert {ep["id"] for ep, _ in out.shown} == {other["id"], "stray.stocks.eod.history", "tiingo.daily.prices"}
+    assert out.owners == {other["id"]: "baseline", "stray.stocks.eod.history": "judged", "tiingo.daily.prices": "judged"}
     assert sorted(o for _, o, _ in out.log["shown"]) == ["baseline", "judged", "judged"]
 
 
@@ -299,9 +299,9 @@ async def test_run_interleaves_and_owns_rows_and_pure_arms_get_pure_pages(monkey
 async def _search_rows_and_log(clients, query, token):
     from sqlmodel import select
 
-    from treg import audit
-    from treg.infra.db import session_maker
-    from treg.models import SearchLog
+    from stray import audit
+    from stray.infra.db import session_maker
+    from stray.models import SearchLog
     from test_mcp import _call_tool, mcp_session
 
     async with mcp_session(clients) as c:
@@ -333,8 +333,8 @@ async def test_mcp_shadow_serves_the_baseline_and_records_both_pages(clients, mo
     assert row.shown == [] and row.judge_ms == 12 and row.judge_error is None
     # and the lexical miss is still the miss log's business
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import SearchMiss
+    from stray.infra.db import session_maker
+    from stray.models import SearchMiss
     async with session_maker() as s:
         assert [m.query for m in (await s.execute(select(SearchMiss))).scalars()] == [q]
 
@@ -345,7 +345,7 @@ async def test_mcp_interleave_serves_the_merge_and_owns_each_row(clients, monkey
     token = (await clients.post("/users", json={"email": "merge@superdesign.dev"})).json()["token"]
     out, rows = await _search_rows_and_log(clients, "apple stock closing prices for last year", token)
     ids = [r["endpoint_id"] for r in out["results"]]
-    assert ids and ids[0] == "treg.stocks.eod.history" and "tiingo.daily.prices" in ids   # grouped: parent first
+    assert ids and ids[0] == "stray.stocks.eod.history" and "tiingo.daily.prices" in ids   # grouped: parent first
     assert all("judged" not in r for r in out["results"])          # the probability stays in the log
     (row,) = rows
     assert row.arm == "interleave" and row.shown == [[i, "judged", "stocks.eod.history"] for i in ids]

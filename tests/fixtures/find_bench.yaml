@@ -1,6 +1,6 @@
 # Synthetic find-bench cases for CI's recall tier (scripts/find_bench.py). Written by hand to the
 # shapes people type into the Catalog box - a described job, a short job, a bare name, a typing
-# fragment, something treg does not do - and never taken from a log.
+# fragment, something stray does not do - and never taken from a log.
 #
 # `gold` is a regex matched against a unit's id and its capability id; `expect` lists the acceptable
 # verdicts, `|`-separated; `target` is what a name verdict must name. `stratum` groups the report.
@@ -36,7 +36,7 @@ cases:
   # ---- a typing fragment ---------------------------------------------------------------------------
   - {q: "pinter", stratum: prefix, gold: null, expect: name|none, target: "platform:pinterest"}
   - {q: "yout", stratum: prefix, gold: null, expect: name|none, target: "platform:youtube"}
-  # ---- nothing treg does ---------------------------------------------------------------------------
+  # ---- nothing stray does ---------------------------------------------------------------------------
   - {q: "book a table for two at an italian restaurant tonight", stratum: none, gold: null, expect: none}
   - {q: "file my quarterly sales tax return", stratum: none, gold: null, expect: none}
-  - {q: "how do I rotate my treg token", stratum: none, gold: null, expect: none}
+  - {q: "how do I rotate my stray token", stratum: none, gold: null, expect: none}

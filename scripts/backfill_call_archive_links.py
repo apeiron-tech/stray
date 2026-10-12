@@ -17,7 +17,7 @@ anything else). Served hits are skipped.
     python scripts/backfill_call_archive_links.py --apply        # write the links
     python scripts/backfill_call_archive_links.py --window 10    # ± seconds (default 10)
 
-Connects with `TREG_DATABASE_URL` / `--dsn` (a postgres:// DSN).
+Connects with `STRAY_DATABASE_URL` / `--dsn` (a postgres:// DSN).
 """
 from __future__ import annotations
 
@@ -80,13 +80,13 @@ async def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--apply", action="store_true", help="write the links (default: dry run)")
     ap.add_argument("--window", type=int, default=10, help="± seconds between call and fetch (default 10)")
-    ap.add_argument("--dsn", default=os.environ.get("TREG_DATABASE_URL", ""), help="postgres DSN")
+    ap.add_argument("--dsn", default=os.environ.get("STRAY_DATABASE_URL", ""), help="postgres DSN")
     args = ap.parse_args()
 
     import asyncpg
 
     if not args.dsn:
-        print("no DSN: pass --dsn, set TREG_DATABASE_URL", file=sys.stderr)
+        print("no DSN: pass --dsn, set STRAY_DATABASE_URL", file=sys.stderr)
         return 2
     dsn = args.dsn.replace("postgresql+asyncpg://", "postgresql://")
     conn = await asyncpg.connect(dsn, timeout=45)

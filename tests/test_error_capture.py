@@ -1,4 +1,4 @@
-"""Admin-only evidence kept for a failed relayed call: caller input and provider/treg explanation.
+"""Admin-only evidence kept for a failed relayed call: caller input and provider/stray explanation.
 
 Until this existed a failure recorded a status code and nothing else, so it could not be explained
 afterwards — the provider's message was never stored and the caller's parameters survived only inside
@@ -8,9 +8,9 @@ returned 80 identical 400s across 6 orgs and none of them could be diagnosed.
 Three properties are load-bearing here, and each has its own test below:
 
 1. It is FAILURE-ONLY. Successful calls never retain request or response content.
-2. It never retains treg's own credential. That key is shared across every tenant, so a leak is not
+2. It never retains stray's own credential. That key is shared across every tenant, so a leak is not
    one customer's problem — and providers routinely quote the offending request back in a 400/401.
-3. It captures BOTH failure shapes: the provider answering badly, and treg failing to reach it.
+3. It captures BOTH failure shapes: the provider answering badly, and stray failing to reach it.
 """
 
 from __future__ import annotations
@@ -24,15 +24,15 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from treg.application.call import evidence as call_evidence
-from treg.application.call import service as call_service
-from treg.application.call.types import ReservationFailed, UpstreamResponse
-from treg.routers import admin as admin_routes
-from treg.application import evidence_retention
-from treg.routers import call as call_routes
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import CallRecord
+from stray.application.call import evidence as call_evidence
+from stray.application.call import service as call_service
+from stray.application.call.types import ReservationFailed, UpstreamResponse
+from stray.routers import admin as admin_routes
+from stray.application import evidence_retention
+from stray.routers import call as call_routes
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import CallRecord
 
 EP = "tikhub.tiktok.video.comments"           # GET, tikhub — header-injected
 EP_SPYFU = "spyfu.google.domain.overview"     # GET, spyfu — QUERY-injected (the harder leak case)
@@ -45,13 +45,13 @@ EP_POST = "dataforseo.web.page.audit"         # POST — the only shape whose pa
 PLATFORM_KEY = "tk.9f2a-Q1"
 SPYFU_KEY = "sp.4b7c-Z8"
 ADMIN_TOKEN = "ENV-ADMIN-SECRET"
-ADMIN = {"X-Treg-Token": ADMIN_TOKEN}       # /admin/* authenticates with the env token, not a member
+ADMIN = {"X-Stray-Token": ADMIN_TOKEN}       # /admin/* authenticates with the env token, not a member
 
 
 def test_constant_binding_format_is_not_a_secret_rendering(monkeypatch):
     """Provider protocol constants are not credentials and must not be scrubbed as credentials."""
     key = "cr.test-Q7"
-    monkeypatch.setenv("TREG_PLATFORM_KEY_CRUSTDATA", key)
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_CRUSTDATA", key)
     get_settings.cache_clear()
     constant = {
         "platform_setting": "platform_key_crustdata",
@@ -83,11 +83,11 @@ def test_constant_binding_format_is_not_a_secret_rendering(monkeypatch):
 
 @pytest.fixture
 def platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN_TOKEN)
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", PLATFORM_KEY)
-    monkeypatch.setenv("TREG_PLATFORM_KEY_SPYFU", SPYFU_KEY)
-    monkeypatch.setenv("TREG_PLATFORM_KEY_DATAFORSEO", "PLATFORM-DFS-KEY-def456")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub,spyfu,dataforseo")
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN_TOKEN)
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", PLATFORM_KEY)
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_SPYFU", SPYFU_KEY)
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_DATAFORSEO", "PLATFORM-DFS-KEY-def456")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub,spyfu,dataforseo")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -122,7 +122,7 @@ async def _row(clients: AsyncClient) -> dict:
     Deliberately NOT via `GET /calls`: that endpoint does not expose these columns and must not (see
     the last test), so reading through it would make every assertion below vacuously pass.
     """
-    from treg import audit
+    from stray import audit
     await audit.drain()          # fire-and-forget writes must be flushed before reading
     async with session_maker() as db:
         row = (await db.execute(
@@ -186,8 +186,8 @@ async def test_a_post_body_is_captured_for_a_failed_platform_call(
     assert "example.com/coffee" in row["error_request"], "the POST body is the only copy of these"
 
 
-# ---- shape 2: treg never reached the provider ---------------------------------------------------
-async def test_treg_s_own_502_is_explained_too(clients: AsyncClient, platform_on, monkeypatch):
+# ---- shape 2: stray never reached the provider ---------------------------------------------------
+async def test_stray_s_own_502_is_explained_too(clients: AsyncClient, platform_on, monkeypatch):
     """The branch where `body` is UNBOUND. These are the failures a bare status explains least:
     upstream timeout, connection reset, failed injection, SSRF refusal."""
     import httpx
@@ -196,7 +196,7 @@ async def test_treg_s_own_502_is_explained_too(clients: AsyncClient, platform_on
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 502
     row = await _row(clients)
-    assert row["error_response"].startswith("treg: ")
+    assert row["error_response"].startswith("stray: ")
     assert "upstream request failed" in row["error_response"]
     assert "aweme_id=7" in row["error_request"]
 
@@ -248,8 +248,8 @@ async def test_plain_own_tool_failure_keeps_evidence(clients: AsyncClient, monke
 
 async def test_oauth_provisioned_own_tool_failure_keeps_evidence(
         clients: AsyncClient, monkeypatch):
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_ID", "treg-google-cid")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_SECRET", "treg-google-csec")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_ID", "stray-google-cid")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_SECRET", "stray-google-csec")
     get_settings.cache_clear()
     state = (await clients.post("/oauth/start", json={
         "provider": "google-search-console", "name": "google-search-console",
@@ -316,7 +316,7 @@ async def test_large_unmetered_body_keeps_query_only(clients: AsyncClient, monke
     assert "body-marker" not in row["error_request"]
 
 
-async def test_treg_side_502_keeps_own_tool_evidence(clients: AsyncClient, monkeypatch):
+async def test_stray_side_502_keeps_own_tool_evidence(clients: AsyncClient, monkeypatch):
     import httpx
 
     await _own_tool(clients, name="broken-own")
@@ -329,7 +329,7 @@ async def test_treg_side_502_keeps_own_tool_evidence(clients: AsyncClient, monke
     assert "upstream request failed" in row["error_response"]
 
 
-async def test_a_treg_refusal_stores_nothing(clients: AsyncClient):
+async def test_a_stray_refusal_stores_nothing(clients: AsyncClient):
     """`refused_by` already explains these, and nothing went upstream to have an error body."""
     r = await clients.get(f"/call/{EP}?aweme_id=7")     # tier 4 off → tier-3 404
     assert r.status_code == 404
@@ -385,11 +385,11 @@ async def test_a_decoded_basic_credential_never_survives(clients: AsyncClient, p
                                                          monkeypatch):
     """dataforseo's platform value IS the base64 of `login:password` (config.py says so), and it is
     the largest provider by spend. A provider that decodes Basic auth and reports the two halves
-    echoes treg's credential in a form where neither the base64 blob nor `Basic <blob>` appears —
+    echoes stray's credential in a form where neither the base64 blob nor `Basic <blob>` appears —
     so only decomposing it can catch this."""
     import base64
-    login, password = "treg-ops@example.com", "pw.7Kq2"
-    monkeypatch.setenv("TREG_PLATFORM_KEY_DATAFORSEO",
+    login, password = "stray-ops@example.com", "pw.7Kq2"
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_DATAFORSEO",
                        base64.b64encode(f"{login}:{password}".encode()).decode())
     get_settings.cache_clear()
     monkeypatch.setattr(call_service, "relay", _fake_relay(
@@ -408,7 +408,7 @@ async def test_a_lowercase_percent_encoded_key_never_survives(clients: AsyncClie
     """`quote()` emits UPPERCASE hex; plenty of servers echo lowercase. Under a neutral field name
     the query-shaped rule does not fire either, so the exact mask is the only thing left."""
     from urllib.parse import quote
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "a/b+c=dQ")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "a/b+c=dQ")
     get_settings.cache_clear()
     monkeypatch.setattr(call_service, "relay", _fake_relay(
         400, f'{{"error":"bad","echo":"{quote("a/b+c=dQ", safe="").lower()}"}}'.encode()))
@@ -487,7 +487,7 @@ async def test_a_bodyless_failure_still_leaves_a_row(clients: AsyncClient, platf
     and `_audit` only stores evidence when one is truthy — so the row vanished from /admin/errors and
     the failure looked like capture had never run. "Nothing came back" is itself the finding."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(500, b""))
-    # The required param has to be present or treg refuses before relay — the empty half under test
+    # The required param has to be present or stray refuses before relay — the empty half under test
     # is the RESPONSE, which is what a bodyless provider 5xx actually looks like.
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 500
@@ -502,7 +502,7 @@ async def test_expired_evidence_is_a_state_not_content(clients: AsyncClient, pla
     """The sentinel must never be served as though it were the provider's answer."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"aged out later"}'))
     await clients.get(f"/call/{EP}?aweme_id=7")
-    from treg import audit
+    from stray import audit
     await audit.drain()
     async with session_maker() as db:
         row = (await db.execute(
@@ -520,7 +520,7 @@ async def test_expired_evidence_is_a_state_not_content(clients: AsyncClient, pla
 async def test_a_cap_refusal_says_WHICH_cap(clients: AsyncClient, platform_on, monkeypatch):
     """`refused_by='cap'` is an aggregation bucket, not a diagnosis: every 429 lands in it, covering
     member call caps, tag caps, the platform ceiling, trial allowances and demo-IP limits. Which one
-    it was is in treg's own detail, and 878 refusals a week were discarding it."""
+    it was is in stray's own detail, and 878 refusals a week were discarding it."""
     async def _boom(*a, **k):
         raise ReservationFailed(
             "tag_spend_cap_reached", status_code=429,
@@ -538,7 +538,7 @@ async def test_admin_errors_surfaces_the_method(clients: AsyncClient, platform_o
     """A GET at a POST endpoint IS the diagnosis for 47 real apollo failures."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"nope"}'))
     await clients.get(f"/call/{EP}?aweme_id=7")
-    from treg import audit
+    from stray import audit
     await audit.drain()
     errs = (await clients.get("/admin/errors", headers=ADMIN)).json()["errors"]
     assert errs and errs[0]["method"] == "GET"
@@ -596,7 +596,7 @@ def test_unknown_telemetry_costs_a_column_not_the_whole_row():
     """The pre-existing bug this feature had to fix first: `record_call` splats telemetry into
     `CallRecord(**fields)`, so ONE key without a column raised inside `_write`, where a bare except
     swallowed it — and the entire audit row vanished with no trace anywhere."""
-    from treg.audit import _known_fields
+    from stray.audit import _known_fields
 
     kept = _known_fields(CallRecord, {"provider": "tikhub", "error_response": "boom",
                                       "not_a_column_at_all": "xyz"})
@@ -612,7 +612,7 @@ async def test_the_columns_are_not_exposed_to_the_team_yet(clients: AsyncClient,
     by accident — this pins that, because the follow-on that exposes it must be deliberate."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"nope"}'))
     await clients.get(f"/call/{EP}?aweme_id=7")
-    from treg import audit
+    from stray import audit
     await audit.drain()
     body = (await clients.get("/calls")).text
     assert "error_response" not in body, "the customer feed must not expose the evidence columns yet"
@@ -634,7 +634,7 @@ async def test_admin_errors_lists_all_failed_tiers_and_filters_them(clients: Asy
 
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"ok":true}'))
     await clients.get("/call/admin-own/success")          # a success must not appear
-    from treg import audit
+    from stray import audit
     await audit.drain()
 
     d = (await clients.get("/admin/errors", headers=ADMIN)).json()
@@ -655,7 +655,7 @@ async def test_evidence_ages_out_but_the_audit_row_survives(clients: AsyncClient
     trail and has to outlive its evidence."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"stale failure"}'))
     await clients.get(f"/call/{EP}?aweme_id=bad")
-    from treg import audit
+    from stray import audit
     await audit.drain()
 
     async with session_maker() as db:
@@ -682,7 +682,7 @@ async def test_admin_errors_is_read_only_and_withholds_aged_evidence(clients: As
     and a row past the window shows no evidence even before the purge cron has reached it."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"stale failure"}'))
     await clients.get(f"/call/{EP}?aweme_id=bad")
-    from treg import audit
+    from stray import audit
     await audit.drain()
     async with session_maker() as db:
         row = (await db.execute(
@@ -700,9 +700,9 @@ async def test_admin_errors_is_read_only_and_withholds_aged_evidence(clients: As
 
 
 async def test_purge_worker_blanks_in_bounded_batches(clients: AsyncClient, platform_on, monkeypatch):
-    """`treg-worker admin purge-evidence` end to end: each transaction touches at most
+    """`stray-worker admin purge-evidence` end to end: each transaction touches at most
     `--batch-size` rows, the run ends, and a failed run exits non-zero instead of looking green."""
-    from treg import audit, worker
+    from stray import audit, worker
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"test failure"}'))
     for _ in range(5):
         await clients.get(f"/call/{EP}?aweme_id=test")

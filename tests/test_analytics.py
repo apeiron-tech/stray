@@ -15,11 +15,11 @@ from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from starlette.requests import Request
 from uvicorn.protocols.http.h11_impl import RequestResponseCycle
 
-from treg import analytics
-from treg.application.call.types import CallFailure
-from treg.bootstrap_handlers import _pool_saturated
-from treg.config import get_settings
-from treg.routers.call import _translate_call_failure
+from stray import analytics
+from stray.application.call.types import CallFailure
+from stray.bootstrap_handlers import _pool_saturated
+from stray.config import get_settings
+from stray.routers.call import _translate_call_failure
 
 
 @pytest.fixture(autouse=True)
@@ -74,7 +74,7 @@ async def test_batch_shape_and_drain(enabled, posts):
     assert first["distinct_id"] == "a@b.c"
     assert first["properties"]["provider"] == "tikhub"
     assert first["properties"]["$groups"] == {"team": "acme"}
-    assert first["properties"]["$lib"] == "treg-server"
+    assert first["properties"]["$lib"] == "stray-server"
     assert "$groups" not in batch[1]["properties"]  # no groups passed → no key at all
 
 
@@ -124,7 +124,7 @@ async def test_service_started_reports_role_and_archive_settings(enabled, posts,
     analytics.capture_service_started("all")
     await analytics.drain()
     (event,) = posts[0]
-    assert event["event"] == "service_started" and event["distinct_id"] == "treg-server"
+    assert event["event"] == "service_started" and event["distinct_id"] == "stray-server"
     props = event["properties"]
     assert props["role"] == "all" and props["archive_serve_entries"] == 2
     assert props["archive_mode"] == get_settings().archive_mode
@@ -172,7 +172,7 @@ def test_fault_payload_is_secret_minimal_and_truncated(enabled):
     analytics.capture_fault(RuntimeError("x" * 700), component="scheduler")
 
     event = _exception_events()[0]
-    assert event["distinct_id"] == "treg-server"
+    assert event["distinct_id"] == "stray-server"
     assert event["properties"] == {
         "$exception_list": [{
             "type": "RuntimeError",
@@ -182,7 +182,7 @@ def test_fault_payload_is_secret_minimal_and_truncated(enabled):
         "component": "scheduler",
         "fault_type": "RuntimeError",
         "fault_occurrences": 1,
-        "$lib": "treg-server",
+        "$lib": "stray-server",
         "build": analytics.build_id(),
         "archive_config": analytics.archive_config_id(),
     }
@@ -346,8 +346,8 @@ def test_handler_recursion_guard_swallows_capture_failure(enabled, monkeypatch):
 
 def test_handler_ignores_analytics_logger_and_children(enabled):
     handler = analytics.install_fault_handler()
-    logging.getLogger("treg.analytics").error("self failure")
-    logging.getLogger("treg.analytics.sender").error("child failure")
+    logging.getLogger("stray.analytics").error("self failure")
+    logging.getLogger("stray.analytics.sender").error("child failure")
     assert _exception_events() == []
     analytics.remove_fault_handler(handler)
 

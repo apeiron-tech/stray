@@ -15,11 +15,11 @@ from sqlalchemy import select
 
 from conftest import drain_background_writes, make_upstream
 
-from treg import sandbox
-from treg.routers.onboard import SANDBOX_RATE_MAX
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
-from treg.models import Secret, Tool, User
+from stray import sandbox
+from stray.routers.onboard import SANDBOX_RATE_MAX
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
+from stray.models import Secret, Tool, User
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ async def anon():
 
 
 def _h(tok: str) -> dict:
-    return {"X-Treg-Token": tok}
+    return {"X-Stray-Token": tok}
 
 
 STRIPE = sandbox.DEFAULTS[0]  # {"secret":"STRIPE_KEY","value":…,"tool":"stripe","base":…}
@@ -56,7 +56,7 @@ async def test_mint_creates_a_starter_team(anon):
 
 
 async def test_call_synthesizes_and_injects_without_network(anon):
-    """The safety boundary: the call injects for REAL (visible) but never leaves treg."""
+    """The safety boundary: the call injects for REAL (visible) but never leaves stray."""
     tok = (await anon.post("/demo/sandbox")).json()["token"]
     r = await anon.get(f"/call/{STRIPE['base']}/{STRIPE['example']['path']}", headers=_h(tok))
     assert r.status_code == 200, r.text
@@ -114,10 +114,10 @@ async def test_export_skill(anon):
     assert r.status_code == 200, r.text
     exp = r.json()
     assert exp["manifest"]["tools"] and exp["manifest"]["secrets"]
-    assert STRIPE["tool"] in exp["treg_json"]
+    assert STRIPE["tool"] in exp["stray_json"]
     assert "SKILL" in exp["skill_md"].upper() or "skill" in exp["skill_md"]
     # a manifest never carries real secret values — only placeholders
-    assert STRIPE["value"] not in exp["treg_json"]
+    assert STRIPE["value"] not in exp["stray_json"]
 
 
 async def test_skill_install_script(anon):
@@ -126,7 +126,7 @@ async def test_skill_install_script(anon):
     body = r.text
     assert body.startswith("#!/bin/sh")
     assert ".claude/skills" in body and "sbx_tok_123" in body        # writes the folder + bakes the token
-    assert "/call/https://app.posthog.com" in body                    # calls through the treg proxy
+    assert "/call/https://app.posthog.com" in body                    # calls through the stray proxy
     assert (await anon.get("/skills/nope/install.sh")).status_code == 404
 
 
@@ -170,7 +170,7 @@ async def test_gc_reaps_a_sandbox_that_made_an_idempotent_call(anon):
 
     SQLite does not enforce foreign keys, so on SQLite this test only sees the orphaned row; on
     Postgres (CI) it sees the raise itself. Both are the same bug."""
-    from treg.models import IdempotentCall, Membership, Org
+    from stray.models import IdempotentCall, Membership, Org
 
     tok = (await anon.post("/demo/sandbox")).json()["token"]
     r = await anon.get(f"/call/{STRIPE['base']}/{STRIPE['example']['path']}",
@@ -195,7 +195,7 @@ async def test_gc_reaps_a_sandbox_that_made_an_idempotent_call(anon):
 async def test_a_failing_reaper_does_not_close_the_front_door(anon, monkeypatch):
     """gc runs inside the mint request. Whatever it raises is a bug to log, never a 500 for the
     visitor - that coupling is what turned one undeletable sandbox into six hours of downtime."""
-    from treg.application.onboard import sandbox as onboard_sandbox
+    from stray.application.onboard import sandbox as onboard_sandbox
 
     async def boom(db):
         raise RuntimeError("reaper bug")
@@ -209,8 +209,8 @@ async def test_a_failing_reaper_does_not_close_the_front_door(anon, monkeypatch)
 async def test_gc_skips_a_sandbox_it_cannot_delete_and_reaps_the_rest(anon, monkeypatch):
     """Reaping is per visitor, not all-or-nothing. Before, one undeletable sandbox rolled back every
     other delete too, and since gc only runs from mint, nothing was ever reaped again."""
-    from treg.application.onboard import sandbox as onboard_sandbox
-    from treg.models import Org
+    from stray.application.onboard import sandbox as onboard_sandbox
+    from stray.models import Org
 
     slugs = [(await anon.post("/demo/sandbox")).json()["org_slug"] for _ in range(2)]
     poisoned = slugs[0]

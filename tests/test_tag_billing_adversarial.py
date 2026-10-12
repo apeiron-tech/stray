@@ -14,18 +14,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from starlette.requests import Request
 
-from treg import audit, crypto, localproxy
-from treg.domain import money as ledger
-from treg.application.call import idempotency as call_idem
-from treg.application.call import reserve as call_reserve
-from treg.application.call import service as call_service
-from treg.application.call.intake import CallMeta
-from treg.application.call.types import UpstreamResponse
-from treg.routers import call as call_routes
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.domain.governance import budgets as budget_policy
-from treg.models import CreditBlock, Hold, LedgerEntry, Membership, Org, TagSpend, User
+from stray import audit, crypto, localproxy
+from stray.domain import money as ledger
+from stray.application.call import idempotency as call_idem
+from stray.application.call import reserve as call_reserve
+from stray.application.call import service as call_service
+from stray.application.call.intake import CallMeta
+from stray.application.call.types import UpstreamResponse
+from stray.routers import call as call_routes
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.domain.governance import budgets as budget_policy
+from stray.models import CreditBlock, Hold, LedgerEntry, Membership, Org, TagSpend, User
 
 
 EP = "tikhub.tiktok.video.comments"
@@ -34,8 +34,8 @@ EP_MICRO = 1_000
 
 @pytest.fixture
 def platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "PLATFORM-TIKHUB-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "PLATFORM-TIKHUB-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -62,7 +62,7 @@ def _request_with_meta(value: str) -> Request:
         "method": "GET",
         "path": f"/call/{EP}",
         "query_string": b"",
-        "headers": [(b"x-treg-meta", value.encode("latin-1"))],
+        "headers": [(b"x-stray-meta", value.encode("latin-1"))],
     })
 
 
@@ -78,7 +78,7 @@ async def test_attack_1_all_ingress_paths_reject_storage_key_delimiters(
     # Direct HTTP/API ingress. HTTPX itself rejects newlines, so exercise that byte through the ASGI
     # Request object consumed by the same parser; the other delimiters go through the real route.
     for raw in ("customer=a\x1fb", "customer=a,b"):
-        response = await clients.get(f"/call/{EP}?aweme_id=1", headers={"X-Treg-Meta": raw})
+        response = await clients.get(f"/call/{EP}?aweme_id=1", headers={"X-Stray-Meta": raw})
         assert response.status_code == 422, (raw, response.text)
     _assert_meta_rejected("customer=a\nb")
 
@@ -110,7 +110,7 @@ async def test_attack_2_usage_identity_survives_five_tags_zero_release_settle_an
         "cohort": "cohort_1",
     }
     header = ", ".join(f"{key}={value}" for key, value in tags.items())
-    response = await clients.get(f"/call/{EP}?aweme_id=five", headers={"X-Treg-Meta": header})
+    response = await clients.get(f"/call/{EP}?aweme_id=five", headers={"X-Stray-Meta": header})
     assert response.status_code == 200, response.text
 
     for dim in tags:
@@ -192,7 +192,7 @@ async def test_attack_4_concurrent_prechecks_overshoot_is_bounded_not_exact(
     responses = await asyncio.gather(*(
         clients.get(
             f"/call/{EP}?aweme_id=race-{index}",
-            headers={"X-Treg-Meta": "customer=race"},
+            headers={"X-Stray-Meta": "customer=race"},
         )
         for index in range(4)
     ))
@@ -334,14 +334,14 @@ async def test_review_pin_bypass_matrix_never_attributes_a_different_value(
     assert made.status_code == 200, made.text
     token = made.json()["token"]
     attempts = (
-        ({"X-Treg-Token": token}, 200),
-        ({"X-Treg-Token": token, "X-Treg-Meta": " CUSTOMER = cust_A "}, 200),
-        ({"X-Treg-Token": token, "X-Treg-Meta": "customer=CUST_A"}, 403),
-        ({"X-Treg-Token": token, "X-Treg-Meta": "customer=cust_A, workspace=ws_9"}, 200),
-        ([("X-Treg-Token", token), ("X-Treg-Meta", "customer=cust_A"),
-          ("X-Treg-Meta", "customer=cust_B")], 200),
-        ([("X-Treg-Token", token), ("X-Treg-Meta", "customer=cust_B"),
-          ("X-Treg-Meta", "customer=cust_A")], 403),
+        ({"X-Stray-Token": token}, 200),
+        ({"X-Stray-Token": token, "X-Stray-Meta": " CUSTOMER = cust_A "}, 200),
+        ({"X-Stray-Token": token, "X-Stray-Meta": "customer=CUST_A"}, 403),
+        ({"X-Stray-Token": token, "X-Stray-Meta": "customer=cust_A, workspace=ws_9"}, 200),
+        ([("X-Stray-Token", token), ("X-Stray-Meta", "customer=cust_A"),
+          ("X-Stray-Meta", "customer=cust_B")], 200),
+        ([("X-Stray-Token", token), ("X-Stray-Meta", "customer=cust_B"),
+          ("X-Stray-Meta", "customer=cust_A")], 403),
     )
     successes = 0
     for headers, expected in attempts:
@@ -373,7 +373,7 @@ async def test_review_distinct_memberships_never_share_idempotent_bodies(
     async def relay_by_token(request, upstream_url, tool, secrets, client, drop_params=None,
                              force_identity=False):
         body = next(
-            value for name, value in request.raw_headers if name.lower() == b"x-treg-token")
+            value for name, value in request.raw_headers if name.lower() == b"x-stray-token")
 
         async def stream():
             yield body
@@ -385,22 +385,22 @@ async def test_review_distinct_memberships_never_share_idempotent_bodies(
             200, ((b"content-type", b"text/plain; charset=utf-8"),), stream(), close)
 
     monkeypatch.setattr(call_service, "relay", relay_by_token)
-    common = {"X-Treg-Meta": "customer=same", "Idempotency-Key": "same-key"}
-    first_a = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Treg-Token": token_a})
-    first_b = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Treg-Token": token_b})
-    replay_a = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Treg-Token": token_a})
-    replay_b = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Treg-Token": token_b})
+    common = {"X-Stray-Meta": "customer=same", "Idempotency-Key": "same-key"}
+    first_a = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Stray-Token": token_a})
+    first_b = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Stray-Token": token_b})
+    replay_a = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Stray-Token": token_a})
+    replay_b = await clients.get(f"/call/{EP}?aweme_id=idem", headers={**common, "X-Stray-Token": token_b})
     assert first_a.content == replay_a.content == token_a.encode()
     assert first_b.content == replay_b.content == token_b.encode()
     assert first_a.content != first_b.content
 
 
 async def test_review_replay_keeps_the_original_call_id(clients: AsyncClient, platform_on):
-    headers = {"X-Treg-Meta": "customer=cust_A", "Idempotency-Key": "review-call-id"}
+    headers = {"X-Stray-Meta": "customer=cust_A", "Idempotency-Key": "review-call-id"}
     first = await clients.get(f"/call/{EP}?aweme_id=idem", headers=headers)
     replay = await clients.get(f"/call/{EP}?aweme_id=idem", headers=headers)
-    assert replay.headers["X-Treg-Idempotent-Replay"] == "true"
-    assert replay.headers["X-Treg-Call-Id"] == first.headers["X-Treg-Call-Id"]
+    assert replay.headers["X-Stray-Idempotent-Replay"] == "true"
+    assert replay.headers["X-Stray-Call-Id"] == first.headers["X-Stray-Call-Id"]
 
 
 def test_review_idempotency_separator_and_post_fingerprint_are_unambiguous():
@@ -424,7 +424,7 @@ async def test_review_primary_call_cap_survives_audit_loss(
         f"/orgs/{org_id}/budgets/customer/cust_A", json={"calls_per_day": 1})
     assert response.status_code == 200, response.text
     monkeypatch.setattr(audit, "_schedule", _drop_audit)
-    headers = {"X-Treg-Meta": "customer=cust_A"}
+    headers = {"X-Stray-Meta": "customer=cust_A"}
     assert (await clients.get(f"/call/{EP}?aweme_id=one", headers=headers)).status_code == 200
     refused = await clients.get(f"/call/{EP}?aweme_id=two", headers=headers)
     assert refused.status_code == 429, refused.text
@@ -440,7 +440,7 @@ async def test_review_non_primary_call_cap_and_export_counts_work(
     response = await clients.put(
         f"/orgs/{org_id}/budgets/workspace/ws_9", json={"calls_per_day": 1})
     assert response.status_code == 200, response.text
-    headers = {"X-Treg-Meta": "customer=cust_A, workspace=ws_9"}
+    headers = {"X-Stray-Meta": "customer=cust_A, workspace=ws_9"}
     assert (await clients.get(f"/call/{EP}?aweme_id=one", headers=headers)).status_code == 200
     await audit.drain()
     usage = (await clients.get(f"/orgs/{org_id}/usage/by-tag?key=workspace")).json()
@@ -486,15 +486,15 @@ async def test_review_every_ledger_writer_overrides_false_provenance(clients: As
 
 
 def test_review_local_proxy_keeps_meta_but_replaces_identity():
-    cfg = localproxy.ProxyConfig(token="proxy", treg_token="real-token", org="real-org")
+    cfg = localproxy.ProxyConfig(token="proxy", stray_token="real-token", org="real-org")
     out = localproxy._forward_headers(cfg, [
-        ("X-Treg-Meta", "customer=cust_A"), ("X-Treg-Token", "stolen"),
-        ("X-Treg-Org", "victim"), ("X-Custom", "kept"),
+        ("X-Stray-Meta", "customer=cust_A"), ("X-Stray-Token", "stolen"),
+        ("X-Stray-Org", "victim"), ("X-Custom", "kept"),
     ])
     grouped: dict[str, list[str]] = {}
     for key, value in out:
         grouped.setdefault(key.lower(), []).append(value)
-    assert grouped["x-treg-meta"] == ["customer=cust_A"]
-    assert grouped["x-treg-token"] == ["real-token"]
-    assert grouped["x-treg-org"] == ["real-org"]
+    assert grouped["x-stray-meta"] == ["customer=cust_A"]
+    assert grouped["x-stray-token"] == ["real-token"]
+    assert grouped["x-stray-org"] == ["real-org"]
     assert grouped["x-custom"] == ["kept"]

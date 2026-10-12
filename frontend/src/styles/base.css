@@ -284,8 +284,8 @@
   [role="dialog"][tabindex="-1"]:focus{outline:none}
   /* Inline spinner for waits on a live upstream (resource discovery), so a slow round-trip reads
      as "working" rather than "broken". */
-  .spin{display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:treg-spin .7s linear infinite}
-  @keyframes treg-spin{to{transform:rotate(360deg)}}
+  .spin{display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:stray-spin .7s linear infinite}
+  @keyframes stray-spin{to{transform:rotate(360deg)}}
   .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(680px,94vw);max-height:88vh;overflow:auto}
   /* first-run welcome: agent picker cards + the Skip/Next footer */
   .agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -924,7 +924,7 @@ main.flush,.redesign main.flush{padding:0;max-width:none}
 .pl-prov .pl-logo{width:20px;height:20px;flex-basis:20px;border-radius:6px}
 .pl-prov .pl-logo img{width:13px;height:13px}
 
-/* Comparison page: treg's answer, lit like /search: a surface under the landing hero's soft green
+/* Comparison page: stray's answer, lit like /search: a surface under the landing hero's soft green
    light and a dot field fading out from the same corner. */
 .pl-autocard{position:relative;isolation:isolate;overflow:hidden;
   display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:36px;align-items:center;margin:0 0 56px;

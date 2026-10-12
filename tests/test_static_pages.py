@@ -1,4 +1,4 @@
-"""The hand-built pages under src/treg/web: what they ship, how they are cached, and the copy rule
+"""The hand-built pages under src/stray/web: what they ship, how they are cached, and the copy rule
 that the catalog's size is read from the catalog, never typed."""
 
 from __future__ import annotations
@@ -10,9 +10,9 @@ from urllib.parse import urlsplit
 import pytest
 from httpx import AsyncClient
 
-from treg.domain.catalog import store as catalog_store
+from stray.domain.catalog import store as catalog_store
 
-WEB = Path(__file__).resolve().parents[1] / "src" / "treg" / "web"
+WEB = Path(__file__).resolve().parents[1] / "src" / "stray" / "web"
 ROOT = WEB.parents[2]
 
 

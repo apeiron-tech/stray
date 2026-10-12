@@ -9,7 +9,7 @@
     "last_name": { "type": "string", "default": "", "example": "Collison" },
     "domain": { "type": "string", "default": "", "example": "stripe.com", "note": "the company's website domain; needed with a name" }
   },
-  "uses": ["treg.people.email.find", "treg.people.email.verify"],
+  "uses": ["stray.people.email.find", "stray.people.email.verify"],
   "script": "run.js",
   "output": { "fields": ["email", "email_status", "found_by", "verified_by", "confidence", "first_name", "last_name", "spent_usd", "units"] },
   "limits": { "cost_usd": 0.5 },

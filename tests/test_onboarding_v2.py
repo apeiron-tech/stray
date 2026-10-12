@@ -1,6 +1,6 @@
 """The first-run onboarding behind `onboarding_v2`: team, lookup, ranked first tasks.
 
-The lookup is exercised against one fake network (GitHub, treg's own `/call/` for the house calls,
+The lookup is exercised against one fake network (GitHub, stray's own `/call/` for the house calls,
 the AI Gateway and the judge), so each test states what the world knows about a user and checks
 which tasks and inputs come out, and that nothing ever lands on the user's own credit.
 """
@@ -16,15 +16,15 @@ from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
 from conftest import make_upstream
-from treg.api import app
-from treg.application.onboard import first_run, page, work_email
-from treg.application.onboard.lookup import Hints, Lookup
-from treg.application.onboard.tasks import DEFAULT_RANK, TASKS, build_calls
-from treg.config import get_settings
-from treg.domain.identity import session as sess
-from treg.infra.db import reset_db, session_maker
-from treg.infra.upstream import ssrf
-from treg.models import LedgerEntry, Membership, OnboardingProfile, Org, User
+from stray.api import app
+from stray.application.onboard import first_run, page, work_email
+from stray.application.onboard.lookup import Hints, Lookup
+from stray.application.onboard.tasks import DEFAULT_RANK, TASKS, build_calls
+from stray.config import get_settings
+from stray.domain.identity import session as sess
+from stray.infra.db import reset_db, session_maker
+from stray.infra.upstream import ssrf
+from stray.models import LedgerEntry, Membership, OnboardingProfile, Org, User
 
 
 # ---------------------------------------------------------------------------------- the library
@@ -45,7 +45,7 @@ def test_fill_in_values_parse_into_the_call():
     assert build_calls("scrape", "https://uizard.io/pricing")[0]["body"] == {"url": "https://uizard.io/pricing"}
     assert build_calls("scrape", "uizard.io/pricing")[0]["body"] == {"url": "https://uizard.io/pricing"}
     social = build_calls("social", "Linear")
-    assert [c["endpoint"] for c in social] == ["treg.x.search.posts", "scrapecreators.reddit.search.posts"]
+    assert [c["endpoint"] for c in social] == ["stray.x.search.posts", "scrapecreators.reddit.search.posts"]
     assert social[1] == {"endpoint": "scrapecreators.reddit.search.posts", "method": "GET", "body": {},
                          "query": {"query": "Linear", "sort": "relevance"}}
     assert build_calls("serp", "  ") is None
@@ -84,12 +84,12 @@ class World:
         if "/call/" in url:
             endpoint = url.split("/call/")[1].split("?")[0]
             body = json.loads(request.content) if request.content else {}
-            self.house_calls.append((endpoint, body, request.headers.get("X-Treg-Token")))
+            self.house_calls.append((endpoint, body, request.headers.get("X-Stray-Token")))
             out = self._call(endpoint, body)
             if out is None:
                 return httpx.Response(404, json={})
             body_out = out if endpoint == "openrouter.ai-judge.decide" else {"output": out}
-            return httpx.Response(200, json=body_out, headers={"X-Treg-Cost-Micro": str(self.call_cost)})
+            return httpx.Response(200, json=body_out, headers={"X-Stray-Cost-Micro": str(self.call_cost)})
         if request.method == "GET" and url in self.pages:     # a site read directly
             return httpx.Response(200, text=self.pages[url], headers={"content-type": "text/html"})
         return httpx.Response(404)
@@ -98,14 +98,14 @@ class World:
         if endpoint == "openrouter.ai-judge.decide":
             assert body["model"] == "typesafe/jev-1.13" and body["state"].startswith("# A new user")
             return None if self.judge is None else {"answers": {q: {"noul": self.judge.get(q, 0.3)} for q in body["questions"]}}
-        if endpoint == "treg.companies.enrich":
+        if endpoint == "stray.companies.enrich":
             return self.company
-        if endpoint == "treg.web.extract":
+        if endpoint == "stray.web.extract":
             return {"pages": [{"markdown": self.homepage}]} if self.homepage else None
-        if endpoint == "treg.google.serp.organic":
+        if endpoint == "stray.google.serp.organic":
             hosts = self.serp.get(body["q"])
             return {"results": [{"title": h, "link": f"https://{h}/x"} for h in hosts]} if hosts else None
-        if endpoint == "treg.tiktok.search.videos":
+        if endpoint == "stray.tiktok.search.videos":
             titles = self.tiktok.get(body["q"])
             return {"videos": [{"desc": t} for t in titles]} if titles else None
         return None
@@ -113,8 +113,8 @@ class World:
 
 @pytest.fixture
 def configured(monkeypatch):
-    for k, v in {"TREG_ONBOARDING_V2": "1", "TREG_ONBOARDING_TREG_TOKEN": "house-token",
-                 "TREG_ONBOARDING_GITHUB_TOKEN": "gh", "TREG_AI_GATEWAY_API_KEY": "gw"}.items():
+    for k, v in {"STRAY_ONBOARDING_V2": "1", "STRAY_ONBOARDING_STRAY_TOKEN": "house-token",
+                 "STRAY_ONBOARDING_GITHUB_TOKEN": "gh", "STRAY_AI_GATEWAY_API_KEY": "gw"}.items():
         monkeypatch.setenv(k, v)
     monkeypatch.setattr(ssrf, "host_is_public", lambda host: True)   # the fake network has no DNS
     get_settings.cache_clear()
@@ -169,8 +169,8 @@ async def test_a_gmail_founder_is_read_from_github_their_company_and_site(config
     assert steps["personal"]["state"] == "ok"
     # a Gmail address has no work domain: the company's site came from the GitHub organisation
     # named like the profile's company, and the site was read directly, not through the catalog
-    assert ("treg.companies.enrich", {"domain": "pixelforge.dev"}, "house-token") in PIXELFORGE.house_calls
-    assert "treg.web.extract" not in [c[0] for c in PIXELFORGE.house_calls]
+    assert ("stray.companies.enrich", {"domain": "pixelforge.dev"}, "house-token") in PIXELFORGE.house_calls
+    assert "stray.web.extract" not in [c[0] for c in PIXELFORGE.house_calls]
     assert state.ranking[0] == {"id": "keywords", "score": 0.62}
     f = state.fills
     # the judge overruled the LLM's first term: its results are not products like the user's
@@ -247,25 +247,25 @@ async def test_an_llm_that_fails_still_ranks_and_keeps_the_facts(configured):
     world = World(company={"name": "Linear", "domain": "linear.app"}, homepage="Linear. Plan and build products.",
                   judge={"email": 0.7})
     state, _ = await _lookup(world, "karri@linear.app")
-    assert ("treg.companies.enrich", {"domain": "linear.app"}, "house-token") in world.house_calls
+    assert ("stray.companies.enrich", {"domain": "linear.app"}, "house-token") in world.house_calls
     assert state.ranking[0] == {"id": "email", "score": 0.7}
     assert state.fills["company"]["value"] == "linear.app"
     assert state.fills["keywords"]["source"] == "example"
 
 
 async def test_the_house_budget_stops_the_checks(configured, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_MAX_HOUSE_MICRO", "2000")
+    monkeypatch.setenv("STRAY_ONBOARDING_MAX_HOUSE_MICRO", "2000")
     get_settings.cache_clear()
     world = World(**{k: getattr(PIXELFORGE, k) for k in ("profile", "company", "homepage", "llm", "judge", "serp", "tiktok")},
                   commits_login="ada-builds")
     state, saves = await _lookup(world, "someone@gmail.com")
-    assert [c[0] for c in world.house_calls] == ["treg.companies.enrich", "treg.web.extract"]
+    assert [c[0] for c in world.house_calls] == ["stray.companies.enrich", "stray.web.extract"]
     assert state.fills["serp"]["source"] == "example"
     assert saves[-1] == 2000
 
 
 async def test_without_any_key_the_lookup_still_finishes(monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2", "1")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2", "1")
     monkeypatch.setattr(ssrf, "host_is_public", lambda host: True)
     get_settings.cache_clear()
     try:
@@ -299,15 +299,15 @@ async def _new_user(email: str) -> int:
 
 
 async def test_the_routes_are_off_without_the_flag(c):
-    c.cookies.set("treg_session", sess.make_session(await _new_user("new@gmail.com")))
+    c.cookies.set("stray_session", sess.make_session(await _new_user("new@gmail.com")))
     assert (await c.post("/onboarding/start")).status_code == 404
     assert (await c.get("/onboarding")).status_code == 404
     assert "onboarding_v2" not in (await c.get("/auth/me")).json()
 
 
 async def test_the_experiment_is_for_work_addresses_judged_once_per_domain(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2_EXPERIMENT", "1")
-    monkeypatch.setenv("TREG_ONBOARDING_TREG_TOKEN", "house-token")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2_EXPERIMENT", "1")
+    monkeypatch.setenv("STRAY_ONBOARDING_STRAY_TOKEN", "house-token")
     get_settings.cache_clear()
     asked = []
 
@@ -326,21 +326,21 @@ async def test_the_experiment_is_for_work_addresses_judged_once_per_domain(c, mo
     try:
         for email, work in (("ada@gmail.com", False), ("ada@acme.io", True), ("bob@acme.io", True),
                             ("cy@mail.example", False)):
-            c.cookies.set("treg_session", sess.make_session(await _new_user(email)))
+            c.cookies.set("stray_session", sess.make_session(await _new_user(email)))
             me = (await c.get("/auth/me")).json()
             assert me.get("onboarding_v2_experiment", False) is work, email
             assert "onboarding_v2" not in me        # the flag's arm decides, not the server
         assert len(asked) == 2                       # a listed mailbox is never asked; a domain once
         assert "<domain>mail.example</domain>" in asked[1] and "Not read" in asked[1]
         # an account that already has a team is never put to Jev
-        c.cookies.set("treg_session", sess.make_session(await _new_user("old@older.io")))
+        c.cookies.set("stray_session", sess.make_session(await _new_user("old@older.io")))
         assert (await c.post("/orgs", json={"name": "Older"})).status_code == 200
         assert "onboarding_v2_experiment" not in (await c.get("/auth/me")).json()
         assert len(asked) == 2
         assert (await c.get("/onboarding")).status_code == 404     # cy@mail.example: not a work address
-        c.cookies.set("treg_session", sess.make_session(await _new_user("dee@acme.io")))
+        c.cookies.set("stray_session", sess.make_session(await _new_user("dee@acme.io")))
         assert (await c.get("/onboarding")).status_code == 200
-        monkeypatch.setenv("TREG_ONBOARDING_V2_EXPERIMENT", "0")  # the off switch closes it
+        monkeypatch.setenv("STRAY_ONBOARDING_V2_EXPERIMENT", "0")  # the off switch closes it
         get_settings.cache_clear()
         assert (await c.get("/onboarding")).status_code == 404
     finally:
@@ -348,13 +348,13 @@ async def test_the_experiment_is_for_work_addresses_judged_once_per_domain(c, mo
 
 
 async def test_start_makes_one_team_with_the_signup_credit_and_finishes(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2", "1")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2", "1")
     get_settings.cache_clear()
     try:
         uid = await _new_user("ada.l@gmail.com")
-        c.cookies.set("treg_session", sess.make_session(uid))
+        c.cookies.set("stray_session", sess.make_session(uid))
         assert (await c.get("/auth/me")).json()["onboarding_v2"] is True
-        c.cookies.set("treg_landing", "%2Fpeople-search")
+        c.cookies.set("stray_landing", "%2Fpeople-search")
         r = await c.post("/onboarding/start")
         assert r.status_code == 200, r.text
         assert r.json()["team"]["name"] == "Ada's team"
@@ -389,13 +389,13 @@ async def test_start_makes_one_team_with_the_signup_credit_and_finishes(c, monke
 
 
 async def test_start_survives_a_reserved_name_a_double_click_and_a_personal_team(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2", "1")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2", "1")
     get_settings.cache_clear()
     try:
         # a vendor's own domain names a reserved team: the person's name is used instead
         assert first_run.team_names("ada@apollo.io") == ["Apollo", "Ada's team", "My team"]
         uid = await _new_user("ada@apollo.io")
-        c.cookies.set("treg_session", sess.make_session(uid))
+        c.cookies.set("stray_session", sess.make_session(uid))
         # two starts at once (two tabs) make one team between them
         a, b = await asyncio.gather(c.post("/onboarding/start"), c.post("/onboarding/start"))
         assert (a.status_code, b.status_code) == (200, 200), (a.text, b.text)
@@ -412,7 +412,7 @@ async def test_start_survives_a_reserved_name_a_double_click_and_a_personal_team
             await db.flush()
             db.add(Membership(user_id=uid, org_id=org.id, role="owner", token_hash=f"h{uid}"))
             await db.commit()
-        c.cookies.set("treg_session", sess.make_session(uid))
+        c.cookies.set("stray_session", sess.make_session(uid))
         r = await c.post("/onboarding/start")
         assert r.status_code == 200, r.text
         assert r.json()["team"]["name"] == "Example"
@@ -421,8 +421,8 @@ async def test_start_survives_a_reserved_name_a_double_click_and_a_personal_team
 
 
 async def test_a_domain_jev_could_not_judge_is_not_asked_again_at_once(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2_EXPERIMENT", "1")
-    monkeypatch.setenv("TREG_ONBOARDING_TREG_TOKEN", "house-token")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2_EXPERIMENT", "1")
+    monkeypatch.setenv("STRAY_ONBOARDING_STRAY_TOKEN", "house-token")
     get_settings.cache_clear()
     asked = []
 
@@ -438,7 +438,7 @@ async def test_a_domain_jev_could_not_judge_is_not_asked_again_at_once(c, monkey
     app.state.http = AsyncClient(transport=httpx.MockTransport(down))
     try:
         for email in ("ada@flaky.io", "bob@flaky.io"):
-            c.cookies.set("treg_session", sess.make_session(await _new_user(email)))
+            c.cookies.set("stray_session", sess.make_session(await _new_user(email)))
             assert "onboarding_v2_experiment" not in (await c.get("/auth/me")).json()
         assert len(asked) == 1            # the outage is remembered for a while, not paid per page load
     finally:
@@ -446,11 +446,11 @@ async def test_a_domain_jev_could_not_judge_is_not_asked_again_at_once(c, monkey
 
 
 async def test_an_account_with_a_team_is_not_onboarded_again(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2", "1")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2", "1")
     get_settings.cache_clear()
     try:
         uid = await _new_user("old@x.io")
-        c.cookies.set("treg_session", sess.make_session(uid))
+        c.cookies.set("stray_session", sess.make_session(uid))
         assert (await c.post("/orgs", json={"name": "Old team"})).status_code == 200
         assert (await c.post("/onboarding/start")).status_code == 409
     finally:
@@ -458,12 +458,12 @@ async def test_an_account_with_a_team_is_not_onboarded_again(c, monkeypatch):
 
 
 async def test_the_flow_can_be_on_for_listed_people_only(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2_EMAILS", "@pixelforge.dev, ada@example.com")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2_EMAILS", "@pixelforge.dev, ada@example.com")
     get_settings.cache_clear()
     try:
         assert [first_run.enabled(e) for e in ("tim@pixelforge.dev", "ADA@example.com", "bob@example.com")] == \
             [True, True, False]
-        c.cookies.set("treg_session", sess.make_session(await _new_user("bob@example.com")))
+        c.cookies.set("stray_session", sess.make_session(await _new_user("bob@example.com")))
         assert (await c.post("/onboarding/start")).status_code == 404
         assert "onboarding_v2" not in (await c.get("/auth/me")).json()
     finally:
@@ -471,17 +471,17 @@ async def test_the_flow_can_be_on_for_listed_people_only(c, monkeypatch):
 
 
 async def test_a_preview_runs_the_flow_for_any_email_without_a_team(c, monkeypatch):
-    monkeypatch.setenv("TREG_ONBOARDING_V2_EMAILS", "tuner@pixelforge.dev")
-    monkeypatch.setenv("TREG_ONBOARDING_TREG_TOKEN", "house-token")
-    monkeypatch.setenv("TREG_ONBOARDING_TREG_URL", "http://upstream")
+    monkeypatch.setenv("STRAY_ONBOARDING_V2_EMAILS", "tuner@pixelforge.dev")
+    monkeypatch.setenv("STRAY_ONBOARDING_STRAY_TOKEN", "house-token")
+    monkeypatch.setenv("STRAY_ONBOARDING_STRAY_URL", "http://upstream")
     get_settings.cache_clear()
     try:
-        c.cookies.set("treg_session", sess.make_session(await _new_user("someone@else.io")))
+        c.cookies.set("stray_session", sess.make_session(await _new_user("someone@else.io")))
         assert (await c.post("/onboarding/preview", json={"email": "a@b.co"})).status_code == 404
         assert "onboarding_preview" not in (await c.get("/auth/me")).json()
 
         uid = await _new_user("tuner@pixelforge.dev")
-        c.cookies.set("treg_session", sess.make_session(uid))
+        c.cookies.set("stray_session", sess.make_session(uid))
         assert (await c.get("/auth/me")).json()["onboarding_preview"] is True
         assert (await c.post("/onboarding/preview", json={"email": "not an email"})).status_code == 400
         r = await c.post("/onboarding/preview", json={"email": "Karri@Linear.app"})
@@ -502,15 +502,15 @@ async def test_a_preview_runs_the_flow_for_any_email_without_a_team(c, monkeypat
         # only a call the task library makes, and only a few of them
         bad = await c.post(f"/onboarding/preview/{pid}/call", json={"endpoint": "stripe.charges.create", "body": {}})
         assert bad.status_code == 400
-        call = {"endpoint": "treg.google.serp.organic", "method": "POST", "body": {"q": "ai ui generator"}}
+        call = {"endpoint": "stray.google.serp.organic", "method": "POST", "body": {"q": "ai ui generator"}}
         cap = first_run.PREVIEW_CALLS
         answers = [(await c.post(f"/onboarding/preview/{pid}/call", json=call)).status_code for _ in range(cap + 1)]
         assert answers[:cap] == [200] * cap and answers[cap] == 429
 
         other = await _new_user("other@pixelforge.dev")      # a preview is its owner's alone
-        monkeypatch.setenv("TREG_ONBOARDING_V2_EMAILS", "tuner@pixelforge.dev,other@pixelforge.dev")
+        monkeypatch.setenv("STRAY_ONBOARDING_V2_EMAILS", "tuner@pixelforge.dev,other@pixelforge.dev")
         get_settings.cache_clear()
-        c.cookies.set("treg_session", sess.make_session(other))
+        c.cookies.set("stray_session", sess.make_session(other))
         assert (await c.get(f"/onboarding/preview/{pid}")).status_code == 404
     finally:
         get_settings.cache_clear()
@@ -530,7 +530,7 @@ async def test_a_handle_like_company_name_is_searched_as_its_domain(configured):
 
 
 def test_a_company_record_for_another_company_is_not_believed():
-    from treg.application.onboard.lookup import _same_company
+    from stray.application.onboard.lookup import _same_company
     assert _same_company("Cal.com", ["cal.com", "calcom"])
     assert _same_company("Pixelforge", ["pixelforge.dev", ""])
     assert _same_company("Linear", ["", "Linear"])

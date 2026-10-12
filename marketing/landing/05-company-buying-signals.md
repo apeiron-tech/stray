@@ -30,7 +30,7 @@ facts_used: [F-01, F-02, F-03, F-04, F-05, F-06, F-07, F-08, F-09, F-10, F-11, F
 ### Company Research: Funding, Headcount and Leadership
 
 ```text
-Using treg, find 50 AI infrastructure companies that raised a Series A in the last
+Using stray, find 50 AI infrastructure companies that raised a Series A in the last
 12 months. Pull their funding history, headcount and leadership team.
 ```
 
@@ -44,10 +44,10 @@ Using treg, find 50 AI infrastructure companies that raised a Series A in the la
 
 ## The old way vs. the treg.to way
 
-| | The old way | With treg |
+| | The old way | With stray |
 |---|---|---|
 | **What you pay for** | Crunchbase $99/mo + Diffbot $299/mo, whether you run a search this month or not | One prepaid balance. Company search starts at free and tops out at $0.38 a record |
-| **Keys** | An account and a contract per data vendor, most of them annual | One treg token. Every tool in the catalog answers to it |
+| **Keys** | An account and a contract per data vendor, most of them annual | One stray token. Every tool in the catalog answers to it |
 | **Picking a provider** | You buy one and find out afterwards whether it covers your market | `catalog get` puts all eleven side by side with price, measured success rate and median speed |
 | **Commitment** | Annual data contracts to answer a question that changes every quarter | No subscription. Test coverage for cents before committing to anything |
 | **The workflow** | Funding in one tool, headcount in another, people in a third, joined in a spreadsheet | One agent run: companies, their funding and the people attached to them, in one pass |
@@ -266,4 +266,4 @@ models, no.
 
 # Ad and creator kit
 
-Campaign material is maintained in treg-internal.
+Campaign material is maintained in stray-internal.

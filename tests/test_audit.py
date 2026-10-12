@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from treg import audit
+from stray import audit
 
 # Hand-copied implementations of the same pending-set/drain pattern, so all are pinned here:
 # archive copied audit's drain BEFORE the busy-spin fix landed in audit, and the stale copy went
@@ -15,10 +15,10 @@ from treg import audit
 # copied the pre-fix shape again and wedged the Postgres job the same way. A shared pin is what
 # keeps the copies from diverging. (module, pending set, drain function)
 _DRAINS = [
-    ("treg.audit", "_pending", "drain"),
-    ("treg.archive", "_pending", "drain"),
-    ("treg.archive_bodies", "_pending", "drain"),
-    ("treg.domain.identity.api_keys", "_last_used_tasks", "drain_last_used"),
+    ("stray.audit", "_pending", "drain"),
+    ("stray.archive", "_pending", "drain"),
+    ("stray.archive_bodies", "_pending", "drain"),
+    ("stray.domain.identity.api_keys", "_last_used_tasks", "drain_last_used"),
 ]
 
 
@@ -56,8 +56,8 @@ def test_drain_exits_when_a_finished_task_lingers_in_the_pending_set(module, pen
 # every row enqueued lands, a row the database refuses costs only itself, and shedding is the one
 # loss - on the queue, where rows wait now.
 
-from treg.infra.db import reset_db, session_maker  # noqa: E402
-from treg.models import SearchMiss  # noqa: E402
+from stray.infra.db import reset_db, session_maker  # noqa: E402
+from stray.models import SearchMiss  # noqa: E402
 
 
 async def _misses() -> list[str]:

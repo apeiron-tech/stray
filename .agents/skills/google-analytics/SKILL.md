@@ -1,15 +1,15 @@
 ---
 name: google-analytics
-description: Traps to avoid when querying Google Analytics 4 through treg — cases where the GA4 Data API returns a confident wrong answer instead of an error. Use whenever answering questions about site traffic, visitors, pageviews, channels, conversions, or revenue from GA4.
+description: Traps to avoid when querying Google Analytics 4 through stray — cases where the GA4 Data API returns a confident wrong answer instead of an error. Use whenever answering questions about site traffic, visitors, pageviews, channels, conversions, or revenue from GA4.
 ---
 
-# GA4 via treg — what will silently mislead you
+# GA4 via stray — what will silently mislead you
 
 You already know the GA4 Data API. This file is **only** the things that return a plausible wrong
 answer with no error. Everything here was verified live on 2026-07-22, and each trap was
 confirmed by watching three independent agents walk into it.
 
-Property id: `treg connections ls` → the `google-analytics` row's `resource_ref`.
+Property id: `stray connections ls` → the `google-analytics` row's `resource_ref`.
 
 ## 1. `endDate:"today"` silently includes a partial day
 
@@ -94,10 +94,10 @@ The tool is bound to `analyticsdata.googleapis.com`. Anything on
 404**, not JSON. Two of three agents burned several attempts here, including trying to pass an
 absolute URL (which gets concatenated into garbage).
 
-To list properties, use treg, not the proxy:
+To list properties, use stray, not the proxy:
 
 ```bash
-treg connections resources <connection-id>   # hits the Admin API server-side
+stray connections resources <connection-id>   # hits the Admin API server-side
 ```
 
 ## Everything else

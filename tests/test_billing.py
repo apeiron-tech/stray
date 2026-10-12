@@ -27,19 +27,19 @@ from sqlmodel import select
 
 from conftest import make_upstream, verified_signup
 
-from treg import adsconv
-from treg.application import billing
-from treg.domain import money as ledger
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import AdConversion, Org
+from stray import adsconv
+from stray.application import billing
+from stray.domain import money as ledger
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import AdConversion, Org
 
 WHSEC = "whsec_test_secret_for_the_suite"
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ def _pi_event(org_id: int, *, pi: str = "pi_test_1", cents: int = 1000, auto: st
     return {"id": f"evt_{pi}", "type": kind, "data": {"object": {
         "id": pi, "object": "payment_intent", "amount": cents, "amount_received": cents,
         "currency": "usd", "status": "succeeded", "payment_method": "pm_card_visa",
-        "metadata": {"treg_org_id": str(org_id), "treg_kind": "topup", "treg_auto": auto},
+        "metadata": {"stray_org_id": str(org_id), "stray_kind": "topup", "stray_auto": auto},
         **extra}}}
 
 
@@ -201,13 +201,13 @@ async def test_topup_creates_a_usd_checkout_and_never_credits(c: AsyncClient, mo
     assert session_kw["mode"] == "payment"
     # The card is saved WITH off-session mandate signals, which is what makes auto-top-up legal later.
     assert session_kw["payment_intent_data"]["setup_future_usage"] == "off_session"
-    assert session_kw["payment_intent_data"]["metadata"]["treg_org_id"] == str(org_id)
+    assert session_kw["payment_intent_data"]["metadata"]["stray_org_id"] == str(org_id)
     # Dynamic payment methods: never pin the list, let Stripe pick what converts.
     assert "payment_method_types" not in session_kw
     # An invoice is the document a finance team accepts, and asking for one must not cost the saved
     # card above. The org travels onto the invoice so one found in Stripe resolves to a team.
     assert session_kw["invoice_creation"]["enabled"] is True
-    assert session_kw["invoice_creation"]["invoice_data"]["metadata"]["treg_org_id"] == str(org_id)
+    assert session_kw["invoice_creation"]["invoice_data"]["metadata"]["stray_org_id"] == str(org_id)
     after = (await c.get(f"/orgs/{org_id}/balance", headers=_h(owner))).json()["balance_micro"]
     assert after == before, "creating a Checkout session must not move the balance"
 
@@ -245,7 +245,7 @@ async def test_invoice_events_are_acknowledged_but_never_credit(c: AsyncClient):
     before = (await c.get(f"/orgs/{org_id}/balance", headers=_h(owner))).json()["balance_micro"]
     event = {"id": "evt_inv_1", "type": "invoice.paid", "data": {"object": {
         "id": "in_test_1", "object": "invoice", "amount_paid": 100_000, "currency": "usd",
-        "metadata": {"treg_org_id": str(org_id), "treg_kind": "topup"}}}}
+        "metadata": {"stray_org_id": str(org_id), "stray_kind": "topup"}}}}
     r = await _deliver(c, event)
     assert r.status_code == 200, r.text
     assert r.json().get("handled") is False
@@ -289,7 +289,7 @@ def _charge(pi: str, *, invoice: str | None = None, receipt: str = "https://pay.
     return {"id": f"ch_{pi}", "payment_intent": pi, "receipt_url": receipt, "invoice": invoice}
 
 
-def _invoice(iid: str, *, number: str = "TREG-0001") -> dict:
+def _invoice(iid: str, *, number: str = "STRAY-0001") -> dict:
     return {"id": iid, "number": number,
             "invoice_pdf": f"https://pay.stripe.com/invoice/{iid}/pdf",
             "hosted_invoice_url": f"https://invoice.stripe.com/i/{iid}"}
@@ -320,7 +320,7 @@ async def test_history_links_each_purchase_to_its_invoice(c: AsyncClient, monkey
     rows = {i["payment_intent"]: i for i in body["items"]}
     assert rows["pi_manual"]["amount_micro"] == 10_000_000
     assert rows["pi_manual"]["invoice_pdf"].endswith("/pdf")
-    assert rows["pi_manual"]["invoice_number"] == "TREG-0001"
+    assert rows["pi_manual"]["invoice_number"] == "STRAY-0001"
     assert rows["pi_manual"]["auto"] is False
     # The auto charge is a bare PaymentIntent — no invoice exists for it, so the receipt is the link.
     assert rows["pi_auto"]["invoice_pdf"] == ""
@@ -430,7 +430,7 @@ async def test_checkout_completed_and_payment_intent_are_the_same_credit(c: Asyn
     session_event = {"id": "evt_cs", "type": "checkout.session.completed", "data": {"object": {
         "id": "cs_1", "object": "checkout.session", "mode": "payment", "payment_status": "paid",
         "amount_total": 2500, "currency": "usd", "payment_intent": pi,
-        "metadata": {"treg_org_id": str(org_id), "treg_kind": "topup"}}}}
+        "metadata": {"stray_org_id": str(org_id), "stray_kind": "topup"}}}}
     assert (await _deliver(c, session_event)).json()["credited"] is True
     assert (await _deliver(c, _pi_event(org_id, pi=pi, cents=2500))).json()["credited"] is False
     body = (await c.get(f"/orgs/{org_id}/balance", headers=_h(owner))).json()
@@ -450,7 +450,7 @@ async def test_credit_uses_the_amount_stripe_charged_not_the_metadata(c: AsyncCl
 
 
 async def test_an_unrelated_payment_is_ignored(c: AsyncClient, monkeypatch):
-    """The account also takes the landing-page demo's charges. `treg_kind` is what keeps them out of
+    """The account also takes the landing-page demo's charges. `stray_kind` is what keeps them out of
     someone's balance."""
     org_id, owner = await _org(c)
     monkeypatch.setattr(billing, "_sdk", _no_sdk)
@@ -469,7 +469,7 @@ async def test_setup_intent_succeeded_saves_the_card_and_arms_a_consented_org(c:
                    autotopup_disabled_reason="no_card", stripe_customer_id="cus_1")
     event = {"id": "evt_si", "type": "setup_intent.succeeded", "data": {"object": {
         "id": "seti_1", "object": "setup_intent", "payment_method": "pm_saved_1",
-        "metadata": {"treg_org_id": str(org_id), "treg_kind": "autotopup_card"}}}}
+        "metadata": {"stray_org_id": str(org_id), "stray_kind": "autotopup_card"}}}}
     r = await _deliver(c, event)
     assert r.status_code == 200 and r.json()["payment_method_saved"] is True
     state = (await c.get("/billing", headers=_h(owner))).json()
@@ -547,7 +547,7 @@ def _pi_ok(pi_id: str = "pi_auto_1", cents: int = 1000):
     async def fake_sdk(fn, /, **kw):
         assert kw.get("off_session") is True and kw.get("confirm") is True
         assert kw.get("currency") == "usd"
-        assert kw.get("idempotency_key", "").startswith("treg_")
+        assert kw.get("idempotency_key", "").startswith("stray_")
         fake_sdk.calls.append(kw)
         return {"id": pi_id, "status": "succeeded", "amount": cents, "amount_received": cents}
     fake_sdk.calls = []
@@ -561,7 +561,7 @@ async def test_auto_topup_charges_off_session_and_credits(c: AsyncClient, monkey
     monkeypatch.setattr(billing, "_sdk", sdk)
     result = await _attempt(org_id)
     assert result["ok"] is True, result
-    assert sdk.calls[0]["amount"] == 1000 and sdk.calls[0]["metadata"]["treg_auto"] == "1"
+    assert sdk.calls[0]["amount"] == 1000 and sdk.calls[0]["metadata"]["stray_auto"] == "1"
     body = (await c.get(f"/orgs/{org_id}/balance", headers=_h(owner))).json()
     assert body["balance_micro"] == 100 + 10_000_000
     entry = [e for e in body["entries"]["items"] if e["kind"] == "topup"][0]
@@ -764,7 +764,7 @@ async def _no_sdk(fn, /, **kw):
 async def test_topup_completed_fires_once_across_redelivery(c: AsyncClient, monkeypatch):
     """One PostHog `topup_completed` per PaymentIntent — a webhook redelivery re-credits nothing
     and must re-emit nothing (same `fresh` guard as the receipt email)."""
-    from treg import analytics
+    from stray import analytics
     org_id, _owner = await _org(c)
     monkeypatch.setattr(billing, "_sdk", _no_sdk)
     monkeypatch.setattr(get_settings(), "posthog_key", "phc_test_suite", raising=False)
@@ -792,7 +792,7 @@ async def test_topup_completed_fires_once_across_redelivery(c: AsyncClient, monk
 async def test_analytics_outage_cannot_500_the_webhook(c: AsyncClient, monkeypatch):
     """A handler exception returns 500 ON PURPOSE (Stripe retries) — so analytics must be
     incapable of causing one, even when its own machinery breaks."""
-    from treg import analytics
+    from stray import analytics
     org_id, _owner = await _org(c)
     monkeypatch.setattr(billing, "_sdk", _no_sdk)
     monkeypatch.setattr(get_settings(), "posthog_key", "phc_test_suite", raising=False)
@@ -1077,7 +1077,7 @@ async def test_a_topup_checkout_arms_a_consented_policy_that_was_waiting_for_a_c
     session_event = {"id": "evt_cs_arm", "type": "checkout.session.completed", "data": {"object": {
         "id": "cs_arm", "object": "checkout.session", "mode": "payment", "payment_status": "paid",
         "amount_total": 10_000, "currency": "usd", "payment_intent": "pi_arm",
-        "metadata": {"treg_org_id": str(org_id), "treg_kind": "topup"}}}}
+        "metadata": {"stray_org_id": str(org_id), "stray_kind": "topup"}}}}
     assert (await _deliver(c, session_event)).json()["credited"] is True
     body = (await c.get("/billing", headers=_h(owner))).json()
     assert body["card_on_file"] is True
@@ -1091,8 +1091,8 @@ async def test_a_topup_checkout_arms_a_consented_policy_that_was_waiting_for_a_c
 
 @pytest.mark.parametrize("first", ["checkout", "payment_intent"])
 async def test_arena_checkout_attribution_survives_either_webhook_and_is_durable(c, monkeypatch, first):
-    from treg import analytics
-    from treg.models import LedgerEntry
+    from stray import analytics
+    from stray.models import LedgerEntry
     org_id, owner = await _org(c)
     sdk_calls, events = [], []
     async def sdk(fn, /, **kw):
@@ -1104,7 +1104,7 @@ async def test_arena_checkout_attribution_survives_either_webhook_and_is_durable
         return {}
     monkeypatch.setattr(billing, "_sdk", sdk)
     monkeypatch.setattr(analytics, "capture", lambda *a, **k: events.append((a, k)))
-    c.cookies.set("treg_entry_surface", "site")
+    c.cookies.set("stray_entry_surface", "site")
     response = await c.post("/billing/topup", json={"amount_usd": 10, "checkout_source": "arena"}, headers=_h(owner))
     assert response.status_code == 200, response.text
     kw = next(kw for fn, kw in sdk_calls if "Session" in fn)
@@ -1133,7 +1133,7 @@ async def test_arena_checkout_attribution_survives_either_webhook_and_is_durable
 
 
 def test_funnel_attribution_never_accepts_arbitrary_urls_or_payloads():
-    from treg.analytics import funnel_surface
+    from stray.analytics import funnel_surface
     for value in [None, {}, [], "https://example.test/?email=secret", "person@example.test", "arena\nsecret"]:
         assert funnel_surface(value) == "unknown"
     assert funnel_surface("arena") == "arena"
@@ -1155,13 +1155,13 @@ async def _paid_checkout(c: AsyncClient, monkeypatch, org_id: int, card: str, n:
         "object": {"id": f"cs_rearm_{n}", "object": "checkout.session", "mode": "payment",
                    "payment_status": "paid", "amount_total": 2_000, "currency": "usd",
                    "payment_intent": f"pi_rearm_{n}",
-                   "metadata": {"treg_org_id": str(org_id), "treg_kind": "topup"}}}})
+                   "metadata": {"stray_org_id": str(org_id), "stray_kind": "topup"}}}})
 
 
 async def _setup(c: AsyncClient, org_id: int, card: str, n: int = 1):
     return await _deliver(c, {"id": f"evt_si_rearm_{n}", "type": "setup_intent.succeeded", "data": {
         "object": {"id": f"seti_rearm_{n}", "object": "setup_intent", "payment_method": card,
-                   "metadata": {"treg_org_id": str(org_id), "treg_kind": "autotopup_card"}}}})
+                   "metadata": {"stray_org_id": str(org_id), "stray_kind": "autotopup_card"}}}})
 
 
 @pytest.mark.parametrize("card", ["pm_old", "pm_new"])

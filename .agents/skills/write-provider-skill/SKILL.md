@@ -1,8 +1,8 @@
 ---
 name: write-provider-skill
-description: Build a treg provider skill — the endpoint map + mistake map that lets an agent do real work on a platform API through treg's proxy. Use when adding a skill for a connected provider (Google Ads, LinkedIn, Meta Ads, TikTok, X, Instagram, Search Console), or when an existing provider skill needs verifying or extending.
+description: Build a stray provider skill — the endpoint map + mistake map that lets an agent do real work on a platform API through stray's proxy. Use when adding a skill for a connected provider (Google Ads, LinkedIn, Meta Ads, TikTok, X, Instagram, Search Console), or when an existing provider skill needs verifying or extending.
 metadata:
-  internal: true  # repo tooling: hidden from `npx skills add superdesigndev/treg`
+  internal: true  # repo tooling: hidden from `npx skills add apeiron-tech/stray`
 ---
 
 # Writing a provider skill
@@ -44,7 +44,7 @@ scripts/dev-local.sh cli call <provider> <path>  # always via /call/, never dire
 ```
 
 Call through `/call/` rather than curl-with-a-token: that exercises binding injection, token
-refresh, and the audit trail, which is where treg bugs surface.
+refresh, and the audit trail, which is where stray bugs surface.
 
 Mark every endpoint **✅ verified** or **⚠️ unverified**, and date the skill. An unverified
 endpoint is allowed — an *unmarked* one is not.
@@ -53,7 +53,7 @@ endpoint is allowed — an *unmarked* one is not.
 client-side path mangling that the terminal output hides:
 
 ```bash
-sqlite3 treg-dev.db "select method,path,status_code from callrecord order by id desc limit 5"
+sqlite3 stray-dev.db "select method,path,status_code from callrecord order by id desc limit 5"
 ```
 
 That's how the zsh `:r` bug below was found: the terminal showed a plausible Google error, the
@@ -76,8 +76,8 @@ Follow this order — it matches how an agent actually reads under time pressure
 
 ```
 frontmatter: name + description (description = the trigger; list the words a user would say)
-# <Platform> via treg
-  one line: you call X through treg's proxy, you never hold a credential
+# <Platform> via stray
+  one line: you call X through stray's proxy, you never hold a credential
   "All examples verified live on <date>"
 ## Setup (once per team)      — connect command, what capability you get
 ## Which <resource> to use    — how to READ the id, never guess it
@@ -96,8 +96,8 @@ unconfirmed** elsewhere until tested.
 - **Host split** — is there an admin/management API on a different hostname than the data API?
   The tool's `base_url` binds one host; the other is unreachable via `/call/`.
   *Expect this on Google Ads (googleads vs googleadsapi surfaces) and Meta (graph vs business).*
-- **Resource id format** — exact prefix, exact encoding. Read it from `treg connections ls`
-  → `resource_ref`. If empty, `treg connections resources <id>` then `treg connections use`.
+- **Resource id format** — exact prefix, exact encoding. Read it from `stray connections ls`
+  → `resource_ref`. If empty, `stray connections resources <id>` then `stray connections use`.
 - **Positional response arrays** — headers and values matched by index, not name.
 - **Numbers as strings** — cast before arithmetic.
 - **Timezone/currency** — reports render in the *property's* timezone. Read it from the response
@@ -106,16 +106,16 @@ unconfirmed** elsewhere until tested.
   pagination tokens that look like completion.
 - **Shell quoting** — in zsh, `$VAR:runReport` triggers the `:r` history modifier and silently
   corrupts the path. Use `${VAR}:runReport`. Applies to any API with `:action` path suffixes.
-- **Scope vs capability** — what the connection actually granted (`treg connections ls` →
+- **Scope vs capability** — what the connection actually granted (`stray connections ls` →
   `scopes`, `capabilities`, `missing_capabilities`), not what the platform offers.
 
-## Also record treg friction
+## Also record stray friction
 
-This exercise doubles as a treg test. When an agent would plausibly guess wrong about *treg's own
+This exercise doubles as a stray test. When an agent would plausibly guess wrong about *stray's own
 interface*, note it — those are product bugs, not skill content. Found so far:
 
-- `treg connections list` is invalid; the subcommand is `ls`
-- `treg connections resources` takes a numeric id, not a provider name
+- `stray connections list` is invalid; the subcommand is `ls`
+- `stray connections resources` takes a numeric id, not a provider name
 
 ## Checklist
 
@@ -126,4 +126,4 @@ interface*, note it — those are product bugs, not skill content. Found so far:
 - [ ] Checked for a host split
 - [ ] Write endpoints either authorized + tested, or marked unverified
 - [ ] Links out instead of restating the reference
-- [ ] treg friction recorded separately from platform friction
+- [ ] stray friction recorded separately from platform friction

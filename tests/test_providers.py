@@ -1,4 +1,4 @@
-"""Provider catalog + env scanner (`treg upload`, Phase 1 detect + Phase 2 plan).
+"""Provider catalog + env scanner (`stray upload`, Phase 1 detect + Phase 2 plan).
 
 Pure logic — no DB, no network. Covers: bucket classification (matched / oauth_pair / basic_pair /
 app_internal / unknown_secret / config), pair grouping (+ incomplete half), provider-wins-over-internal,
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from treg import providers as prov
+from stray import providers as prov
 
 
 def _write_env(tmp_path, body: str) -> str:
@@ -49,10 +49,10 @@ def test_bearer_vs_header_auth_shapes(tmp_path):
 
 
 def test_app_prefix_is_transparent(tmp_path):
-    # A TREG_/APP_ prefix must not hide the provider token.
-    env = _write_env(tmp_path, "TREG_RESEND_API_KEY=x\n")
+    # A STRAY_/APP_ prefix must not hide the provider token.
+    env = _write_env(tmp_path, "STRAY_RESEND_API_KEY=x\n")
     d = _by_var(prov.scan_env(env))
-    assert d["TREG_RESEND_API_KEY"].provider == "Resend"
+    assert d["STRAY_RESEND_API_KEY"].provider == "Resend"
 
 
 def test_oauth_pair_is_grouped(tmp_path):
@@ -369,7 +369,7 @@ def test_scan_env_respects_passed_catalog(tmp_path):
 async def test_providers_json_endpoint_serves_catalog():
     from httpx import ASGITransport, AsyncClient
 
-    from treg.api import app
+    from stray.api import app
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
         r = await c.get("/providers.json")
     assert r.status_code == 200
@@ -393,7 +393,7 @@ def test_every_catalog_cli_profile_is_valid_and_typed():
     """Every catalog `cli` block must pass validate_cli_profile AND declare a known auth_mechanism —
     the field the auto-importer routes on (env/argv → server-injectable, config_file → local, device →
     report-only)."""
-    from treg.localrun import AUTH_MECHANISMS, validate_cli_profile
+    from stray.localrun import AUTH_MECHANISMS, validate_cli_profile
     clis = [(e["provider"], e["cli"]) for e in prov.CATALOG if "cli" in e]
     assert clis, "catalog has no cli entries"
     for provider, cli in clis:
@@ -405,7 +405,7 @@ def test_every_catalog_cli_profile_is_valid_and_typed():
 
 
 def test_validate_cli_profile_accepts_and_rejects_the_new_fields():
-    from treg.localrun import validate_cli_profile
+    from stray.localrun import validate_cli_profile
     validate_cli_profile({"bin": "x", "auth_mechanism": "env", "beta": True,
                           "detect": {"config_paths": ["~/.config/x"]}})
     for bad in (

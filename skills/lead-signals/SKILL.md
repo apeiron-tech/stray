@@ -8,7 +8,7 @@ description: Use when the user wants to find buyers, warm or hot leads, or in-ma
 A signal is a public fact that makes a conversation timely: someone complained about the problem you
 solve, engaged with a post about it, hired for it, raised money, switched tools.
 
-Runs on treg. If it isn't set up (`treg --version` fails), read https://treg.to/llms.txt and follow it to
+Runs on stray. If it isn't set up (`stray --version` fails), read https://treg.to/llms.txt and follow it to
 install and sign in, then come back here.
 
 ## The run
@@ -49,16 +49,16 @@ token.
 
 The catalog changes every week, so never trust a remembered endpoint id.
 
-1. `treg catalog search "<the job in plain words>"`, not a vendor name.
-2. Prefer a routed `treg.*` endpoint when there is one: the team's own keys first, then providers in
+1. `stray catalog search "<the job in plain words>"`, not a vendor name.
+2. Prefer a routed `stray.*` endpoint when there is one: the team's own keys first, then providers in
    order, and most misses are free.
-3. `treg catalog get <id>`: the price, the **hit rate** (it found something), not just works (it
+3. `stray catalog get <id>`: the price, the **hit rate** (it found something), not just works (it
    returned 200), and the row's note.
-4. One small call first. Read the reported charge and `_treg.served_by`, then scale.
-5. Nothing fits: `treg catalog request "<what is missing>"`.
+4. One small call first. Read the reported charge and `_stray.served_by`, then scale.
+5. Nothing fits: `stray catalog request "<what is missing>"`.
 
-For emails use the routed finder, `treg.people.email.find`, and always send
-`X-Treg-Route-Max-Cost: 0.05`; uncapped, a miss can walk up to the dearest provider.
+For emails use the routed finder, `stray.people.email.find`, and always send
+`X-Stray-Route-Max-Cost: 0.05`; uncapped, a miss can walk up to the dearest provider.
 
 ## Score
 
@@ -74,7 +74,7 @@ When the user wants it recurring:
    first run is the baseline; say so.
 3. Schedule it with the user's agent: Claude Code `/schedule` (a cloud routine) or `/loop` (while the
    session is open), Codex `codex exec "<prompt>"` from cron, any other agent its own scheduler. The
-   scheduled run needs `TREG_TOKEN` (an agent token from `treg org agent-new`) and a place for
+   scheduled run needs `STRAY_TOKEN` (an agent token from `stray org agent-new`) and a place for
    `signals.csv` it can read and write, such as a repo file or a sheet.
 
 ## Before the first list

@@ -1,1 +1,1 @@
-export const LS = 'treg-dash'
+export const LS = 'stray-dash'

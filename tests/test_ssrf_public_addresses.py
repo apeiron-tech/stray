@@ -2,8 +2,8 @@
 
 import pytest
 
-from treg.config import get_settings
-from treg.infra.upstream.ssrf import safe_webhook_url
+from stray.config import get_settings
+from stray.infra.upstream.ssrf import safe_webhook_url
 
 
 PUBLIC_ADDRESSES = [

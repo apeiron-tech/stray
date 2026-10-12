@@ -27,19 +27,19 @@ from sqlmodel import select
 
 from conftest import make_upstream, verified_signup
 
-from treg.application import billing
-from treg.domain import money as ledger
-from treg.domain import referrals
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import CreditBlock, Org, Referral, User
+from stray.application import billing
+from stray.domain import money as ledger
+from stray.domain import referrals
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import CreditBlock, Org, Referral, User
 
 WHSEC = "whsec_referral_suite"
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 @pytest.fixture
@@ -71,7 +71,7 @@ async def _signup(c: AsyncClient, email: str, *, ref: str = "") -> tuple[int, st
 
 
 def referrals_cookie() -> str:
-    from treg.routers.signup_cookies import REFERRAL_COOKIE
+    from stray.routers.signup_cookies import REFERRAL_COOKIE
     return REFERRAL_COOKIE
 
 
@@ -93,7 +93,7 @@ def _checkout_event(org_id: int, *, pi: str, cents: int = 1000) -> dict:
     return {"id": f"evt_{pi}", "type": "checkout.session.completed", "data": {"object": {
         "id": f"cs_{pi}", "object": "checkout.session", "mode": "payment", "payment_status": "paid",
         "amount_total": cents, "currency": "usd", "payment_intent": pi,
-        "metadata": {"treg_org_id": str(org_id), "treg_kind": "topup"}}}}
+        "metadata": {"stray_org_id": str(org_id), "stray_kind": "topup"}}}}
 
 
 def _fake_sdk(fingerprint: str | None = "fp_card_A"):
@@ -416,7 +416,7 @@ async def test_dispute_inside_the_hold_cancels_the_referrers_half(c, monkeypatch
 
 
 async def test_dispute_does_not_touch_the_balance(c, monkeypatch):
-    """The clawback cancels a BONUS, never a top-up. treg has no path that drives a balance
+    """The clawback cancels a BONUS, never a top-up. stray has no path that drives a balance
     negative, and refunding a payment is a human decision — that boundary is deliberate."""
     _, _, code = await _ready_referrer(c, monkeypatch)
     bob_org, bob_token = await _signup(c, "bob@example.com", ref=code)
@@ -463,7 +463,7 @@ async def test_a_brand_new_account_gets_a_working_link_immediately(c, monkeypatc
 async def test_admin_report_totals_pending_before_it_is_spent(c, monkeypatch):
     """`pending_payout_micro` is what the sweep will grant once holds elapse — the number that says
     whether the program is affordable BEFORE the money leaves."""
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", "adm_referrals")
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", "adm_referrals")
     get_settings.cache_clear()
     # cache_clear() builds a NEW Settings, so the fixture's Stripe patches (applied to the old
     # instance) are gone with it — and every webhook below would 400 on the signature check.
@@ -474,7 +474,7 @@ async def test_admin_report_totals_pending_before_it_is_spent(c, monkeypatch):
         _, _, code = await _ready_referrer(c, monkeypatch)
         bob_org, _ = await _signup(c, "bob@example.com", ref=code)
         await _topup(c, monkeypatch, bob_org, pi="pi_bob", fingerprint="fp_bob")
-        r = await c.get("/admin/referrals", headers={"X-Treg-Token": "adm_referrals"})
+        r = await c.get("/admin/referrals", headers={"X-Stray-Token": "adm_referrals"})
         assert r.status_code == 200, r.text
         s = get_settings()
         assert r.json()["counts"] == {"qualified": 1}

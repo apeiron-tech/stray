@@ -162,7 +162,7 @@ export default {
               </span>
               <h1>{{platLabel || '\u00a0'}}</h1>
             </div>
-            <p class="sub plat-intro">Every endpoint treg knows for this platform, one ledger, filed by subject — jobs several
+            <p class="sub plat-intro">Every endpoint stray knows for this platform, one ledger, filed by subject — jobs several
               providers do sit on a single row, so you can compare price and coverage before you spend a call.</p>
             <div class="plat-provs" v-if="platProviders.length">
               <span class="plat-provs-l">Providers</span>
@@ -171,7 +171,7 @@ export default {
               <button v-for="s in platProviders" :key="s" class="btn sm"
                       @click="publicCatalog ? openSignin() : openProvider(s)">{{provName(s)}}{{publicCatalog?'':' \u2192'}}</button>
               <button class="btn sm" @click="catalogByok(platProviders.length===1 ? platProviders[0] : null)"
-                      title="Register your own provider key — your key wins over treg's and those calls are never metered">🔑 Bring your own key</button>
+                      title="Register your own provider key — your key wins over stray's and those calls are never metered">🔑 Bring your own key</button>
             </div>
           </div>
 
@@ -297,12 +297,12 @@ export default {
                             <span class="chip" :title="costTitle(e.cost)">{{costShort(e.cost)}}<span
                                   v-if="costNative(e.cost)" class="cost-nat">({{costNative(e.cost)}})</span></span>
                             <span v-if="e.verified" class="chip ver" :title="'Called for real on '+e.verified+' and the response captured'">verified {{e.verified}}</span>
-                            <span v-else class="chip" title="Documented, but treg has not called it with a live key yet">unverified</span>
+                            <span v-else class="chip" title="Documented, but stray has not called it with a live key yet">unverified</span>
                             <!-- Scope is the difference between "point this at any handle" and "this
                                  only ever sees the account you connected", which changes what you
                                  can build. -->
                             <span v-if="e.scope==='own_account'" class="chip own"
-                                  :title="e.id==='fishaudio.voices.list'?'Uses the connected Fish account under BYOK, otherwise this treg team\'s voices':'Reads the account YOU connect via OAuth, not arbitrary public accounts'">{{e.id==='fishaudio.voices.list'?'team or your account':'your account'}}</span>
+                                  :title="e.id==='fishaudio.voices.list'?'Uses the connected Fish account under BYOK, otherwise this stray team\'s voices':'Reads the account YOU connect via OAuth, not arbitrary public accounts'">{{e.id==='fishaudio.voices.list'?'team or your account':'your account'}}</span>
                             <span v-else-if="e.scope==='any_account'" class="chip any"
                                   title="Reads any public account, page or query — no OAuth connection to that account needed">any account</span>
                             <span v-if="e.tier && e.tier!=='core'" class="chip">{{e.tier}}</span>
@@ -328,9 +328,9 @@ export default {
                             <a v-else-if="provFact(e.provider,'pricing_url')" class="btn sm" :href="provFact(e.provider,'pricing_url')" target="_blank" rel="noopener" @click.stop="catalogDocs(e)">Pricing ↗</a>
                             <!-- Always offered: the drawer's access dry-run says how (or whether) THIS
                                  org can call it, and disables Run with the reason when it can't. -->
-                            <!-- OAuth providers can't be served on treg's key (they act AS your account),
+                            <!-- OAuth providers can't be served on stray's key (they act AS your account),
                                  so Connect is their primary CTA and Try-it is secondary. Key/token
-                                 providers are the reverse: Try-it (treg's key) leads, own key is optional. -->
+                                 providers are the reverse: Try-it (stray's key) leads, own key is optional. -->
                             <!-- Calling costs money and needs a team, so a public visitor gets the
                                  way in rather than a button that can only 401. Everything else in
                                  the expander - parameters, limits, rate card, the copyable command
@@ -344,7 +344,7 @@ export default {
                                  whole key shelf in view, not a dead-end detail page - so the user
                                  sees where their key lives among the rest before they paste it. -->
                             <button v-else-if="mkKnown(e.provider)" class="btn sm" @click.stop="catalogByok(e.provider, e)"
-                                    :title="'Register your own '+(e.provider_display||e.provider)+' key — your key wins over treg\'s and those calls are never metered'">Bring your own key</button>
+                                    :title="'Register your own '+(e.provider_display||e.provider)+' key — your key wins over stray\'s and those calls are never metered'">Bring your own key</button>
                           </span>
                         </div>
                         <div v-show="epTabOf(e)==='req'">
@@ -375,7 +375,7 @@ export default {
                         <!-- The provider-wide facts an expanded row needs and a table cell can't
                              hold: how it meters, what it rate-limits, where the rate card lives. -->
                         <ul class="lfacts" v-if="epFacts(e).length"><li v-for="(f,fi) in epFacts(e)" :key="fi">{{f}}</li></ul>
-                        <!-- The line that actually runs it. `treg call` proxies the key server-side,
+                        <!-- The line that actually runs it. `stray call` proxies the key server-side,
                              so this is paste-ready with no key on the machine that runs it. -->
                         <!-- The line that actually runs it, at the bottom of the Request tab - the
                              last thing you read before you go and run it. -->
@@ -471,7 +471,7 @@ export default {
 /* Both the wrapper and the table drop their overflow clip: an `overflow:hidden` ancestor is a
    scroll container, and a sticky heading inside one never leaves it. */
 .lwrap{overflow:visible;border-radius:var(--r)}
-/* Fixed layout, so a nowrap path or `treg call` line inside an expanded row scrolls INSIDE its
+/* Fixed layout, so a nowrap path or `stray call` line inside an expanded row scrolls INSIDE its
    cell instead of widening the table past the page. */
 .ledger{overflow:visible;table-layout:fixed}
 /* The wrapper draws the one rounded frame. A collapsed table cannot round its own border, so a
@@ -600,7 +600,7 @@ export default {
    response gets the SAME cap, so the two panes are the same size box. */
 .prm{max-height:320px;overflow-y:auto}
 .cat-ex pre{max-height:320px}
-/* The line that actually runs it - `treg call` proxies the key server-side, so it is paste-ready
+/* The line that actually runs it - `stray call` proxies the key server-side, so it is paste-ready
    on a machine that holds no credential. */
 .lcall{display:flex;align-items:center;gap:9px;margin:0 0 11px;padding:7px 9px;
   background:var(--surface);border:1px solid var(--line2);border-radius:var(--rb)}

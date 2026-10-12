@@ -1,4 +1,4 @@
-"""The universal /login page + /auth/cli/approve — `treg login` opens /login?cli=<id>, which
+"""The universal /login page + /auth/cli/approve — `stray login` opens /login?cli=<id>, which
 reuses an existing dashboard session (one click) or offers every configured door. Approve is a
 POST with a same-origin check so a phished GET link can't complete a handshake by itself.
 """
@@ -10,12 +10,12 @@ import time
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from treg import crypto
-from treg.domain.identity import session as sess
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import Membership, Org, Tool, User
+from stray import crypto
+from stray.domain.identity import session as sess
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import Membership, Org, Tool, User
 
 LID = "abcDEF123-_x"  # a valid login_id shape (only for page-render tests; approve needs a started one)
 
@@ -30,10 +30,10 @@ async def _start(web) -> tuple[str, str]:
 async def web(monkeypatch):
     """An anonymous browser-shaped client. GitHub configured, Google not — so the page's
     door-rendering is assertable both ways."""
-    monkeypatch.setenv("TREG_GITHUB_CLIENT_ID", "cid")
-    monkeypatch.setenv("TREG_GITHUB_CLIENT_SECRET", "csec")
-    monkeypatch.setenv("TREG_GOOGLE_CLIENT_ID", "")  # explicit: a dev's .env may configure Google
-    monkeypatch.setenv("TREG_SESSION_SECRET", "test-session-secret")
+    monkeypatch.setenv("STRAY_GITHUB_CLIENT_ID", "cid")
+    monkeypatch.setenv("STRAY_GITHUB_CLIENT_SECRET", "csec")
+    monkeypatch.setenv("STRAY_GOOGLE_CLIENT_ID", "")  # explicit: a dev's .env may configure Google
+    monkeypatch.setenv("STRAY_SESSION_SECRET", "test-session-secret")
     get_settings.cache_clear()
     await reset_db()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:
@@ -70,13 +70,13 @@ async def test_landing_offers_dashboard_for_a_live_session(web):
     assert r.status_code == 200  # anonymous → marketing landing
     assert 'data-signed-in="false"' in r.text
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     r = await web.get("/", follow_redirects=False)
     assert r.status_code == 200
     assert 'data-signed-in="true"' in r.text
     assert r.headers['cache-control'] == 'private, no-store'
     assert r.headers['vary'] == 'Cookie'
-    web.cookies.set("treg_session", sess.make_session(uid, ttl=-1))  # expired session → landing again
+    web.cookies.set("stray_session", sess.make_session(uid, ttl=-1))  # expired session → landing again
     r = await web.get("/", follow_redirects=False)
     assert r.status_code == 200
     assert 'data-signed-in="false"' in r.text
@@ -97,7 +97,7 @@ async def test_login_rejects_malformed_login_id(web):
 # ---- the org picker: /auth/cli/orgs + approve with a chosen team ---------------------------
 async def test_cli_orgs_lists_the_users_teams(web):
     uid, _ = await _seed_user_org(team="Acme", slug="acme", tools=3)
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     d = (await web.get("/auth/cli/orgs")).json()
     assert d["email"] == "pat@x.dev"
     assert d["orgs"] and d["orgs"][0]["slug"] == "acme" and d["orgs"][0]["tool_count"] == 3
@@ -117,7 +117,7 @@ async def test_cli_orgs_sorts_team_before_personal(web):
         s.add(Tool(org_id=o.id, name="stripe", owner="dev@x.dev", base_url="https://api.stripe.com",
                    host="api.stripe.com", bindings=[]))
         await s.commit()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     orgs = (await web.get("/auth/cli/orgs")).json()["orgs"]
     assert [o["slug"] for o in orgs] == ["superdesign", "dev-personal"]
     assert orgs[0]["personal"] is False and orgs[1]["personal"] is True
@@ -125,7 +125,7 @@ async def test_cli_orgs_sorts_team_before_personal(web):
 
 async def test_approve_with_org_scopes_the_handshake(web):
     uid, org = await _seed_user_org(team="Acme", slug="acme")
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     lid, code = await _start(web)
     r = await web.post("/auth/cli/approve", json={"login_id": lid, "org": "acme", "code": code})
     assert r.status_code == 200 and r.json()["active_org"] == "acme"
@@ -140,7 +140,7 @@ async def test_approve_rejects_a_foreign_org(web):
     uid, _ = await _seed_user_org(team="Acme", slug="acme")
     async with session_maker() as s:  # a team the user is NOT a member of
         s.add(Org(name="Other", slug="other")); await s.commit()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     lid, code = await _start(web)
     r = await web.post("/auth/cli/approve", json={"login_id": lid, "org": "other", "code": code})
     assert r.status_code == 403
@@ -149,7 +149,7 @@ async def test_approve_rejects_a_foreign_org(web):
 # ---- approve: completing the handshake from a session --------------------------------------
 async def test_approve_completes_the_cli_handshake(web):
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     lid, code = await _start(web)
     r = await web.post("/auth/cli/approve", json={"login_id": lid, "code": code})
     assert r.status_code == 200 and r.json()["email"] == "pat@x.dev"
@@ -158,7 +158,7 @@ async def test_approve_completes_the_cli_handshake(web):
     assert d["email"] == "pat@x.dev" and d["token"]
     claims = sess.read_identity_claims(d["token"])
     assert claims["scope"] == sess.BOOTSTRAP_SCOPE and claims["exp"] > int(time.time())
-    me = await web.get("/auth/me", headers={"X-Treg-Token": d["token"]})  # token path wins over the cookie
+    me = await web.get("/auth/me", headers={"X-Stray-Token": d["token"]})  # token path wins over the cookie
     assert me.status_code == 200 and me.json()["email"] == "pat@x.dev"
     again = (await web.get(f"/auth/cli/poll?login_id={lid}")).json()
     assert again == {"status": "pending"}  # single-use
@@ -174,7 +174,7 @@ async def test_approve_accepts_same_host_origin(web):
     public_url — approve must accept the request's own host, not just public_url (regression:
     the first cut compared Origin to public_url only and broke every localhost login)."""
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     lid, code = await _start(web)
     r = await web.post("/auth/cli/approve", json={"login_id": lid, "code": code},
                        headers={"Origin": "http://registry"})  # matches the test client's Host
@@ -183,7 +183,7 @@ async def test_approve_accepts_same_host_origin(web):
 
 async def test_approve_rejects_cross_origin(web):
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     r = await web.post("/auth/cli/approve", json={"login_id": LID},
                        headers={"Origin": "https://evil.example"})
     assert r.status_code == 403
@@ -191,7 +191,7 @@ async def test_approve_rejects_cross_origin(web):
 
 async def test_approve_rejects_bad_login_id(web):
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     r = await web.post("/auth/cli/approve", json={"login_id": "no"})
     assert r.status_code == 400
 
@@ -199,9 +199,9 @@ async def test_approve_rejects_bad_login_id(web):
 # ---- the email door end-to-end: start → verify → approve → poll -----------------------------
 async def test_email_door_completes_the_handshake(web):
     start = await web.post("/auth/email/start", json={"email": "new@x.dev"})
-    code = start.json()["dev_code"]  # TREG_EMAIL_DEV_MODE=true in conftest
+    code = start.json()["dev_code"]  # STRAY_EMAIL_DEV_MODE=true in conftest
     verify = await web.post("/auth/email/verify", json={"email": "new@x.dev", "code": code})
-    assert verify.status_code == 200 and web.cookies.get("treg_session")  # verify set the session
+    assert verify.status_code == 200 and web.cookies.get("stray_session")  # verify set the session
     lid, code = await _start(web)
     r = await web.post("/auth/cli/approve", json={"login_id": lid, "code": code})
     assert r.status_code == 200
@@ -219,7 +219,7 @@ async def test_approve_requires_a_started_login_and_matching_code(web):
     wrong/blank code is refused — so a mailed /login?cli=<attacker_id> the victim never started (or
     whose code they don't have) never yields a token. A codeless poll of it returns pending."""
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
 
     # a login_id that was never started (what an attacker's mailed link may carry) → refused, no token
     bogus = await web.post("/auth/cli/approve", json={"login_id": LID, "code": "7F3K"})
@@ -238,9 +238,9 @@ async def test_approve_requires_a_started_login_and_matching_code(web):
 async def test_wrong_code_attempts_are_capped(web):
     """Brute-forcing the short code is bounded: after CLI_APPROVE_MAX_TRIES misses the pending login is
     discarded, so the real code can no longer be ground down (and the correct code then also fails)."""
-    from treg.routers.auth import CLI_APPROVE_MAX_TRIES
+    from stray.routers.auth import CLI_APPROVE_MAX_TRIES
     uid = await _seed_user()
-    web.cookies.set("treg_session", sess.make_session(uid))
+    web.cookies.set("stray_session", sess.make_session(uid))
     lid, code = await _start(web)
     for _ in range(CLI_APPROVE_MAX_TRIES):
         assert (await web.post("/auth/cli/approve", json={"login_id": lid, "code": "0000"})).status_code == 400

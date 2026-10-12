@@ -16,10 +16,10 @@ from sqlmodel import select
 
 from conftest import make_upstream
 
-from treg import crypto
-from treg.api import app
-from treg.infra.db import reset_db, session_maker
-from treg.models import Membership, Org, User
+from stray import crypto
+from stray.api import app
+from stray.infra.db import reset_db, session_maker
+from stray.models import Membership, Org, User
 
 
 async def _make_org(name: str, slug: str) -> int:
@@ -46,7 +46,7 @@ async def _mint(email: str, org_id: int, role: str) -> str:
 
 
 def _h(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 @pytest.fixture

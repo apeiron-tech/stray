@@ -12,7 +12,7 @@ export default { setup: useDashboard }
           <p class="explain"><span class="mono">{{epTry.method||'GET'}} {{epTryDisplayPath}}</span><br>{{epTry.summary}}</p>
           <p class="sub" v-if="epTryAccess" style="margin:0 0 12px">
             <template v-if="epTryAccess.tier==='anonymous'">◎ {{epTryAccess.detail||'No provider key needed — the verified public upstream route is free.'}}</template>
-            <template v-else-if="epTryAccess.tier==='platform'">⚡ {{epTryAccess.detail||'No key needed — served on treg\'s key, billed to the team balance.'}}</template>
+            <template v-else-if="epTryAccess.tier==='platform'">⚡ {{epTryAccess.detail||'No key needed — served on stray\'s key, billed to the team balance.'}}</template>
             <template v-else-if="epTryAccess.tier==='tool'||epTryAccess.tier==='credential'">🔑 Served with your team's own {{epTry.provider_display||epTry.provider}} credential — billed by the provider, not the team balance.</template>
             <!-- A routed tool: say who can serve it now in one line; the providers this example cannot
                  use, and why, are there for whoever asks rather than a paragraph above the form. -->
@@ -42,17 +42,17 @@ export default { setup: useDashboard }
             <p class="sub" style="margin:4px 0 8px">One line — the agent reads llms.txt, installs the CLI and signs in as you. Token &amp; team are baked in.</p>
             <div class="lc-codewrap"><button class="lc-cp" @click="copyStart(epTrySetupLine,'ep-setup')">{{startCopied==='ep-setup'?'✓ copied':'copy'}}</button><pre style="white-space:pre-wrap;word-break:break-all">{{epTrySetupLine}}</pre></div>
             <div class="lbl" style="margin-top:20px">2 · Ask your agent to use this</div>
-            <p class="sub" style="margin:4px 0 8px">Paste this next — the agent calls the endpoint through treg, no key on its machine.</p>
+            <p class="sub" style="margin:4px 0 8px">Paste this next — the agent calls the endpoint through stray, no key on its machine.</p>
             <div class="lc-codewrap"><button class="lc-cp" @click="copyStart(epTryAgentUse,'ep-use')">{{startCopied==='ep-use'?'✓ copied':'copy'}}</button><pre style="white-space:pre-wrap">{{epTryAgentUse}}</pre></div>
           </template>
 
           <!-- CLI — install, sign in, inspect, run this exact endpoint -->
           <template v-else-if="epTryTab==='cli'">
             <div class="lbl">1 · Install the CLI &amp; sign in</div>
-            <div class="lc-codewrap"><button class="lc-cp" @click="copyStart('curl -fsSL '+proxy+'/install.sh | sh\ntreg login','ep-cli1')">{{startCopied==='ep-cli1'?'✓ copied':'copy'}}</button><pre>curl -fsSL {{proxy}}/install.sh | sh
-treg login</pre></div>
+            <div class="lc-codewrap"><button class="lc-cp" @click="copyStart('curl -fsSL '+proxy+'/install.sh | sh\nstray login','ep-cli1')">{{startCopied==='ep-cli1'?'✓ copied':'copy'}}</button><pre>curl -fsSL {{proxy}}/install.sh | sh
+stray login</pre></div>
             <div class="lbl" style="margin-top:18px">2 · See its params &amp; price</div>
-            <div class="lc-codewrap"><button class="lc-cp" @click="copyStart('treg catalog get '+epTry.id,'ep-cli2')">{{startCopied==='ep-cli2'?'✓ copied':'copy'}}</button><pre>treg catalog get {{epTry.id}}</pre></div>
+            <div class="lc-codewrap"><button class="lc-cp" @click="copyStart('stray catalog get '+epTry.id,'ep-cli2')">{{startCopied==='ep-cli2'?'✓ copied':'copy'}}</button><pre>stray catalog get {{epTry.id}}</pre></div>
             <div class="lbl" style="margin-top:18px">3 · Call it — {{epTry.id==='fishaudio.voices.list'?'BYOK or platform is selected server-side':(epTryAccess&&epTryAccess.tier==='anonymous'?'no provider key is needed':'the key is injected server-side')}}</div>
             <div class="lc-codewrap"><button class="lc-cp" @click="copyStart(epTryCliCall,'ep-cli3')">{{startCopied==='ep-cli3'?'✓ copied':'copy'}}</button><pre style="white-space:pre-wrap;word-break:break-all">{{epTryCliCall}}</pre></div>
           </template>
@@ -60,14 +60,14 @@ treg login</pre></div>
           <!-- API — the raw /call/ passthrough with the token header -->
           <template v-else-if="epTryTab==='api'">
             <p v-if="epTry.id==='fishaudio.voices.list'" class="sub" style="margin:0 0 8px">One endpoint, one token. The server returns normalized voice rows from the connected Fish account under BYOK, or from this team's organization-owned voices otherwise.</p>
-            <p v-else class="sub" style="margin:0 0 8px">One endpoint, one token. {{epTryAccess&&epTryAccess.tier==='anonymous'?'This verified public upstream route needs no provider key.':'treg injects the credential server-side.'}} treg relays the response verbatim.</p>
+            <p v-else class="sub" style="margin:0 0 8px">One endpoint, one token. {{epTryAccess&&epTryAccess.tier==='anonymous'?'This verified public upstream route needs no provider key.':'stray injects the credential server-side.'}} stray relays the response verbatim.</p>
             <div class="lc-codewrap"><button class="lc-cp" @click="copyStart(epTryCurl,'ep-api')">{{startCopied==='ep-api'?'✓ copied':'copy'}}</button><pre style="white-space:pre-wrap;word-break:break-all">{{epTryCurl}}</pre></div>
-            <p class="sub" v-if="!myToken" style="margin:8px 0 0;font-size:12px"><span class="mono">$TREG_TOKEN</span> is a placeholder — set it to your API token (copy it on Getting started).</p>
+            <p class="sub" v-if="!myToken" style="margin:8px 0 0;font-size:12px"><span class="mono">$STRAY_TOKEN</span> is a placeholder — set it to your API token (copy it on Getting started).</p>
           </template>
 
           <!-- MANUAL — the live test form -->
           <template v-else>
-            <!-- Not callable from here (no key connected / no treg price): don't strand the user on a
+            <!-- Not callable from here (no key connected / no stray price): don't strand the user on a
                  dead Run button — point them at the tab that DOES work. -->
             <div v-if="epTryAccess && !['anonymous','platform','tool','credential','routed'].includes(epTryAccess.tier)"
                  class="banner" style="margin:0">
@@ -99,7 +99,7 @@ treg login</pre></div>
             <div v-if="epTryResp" style="margin-top:14px">
               <div class="muted" style="font-size:12px;margin-bottom:6px">Result
                 <span class="badge" :class="epTryStatus>=200&&epTryStatus<300?'ok':'invalid'">{{epTryStatus}}</span>
-                · {{epTryMs}}ms<span v-if="epTryCost!=null"> · charged {{money(epTryCost)}}<span v-if="epTryCost===0 && epTryStatus>=200 && epTryStatus<300" :title="epTryAccess&&epTryAccess.tier==='anonymous'?'This verified public upstream route used no provider key and did not charge the team balance.':'The provider reported charging nothing for this call — usually its own cache serving a repeat lookup (look for cached: true in the response). You are billed exactly what the provider billed treg.'"> {{epTryAccess&&epTryAccess.tier==='anonymous'?'(free — no provider key ⓘ)':'(free — provider charged 0 ⓘ)'}}</span></span>
+                · {{epTryMs}}ms<span v-if="epTryCost!=null"> · charged {{money(epTryCost)}}<span v-if="epTryCost===0 && epTryStatus>=200 && epTryStatus<300" :title="epTryAccess&&epTryAccess.tier==='anonymous'?'This verified public upstream route used no provider key and did not charge the team balance.':'The provider reported charging nothing for this call — usually its own cache serving a repeat lookup (look for cached: true in the response). You are billed exactly what the provider billed stray.'"> {{epTryAccess&&epTryAccess.tier==='anonymous'?'(free — no provider key ⓘ)':'(free — provider charged 0 ⓘ)'}}</span></span>
                 <template v-if="epTry.id!=='fishaudio.voices.list'"> · logged in Activity like any call</template></div>
               <audio v-if="epTryAudioUrl" :src="epTryAudioUrl" controls style="width:100%;margin:8px 0"></audio>
               <a v-if="epTryAudioUrl" class="btn sm" :href="epTryAudioUrl" :download="epTryAudioName">Download audio</a>

@@ -7,18 +7,18 @@ sources:
   - scripts/build-dashboard.sh
   - scripts/build-web.sh
   - scripts/frontend-e2e-server.sh
-  - src/treg/__main__.py
-  - src/treg/maintenance.py
-  - src/treg/alembic/env.py
-  - src/treg/alembic/versions/0034_managed_api_keys.py
-  - src/treg/alembic/versions/0035_default_key_generation.py
-  - src/treg/alembic/versions/0036_activity_key_indexes.py
-  - src/treg/worker.py
-  - src/treg/web/selfhost.sh
-  - src/treg/config.py
-  - src/treg/infra/db.py
-  - src/treg/email.py
-  - src/treg/audit.py
+  - src/stray/__main__.py
+  - src/stray/maintenance.py
+  - src/stray/alembic/env.py
+  - src/stray/alembic/versions/0034_managed_api_keys.py
+  - src/stray/alembic/versions/0035_default_key_generation.py
+  - src/stray/alembic/versions/0036_activity_key_indexes.py
+  - src/stray/worker.py
+  - src/stray/web/selfhost.sh
+  - src/stray/config.py
+  - src/stray/infra/db.py
+  - src/stray/email.py
+  - src/stray/audit.py
   - scripts/dev-local.sh
   - deploy/render.example.yaml
 related:
@@ -33,32 +33,32 @@ related:
 This fragment documents behavior every operator needs to run or self-host a registry. It does not
 describe the private topology, live settings, account funding, incidents or rollout state of the
 hosted treg.to service. Superdesign operators use the private
-[treg.to deployment runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/production/deploy.md).
+[treg.to deployment runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/production/deploy.md).
 
-Fish Audio shared-key capacity monitoring requires both `TREG_PLATFORM_KEY_FISHAUDIO` and
-`TREG_PLATFORM_FISHAUDIO_WORKSPACE_ID`. The latter is the Fish workspace selector used only by the
+Fish Audio shared-key capacity monitoring requires both `STRAY_PLATFORM_KEY_FISHAUDIO` and
+`STRAY_PLATFORM_FISHAUDIO_WORKSPACE_ID`. The latter is the Fish workspace selector used only by the
 free API-credit probe; without it, capacity remains unknown rather than reading the unrelated
 personal wallet.
 
 ## Entry point (`__main__.py`)
 
-`python -m treg upgrade` runs the explicit release phase. `maintenance._upgrade_schema()` runs
+`python -m stray upgrade` runs the explicit release phase. `maintenance._upgrade_schema()` runs
 `alembic upgrade head` for an empty or stamped database. A non-empty unstamped database is refused
 without writes: adoption ended with 0.14.x, so the operator must install
-`tools-registry[server]==0.14.*`, run `python -m treg upgrade` there once, then continue onward. A
+`stray[server]==0.14.*`, run `python -m stray upgrade` there once, then continue onward. A
 database stamped at a revision this build does not know is also refused because explicit upgrade may
 not cross the rollback floor. The ordered, idempotent release-task registry runs only after schema
 success and never provisions a local user.
 
-The default `python -m treg` serve path runs the same upgrade phase, calls
+The default `python -m stray` serve path runs the same upgrade phase, calls
 `api._bootstrap_single_user()`, disposes the async engine inside the pre-serve event loop, and then
-calls `uvicorn.run("treg.api:app", host="0.0.0.0", port=int($PORT or 18790))`. `--reload` is optional.
-It honors `$PORT` for platforms that route and health-check an injected port. `python -m treg keygen`
-prints a Fernet key for `TREG_SECRET_KEY` without importing the server maintenance stack.
-`treg.api:app` is `bootstrap.create_app(role="all")`.
+calls `uvicorn.run("stray.api:app", host="0.0.0.0", port=int($PORT or 18790))`. `--reload` is optional.
+It honors `$PORT` for platforms that route and health-check an injected port. `python -m stray keygen`
+prints a Fernet key for `STRAY_SECRET_KEY` without importing the server maintenance stack.
+`stray.api:app` is `bootstrap.create_app(role="all")`.
 
 The FastAPI lifespan calls read-only `verify_db()`. It refuses an unstamped database or a known
-revision behind head and directs raw-ASGI operators to `python -m treg upgrade`. An unknown newer
+revision behind head and directs raw-ASGI operators to `python -m stray upgrade`. An unknown newer
 revision means the code is older than the schema: startup warns and serves because additive revisions
 tolerate rollback. A revision marked `contract = True` is the documented hard rollback floor. Every
 role startup manifest is schema-write-free.
@@ -72,7 +72,7 @@ closed maintenance loop. Calling `maintenance.upgrade()` directly does not dispo
   and a hash-only backfill for existing membership credentials. It is marked `contract = True`
   because old code cannot enforce newly stored disable or revoke state. The migration is additive
   and uses SQL that works on SQLite and Postgres.
-- **Alembic is authoritative:** migration scripts ship inside `src/treg/alembic/` in the wheel.
+- **Alembic is authoritative:** migration scripts ship inside `src/stray/alembic/` in the wheel.
   `maintenance._alembic_config()` resolves that installed package resource, supplies the escaped
   configured URL, and runs Alembic in a worker thread.
 - **The adoption floor is final.** An unstamped existing database must pass through release 0.14.x.
@@ -83,7 +83,7 @@ closed maintenance loop. Calling `maintenance.upgrade()` directly does not dispo
 - **Schema changes are revision-only.** An autogenerate drift guard requires Alembic head and
   `SQLModel.metadata` to match exactly. `reset_db()` uses `create_all` only to build a missing test
   schema and stamps it directly at head.
-- **A missing encryption key fails loudly on a real database.** If `TREG_SECRET_KEY` is empty and
+- **A missing encryption key fails loudly on a real database.** If `STRAY_SECRET_KEY` is empty and
   `database_url` is not SQLite, `verify_db()` raises. On SQLite development it logs a warning.
 
 For PostgreSQL, migrations set bounded lock and statement timeouts. A contended ordinary DDL
@@ -125,7 +125,7 @@ Every process opens its own pools and runs its own in-process background tasks. 
 connection peak from pool capacities, process count and the maximum number of overlapping instances
 during a rolling deployment. Keep that peak below the database connection ceiling with headroom.
 
-`TREG_DB_POOL_OVERRIDES` accepts entries such as
+`STRAY_DB_POOL_OVERRIDES` accepts entries such as
 `"admin.pool_size=4,background.pool_size=12"` and patches `POOL_SPECS` at startup. Unknown pools,
 unknown field names, non-integers and out-of-range values are logged and skipped. In particular,
 SQLAlchemy treats some zero and negative values as unlimited, so the parser must not pass them
@@ -136,7 +136,7 @@ headroom. Resize from measurements, one pool at a time. A larger pool does not r
 lock queue, disk-bound database or missing index.
 
 All pools use `pool_pre_ping=True`, `pool_recycle=300` and `pool_timeout=5`. A request that gets no
-slot in time receives `503 {"treg_saturated": true}` with `Retry-After: 2` through
+slot in time receives `503 {"stray_saturated": true}` with `Retry-After: 2` through
 `bootstrap_handlers._pool_saturated`. A `/call/` holds no connection during the upstream round trip.
 
 SQLite aliases all three makers to one engine. It has no pool to protect and file-level write locks
@@ -145,7 +145,7 @@ than SQLite isolation.
 
 ### Optional read replica
 
-`TREG_READ_DATABASE_URL` adds a datasource exposed as `read_session_maker`. Its supported drivers
+`STRAY_READ_DATABASE_URL` adds a datasource exposed as `read_session_maker`. Its supported drivers
 match the project's SQLite / PostgreSQL support: `sqlite+aiosqlite` and `postgresql+asyncpg`.
 Bare `postgres://` and `postgresql://` URLs normalize to `postgresql+asyncpg`, as for the primary;
 other read URL drivers fail settings validation. This does not add support for MySQL or other
@@ -155,7 +155,7 @@ transaction behavior (including writes) and no additional pool. Connections are 
 A configured URL always gets an independent engine, even when it names the primary database:
 
 - PostgreSQL uses a `read` pool defaulting to two connections with no overflow;
-  `TREG_DB_POOL_OVERRIDES` accepts `read.pool_size` and `read.max_overflow`. Each connection sets
+  `STRAY_DB_POOL_OVERRIDES` accepts `read.pool_size` and `read.max_overflow`. Each connection sets
   `default_transaction_read_only=on` through asyncpg's `server_settings`.
 - SQLite retains the driver's default pool behavior and sets `PRAGMA query_only=ON` on every new
   read connection, including after reconnection. The primary's connections remain writable. For an
@@ -184,7 +184,7 @@ Cron job's workload. Configure it in a private local `.env` or the hosting servi
 
 ## Configuration (`config.py`)
 
-`Settings` uses the `TREG_` prefix, reads `.env`, and is cached by `get_settings()`.
+`Settings` uses the `STRAY_` prefix, reads `.env`, and is cached by `get_settings()`.
 
 - `database_url` defaults to local SQLite. A validator rewrites bare `postgres://` and
   `postgresql://` URLs to `postgresql+asyncpg://`.
@@ -216,9 +216,9 @@ Cron job's workload. Configure it in a private local `.env` or the hosting servi
 
 Registry-owned OAuth applications, advertising conversion credentials and platform provider keys are
 optional deployment capabilities. Their names and binding behavior are documented with their owning
-subsystems. Credentials must stay in the deployment secret store. `TREG_PLATFORM_PROVIDERS` is the
+subsystems. Credentials must stay in the deployment secret store. `STRAY_PLATFORM_PROVIDERS` is the
 shared-serving allow-list. Most providers also require a configured platform key. A live-verified
-free endpoint declared `platform_auth: anonymous` needs only the allow-list because treg injects no
+free endpoint declared `platform_auth: anonymous` needs only the allow-list because stray injects no
 provider credential.
 
 ## Safe local mode
@@ -228,7 +228,7 @@ pre-phase idempotently creates the local identity and personal team and writes a
 mode 0600. The token is re-minted only if its file is deleted.
 
 This behavior is gated by `single_user_ok`, which requires both a local SQLite database and a
-loopback `public_url`. A stray `TREG_SINGLE_USER=true` on a public PostgreSQL deployment therefore
+loopback `public_url`. A stray `STRAY_SINGLE_USER=true` on a public PostgreSQL deployment therefore
 does nothing.
 
 `email_dev_mode` is similarly guarded. A login code is exposed only when the flag is true and the
@@ -251,29 +251,29 @@ marketing videos.
 Run `bash scripts/build-dashboard.sh` before building a distributable Python package. Hatch's
 build hook rejects a wheel or sdist without the dashboard entry and includes the generated assets;
 editable installs remain Python-only. Node and npm are build tools, not runtime services.
-`TREG_FRONTEND_DEV=true` serves the authored entry with Vite scripts on local port 5173 and is
+`STRAY_FRONTEND_DEV=true` serves the authored entry with Vite scripts on local port 5173 and is
 accepted only with SQLite and a loopback public URL. `scripts/dev-local.sh up` manages both processes.
 For browser previews from another device, build the dashboard and start or restart the local stack
-with `TREG_FRONTEND_DEV=false`; compiled assets then use the same origin on port 18790.
-The browser tests' server (`scripts/frontend-e2e-server.sh`) runs on `TREG_E2E_PORT`, which
+with `STRAY_FRONTEND_DEV=false`; compiled assets then use the same origin on port 18790.
+The browser tests' server (`scripts/frontend-e2e-server.sh`) runs on `STRAY_E2E_PORT`, which
 `frontend/playwright.config.ts` sets to a port the OS reports free at the start of each run, so runs
-in parallel worktrees or beside a `treg serve` proxy (default 18791) never share a port.
+in parallel worktrees or beside a `stray serve` proxy (default 18791) never share a port.
 
-A feature flag set in the calling shell (`TREG_HUB_ENABLED=1 scripts/dev-local.sh up`) does not
+A feature flag set in the calling shell (`STRAY_HUB_ENABLED=1 scripts/dev-local.sh up`) does not
 reach the server on its own: the script starts the server inside a tmux session, and a tmux session
 inherits the **tmux server's** environment, not the calling client's — the server would start and
 answer every hub route `404` with no error. `dev-local.sh` expands a fixed passthrough list
 (the hub, table and onboarding flags) in its own process and bakes the value into the command string
 tmux runs; add a flag to that list to pass another one through. Keys never go through that list:
 they go in `scripts/.dev-home/dev-keys.env`, which the server sources. The script's own three env vars
-(`TREG_EMAIL_DEV_MODE`, `TREG_CONNECT_DEMO_ENABLED`, `TREG_DATABASE_URL`) are appended last so they
+(`STRAY_EMAIL_DEV_MODE`, `STRAY_CONNECT_DEMO_ENABLED`, `STRAY_DATABASE_URL`) are appended last so they
 always win over anything passed through.
 
 [`deploy/render.example.yaml`](../../../deploy/render.example.yaml) is a generic self-hosting example.
 It creates one web service and one PostgreSQL database, builds with
 `bash scripts/build-web.sh` (frontend build followed by the locked Python install), runs
-`python -m treg upgrade` before serving,
-starts `python -m treg`, and checks `/meta`. Copy it into the operator's own deployment repository and
+`python -m stray upgrade` before serving,
+starts `python -m stray`, and checks `/meta`. Copy it into the operator's own deployment repository and
 change resource names, region, plans, public URL and integrations.
 
 ### Build from the lock file
@@ -293,7 +293,7 @@ older version than `[tool.uv] required-version` accepts; set `UV_VERSION` on the
 version that satisfies it. Upgrading a dependency is a `uv lock --upgrade-package <name>` (or
 `uv lock --upgrade`) commit that CI tests before it can reach a build.
 
-Installing the published wheel (`pip install "tools-registry[server]"`) is a different path: a wheel
+Installing the published wheel (`pip install "stray[server]"`) is a different path: a wheel
 carries no lock, so that operator pins versions in their own requirements file.
 
 The published source archive is built by Hatchling from the checkout. The Hatch target exclusions in
@@ -318,75 +318,75 @@ These are admission budgets, not an RSS ceiling: SDK buffers, compression and ma
 evidence require additional memory headroom.
 
 Spooled settlement evidence (`spooled_response`, proxy-model.md) writes large metered answers to
-the process temp directory, not RAM. `TREG_SPOOL_BUDGET_BYTES` (default 512 MiB per process) bounds
-that disk use, `TREG_SPOOL_MAX_BYTES` (64 MiB) one answer, `TREG_SPOOL_PARSE_CONCURRENCY` (2) the
-transient parse memory (up to about three times the body each), and `TREG_SPOOL_DIR` overrides the directory.
+the process temp directory, not RAM. `STRAY_SPOOL_BUDGET_BYTES` (default 512 MiB per process) bounds
+that disk use, `STRAY_SPOOL_MAX_BYTES` (64 MiB) one answer, `STRAY_SPOOL_PARSE_CONCURRENCY` (2) the
+transient parse memory (up to about three times the body each), and `STRAY_SPOOL_DIR` overrides the directory.
 Size the budget against the host's ephemeral disk: a platform that evicts an instance over its
 local-storage allowance turns an oversized budget into a restart. Production observations and incident history live in
-the private [database-capacity runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/production/database-capacity.md).
+the private [database-capacity runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/production/database-capacity.md).
 
 ## Hosted feature switches
 
 Several settings alter optional shared-service behavior without changing the underlying public
 contract:
 
-- `TREG_PLATFORM_DAILY_CAP_USD` is the default per-UTC-day shared-provider spend limit for a team
+- `STRAY_PLATFORM_DAILY_CAP_USD` is the default per-UTC-day shared-provider spend limit for a team
   that has not set its own; 0 (the default) is no limit. A team's own setting wins in either
   direction.
-- `TREG_OAUTH_BILLED_PROVIDERS` names OAuth providers whose upstream bill lands on the registry
+- `STRAY_OAUTH_BILLED_PROVIDERS` names OAuth providers whose upstream bill lands on the registry
   operator. Own-app connections are never metered by this switch.
-- `TREG_ROUTED_DISCOVERY` controls whether discovery leads callers to routed capability tools. It
+- `STRAY_ROUTED_DISCOVERY` controls whether discovery leads callers to routed capability tools. It
   does not delete or make existing endpoint IDs uncallable.
-- `TREG_PLATFORM_PROVIDERS` enables use of configured platform credentials.
-- `TREG_OVERFLOW_MODE` and `TREG_OVERFLOW_DAILY_BUDGET_USD` control same-vendor overflow. See
+- `STRAY_PLATFORM_PROVIDERS` enables use of configured platform credentials.
+- `STRAY_OVERFLOW_MODE` and `STRAY_OVERFLOW_DAILY_BUDGET_USD` control same-vendor overflow. See
   [capacity](capacity.md).
-- `TREG_SEARCH_EXPERIMENT` (`off` | `shadow` | `interleave`) runs the
+- `STRAY_SEARCH_EXPERIMENT` (`off` | `shadow` | `interleave`) runs the
   [discovery experiment](../architecture/search-experiment.md) on the MCP search tools; it is also
-  its kill switch. Needs `TREG_TYPESAFE_API_KEY`; `TREG_TYPESAFE_TIMEOUT_S` bounds what the judge
+  its kill switch. Needs `STRAY_TYPESAFE_API_KEY`; `STRAY_TYPESAFE_TIMEOUT_S` bounds what the judge
   may add to a search. Off by default, and off whenever the key is empty.
-- `TREG_FIND_ENGINE` (`v1` | `v2` | `shadow`) picks what `/catalog/find` answers with (see
+- `STRAY_FIND_ENGINE` (`v1` | `v2` | `shadow`) picks what `/catalog/find` answers with (see
   [find](../architecture/find.md)); `shadow` serves v1 and logs v2 beside it, at a second judge
   request per find. Rolling back is setting it to `v1`.
-- `TREG_FIND_EMBED_API_KEY` turns on v2's semantic channel; with the default OpenRouter
-  `TREG_FIND_EMBED_URL` an empty value uses `TREG_PLATFORM_KEY_OPENROUTER`. Card vectors are cached in
+- `STRAY_FIND_EMBED_API_KEY` turns on v2's semantic channel; with the default OpenRouter
+  `STRAY_FIND_EMBED_URL` an empty value uses `STRAY_PLATFORM_KEY_OPENROUTER`. Card vectors are cached in
   the archive's object store when archive R2 is on, else rebuilt by each process.
 
 Exact treg.to values, funded accounts and rollout instructions live in the private
-[provider-capacity runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/production/provider-capacity.md).
+[provider-capacity runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/production/provider-capacity.md).
 
 ## Worker commands
 
-`treg-worker` is a console script in the `[server]` extra. It hosts scheduled maintainer commands
-without importing the heavy database stack into the light `treg` CLI.
+`stray-worker` is a console script in the `[server]` extra. It hosts scheduled maintainer commands
+without importing the heavy database stack into the light `stray` CLI.
 
-- `treg-worker capacity sweep` collects provider capacity and writes snapshots.
-- `treg-worker overflow verify` obtains route evidence and spends real money when configured.
-- `treg-worker overflow sync` derives enabled overflow routes from current evidence.
-- `treg-worker asynctasks settle` completes durable holds for asynchronous upstream operations.
-- `treg-worker arena insights` folds new audit rows into the rolling Arena aggregate
+- `stray-worker capacity sweep` collects provider capacity and writes snapshots.
+- `stray-worker overflow verify` obtains route evidence and spends real money when configured.
+- `stray-worker overflow sync` derives enabled overflow routes from current evidence.
+- `stray-worker asynctasks settle` completes durable holds for asynchronous upstream operations.
+- `stray-worker arena insights` folds new audit rows into the rolling Arena aggregate
   (`--max-seconds`, default 110, bounds one pass; schedule it every two minutes).
   It requires the archive object-store settings when R2 reads are enabled, opens the same client
   lifecycle as the web service, and flushes read analytics before exiting. The same scheduled
   command refreshes Web Arena's saved Battle totals when Web Arena is enabled and its reviewed
   benchmark is published; that full refresh is gated to once every 30 minutes.
-- `treg-worker catalog stats` folds new audit rows into per-endpoint, per-day reliability buckets
+- `stray-worker catalog stats` folds new audit rows into per-endpoint, per-day reliability buckets
   (`--max-rows`, default 500,000, bounds one pass; schedule it every few minutes). The catalog keeps
   computing observations live until this command has caught up once, so it can be scheduled after
   the application deploys, and a self-hosted registry that never schedules it loses nothing.
-- `treg-worker jev xboost` runs the `/jev` launch-radar demo once a day: it calls treg's own `/call/` API
-  with `TREG_JEV_TREG_TOKEN` (a member token of the demo team, so the spend is an ordinary bill) and jev
-  through the Vercel AI Gateway (`TREG_AI_GATEWAY_API_KEY`), and stores the run under Ephemeral for the page.
+- `stray-worker jev xboost` runs the `/jev` launch-radar demo once a day: it calls stray's own `/call/` API
+  with `STRAY_JEV_STRAY_TOKEN` (a member token of the demo team, so the spend is an ordinary bill) and jev
+  through the Vercel AI Gateway (`STRAY_AI_GATEWAY_API_KEY`), and stores the run under Ephemeral for the page.
   Both variables also belong on the web service, which needs them for the visitor judge endpoint.
-  The first-run onboarding (`TREG_ONBOARDING_V2`, or `TREG_ONBOARDING_V2_EMAILS` for a list, or
-  `TREG_ONBOARDING_V2_EXPERIMENT` for work addresses in the PostHog experiment `onboarding-v2`) runs
-  on the web service and reads `TREG_ONBOARDING_TREG_TOKEN` (a member token of the team its setup
-  lookups bill), `TREG_ONBOARDING_GITHUB_TOKEN` and `TREG_AI_GATEWAY_API_KEY`; each is optional, and a
+  The first-run onboarding (`STRAY_ONBOARDING_V2`, or `STRAY_ONBOARDING_V2_EMAILS` for a list, or
+  `STRAY_ONBOARDING_V2_EXPERIMENT` for work addresses in the PostHog experiment `onboarding-v2`) runs
+  on the web service and reads `STRAY_ONBOARDING_STRAY_TOKEN` (a member token of the team its setup
+  lookups bill), `STRAY_ONBOARDING_GITHUB_TOKEN` and `STRAY_AI_GATEWAY_API_KEY`; each is optional, and a
   missing one skips its step.
-- `treg-worker admin purge-evidence` blanks failed-call evidence past the 14-day retention window
+- `stray-worker admin purge-evidence` blanks failed-call evidence past the 14-day retention window
   (`--batch-size`, default 5000, rows per transaction; schedule it daily). `GET /admin/errors` is
   read-only and already withholds evidence past the window, so an unscheduled purge keeps the old
   bytes in the database but never shows them.
-- `treg-worker hub check [--only <tool_id>] [--json]` runs every live [hub](../architecture/hub.md)
+- `stray-worker hub check [--only <tool_id>] [--json]` runs every live [hub](../architecture/hub.md)
   tool's `check.json` once, as its maker (spends the maker's balance at step prices); a no-op with
   exit 0 when `hub_enabled` is off. Schedule it every 6 hours; health is derived from the last three
   runs.
@@ -407,6 +407,6 @@ Do not deploy server code older than `0034` after key disable or revoke state ha
 The package version follows current main; this branch does not publish a release.
 
 For hosted rollout, release and verify the compatible CLI before deploying the managed-key server.
-The served installer installs from PyPI, so changing the server alone does not make `treg update`
+The served installer installs from PyPI, so changing the server alone does not make `stray update`
 install the new client. Old browser login and saved-token calls remain usable; affected email and
 team-change requests receive an update instruction before their local state can be replaced.

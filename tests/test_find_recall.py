@@ -3,8 +3,8 @@ built here, so each rule is pinned on rows whose words are chosen for it - token
 whole-word and prefix hits, member pooling and its representatives, seats, the name table."""
 from __future__ import annotations
 
-from treg.domain.catalog import find_recall as fr
-from treg.domain.catalog import store
+from stray.domain.catalog import find_recall as fr
+from stray.domain.catalog import store
 
 
 def _ep(eid, cap, platform, provider, name, summary="", kind="data"):

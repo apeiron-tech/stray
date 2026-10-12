@@ -1,29 +1,29 @@
 {
   "background_tasks": [
     {
-      "condition": "treg.adsconv.enabled()",
-      "task": "treg.adsconv.worker"
+      "condition": "stray.adsconv.enabled()",
+      "task": "stray.adsconv.worker"
     }
   ],
   "mounted_lifespans": [
     {
-      "condition": "treg.bootstrap._mcp is not None",
-      "task": "treg.mcp.mcp_lifespan"
+      "condition": "stray.bootstrap._mcp is not None",
+      "task": "stray.mcp.mcp_lifespan"
     }
   ],
   "shutdown": [
     {
       "action": "cancel",
-      "condition": "treg.adsconv.worker was started",
-      "task": "treg.adsconv.worker"
+      "condition": "stray.adsconv.worker was started",
+      "task": "stray.adsconv.worker"
     },
     {
       "action": "await",
-      "task": "treg.audit.drain"
+      "task": "stray.audit.drain"
     },
     {
       "action": "await",
-      "task": "treg.analytics.drain"
+      "task": "stray.analytics.drain"
     },
     {
       "action": "await close",
@@ -33,7 +33,7 @@
   "startup": [
     {
       "action": "await",
-      "task": "treg.infra.db.verify_db"
+      "task": "stray.infra.db.verify_db"
     },
     {
       "action": "create",

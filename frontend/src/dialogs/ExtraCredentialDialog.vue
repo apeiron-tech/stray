@@ -8,11 +8,11 @@ export default { setup: useDashboard }
       <div class="modal" style="width:min(680px,95vw)"><div class="hd"><b id="extra-credential-dialog-title">Add a skill</b><button class="btn sm ico" @click="newSkill=false" aria-label="Close">✕</button></div>
         <div style="padding:16px 18px">
           <template v-if="skillMode==='folder'">
-            <p class="explain">Pick a skill folder (or a folder of skills). treg reads each <span class="mono">SKILL.md</span> and detects whether it's a recipe, a tool, or needs credentials - exactly like <span class="mono">treg upload skills</span> - and shows you before anything is registered.</p>
+            <p class="explain">Pick a skill folder (or a folder of skills). stray reads each <span class="mono">SKILL.md</span> and detects whether it's a recipe, a tool, or needs credentials - exactly like <span class="mono">stray upload skills</span> - and shows you before anything is registered.</p>
             <label class="skill-drop" v-if="!detected">
               <input type="file" webkitdirectory directory multiple @change="onSkillFolder" style="display:none"/>
               <div class="sd-ic">📁</div>
-              <div><b>Choose a skill folder</b><div class="sub" style="margin:2px 0 0">reads SKILL.md, treg.json, .env + .secret files - nothing is registered until you confirm</div><div class="sub" style="margin:4px 0 0">Hidden folder like <span class="mono">.claude</span>? In the picker press <span class="mono">⌘⇧.</span> (Mac) or enable "show hidden files" to reveal it.</div></div>
+              <div><b>Choose a skill folder</b><div class="sub" style="margin:2px 0 0">reads SKILL.md, stray.json, .env + .secret files - nothing is registered until you confirm</div><div class="sub" style="margin:4px 0 0">Hidden folder like <span class="mono">.claude</span>? In the picker press <span class="mono">⌘⇧.</span> (Mac) or enable "show hidden files" to reveal it.</div></div>
             </label>
             <div v-if="skillBusy && !detected" class="sub">Analyzing…</div>
             <template v-if="detected">

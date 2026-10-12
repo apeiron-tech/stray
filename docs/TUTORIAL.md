@@ -1,10 +1,10 @@
-# tools-registry — hands-on tutorial
+# stray — hands-on tutorial
 
 The whole registry, end to end. Every step shows the **exact command**, the **expected output**, and
 **what to notice** — so it reads standalone. Copy each command into your terminal and follow along.
 
 There are two companion versions of this same walkthrough, generated from one source
-(`src/treg/web/tutorial.js`):
+(`src/stray/web/tutorial.js`):
 
 - **In the dashboard** → sign in at `https://treg.to/` and open **Help → Tutorial**.
 - **Standalone** → `https://treg.to/tutorial`.
@@ -16,7 +16,7 @@ those for the full, step-by-step treatment (each shows the exact commands, real 
 tested):
 
 - **Import & shell** → `https://treg.to/tutorial-import-shell.md` — turn the CLIs already on your
-  machine into team tools in one command (`treg upload clis`), and open a shell (`treg shell`) where
+  machine into team tools in one command (`stray upload clis`), and open a shell (`stray shell`) where
   `stripe`, `gh`, `gcloud` … just work with the team key injected. Includes the local-run **security
   sandbox** (the CLI runs as a locked-down user, can reach only its own API, and can't leave the key on
   disk).
@@ -29,23 +29,23 @@ tested):
 
 - **Email is your identity.** You *are* a verified email. Three doors prove it — **GitHub**, an emailed
   **one-time code** (OTP), or an **invite code**. The first time you prove an email you're *registered*;
-  every proof after is a *login*. There is no separate sign-up (and no more `treg register`).
+  every proof after is a *login*. There is no separate sign-up (and no more `stray register`).
 - **The proxy = a bank teller.** You call the real upstream API *through* the registry. It swaps your tool
   reference for the real secret and injects it server-side. The key never lands on your machine; your
   token authorises the call.
 - **A token = a (you, org) pair.** A **User** is an identity; an **Org** is a team that owns resources; a
-  **Membership** links them with a role. Your **identity token** (from `treg login`) works across every org
-  you belong to — `treg org use <slug>` picks the active one. (Agents/CI can use a per-org token instead.)
+  **Membership** links them with a role. Your **identity token** (from `stray login`) works across every org
+  you belong to — `stray org use <slug>` picks the active one. (Agents/CI can use a per-org token instead.)
 - **Invites attach to an email.** An owner/admin invites an *email*. Prove that email (any door) and the
   invite is yours to accept — no code needed. The code is a fast out-of-band shortcut, not a requirement.
 - **Tool & skill.** A **tool** = an upstream `base_url` + a list of credential **bindings** (a request may
   carry several). A **skill / bundle** = a recipe (`SKILL.md`) + its secrets + its tool(s), registered from
-  a folder via a `treg.json` contract.
-- **Two ways to use a tool.** `treg call` proxies an HTTP **API** — the secret is injected server-side and
-  nothing lands on your machine. `treg run` runs a vendor **command-line tool** (stripe, gh, gcloud…) with
+  a folder via a `stray.json` contract.
+- **Two ways to use a tool.** `stray call` proxies an HTTP **API** — the secret is injected server-side and
+  nothing lands on your machine. `stray run` runs a vendor **command-line tool** (stripe, gh, gcloud…) with
   the credential injected, so you use the CLI without owning it or logging in. Two tiers: `--local` (default;
-  runs on your machine — on Linux the key is isolated under a dedicated `treg-run` user) and `--server`
-  (runs on the registry server, so the key never reaches you). The owner opts each tool in first; `treg runs`
+  runs on your machine — on Linux the key is isolated under a dedicated `stray-run` user) and `--server`
+  (runs on the registry server, so the key never reaches you). The owner opts each tool in first; `stray runs`
   is the audit log.
 
 ### Roles at a glance
@@ -64,17 +64,17 @@ tested):
 ## Setup — simulate three people on one machine
 
 We play three users on one laptop by giving each its own `HOME`, so each gets an isolated
-`~/.treg/config.json` pointed at the registry. In real life every person is on their own machine and drops
+`~/.stray/config.json` pointed at the registry. In real life every person is on their own machine and drops
 the `HOME=` prefix.
 
 ```bash
 for u in tom bob alice; do
-  mkdir -p ~/.treg-personas/$u
-  HOME=~/.treg-personas/$u treg config --base-url https://treg.to
+  mkdir -p ~/.stray-personas/$u
+  HOME=~/.stray-personas/$u stray config --base-url https://treg.to
 done
 ```
 
-**Notice:** prefix any command with `HOME=~/.treg-personas/<name>` to act as that person.
+**Notice:** prefix any command with `HOME=~/.stray-personas/<name>` to act as that person.
 
 ---
 
@@ -82,7 +82,7 @@ done
 
 Everything after this part needs a team, a secret and a registered tool before anything happens.
 The catalog needs none of them — it is the shortest path from "installed" to "got real data",
-and it is what treg now leads with.
+and it is what stray now leads with.
 
 ## Step 1 — Find a tool by what it DOES
 
@@ -91,7 +91,7 @@ He does not need to know which vendor sells backlink data; he searches by the **
 hit shows what it costs.
 
 ```bash
-treg catalog search "backlinks for a domain"
+stray catalog search "backlinks for a domain"
 ```
 
 ```
@@ -103,7 +103,7 @@ treg catalog search "backlinks for a domain"
   majestic.backlinks.list               web        Majestic     $0.010/call
 ```
 
-> Several providers usually serve one capability at different prices. treg shows them side by side
+> Several providers usually serve one capability at different prices. stray shows them side by side
 > — **choosing is yours**; it does not silently pick or fail over for you.
 
 ## Step 2 — Read the price before you spend
@@ -112,7 +112,7 @@ Every catalogued endpoint carries its price, parameters and an example response.
 expected to read this and tell the human the cost *before* spending the team's balance.
 
 ```bash
-treg catalog get tikhub.tiktok.user.profile
+stray catalog get tikhub.tiktok.user.profile
 ```
 
 ```
@@ -126,17 +126,17 @@ Public TikTok profile by username (uniqueId) or secUid
   verified  2026-07-28
 ```
 
-> An endpoint treg has no published price for is **refused**, never served for free — you are
+> An endpoint stray has no published price for is **refused**, never served for free — you are
 > told to connect your own key instead.
 
 ## Step 3 — Call it, with no key anywhere
 
-No account with TikHub, no signup, no key on the machine. treg holds the credential, injects it
+No account with TikHub, no signup, no key on the machine. stray holds the credential, injects it
 server-side, and bills the call to the team's prepaid balance. New verified accounts receive
 **$1.00 free once**, when creating an eligible team, which covers hundreds of calls at this price.
 
 ```bash
-treg call tikhub.tiktok.user.profile --query uniqueId=tiktok
+stray call tikhub.tiktok.user.profile --query uniqueId=tiktok
 ```
 
 > If your team already has its own key for that provider it wins automatically — and those calls
@@ -149,7 +149,7 @@ costing a fraction of a cent is recorded exactly rather than rounded away. Out o
 HTTP **402** carrying the numbers an agent can act on.
 
 ```bash
-treg balance
+stray balance
 ```
 
 ```
@@ -159,7 +159,7 @@ treg balance
   settle   -$0.0010   tikhub.tiktok.user.profile
 ```
 
-> Only calls on treg's key cost balance. Your own keys, your own tools and vendor CLIs are free of it.
+> Only calls on stray's key cost balance. Your own keys, your own tools and vendor CLIs are free of it.
 
 # Part 2 — Tom founds Superdesign
 
@@ -170,7 +170,7 @@ act **creates** him plus a personal org (so there's never an empty state). The c
 he checks his inbox and types it in.
 
 ```bash
-HOME=~/.treg-personas/tom treg login --email tom@superdesign.dev
+HOME=~/.stray-personas/tom stray login --email tom@superdesign.dev
 ```
 ```
 We sent a 6-digit code to tom@superdesign.dev.
@@ -179,7 +179,7 @@ Enter code: 429641
 ```
 
 **Notice:** Check your inbox for the 6-digit code, then enter it. Tom now holds an **identity token** that
-works across every org he joins — no per-org tokens to juggle. (A dev box can set `TREG_EMAIL_DEV_MODE=true`
+works across every org he joins — no per-org tokens to juggle. (A dev box can set `STRAY_EMAIL_DEV_MODE=true`
 to print the code inline instead of emailing it.)
 
 ## Step 6 — Tom creates the team
@@ -188,7 +188,7 @@ His personal org is just his own. Now he spins up the shared team and becomes it
 switches to it, so everything after runs there.
 
 ```bash
-HOME=~/.treg-personas/tom treg org create "Superdesign"
+HOME=~/.stray-personas/tom stray org create "Superdesign"
 ```
 ```json
 {
@@ -212,7 +212,7 @@ Tom invites a teammate by **email**. The invite attaches to that email and Tom g
 *could* hand over — but Bob won't even need it.
 
 ```bash
-HOME=~/.treg-personas/tom treg org invite bob@superdesign.dev --role member
+HOME=~/.stray-personas/tom stray org invite bob@superdesign.dev --role member
 ```
 ```json
 {
@@ -232,7 +232,7 @@ Switch to Bob. He proves his email the same way — and since it's his first tim
 with his own identity token and personal org. He never touches the invite code.
 
 ```bash
-HOME=~/.treg-personas/bob treg login --email bob@superdesign.dev
+HOME=~/.stray-personas/bob stray login --email bob@superdesign.dev
 ```
 ```
 We sent a 6-digit code to bob@superdesign.dev.
@@ -249,7 +249,7 @@ Because the invite is tied to Bob's now-proven email, he can just ask what's wai
 full circle: proving the email reveals every invite addressed to it.
 
 ```bash
-HOME=~/.treg-personas/bob treg invites
+HOME=~/.stray-personas/bob stray invites
 ```
 ```json
 [
@@ -273,7 +273,7 @@ Bob joins Superdesign by naming the org. No code — his proven identity is the 
 to Superdesign.
 
 ```bash
-HOME=~/.treg-personas/bob treg accept superdesign
+HOME=~/.stray-personas/bob stray accept superdesign
 ```
 ```json
 {
@@ -292,14 +292,14 @@ One identity, two memberships — owner of his personal org, member of Superdesi
 works in both.
 
 ```bash
-HOME=~/.treg-personas/bob treg org ls
+HOME=~/.stray-personas/bob stray org ls
 ```
 ```
   bob-superdesign-dev    bob@superdesign.dev    owner
 * superdesign            Superdesign            member   (active)
 ```
 
-**Notice:** the `*` marks the active org. Switch anytime with `treg org use <slug>`.
+**Notice:** the `*` marks the active org. Switch anytime with `stray org use <slug>`.
 
 ---
 
@@ -311,7 +311,7 @@ The other door: the **code**. First Tom invites Alice as a **viewer** — she'll
 not register anything.
 
 ```bash
-HOME=~/.treg-personas/tom treg org invite alice@superdesign.dev --role viewer
+HOME=~/.stray-personas/tom stray org invite alice@superdesign.dev --role viewer
 ```
 ```json
 {
@@ -331,7 +331,7 @@ The contrast with Bob: Alice **never runs** `login`. The code itself proves her 
 her, adds her to Superdesign, and saves her token — all in one command.
 
 ```bash
-HOME=~/.treg-personas/alice treg org join ZTeW5ss-cXiyvzeMs3em-… --email alice@superdesign.dev
+HOME=~/.stray-personas/alice stray org join ZTeW5ss-cXiyvzeMs3em-… --email alice@superdesign.dev
 ```
 ```json
 {
@@ -350,7 +350,7 @@ her token.
 Alice can read and call, but a viewer **cannot register** anything. Watch her get stopped.
 
 ```bash
-HOME=~/.treg-personas/alice treg secret add testkey --value "nope"
+HOME=~/.stray-personas/alice stray secret add testkey --value "nope"
 ```
 ```json
 {
@@ -370,7 +370,7 @@ Unlike Alice, a **member** can register. Bob adds an API key — encrypted serve
 returned again.
 
 ```bash
-HOME=~/.treg-personas/bob treg secret add echo-key --value "sk-demo-secret-123"
+HOME=~/.stray-personas/bob stray secret add echo-key --value "sk-demo-secret-123"
 ```
 ```json
 {
@@ -390,7 +390,7 @@ A tool = an upstream `base_url` + how to inject the credential. We point at post
 injection. A single `--secret` defaults to a `Bearer` token in the `Authorization` header.
 
 ```bash
-HOME=~/.treg-personas/bob treg tool add echo --base-url https://postman-echo.com --secret 1
+HOME=~/.stray-personas/bob stray tool add echo --base-url https://postman-echo.com --secret 1
 ```
 ```json
 {
@@ -403,16 +403,16 @@ HOME=~/.treg-personas/bob treg tool add echo --base-url https://postman-echo.com
 }
 ```
 
-**Notice:** for multi-credential upstreams, add more bindings with `--bind` — treg applies every binding on
+**Notice:** for multi-credential upstreams, add more bindings with `--bind` — stray applies every binding on
 each call.
 
 ## Step 17 — Alice calls it (with no key)
 
-The whole point of treg. Alice is a **viewer** with **no secret** on her machine. Yet when she calls, the
+The whole point of stray. Alice is a **viewer** with **no secret** on her machine. Yet when she calls, the
 upstream sees Bob's key, injected server-side.
 
 ```bash
-HOME=~/.treg-personas/alice treg call echo /get
+HOME=~/.stray-personas/alice stray call echo /get
 ```
 ```json
 {
@@ -433,7 +433,7 @@ HOME=~/.treg-personas/alice treg call echo /get
 The proxy writes an audit row per call. The owner reviews the org's activity.
 
 ```bash
-HOME=~/.treg-personas/tom treg calls --limit 5
+HOME=~/.stray-personas/tom stray calls --limit 5
 ```
 ```json
 [
@@ -457,27 +457,27 @@ HOME=~/.treg-personas/tom treg calls --limit 5
 
 ## Step 19 — Call by full URL (agent-native)
 
-An agent often already knows the real upstream URL. Instead of `call <tool> <path>`, hand treg the **whole
-URL** — it matches the host to a registered tool and injects the key. No treg-specific knowledge needed.
+An agent often already knows the real upstream URL. Instead of `call <tool> <path>`, hand stray the **whole
+URL** — it matches the host to a registered tool and injects the key. No stray-specific knowledge needed.
 
 ```bash
-HOME=~/.treg-personas/alice treg call https://postman-echo.com/get
+HOME=~/.stray-personas/alice stray call https://postman-echo.com/get
 ```
 ```
 # same echo response, with "authorization": "Bearer sk-demo-secret-123" injected.
 # note: no tool name in the command — just the destination URL.
 ```
 
-**Notice:** treg resolves the tool by **host**, so the agent-native full-URL form just works.
+**Notice:** stray resolves the tool by **host**, so the agent-native full-URL form just works.
 
 ## Step 20 — The raw HTTP underneath
 
-`treg call` is sugar. Under the hood it's a plain HTTP request to `<proxy>/call/<upstream-url>` with your
+`stray call` is sugar. Under the hood it's a plain HTTP request to `<proxy>/call/<upstream-url>` with your
 token header — any language, any agent, `curl`.
 
 ```bash
-ATOK=$(python3 -c "import json;print(json.load(open('/Users/you/.treg-personas/alice/.treg/config.json'))['token'])")
-curl -s -H "X-Treg-Token: $ATOK" \
+ATOK=$(python3 -c "import json;print(json.load(open('/Users/you/.stray-personas/alice/.stray/config.json'))['token'])")
+curl -s -H "X-Stray-Token: $ATOK" \
   "https://treg.to/call/https://postman-echo.com/get"
 ```
 ```
@@ -485,20 +485,20 @@ curl -s -H "X-Treg-Token: $ATOK" \
 # just curl, no secret on the client.
 ```
 
-**Notice:** the whole product in one line: prefix any upstream URL with the proxy, send your token, treg
+**Notice:** the whole product in one line: prefix any upstream URL with the proxy, send your token, stray
 swaps in the real credential.
 
 ## Step 21 — Draft a skill's registration
 
-A whole skill folder (a recipe + credential files) can register in one shot via a `treg.json` contract.
+A whole skill folder (a recipe + credential files) can register in one shot via a `stray.json` contract.
 `skill init` scans `SKILL.md` + the `.secret/` dir and drafts it — guessing the base URL and finding the
 secret. No values go in the file, only references.
 
 ```bash
-HOME=~/.treg-personas/bob treg skill init --dir /tmp/skills/echo-svc
+HOME=~/.stray-personas/bob stray skill init --dir /tmp/skills/echo-svc
 ```
 ```
-wrote /tmp/skills/echo-svc/treg.json
+wrote /tmp/skills/echo-svc/stray.json
   auto: base_url=https://postman-echo.com | secrets=['echo-svc']
   review / fill:
     - base_url — heuristic guess, verify
@@ -514,7 +514,7 @@ One command turns the folder into a live tool: the recipe, the secret (value loa
 the json), and the tool — all created atomically as a **bundle**.
 
 ```bash
-HOME=~/.treg-personas/bob treg skill add --dir /tmp/skills/echo-svc
+HOME=~/.stray-personas/bob stray skill add --dir /tmp/skills/echo-svc
 ```
 ```json
 {
@@ -536,13 +536,13 @@ registry.
 
 ## Step 22a — Turn your whole `.env` into tools
 
-`treg upload env` reads your `.env`, matches each variable against the providers treg recognizes, and
+`stray upload env` reads your `.env`, matches each variable against the providers stray recognizes, and
 registers the ones you pick as ready-to-call tools. Detection reads **names only**; the value is loaded
 only for the keys you confirm. Config vars (`*_HOST`, `*_MODEL`, `*_PROJECT_ID`) and your app's own
 secrets (`SECRET_KEY`, `SESSION_SECRET`, `DATABASE_URL`, `*_WEBHOOK_SECRET`) are excluded automatically.
 
 ```bash
-HOME=~/.treg-personas/bob treg upload env --select openai,stripe,resend
+HOME=~/.stray-personas/bob stray upload env --select openai,stripe,resend
 ```
 ```text
 Scanned .env: 6 key(s) to register, 1 OAuth, 4 other.
@@ -554,21 +554,21 @@ Registered 3/3 tools.
 ```
 
 **Notice:** a `CLIENT_ID`+`CLIENT_SECRET` pair is detected as **OAuth** and offered a guided
-`treg oauth connect` instead of a broken bearer key. Other auth shapes are handled too — an API-key
+`stray oauth connect` instead of a broken bearer key. Other auth shapes are handled too — an API-key
 header (`x-api-key`), a query-param key (`?apiKey=`), or a Basic pair (base64 `id:secret`).
 
 ## Step 22b — Import a whole folder of skills
 
-Point `treg upload skills` at a directory of skills. For each, it uses an existing `treg.json`, or
+Point `stray upload skills` at a directory of skills. For each, it uses an existing `stray.json`, or
 **builds one** from the skill's script (base URL + the env var it reads) — registering API skills as
 tools and knowledge skills as recipe-only bundles. The whole team library lands in one pass.
 
 ```bash
-HOME=~/.treg-personas/bob treg upload skills --dir ~/.claude/skills --all
+HOME=~/.stray-personas/bob stray upload skills --dir ~/.claude/skills --all
 ```
 ```text
 Scanned ~/.claude/skills: 5 API-tool skill(s), 23 recipe-only.
-  ✓ render          (tool)   [wrote treg.json]
+  ✓ render          (tool)   [wrote stray.json]
   ✓ intercom        (tool)
   ✓ seo-blog-writer (recipe)
   …
@@ -576,8 +576,8 @@ Imported 27/28 skills.
 ```
 
 Re-run any time — it skips what's already registered (or `--replace` to update). A teammate then pulls
-any of them with `treg skill install <name>` (or `--all`), which writes the recipe into their
-`.claude/skills/`. Bare `treg upload` (no `env`/`skills`) does **both** for the current directory.
+any of them with `stray skill install <name>` (or `--all`), which writes the recipe into their
+`.claude/skills/`. Bare `stray upload` (no `env`/`skills`) does **both** for the current directory.
 
 > **Non-interactive safety:** run from an agent/CI (no TTY) and upload refuses without `--all` or
 > `--select`, so credentials are never registered unattended by accident.
@@ -587,7 +587,7 @@ any of them with `treg skill install <name>` (or `--all`), which writes the reci
 # Part 6c — Run a CLI tool
 
 Every tool so far was an HTTP **API** you `call`. Many providers also ship a **command-line tool** (stripe,
-gh, gcloud…). `treg run` executes that CLI with the org's credential injected — so a teammate uses it
+gh, gcloud…). `stray run` executes that CLI with the org's credential injected — so a teammate uses it
 *without* owning the key or logging in.
 
 ## Step 22c — Turn on `run` for a CLI tool
@@ -596,7 +596,7 @@ Because a run hands the credential to a machine, the owner opts each tool in fir
 toggle is the same switch). Here Tom enables it for the `stripe` tool (its id from `tool ls`).
 
 ```bash
-HOME=~/.treg-personas/tom treg tool update 4 --local-run on
+HOME=~/.stray-personas/tom stray tool update 4 --local-run on
 ```
 ```json
 {
@@ -611,14 +611,14 @@ an owner/admin can flip it.
 
 ## Step 22d — Run the vendor CLI (no login, nothing on disk)
 
-Now Bob runs Stripe's real CLI *through* treg. Everything after `--` is handed to the vendor tool verbatim.
-treg injects the credential just for this run; Bob never logged into Stripe or stored its key. The default
+Now Bob runs Stripe's real CLI *through* stray. Everything after `--` is handed to the vendor tool verbatim.
+stray injects the credential just for this run; Bob never logged into Stripe or stored its key. The default
 tier is `--local` — it runs on Bob's own machine, and on Linux the key is isolated under a dedicated
-`treg-run` user (installed once with `sudo treg setup-local-run`; on macOS it's best-effort). Add `--server`
+`stray-run` user (installed once with `sudo stray setup-local-run`; on macOS it's best-effort). Add `--server`
 to run it on the registry instead, for a catalog-known CLI, so the key never reaches Bob's machine at all.
 
 ```bash
-HOME=~/.treg-personas/bob treg run stripe -- get /v1/balance
+HOME=~/.stray-personas/bob stray run stripe -- get /v1/balance
 ```
 ```
 {
@@ -629,17 +629,17 @@ HOME=~/.treg-personas/bob treg run stripe -- get /v1/balance
 # Stripe's own CLI ran with the org key injected — Bob never logged in or held the key.
 ```
 
-**Notice:** `treg run <tool> -- <args>` for a CLI; `treg call <tool> <path>` for an HTTP API — same
+**Notice:** `stray run <tool> -- <args>` for a CLI; `stray call <tool> <path>` for an HTTP API — same
 credential, two ways to use it.
 
 ## Step 22e — Every run is on the record
 
 Like proxied calls, CLI runs are audited. A `--server` run is recorded in the run ledger with its exit code
-and duration; a `--local` run leaves its audit trail beside the calls (`treg calls`). The owner reviews
-server runs with `treg runs`.
+and duration; a `--local` run leaves its audit trail beside the calls (`stray calls`). The owner reviews
+server runs with `stray runs`.
 
 ```bash
-HOME=~/.treg-personas/tom treg runs --limit 5
+HOME=~/.stray-personas/tom stray runs --limit 5
 ```
 ```json
 [
@@ -655,7 +655,7 @@ HOME=~/.treg-personas/tom treg runs --limit 5
 ]
 ```
 
-**Notice:** the mnemonic — `treg call` → `treg calls`; `treg run` → `treg runs`. Two verbs, two ledgers.
+**Notice:** the mnemonic — `stray call` → `stray calls`; `stray run` → `stray runs`. Two verbs, two ledgers.
 
 ---
 
@@ -666,7 +666,7 @@ HOME=~/.treg-personas/tom treg runs --limit 5
 The owner lists everyone and their roles. Role changes reference a member by `user_id`.
 
 ```bash
-HOME=~/.treg-personas/tom treg org members
+HOME=~/.stray-personas/tom stray org members
 ```
 ```json
 [
@@ -684,7 +684,7 @@ Only an owner changes roles. Let's make Bob an **admin** — he can invite/manag
 stay owner-only. The last-owner guard stops an org from becoming ownerless.
 
 ```bash
-HOME=~/.treg-personas/tom treg org set-role 2 admin
+HOME=~/.stray-personas/tom stray org set-role 2 admin
 ```
 ```json
 {
@@ -701,7 +701,7 @@ HOME=~/.treg-personas/tom treg org set-role 2 admin
 As a plain member Bob couldn't invite; as an **admin** he can. He invites a new teammate.
 
 ```bash
-HOME=~/.treg-personas/bob treg org invite dana@superdesign.dev --role member
+HOME=~/.stray-personas/bob stray org invite dana@superdesign.dev --role member
 ```
 ```json
 {
@@ -720,7 +720,7 @@ HOME=~/.treg-personas/bob treg org invite dana@superdesign.dev --role member
 Admins see every invite still outstanding for the org. Accepted, revoked, and expired ones are filtered out.
 
 ```bash
-HOME=~/.treg-personas/bob treg org invites
+HOME=~/.stray-personas/bob stray org invites
 ```
 ```json
 [
@@ -739,7 +739,7 @@ Plans change — Bob kills Dana's invite before she uses it. This hard-deletes t
 accepted.
 
 ```bash
-HOME=~/.treg-personas/bob treg org revoke 3
+HOME=~/.stray-personas/bob stray org revoke 3
 ```
 ```json
 {
@@ -754,7 +754,7 @@ HOME=~/.treg-personas/bob treg org revoke 3
 Alice is a viewer. She can call tools, but she can't invite — that needs admin+. She gets refused.
 
 ```bash
-HOME=~/.treg-personas/alice treg org invite eve@superdesign.dev --role member
+HOME=~/.stray-personas/alice stray org invite eve@superdesign.dev --role member
 ```
 ```json
 {
@@ -771,11 +771,11 @@ HOME=~/.treg-personas/alice treg org invite eve@superdesign.dev --role member
 ## Step 29 — Become the platform operator
 
 Super-admin sits *above* orgs — it reads and manages every tenant. Two ways to authorise: the platform
-bearer `TREG_ADMIN_TOKEN`, or a user flagged `is_superadmin`. We use the bearer, read from `.env` so it
+bearer `STRAY_ADMIN_TOKEN`, or a user flagged `is_superadmin`. We use the bearer, read from `.env` so it
 never appears on screen.
 
 ```bash
-treg admin login --token "$(grep -E '^TREG_ADMIN_TOKEN=' .env | cut -d= -f2-)"
+stray admin login --token "$(grep -E '^STRAY_ADMIN_TOKEN=' .env | cut -d= -f2-)"
 ```
 ```
 admin token saved
@@ -789,7 +789,7 @@ One call gives totals across every tenant — the picture no single org owner ca
 `admin orgs / users / tools / health` for cross-tenant inventory.
 
 ```bash
-treg admin stats
+stray admin stats
 ```
 ```json
 {
@@ -806,7 +806,7 @@ growth counts.
 Cross-tenant visibility: Superdesign with its members + tools, plus everyone's personal orgs.
 
 ```bash
-treg admin orgs
+stray admin orgs
 ```
 ```json
 [
@@ -825,7 +825,7 @@ The env bearer bootstraps; then you promote named users so they reach `/admin/*`
 token — no shared secret to pass around.
 
 ```bash
-treg admin grant 1
+stray admin grant 1
 ```
 ```json
 {
@@ -871,7 +871,7 @@ Bob (its creator, and an admin) removes the tool. The bound secret stays — onl
 can't delete a teammate's resource.
 
 ```bash
-HOME=~/.treg-personas/bob treg tool rm 1
+HOME=~/.stray-personas/bob stray tool rm 1
 ```
 ```json
 {
@@ -887,7 +887,7 @@ The finale. Deleting an org is owner-only and **confirm-by-name** — you must t
 your active org. The cascade removes all memberships, tools, secrets, bundles, invites, and audit rows.
 
 ```bash
-HOME=~/.treg-personas/tom treg org delete superdesign
+HOME=~/.stray-personas/tom stray org delete superdesign
 ```
 ```json
 {
@@ -904,40 +904,40 @@ lifecycle: sign in → team → invite (both doors) → roles → tool → proxi
 
 | Shape | Who | How | Header(s) |
 |---|---|---|---|
-| **Identity token** | humans on the CLI | `treg login` (GitHub) or `treg login --email` (OTP) | `X-Treg-Token: <identity>` + `X-Treg-Org: <slug>` |
-| **Per-org token** | agents / CI | baked into an org at `org create` / `org join` | `X-Treg-Token: <org-token>` (org is implicit) |
-| **Session cookie** | the dashboard | GitHub or email-code sign-in sets a signed HttpOnly cookie | cookie + `X-Treg-Org: <slug>` |
-| **Admin bearer** | platform operator | `TREG_ADMIN_TOKEN`, or a user flagged `is_superadmin` | `X-Treg-Token: <admin>` on `/admin/*` |
+| **Identity token** | humans on the CLI | `stray login` (GitHub) or `stray login --email` (OTP) | `X-Stray-Token: <identity>` + `X-Stray-Org: <slug>` |
+| **Per-org token** | agents / CI | baked into an org at `org create` / `org join` | `X-Stray-Token: <org-token>` (org is implicit) |
+| **Session cookie** | the dashboard | GitHub or email-code sign-in sets a signed HttpOnly cookie | cookie + `X-Stray-Org: <slug>` |
+| **Admin bearer** | platform operator | `STRAY_ADMIN_TOKEN`, or a user flagged `is_superadmin` | `X-Stray-Token: <admin>` on `/admin/*` |
 
 ## Appendix B — command reference
 
 ```
-treg login [--email you@x.com | --token <t>]   # sign in (GitHub default; email OTP; or a raw token)
-treg logout                                     # clear your credentials
-treg invites                                    # invites addressed to you (code-free)
-treg accept <org-slug>                          # accept one addressed to you (no code)
+stray login [--email you@x.com | --token <t>]   # sign in (GitHub default; email OTP; or a raw token)
+stray logout                                     # clear your credentials
+stray invites                                    # invites addressed to you (code-free)
+stray accept <org-slug>                          # accept one addressed to you (no code)
 
-treg org create "<Name>"                        # make a team, become owner
-treg org ls | org use <slug>                    # list / switch active org
-treg org invite <email> [--role viewer|member|admin] [--expires-days N]
-treg org join <code> --email you@x.com          # the code door (creates you if new)
-treg org members | set-role <user_id> <role>    # roster / change a role (owner)
-treg org invites | revoke <invite_id>           # list / kill pending invites (admin+)
-treg org leave | delete <slug>                  # self-remove / delete (owner, confirm-by-name)
+stray org create "<Name>"                        # make a team, become owner
+stray org ls | org use <slug>                    # list / switch active org
+stray org invite <email> [--role viewer|member|admin] [--expires-days N]
+stray org join <code> --email you@x.com          # the code door (creates you if new)
+stray org members | set-role <user_id> <role>    # roster / change a role (owner)
+stray org invites | revoke <invite_id>           # list / kill pending invites (admin+)
+stray org leave | delete <slug>                  # self-remove / delete (owner, confirm-by-name)
 
-treg secret add <name> (--value V | --file F | --dir D) [--kind env|oauth|...]
-treg tool add <name> --base-url URL (--secret ID | --bind '...' | --binding '<json>')
-treg secret ls | rm ID | update ID …            # tool ls | rm | update likewise
-treg call <tool> <path>  |  call <full-url>     # proxy a call (named or agent-native)
-treg calls [--limit N]                          # the call audit log
+stray secret add <name> (--value V | --file F | --dir D) [--kind env|oauth|...]
+stray tool add <name> --base-url URL (--secret ID | --bind '...' | --binding '<json>')
+stray secret ls | rm ID | update ID …            # tool ls | rm | update likewise
+stray call <tool> <path>  |  call <full-url>     # proxy a call (named or agent-native)
+stray calls [--limit N]                          # the call audit log
 
-treg run <tool> -- <cli args>                   # run a vendor CLI with the key injected (--local default; --server = on the registry)
-treg runs [--limit N]                           # the CLI-run audit log
-treg tool update <id> --local-run on|off        # owner opt-in: allow/forbid `treg run` for a tool
-sudo treg setup-local-run                       # one-time: isolate local runs under the treg-run user (Linux)
+stray run <tool> -- <cli args>                   # run a vendor CLI with the key injected (--local default; --server = on the registry)
+stray runs [--limit N]                           # the CLI-run audit log
+stray tool update <id> --local-run on|off        # owner opt-in: allow/forbid `stray run` for a tool
+sudo stray setup-local-run                       # one-time: isolate local runs under the stray-run user (Linux)
 
-treg skill init --dir D | skill add --dir D | skill ls | skill rm ID
-treg admin login --token T | stats | orgs | users | tools | health | grant/revoke ID | …
+stray skill init --dir D | skill add --dir D | skill ls | skill rm ID
+stray admin login --token T | stats | orgs | users | tools | health | grant/revoke ID | …
 
 Global: --org <slug> runs any single command in that org instead of the active one.
 ```

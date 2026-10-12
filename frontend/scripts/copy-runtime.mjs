@@ -3,7 +3,7 @@ import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
-const web = fileURLToPath(new URL('../../src/treg/web/', import.meta.url))
+const web = fileURLToPath(new URL('../../src/stray/web/', import.meta.url))
 const vue = fileURLToPath(new URL('../node_modules/vue/', import.meta.url))
 const { version } = JSON.parse(readFileSync(resolve(vue, 'package.json'), 'utf8'))
 const html = readFileSync(resolve(web, 'enrich-arena.html'), 'utf8')

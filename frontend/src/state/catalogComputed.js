@@ -10,7 +10,7 @@ const byUse = (a, b) => (b.usage - a.usage) || (b.provN - a.provN) || byTitle.co
 // What each comparison column means, on hover or focus of its heading (comparisonColumns).
 const COL_TIPS = {
   takes:'What you can send it. Each tag is one input it accepts; — means the catalog has not mapped it yet.',
-  price:"What one call costs on treg's key, in the provider's own unit: per call, per result or per success. With your own key the provider bills you, and treg adds nothing.",
+  price:"What one call costs on stray's key, in the provider's own unit: per call, per result or per success. With your own key the provider bills you, and stray adds nothing.",
   works:'Share of the last 30 days of calls that ended without a provider error. Shown once there are 20 or more.',
   useful:"What teams' agents said after using the result, read like Steam's user reviews: Positive, Mostly positive, Mixed, Mostly negative or Negative by the share that found it useful (partly useful counts half), and Very or Overwhelmingly once 25 or 50 teams agree. One vote per team, last 90 days, scored once 5 teams have rated it; before that their reasons are quoted as early reviews.",
 }
@@ -120,9 +120,9 @@ platProviders(){  // providers with endpoints here, in catalog order
       const seen=[]; for(const g of (this.platData&&this.platData.capabilities||[])) for(const e of (g.endpoints||[])) if(!seen.includes(e.provider)) seen.push(e.provider);
       for(const e of (this.platData&&this.platData.extended||[])) if(!seen.includes(e.provider)) seen.push(e.provider);
       // Navigation is a fact of THIS platform response, not of the separately-loaded connection
-      // registry. Depending on that async registry made the entire row flicker away locally. `treg`
+      // registry. Depending on that async registry made the entire row flicker away locally. `stray`
       // is the synthetic router, not a provider page a person can open.
-      return seen.filter(s=>s!=='treg'); },
+      return seen.filter(s=>s!=='stray'); },
 // ---- the shelf's rows ----
     // Which endpoints file together (a job several providers do, or one endpoint alone) is decided by
     // the server (catalog_store.domain_rows), so the CLI, the API and this page cannot disagree about
@@ -248,7 +248,7 @@ drawerIds(){
       return e.platform_eligible===false ? 'key' : 'copy'; },
 // Everything else worth knowing, as one quiet line instead of a row of chips.
     drawerFacts(){ const e=this.drawerEp; if(!e) return '';
-      const access={'Platform + BYOK':"treg's key or yours", 'Platform access':"treg's key", 'BYOK only':'your own key only'}[this.endpointAccessLabel(e)] || this.endpointAccessLabel(e);
+      const access={'Platform + BYOK':"stray's key or yours", 'Platform access':"stray's key", 'BYOK only':'your own key only'}[this.endpointAccessLabel(e)] || this.endpointAccessLabel(e);
       return [access, e.verified ? 'verified live '+this.verdictDate(e.verified) : 'not yet verified live',
               e.scope==='own_account' ? 'reads the account you connect' : e.scope==='any_account' ? 'any public account' : ''].filter(Boolean).join(' · '); },
 // A provider's tools by platform (GET /catalog/providers/<service>), for its provider page.
@@ -311,7 +311,7 @@ callBodyPretty(){ const t=this.callView&&this.callView.response&&this.callView.r
     callBodyTruncated(){ return !this.callViewFull && this.callBodyPretty.length>262144; },
 // cap the RENDERED text at 256 KB unless asked for all of it
     callBodyShown(){ const t=this.callBodyPretty; return this.callBodyTruncated ? t.slice(0,262144)+'\n… (truncated)' : t; },
-anyTagged(){  // hide the column entirely for teams that never send X-Treg-Meta
+anyTagged(){  // hide the column entirely for teams that never send X-Stray-Meta
       return (this.calls||[]).some(c=>c.tags && Object.keys(c.tags).length);
     },
 // Try-it drawer: the filled query string + the three "how to run it" recipes (agent / CLI / API)
@@ -332,11 +332,11 @@ epTryQuery(){ return this.epTryVisibleParams.filter(p=>['query','path'].includes
       .map(p=>encodeURIComponent(p.name)+'='+encodeURIComponent(p.value)).join('&'); },
 epTryShellBody(){ return "'"+String(this.epTryBody).replace(/'/g,"'\"'\"'")+"'"; },
 epTryCliCall(){ if(!this.epTry) return '';
-      if(this.epTry.id==='fishaudio.voices.list') return 'treg resources list --provider fishaudio --kind voice';
+      if(this.epTry.id==='fishaudio.voices.list') return 'stray resources list --provider fishaudio --kind voice';
       const args=this.epTryVisibleParams.filter(p=>['query','path'].includes(p.location) && p.value!=='' && p.value!=null)
         .map(p=>`--query ${p.name}=${/\s/.test(String(p.value))?JSON.stringify(String(p.value)):p.value}`).join(' ');
       const method=(this.epTry.method||'GET').toUpperCase();
-      let s=`treg call ${this.epTry.id}${args?' '+args:''}`;
+      let s=`stray call ${this.epTry.id}${args?' '+args:''}`;
       if(method!=='GET') s+=` --method ${method}`;
       if(this.epTryAuthMethod) s+=` --authorization-method ${this.epTryAuthMethod}`;
       for(const p of this.epTryVisibleParams.filter(p=>p.location==='header'&&String(p.value)!==''))
@@ -351,16 +351,16 @@ epTryCliCall(){ if(!this.epTry) return '';
       return s; },
 epTryCurl(){ if(!this.epTry) return '';
       if(this.epTry.id==='fishaudio.voices.list'){
-        const tok=this.myToken||'$TREG_TOKEN', org=this.activeOrgId||'$TREG_ORG_ID';
-        let s=`curl "${this.proxy}/orgs/${org}/provider-resources?provider=fishaudio&kind=voice" \\\n+  -H "X-Treg-Token: ${tok}"`;
-        if(this.sessionMode && this.activeSlugNow) s+=` \\\n+  -H "X-Treg-Org: ${this.activeSlugNow}"`;
+        const tok=this.myToken||'$STRAY_TOKEN', org=this.activeOrgId||'$STRAY_ORG_ID';
+        let s=`curl "${this.proxy}/orgs/${org}/provider-resources?provider=fishaudio&kind=voice" \\\n+  -H "X-Stray-Token: ${tok}"`;
+        if(this.sessionMode && this.activeSlugNow) s+=` \\\n+  -H "X-Stray-Org: ${this.activeSlugNow}"`;
         return s;
       }
       const q=this.epTryQuery; const url=`${this.proxy}/call/${this.epTry.id}${q?'?'+q:''}`;
-      const tok=this.myToken||'$TREG_TOKEN', method=(this.epTry.method||'GET').toUpperCase();
-      let s=`curl -X ${method} "${url}" \\\n  -H "X-Treg-Token: ${tok}"`;
-      if(this.sessionMode && this.activeSlugNow) s+=` \\\n  -H "X-Treg-Org: ${this.activeSlugNow}"`;  // minted identity token needs the org header
-      if(this.epTryAuthMethod) s+=` \\\n  -H "X-Treg-Authorization-Method: ${this.epTryAuthMethod}"`;
+      const tok=this.myToken||'$STRAY_TOKEN', method=(this.epTry.method||'GET').toUpperCase();
+      let s=`curl -X ${method} "${url}" \\\n  -H "X-Stray-Token: ${tok}"`;
+      if(this.sessionMode && this.activeSlugNow) s+=` \\\n  -H "X-Stray-Org: ${this.activeSlugNow}"`;  // minted identity token needs the org header
+      if(this.epTryAuthMethod) s+=` \\\n  -H "X-Stray-Authorization-Method: ${this.epTryAuthMethod}"`;
       for(const p of this.epTryVisibleParams.filter(p=>p.location==='header'&&String(p.value)!=='')) s+=` \\\n  -H "${p.name}: ${String(p.value).replace(/"/g,'\\"')}"`;
       if(this.epTryBodyType==='multipart'){
         for(const p of this.epTryMultipart.filter(p=>!String(p.type).includes('file')&&String(p.value)!=='')) s+=` \\\n  -F "${p.name}=${String(p.value).replace(/"/g,'\\"')}"`;
@@ -370,10 +370,10 @@ epTryCurl(){ if(!this.epTry) return '';
       return s; },
 // token + team embedded HERE ONLY (a copy-and-run-now context) — the setup line elsewhere stays clean
     epTrySetupLine(){ const S=this.activeSlugNow||'<team-slug>', T=this.myToken||'<YOUR_TOKEN>';
-      return `set up treg — ${this.proxy}/llms.txt with team ${S} token: ${T}`; },
+      return `set up stray — ${this.proxy}/llms.txt with team ${S} token: ${T}`; },
 epTryAgentUse(){ if(!this.epTry) return '';
-      if(this.epTry.id==='fishaudio.voices.list') return 'Use treg resources_list with provider=fishaudio and kind=voice. It returns the connected Fish account when BYOK exists, otherwise this team’s platform-created voices.';
+      if(this.epTry.id==='fishaudio.voices.list') return 'Use stray resources_list with provider=fishaudio and kind=voice. It returns the connected Fish account when BYOK exists, otherwise this team’s platform-created voices.';
       const what=this.epTry.summary ? this.epTry.summary.replace(/\.$/,'') : this.epTry.id;
       const auth=this.epTryAuthMethod ? ` Use authorization_method=${this.epTryAuthMethod}.` : '';
-      return `Use treg to call ${this.epTry.id} — ${what}.${auth}`; }
+      return `Use stray to call ${this.epTry.id} — ${what}.${auth}`; }
 }

@@ -4,10 +4,10 @@ Status: Checkpoint 0 draft. This file is a review artifact only and must not be 
 
 Source of truth read for this design:
 
-- `/tmp/treg-phase3-brief.md`
+- `/tmp/stray-phase3-brief.md`
 - `docs/REFACTOR-PLAN.md` sections 1.1, 1.2, 1.3, 1.6, 1.7, Stage 3, and section 5
-- the current `src/treg/api.py`, `src/treg/routers/dependencies.py`, `src/treg/session.py`,
-  `src/treg/mcp_oauth.py`, `src/treg/bootstrap.py`, and import-linter configuration
+- the current `src/stray/api.py`, `src/stray/routers/dependencies.py`, `src/stray/session.py`,
+  `src/stray/mcp_oauth.py`, `src/stray/bootstrap.py`, and import-linter configuration
 - `tests/snapshots/routes.json`, `openapi.json`, `composition.json`, and `lifespan.json`
 - the relevant context fragments: composition, import boundaries, MCP OAuth, multi-tenancy,
   super-admin, API, and dashboard
@@ -83,10 +83,10 @@ assign pins to governance.
 
 ### 0.5 Old module import paths need a compatibility ruling
 
-Tests and runtime code import `treg.session` and `treg.mcp_oauth` directly. Unlike `treg.api:app`, the
+Tests and runtime code import `stray.session` and `stray.mcp_oauth` directly. Unlike `stray.api:app`, the
 brief does not explicitly require these paths to remain public, but deleting them would be an observable
 import change. Proposed approach: leave thin re-export shims at both paths for this stage, while all
-runtime owners import `treg.domain.identity.session` and `treg.domain.identity.mcp_oauth`. The section 5
+runtime owners import `stray.domain.identity.session` and `stray.domain.identity.mcp_oauth`. The section 5
 destination is then real, but the old paths remain compatibility facades. `routers/dependencies.py` is
 different: Stage 3 explicitly requires deletion, so it receives no shim.
 
@@ -99,21 +99,21 @@ distinct `_key`, `_b64`, and `_unb64` symbols, so combining them would force ren
 byte rule. Proposed shape:
 
 ```text
-src/treg/domain/
+src/stray/domain/
   __init__.py
   identity/
     __init__.py       public identity exports
-    session.py        exact body of current treg/session.py
-    mcp_oauth.py      exact body of current treg/mcp_oauth.py
+    session.py        exact body of current stray/session.py
+    mcp_oauth.py      exact body of current stray/mcp_oauth.py
     access.py         Caller, resolution, roles, and auth dependencies
 
-src/treg/application/
+src/stray/application/
   __init__.py
   auth.py             multi-step identity proof, pairing, OAuth AS orchestration
   signup.py           identity provisioning and first-team creation/grant sequencing
   connect.py          OAuth/key connection workflows
 
-src/treg/routers/
+src/stray/routers/
   auth.py
   orgs.py
   resources.py
@@ -206,7 +206,7 @@ The HTTP cookie helpers are not identity domain rules and must not create a futu
 `api.py` may re-export the identity names during the staged moves, but all new `Depends(...)` sites must
 import directly from `domain.identity`. `routers/admin.py`, `routers/catalog.py`, and `routers/web.py`
 must be updated in the identity commit. At the end, full-repo `rg routers.dependencies` must return no
-Python import and `src/treg/routers/dependencies.py` is deleted. There is intentionally no compatibility
+Python import and `src/stray/routers/dependencies.py` is deleted. There is intentionally no compatibility
 shim for that transitional path.
 
 ### 1.5 Routes reconciliation and registration points
@@ -276,7 +276,7 @@ route list.
 `lifespan.json` has no auth, governance, or resource tasks. It has one Stage 3 connection-owned startup
 write:
 
-- `treg.api._backfill_provider_extra_tools`
+- `stray.api._backfill_provider_extra_tools`
 
 The function belongs with connection provisioning, but the snapshot and all three role startup
 manifests name the compatibility path. Move its exact body to application connect and re-export the
@@ -306,17 +306,17 @@ Ownership:
 - `domain.identity.access`: the identity/access list in 1.4
 - auth/referral HTTP cookie helpers move to their non-domain homes described in 1.4
 - update all importers and delete `routers/dependencies.py`
-- optional `treg.session` and `treg.mcp_oauth` compatibility shims, pending decision 0.5
+- optional `stray.session` and `stray.mcp_oauth` compatibility shims, pending decision 0.5
 
 Import-linter in the same commit: add `Identity is a domain leaf`, with
-`source_modules = ["treg.domain.identity"]`, `as_packages = true`, and explicit forbidden sibling
+`source_modules = ["stray.domain.identity"]`, `as_packages = true`, and explicit forbidden sibling
 packages `governance`, `connections`, `tools`, `catalog`, `capacity`, and `money`. The contract must be
 tested against import-linter 2.13 before commit; if nonexistent forbidden modules are rejected, create
 the contract when the first sibling package is introduced in Commit 7, not by adding fake placeholder
 domains. Review approval is required because the brief asks for activation in the extraction commit.
 
 Journey: dependency behavior is pinned by the full `tests/test_router_dependencies.py`, plus
-`tests/test_auth.py::test_session_scopes_by_x_treg_org` and
+`tests/test_auth.py::test_session_scopes_by_x_stray_org` and
 `tests/test_mcp_oauth.py::test_our_own_token_is_accepted_and_carries_the_team`.
 
 ### Commit 2: email OTP login journey
@@ -585,7 +585,7 @@ Journey: `test_connections.py::test_set_and_read_back_the_selected_resource`,
 
 ### 3.1 `api.py`
 
-`api.py` remains the ordered route-table host and `treg.api:app` compatibility entry point. During the
+`api.py` remains the ordered route-table host and `stray.api:app` compatibility entry point. During the
 sequence it imports each router block and attaches it at the old position. It may re-export symbols
 that have known test/runtime imports, but moved routers and domains never import `api.py`.
 
@@ -653,12 +653,12 @@ Full-repo scans used:
 
 - `monkeypatch.setattr` / `monkeypatch.delattr`
 - `mock.patch` / `patch(...)`
-- imports of `treg.api`, `treg.session`, `treg.mcp_oauth`, and `routers.dependencies`
+- imports of `stray.api`, `stray.session`, `stray.mcp_oauth`, and `routers.dependencies`
 
 There are no current monkeypatch targets on the Stage 3 handler/helper symbols, except compatibility
 module consumers noted below:
 
-- connection tests import `treg.api as A` and call `A._backfill_provider_extra_tools`; preserve or
+- connection tests import `stray.api as A` and call `A._backfill_provider_extra_tools`; preserve or
   update that target in the connection commit.
 - MCP OAuth metadata tests patch `health.safe_webhook_url`, `health.host_is_public`, and
   `httpx.AsyncClient.get`, not a moved module attribute. Their lazy-import target remains effective.
@@ -735,7 +735,7 @@ Per commit:
 8. run the context drift script before push
 
 `bootstrap` route ownership keys remain path/method/function-name based and must not change. If moving a
-handler makes a key change appear necessary, stop for review. The deployed `treg.api:app` remains the all-role
+handler makes a key change appear necessary, stop for review. The deployed `stray.api:app` remains the all-role
 entry point. No snapshot change is an accepted outcome.
 
 ## 9. Parallel-main merge constraint

@@ -8,7 +8,7 @@ export default { setup: useDashboard }
       <div class="modal" style="width:min(620px,95vw)"><div class="hd"><b id="edit-tool-dialog-title">{{(tForm.id?'Edit ':'Add ')+(tForm.mode==='cli'?'CLI':'endpoint')}}</b><button class="btn sm" @click="newTool=false;toolErr=''" aria-label="Close">✕</button></div>
         <div style="padding:16px 18px">
           <template v-if="tForm.mode!=='cli'">
-            <p class="explain">An endpoint = an upstream base URL + one or more credential bindings (how treg injects each key). Need a key? Close this and open <b>⚿ Secrets</b> first.</p>
+            <p class="explain">An endpoint = an upstream base URL + one or more credential bindings (how stray injects each key). Need a key? Close this and open <b>⚿ Secrets</b> first.</p>
             <div class="frow"><label>Name</label><input v-model="tForm.name" placeholder="e.g. openai"/></div>
             <p v-if="tForm.id && tForm.name.trim() && tForm.name.trim()!==tForm.oldName" class="sub" style="font-size:11px;margin-top:-4px">Renaming changes what agents call: scripts using <span class="mono">{{tForm.oldName}}</span> need the new name.</p>
             <div class="frow"><label>Base URL</label><input v-model="tForm.base_url" placeholder="https://api.openai.com"/></div>
@@ -34,7 +34,7 @@ export default { setup: useDashboard }
             <p v-if="projects.length" class="sub" style="font-size:11px;margin-top:-4px">Optional. Team-wide is the default. A project only narrows things for members you have scoped to it.</p>
           </template>
           <template v-else>
-            <p class="explain">Members run <span class="mono">treg run {{tForm.cli.bin||'&lt;cli&gt;'}} -- &lt;args&gt;</span> — treg injects the key into that run's environment only; it never lands on their machine.</p>
+            <p class="explain">Members run <span class="mono">stray run {{tForm.cli.bin||'&lt;cli&gt;'}} -- &lt;args&gt;</span> — stray injects the key into that run's environment only; it never lands on their machine.</p>
             <div class="frow"><label>CLI command</label><input v-model="tForm.cli.bin" :disabled="!!tForm.id" placeholder="e.g. gh" style="font-family:var(--mono)"/></div>
             <div class="frow"><label>Package</label><input v-model="tForm.cli.package" placeholder="how to install it, e.g. brew install gh (optional)"/></div>
             <div class="frow"><label>API base URL</label><input v-model="tForm.base_url" placeholder="https://api.github.com — the provider behind the CLI"/></div>
@@ -53,7 +53,7 @@ export default { setup: useDashboard }
                 <option v-for="p in projects" :key="p.id" :value="p.slug">{{p.name}}</option>
               </select>
             </div>
-            <label class="cliopt"><span class="tswitch"><input type="checkbox" v-model="tForm.cli.enabled"/><span class="knob"></span></span><span style="flex:1;min-width:0"><b>Local runs</b><span class="sub" style="display:block;margin-top:2px">{{tForm.cli.enabled?'on — members can treg run '+(tForm.cli.bin||'it')+' with the key injected':'off — every run is refused'}}</span></span></label>
+            <label class="cliopt"><span class="tswitch"><input type="checkbox" v-model="tForm.cli.enabled"/><span class="knob"></span></span><span style="flex:1;min-width:0"><b>Local runs</b><span class="sub" style="display:block;margin-top:2px">{{tForm.cli.enabled?'on — members can stray run '+(tForm.cli.bin||'it')+' with the key injected':'off — every run is refused'}}</span></span></label>
             <div class="lbl" style="margin-top:14px;display:flex;align-items:center">Deny list - matching runs are refused before the key is injected <button class="btn sm" @click="tForm.cli.deny.push('')" style="margin-left:auto">＋ pattern</button></div>
             <p class="sub" style="font-size:11px;margin:4px 0 8px">Each row is a regex, matched against the whole command line AND each argument — block subcommands that execute arbitrary code (<span class="mono">(^|\s)run(\s|$)</span>) or flags that redirect the key (<span class="mono">--publish-url\b</span>).</p>
             <div class="bindrow" v-for="(p,i) in tForm.cli.deny" :key="'dn'+i">
@@ -61,11 +61,11 @@ export default { setup: useDashboard }
               <button class="btn sm" @click="tForm.cli.deny.splice(i,1)" aria-label="Remove pattern">✕</button>
             </div>
             <p class="sub" v-if="!tForm.cli.deny.length && !(tForm.cli.deny_defaults && catalogExtra.length)" style="font-size:11px;margin:4px 0 8px;color:var(--warn,#e0a458)">No guardrails — any {{tForm.cli.bin||'CLI'}} invocation gets the key.</p>
-            <label class="cliopt" v-if="catalogExtra.length"><span class="tswitch"><input type="checkbox" v-model="tForm.cli.deny_defaults"/><span class="knob"></span></span><span style="flex:1;min-width:0"><b>Catalog defaults</b><span class="sub" style="display:block;margin-top:2px">treg's built-in deny patterns for {{tForm.cli.bin}} — shown below, maintained centrally</span></span></label>
+            <label class="cliopt" v-if="catalogExtra.length"><span class="tswitch"><input type="checkbox" v-model="tForm.cli.deny_defaults"/><span class="knob"></span></span><span style="flex:1;min-width:0"><b>Catalog defaults</b><span class="sub" style="display:block;margin-top:2px">stray's built-in deny patterns for {{tForm.cli.bin}} — shown below, maintained centrally</span></span></label>
             <template v-if="tForm.cli.deny_defaults && catalogExtra.length">
               <div class="bindrow" v-for="(cp,ci) in catalogExtra" :key="'cd'+ci">
                 <input :value="cp" disabled class="bindinput" style="font-family:var(--mono);opacity:.55"/>
-                <span class="chip" title="From the treg catalog — applies to every org's instance of this CLI; maintained centrally">catalog</span>
+                <span class="chip" title="From the stray catalog — applies to every org's instance of this CLI; maintained centrally">catalog</span>
               </div>
             </template>
           </template>

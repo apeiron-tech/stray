@@ -1,9 +1,9 @@
 {
-  "name": "@superdesign/treg",
+  "name": "@apeiron-tech/stray",
   "version": "0.1.0",
-  "description": "treg — call your team's APIs through one credential-injecting proxy, with no keys on your machine. npm launcher for the treg CLI.",
+  "description": "stray — call your team's APIs through one credential-injecting proxy, with no keys on your machine. npm launcher for the stray CLI.",
   "bin": {
-    "treg": "bin/treg.js"
+    "stray": "bin/stray.js"
   },
   "files": [
     "bin"
@@ -15,12 +15,12 @@
   "homepage": "https://treg.to",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/superdesigndev/treg.git",
+    "url": "git+https://github.com/apeiron-tech/stray.git",
     "directory": "packages/npm"
   },
   "keywords": [
-    "treg",
-    "tools-registry",
+    "stray",
+    "stray",
     "credentials",
     "secrets",
     "proxy",

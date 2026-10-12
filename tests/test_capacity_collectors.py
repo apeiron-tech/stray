@@ -1,4 +1,4 @@
-"""Unit tests for balance collectors in treg.domain.capacity.collectors.
+"""Unit tests for balance collectors in stray.domain.capacity.collectors.
 
 Each test mocks the upstream API response and verifies that the collector returns the expected
 {"value", "unit", "note"} dict. This tests parsing logic without hitting real APIs.
@@ -12,8 +12,8 @@ from datetime import timedelta
 import httpx
 import pytest
 
-from treg.domain.capacity import collectors, policy, sweep
-from treg.timeutil import utcnow_naive
+from stray.domain.capacity import collectors, policy, sweep
+from stray.timeutil import utcnow_naive
 
 
 async def test_spidercloud_balance_converts_api_credits_to_usd():
@@ -38,8 +38,8 @@ async def test_spidercloud_balance_rejects_invalid_api_credits(credits):
 
 
 async def test_fishaudio_balance_uses_workspace_wallet(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FISHAUDIO", "private-test-key")
-    monkeypatch.setenv("TREG_PLATFORM_FISHAUDIO_WORKSPACE_ID", "workspace-test-id")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FISHAUDIO", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_FISHAUDIO_WORKSPACE_ID", "workspace-test-id")
     collectors.get_settings.cache_clear()
     try:
         def probe(request):
@@ -58,8 +58,8 @@ async def test_fishaudio_balance_uses_workspace_wallet(monkeypatch):
 
 
 async def test_fishaudio_balance_is_unknown_without_workspace_and_skips_request(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FISHAUDIO", "private-test-key")
-    monkeypatch.setenv("TREG_PLATFORM_FISHAUDIO_WORKSPACE_ID", "")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FISHAUDIO", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_FISHAUDIO_WORKSPACE_ID", "")
     collectors.get_settings.cache_clear()
     try:
         def probe(_request):
@@ -76,7 +76,7 @@ async def test_fishaudio_balance_is_unknown_without_workspace_and_skips_request(
 
 @pytest.mark.parametrize("credit", [None, True, "not-a-number", "NaN", "Infinity", -1])
 async def test_fishaudio_balance_rejects_invalid_credit(monkeypatch, credit):
-    monkeypatch.setenv("TREG_PLATFORM_FISHAUDIO_WORKSPACE_ID", "workspace-test-id")
+    monkeypatch.setenv("STRAY_PLATFORM_FISHAUDIO_WORKSPACE_ID", "workspace-test-id")
     collectors.get_settings.cache_clear()
     try:
         async with httpx.AsyncClient(transport=httpx.MockTransport(
@@ -295,7 +295,7 @@ async def test_tavily_capacity_rejects_uncertain_usage(payload):
 
 @pytest.mark.parametrize("value,expected", [(0, 0), (71, 71), ("5000", 5000)])
 async def test_zerobounce_balance_accepts_nonnegative_integer_values(monkeypatch, value, expected):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ZEROBOUNCE", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ZEROBOUNCE", "private-test-key")
     collectors.get_settings.cache_clear()
 
     def reply(request):
@@ -320,7 +320,7 @@ async def test_zerobounce_balance_accepts_nonnegative_integer_values(monkeypatch
 async def test_zerobounce_balance_rejects_uncertain_values_without_exposing_key(
     monkeypatch, status, value,
 ):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_ZEROBOUNCE", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_ZEROBOUNCE", "private-test-key")
     collectors.get_settings.cache_clear()
 
     def reply(request):
@@ -338,7 +338,7 @@ async def test_zerobounce_balance_rejects_uncertain_values_without_exposing_key(
 
 @pytest.mark.parametrize("balance", [0, 465])
 async def test_millionverifier_balance_uses_query_key_without_double_counting(monkeypatch, balance):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_MILLIONVERIFIER", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_MILLIONVERIFIER", "private-test-key")
     collectors.get_settings.cache_clear()
     def reply(request):
         assert request.url.path == "/api/v3/credits"
@@ -354,7 +354,7 @@ async def test_millionverifier_balance_uses_query_key_without_double_counting(mo
 
 @pytest.mark.parametrize("balance", [0, 9997, 12.5])
 async def test_bounceban_balance_uses_raw_authorization_header(monkeypatch, balance):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_BOUNCEBAN", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_BOUNCEBAN", "private-test-key")
     collectors.get_settings.cache_clear()
 
     def reply(request):
@@ -382,7 +382,7 @@ async def test_bounceban_balance_rejects_uncertain_values_without_exposing_key(m
             return httpx.Response(200, content=b'{"available_credits": Infinity}')
         return httpx.Response(200, json={"available_credits": balance})
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_BOUNCEBAN", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_BOUNCEBAN", "private-test-key")
     collectors.get_settings.cache_clear()
     try:
         async with httpx.AsyncClient(transport=httpx.MockTransport(probe)) as client:
@@ -396,7 +396,7 @@ async def test_bounceban_balance_rejects_uncertain_values_without_exposing_key(m
 
 @pytest.mark.parametrize("status,body", [(200, {"error": "apikey_not_found"}), (401, {}), (200, {})])
 async def test_millionverifier_balance_errors_do_not_expose_key(monkeypatch, status, body):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_MILLIONVERIFIER", "private-test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_MILLIONVERIFIER", "private-test-key")
     collectors.get_settings.cache_clear()
     try:
         async with httpx.AsyncClient(transport=httpx.MockTransport(
@@ -495,7 +495,7 @@ async def test_akta_collector_parses_credits_and_tier():
 # ---- NO_BALANCE_API / BALANCE_ROUTES registration ---------------------------------------
 
 async def test_olostep_balance(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_OLOSTEP", "test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_OLOSTEP", "test-key")
     collectors.get_settings.cache_clear()
     try:
         def probe(request):
@@ -560,7 +560,7 @@ async def test_linkup_balance_uses_free_credit_route_and_rejects_invalid_values(
 
 
 async def test_scrapegraphai_balance(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_SCRAPEGRAPHAI", "test-key")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_SCRAPEGRAPHAI", "test-key")
     collectors.get_settings.cache_clear()
     try:
         def probe(request):

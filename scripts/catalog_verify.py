@@ -2,14 +2,14 @@
 """Live-verify catalog endpoints and capture example responses.
 
 Usage (credential comes ONLY from the environment — never from a file or argv):
-    TREG_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify.py <service> [--id <endpoint-id>] [--write]
-    TREG_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify.py <service> --extended [--id …]
+    STRAY_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify.py <service> [--id <endpoint-id>] [--write]
+    STRAY_CATALOG_CRED='<secret>' uv run python scripts/catalog_verify.py <service> --extended [--id …]
 
-For each endpoint in src/treg/catalog/<service>.yaml it sends `test_request` to base_url+path with
-the provider's auth shape and required protocol headers (taken from treg.oauth_providers —
+For each endpoint in src/stray/catalog/<service>.yaml it sends `test_request` to base_url+path with
+the provider's auth shape and required protocol headers (taken from stray.oauth_providers —
 token_header/format/location/encode/required_headers),
 checks `expect` (default: HTTP 2xx), and with --write saves a truncated example response to
-src/treg/catalog/examples/<endpoint-id>.json. Prints one PASS/FAIL line per endpoint.
+src/stray/catalog/examples/<endpoint-id>.json. Prints one PASS/FAIL line per endpoint.
 
 `--extended` reads <service>.extended.yaml instead, to REPLAY what a bulk verification run already
 stamped there — it is a re-verifier, not the bulk runner (that is catalog_verify_extended.py). Three
@@ -41,7 +41,7 @@ import httpx
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "src" / "treg" / "catalog"
+CATALOG = ROOT / "src" / "stray" / "catalog"
 MAX_STR = 500
 MAX_LIST = 2
 MAX_BYTES = 10_000
@@ -90,18 +90,18 @@ def main() -> int:
     ap.add_argument("--extended", action="store_true",
                     help="verify <service>.extended.yaml instead of the curated <service>.yaml "
                          "(only its entries that carry a test_request are callable)")
-    ap.add_argument("--via-treg", metavar="TOOL",
-                    help="route through a treg registry's /call proxy (tool name) using ~/.treg/config.json "
-                         "instead of a raw credential — for OAuth providers whose token treg holds")
+    ap.add_argument("--via-stray", metavar="TOOL",
+                    help="route through a stray registry's /call proxy (tool name) using ~/.stray/config.json "
+                         "instead of a raw credential — for OAuth providers whose token stray holds")
     args = ap.parse_args()
 
-    cred = os.environ.get("TREG_CATALOG_CRED")
-    if not cred and not args.via_treg:
-        print("TREG_CATALOG_CRED not set (or use --via-treg <tool>)", file=sys.stderr)
+    cred = os.environ.get("STRAY_CATALOG_CRED")
+    if not cred and not args.via_stray:
+        print("STRAY_CATALOG_CRED not set (or use --via-stray <tool>)", file=sys.stderr)
         return 2
 
     sys.path.insert(0, str(ROOT / "src"))
-    from treg.oauth_providers import REGISTRY
+    from stray.oauth_providers import REGISTRY
 
     prov = REGISTRY.get(args.service)
     if prov is None:
@@ -111,12 +111,12 @@ def main() -> int:
     data = yaml.safe_load((CATALOG / f"{args.service}{suffix}").read_text())
 
     headers, base_query, call_base = {}, {}, None
-    if args.via_treg:
-        cfg = json.loads((Path.home() / ".treg" / "config.json").read_text())
-        call_base = cfg["base_url"].rstrip("/") + f"/call/{args.via_treg}"
-        headers["X-Treg-Token"] = cfg["token"]  # treg's own auth header, not Bearer
+    if args.via_stray:
+        cfg = json.loads((Path.home() / ".stray" / "config.json").read_text())
+        call_base = cfg["base_url"].rstrip("/") + f"/call/{args.via_stray}"
+        headers["X-Stray-Token"] = cfg["token"]  # stray's own auth header, not Bearer
         if cfg.get("active_org"):
-            headers["X-Treg-Org"] = str(cfg["active_org"])
+            headers["X-Stray-Org"] = str(cfg["active_org"])
     else:
         secret = cred
         if prov.token_encode == "base64" and ":" in secret:

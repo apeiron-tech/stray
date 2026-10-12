@@ -665,7 +665,7 @@
         "type": "object"
       },
       "OAuthStartIn": {
-        "description": "Two modes. BYO: supply client_id/client_secret/auth_uri/token_uri/scopes yourself.\nREGISTRY: supply `provider` (+ optional `capability`) and treg fills all of it from its own\napproved app — see oauth_providers.py.",
+        "description": "Two modes. BYO: supply client_id/client_secret/auth_uri/token_uri/scopes yourself.\nREGISTRY: supply `provider` (+ optional `capability`) and stray fills all of it from its own\napproved app — see oauth_providers.py.",
         "properties": {
           "auth_uri": {
             "default": "https://accounts.google.com/o/oauth2/auth",
@@ -1786,7 +1786,7 @@
         "title": "ValidationError",
         "type": "object"
       },
-      "treg__api__RunIn": {
+      "stray__api__RunIn": {
         "properties": {
           "args": {
             "default": [],
@@ -1818,9 +1818,9 @@
         "title": "RunIn",
         "type": "object"
       },
-      "treg__routers__hub__RunIn": {
+      "stray__routers__hub__RunIn": {
         "additionalProperties": false,
-        "description": "A dry run of a folder: the four files plus the inputs. Nothing is stored; every step is\nreal and charged to the maker (HUB-DECISIONS round 4 q10 / round 5 q2: `treg hub run .`).",
+        "description": "A dry run of a folder: the four files plus the inputs. Nothing is stored; every step is\nreal and charged to the maker (HUB-DECISIONS round 4 q10 / round 5 q2: `stray hub run .`).",
         "properties": {
           "check": {
             "additionalProperties": true,
@@ -1879,7 +1879,7 @@
     }
   },
   "info": {
-    "title": "treg",
+    "title": "stray",
     "version": "0.0.1"
   },
   "openapi": "3.1.0",
@@ -1933,31 +1933,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2006,21 +2006,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2077,21 +2077,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2149,21 +2149,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2244,21 +2244,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2295,7 +2295,7 @@
     },
     "/admin/errors": {
       "get": {
-        "description": "Failed calls with the evidence to explain them — the caller's request and the provider's own\nanswer (see models.CallRecord.error_request).\n\nSuperadmin-only and deliberately not mirrored on `/calls`: the rows hold customers' request\ncontent, so v1 keeps them behind the same door as every other cross-tenant view.\n\nRead-only. Ageing is the `treg-worker admin purge-evidence` cron's job\n(application/evidence_retention.py); until it has run, a row older than the window is shown as\nexpired with no evidence, so a late schedule never widens what this view reveals.",
+        "description": "Failed calls with the evidence to explain them — the caller's request and the provider's own\nanswer (see models.CallRecord.error_request).\n\nSuperadmin-only and deliberately not mirrored on `/calls`: the rows hold customers' request\ncontent, so v1 keeps them behind the same door as every other cross-tenant view.\n\nRead-only. Ageing is the `stray-worker admin purge-evidence` cron's job\n(application/evidence_retention.py); until it has run, a row older than the window is shown as\nexpired with no evidence, so a late schedule never widens what this view reveals.",
         "operationId": "admin_errors_admin_errors_get",
         "parameters": [
           {
@@ -2368,21 +2368,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2420,21 +2420,21 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2486,21 +2486,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2551,21 +2551,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2614,21 +2614,21 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2678,21 +2678,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2740,21 +2740,21 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2804,21 +2804,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2863,21 +2863,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2925,21 +2925,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -2996,21 +2996,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3069,21 +3069,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3142,21 +3142,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3215,21 +3215,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3278,21 +3278,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3353,21 +3353,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3401,26 +3401,26 @@
     },
     "/admin/stats": {
       "get": {
-        "description": "Platform totals for the admin page. Every count runs in the database.\n\nLoading the whole call table to count it in Python ran past the request timeout at production\nsize, so the page got a 502. Call counts now come from `endpointdaystat` (one row per endpoint\nper day, folded by the `treg-worker catalog stats` cron): calls the provider saw, as of that\njob's last run. The all-time total is Postgres's own row estimate, not an exact count.",
+        "description": "Platform totals for the admin page. Every count runs in the database.\n\nLoading the whole call table to count it in Python ran past the request timeout at production\nsize, so the page got a 502. Call counts now come from `endpointdaystat` (one row per endpoint\nper day, folded by the `stray-worker catalog stats` cron): calls the provider saw, as of that\njob's last run. The all-time total is Postgres's own row estimate, not an exact count.",
         "operationId": "admin_stats_admin_stats_get",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3458,21 +3458,21 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3513,21 +3513,21 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3577,21 +3577,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3638,21 +3638,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3709,21 +3709,21 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3772,31 +3772,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3830,36 +3830,36 @@
     },
     "/auth/cli-token": {
       "get": {
-        "description": "Mint a fresh CLI/bearer token for the authenticated caller (session cookie OR token). Identity\ntokens are signed (`sess.make_identity`); minting the current generation invalidates nothing — it lets\nthe dashboard embed a working token in copy-paste snippets + a 'copy token' button, so a human\ndoesn't have to hunt for it in `~/.treg/config.json`.\n\nWhen the caller names a team (the dashboard sends `X-Treg-Org` for the active org, and only after\nconfirming membership), the org slug is BAKED into the token. That is what makes the dashboard's\n\"your API key\" work as a bare bearer where no `X-Treg-Org` header can travel — pasted into an MCP\nserver's Authorization it resolves to that team, no header, no per-org agent token to manage. A\ncaller who sends no team receives a seven-day bootstrap credential for onboarding only. It\ncannot access team resources or use itself to mint a Default key. The response also identifies\nthe selected Default control and its active/disabled state so Getting Started never reveals a\ndisabled token.",
+        "description": "Mint a fresh CLI/bearer token for the authenticated caller (session cookie OR token). Identity\ntokens are signed (`sess.make_identity`); minting the current generation invalidates nothing — it lets\nthe dashboard embed a working token in copy-paste snippets + a 'copy token' button, so a human\ndoesn't have to hunt for it in `~/.stray/config.json`.\n\nWhen the caller names a team (the dashboard sends `X-Stray-Org` for the active org, and only after\nconfirming membership), the org slug is BAKED into the token. That is what makes the dashboard's\n\"your API key\" work as a bare bearer where no `X-Stray-Org` header can travel — pasted into an MCP\nserver's Authorization it resolves to that team, no header, no per-org agent token to manage. A\ncaller who sends no team receives a seven-day bootstrap credential for onboarding only. It\ncannot access team resources or use itself to mint a Default key. The response also identifies\nthe selected Default control and its active/disabled state so Getting Started never reveals a\ndisabled token.",
         "operationId": "auth_cli_token_auth_cli_token_get",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3893,16 +3893,16 @@
     },
     "/auth/cli/approve": {
       "post": {
-        "description": "Complete a `treg login` handshake from an EXISTING browser session (the \"Continue as\" button\non /login, and the email door after /auth/email/verify sets the cookie). Deliberately a POST with\na same-origin check — auto-completing on a GET would let a phisher mail out /login?cli=<their-id>\nand poll the victim's identity token straight out of /auth/cli/poll.\n\n`org` (optional) is the team slug the user picked in the /login org picker; it's validated to be\none of the user's memberships and passed back to the CLI so it lands on the RIGHT team instead of\nguessing (`_pick_active_org`).",
+        "description": "Complete a `stray login` handshake from an EXISTING browser session (the \"Continue as\" button\non /login, and the email door after /auth/email/verify sets the cookie). Deliberately a POST with\na same-origin check — auto-completing on a GET would let a phisher mail out /login?cli=<their-id>\nand poll the victim's identity token straight out of /auth/cli/poll.\n\n`org` (optional) is the team slug the user picked in the /login org picker; it's validated to be\none of the user's memberships and passed back to the CLI so it lands on the RIGHT team instead of\nguessing (`_pick_active_org`).",
         "operationId": "auth_cli_approve_auth_cli_approve_post",
         "parameters": [
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -3946,16 +3946,16 @@
     },
     "/auth/cli/orgs": {
       "get": {
-        "description": "The /login page fetches this (session-cookie authed) to render the team picker before completing\na `treg login` handshake. Returns the signed-in user's teams; empty list if no session.",
+        "description": "The /login page fetches this (session-cookie authed) to render the team picker before completing\na `stray login` handshake. Returns the signed-in user's teams; empty list if no session.",
         "operationId": "auth_cli_orgs_auth_cli_orgs_get",
         "parameters": [
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4032,7 +4032,7 @@
     },
     "/auth/cli/start": {
       "post": {
-        "description": "`treg login` calls this FIRST. The SERVER mints both the login_id and a short pairing code and\nremembers them (pending approval). The code is shown only in that terminal; the browser must echo it\nback at approve time, where it's validated server-side, before any token is issued. So a login the\nuser didn't start (a phished /login?cli=<id> link) can't be completed, and the poll endpoint carries\nno code to brute-force. Unauthenticated — on its own it grants nothing.",
+        "description": "`stray login` calls this FIRST. The SERVER mints both the login_id and a short pairing code and\nremembers them (pending approval). The code is shown only in that terminal; the browser must echo it\nback at approve time, where it's validated server-side, before any token is issued. So a login the\nuser didn't start (a phished /login?cli=<id> link) can't be completed, and the poll endpoint carries\nno code to brute-force. Unauthenticated — on its own it grants nothing.",
         "operationId": "auth_cli_start_auth_cli_start_post",
         "responses": {
           "200": {
@@ -4203,11 +4203,11 @@
           },
           {
             "in": "cookie",
-            "name": "treg_oauth_state",
+            "name": "stray_oauth_state",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Oauth State",
+              "title": "Stray Oauth State",
               "type": "string"
             }
           }
@@ -4310,11 +4310,11 @@
           },
           {
             "in": "cookie",
-            "name": "treg_oauth_state",
+            "name": "stray_oauth_state",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Oauth State",
+              "title": "Stray Oauth State",
               "type": "string"
             }
           }
@@ -4369,11 +4369,11 @@
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4434,26 +4434,26 @@
     },
     "/auth/me": {
       "get": {
-        "description": "Who is the caller? Drives the dashboard's identity display in BOTH session mode (cookie) and\ntoken mode (X-Treg-Token) — the token door otherwise had no way to learn its own email, which\nbroke `isPersonal` and join-by-code.",
+        "description": "Who is the caller? Drives the dashboard's identity display in BOTH session mode (cookie) and\ntoken mode (X-Stray-Token) — the token door otherwise had no way to learn its own email, which\nbroke `isPersonal` and join-by-code.",
         "operationId": "auth_me_auth_me_get",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4487,36 +4487,36 @@
     },
     "/auth/revoke-tokens": {
       "post": {
-        "description": "Kill switch for a leaked token: invalidate every signed identity token (from `treg login`) AND\nevery browser session this user holds, in one step. Bumping user.token_version makes all previously\nminted tokens (which carry the old tv) mismatch and be rejected. Unlike suspending the account this\nkeeps the user active; unlike rotating TREG_SESSION_SECRET it affects ONLY this user. We then re-issue\na fresh session cookie + token for the caller, so the device that pressed the button stays signed in\nwhile every other device is signed out. (Org membership tokens from accept-invite are a separate token\ntype and are unaffected — those are revoked by removing the membership.)",
+        "description": "Kill switch for a leaked token: invalidate every signed identity token (from `stray login`) AND\nevery browser session this user holds, in one step. Bumping user.token_version makes all previously\nminted tokens (which carry the old tv) mismatch and be rejected. Unlike suspending the account this\nkeeps the user active; unlike rotating STRAY_SESSION_SECRET it affects ONLY this user. We then re-issue\na fresh session cookie + token for the caller, so the device that pressed the button stays signed in\nwhile every other device is signed out. (Org membership tokens from accept-invite are a separate token\ntype and are unaffected — those are revoked by removing the membership.)",
         "operationId": "auth_revoke_tokens_auth_revoke_tokens_post",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4551,31 +4551,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4614,31 +4614,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4699,31 +4699,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4762,31 +4762,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4825,31 +4825,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4897,31 +4897,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -4972,31 +4972,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5043,31 +5043,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5112,31 +5112,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5182,31 +5182,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5263,31 +5263,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5328,31 +5328,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5393,31 +5393,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5458,31 +5458,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5523,31 +5523,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5588,31 +5588,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5653,31 +5653,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5770,31 +5770,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5831,7 +5831,7 @@
     },
     "/calls/{call_id}/result": {
       "get": {
-        "description": "What one of this team's calls asked and what came back — the archive's copy.\n\n`call_id` is either the audit row's numeric `id` or the `X-Treg-Call-Id` the call returned (a\n32-hex call ref; a short all-digit value is the row id).\n\nOnly a METERED PLATFORM 2xx call has one: those answers are recorded by the archive (see\ndocs/context/architecture/archive.md), and the audit row keeps the identities of the exact\nbytes the caller received. Own-key and own-tool calls are relayed without being stored, a\nfailed call never is, and the redacted failure evidence stays admin-only — `stored` is false\nwith a `note` saying which. The request shape is the vendor-facing one BEFORE credential\ninjection, so no secret can appear in it.",
+        "description": "What one of this team's calls asked and what came back — the archive's copy.\n\n`call_id` is either the audit row's numeric `id` or the `X-Stray-Call-Id` the call returned (a\n32-hex call ref; a short all-digit value is the row id).\n\nOnly a METERED PLATFORM 2xx call has one: those answers are recorded by the archive (see\ndocs/context/architecture/archive.md), and the audit row keeps the identities of the exact\nbytes the caller received. Own-key and own-tool calls are relayed without being stored, a\nfailed call never is, and the redacted failure evidence stays admin-only — `stored` is false\nwith a `note` saying which. The request shape is the vendor-facing one BEFORE credential\ninjection, so no secret can appear in it.",
         "operationId": "get_call_result_calls__call_id__result_get",
         "parameters": [
           {
@@ -5845,31 +5845,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -5903,7 +5903,7 @@
     },
     "/calls/{call_ref}": {
       "get": {
-        "description": "One call by the `X-Treg-Call-Id` it returned — the join key for a builder's own records.\n\nAlso reports the LEDGER's view of the same reference, because that is the durable one: the audit\nrow is fire-and-forget and may have been shed, while the money entries were written synchronously.\nA 404 here therefore means \"no audit row\", not \"this call never happened\" — check `ledger` in the\nbody before concluding anything about money.",
+        "description": "One call by the `X-Stray-Call-Id` it returned — the join key for a builder's own records.\n\nAlso reports the LEDGER's view of the same reference, because that is the durable one: the audit\nrow is fire-and-forget and may have been shed, while the money entries were written synchronously.\nA 404 here therefore means \"no audit row\", not \"this call never happened\" — check `ledger` in the\nbody before concluding anything about money.",
         "operationId": "get_call_calls__call_ref__get",
         "parameters": [
           {
@@ -5917,31 +5917,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6181,7 +6181,7 @@
     },
     "/catalog/search": {
       "get": {
-        "description": "Open: free-text search across the whole catalog — the DISCOVER half of the loop.\n\nAn agent that knows what it wants (\"tiktok comments\") shouldn't have to guess which platform\nshelf hides it. Ranking is plain token matching (see `catalog_store.search`) so results are\nreproducible and explainable; equal scores — the common case, not the edge — then break on what\ntreg has MEASURED and on price, so the cut stops being file order. `hints` carries the next\ncommand, since finding the endpoint is never the goal — inspecting or calling it is.",
+        "description": "Open: free-text search across the whole catalog — the DISCOVER half of the loop.\n\nAn agent that knows what it wants (\"tiktok comments\") shouldn't have to guess which platform\nshelf hides it. Ranking is plain token matching (see `catalog_store.search`) so results are\nreproducible and explainable; equal scores — the common case, not the edge — then break on what\nstray has MEASURED and on price, so the cut stops being file order. `hints` carries the next\ncommand, since finding the endpoint is never the goal — inspecting or calling it is.",
         "operationId": "catalog_search_catalog_search_get",
         "parameters": [
           {
@@ -6239,31 +6239,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6305,31 +6305,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6373,7 +6373,7 @@
     },
     "/connections/{secret_id}": {
       "delete": {
-        "description": "Disconnect, and take the provider's own tool with it.\n\nA tool left bound to a deleted credential isn't \"still configured\" — it's broken, and it says so\nonly at call time with \"a bound secret is missing\". We remove the tool treg auto-provisioned for\nthis provider (that's treg's creation, not the user's) and drop the dead binding from any tool\nthe user built themselves, leaving their other bindings intact.",
+        "description": "Disconnect, and take the provider's own tool with it.\n\nA tool left bound to a deleted credential isn't \"still configured\" — it's broken, and it says so\nonly at call time with \"a bound secret is missing\". We remove the tool stray auto-provisioned for\nthis provider (that's stray's creation, not the user's) and drop the dead binding from any tool\nthe user built themselves, leaving their other bindings intact.",
         "operationId": "revoke_connection_connections__secret_id__delete",
         "parameters": [
           {
@@ -6387,31 +6387,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6457,31 +6457,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6525,7 +6525,7 @@
     },
     "/connections/{secret_id}/extra-credential": {
       "post": {
-        "description": "Supply the second credential a provider needs, and finish building its tool.\n\nGoogle Ads takes the user's OAuth bearer AND a developer-token header from an approved manager\naccount. treg can't invent the latter, so the connect deliberately stops short of a tool. This\nis the other half: store the extra credential and provision the tool with BOTH bindings, so the\nconnection goes from \"connected but uncallable\" to actually usable.",
+        "description": "Supply the second credential a provider needs, and finish building its tool.\n\nGoogle Ads takes the user's OAuth bearer AND a developer-token header from an approved manager\naccount. stray can't invent the latter, so the connect deliberately stops short of a tool. This\nis the other half: store the extra credential and provision the tool with BOTH bindings, so the\nconnection goes from \"connected but uncallable\" to actually usable.",
         "operationId": "set_extra_credential_connections__secret_id__extra_credential_post",
         "parameters": [
           {
@@ -6539,31 +6539,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6620,31 +6620,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6702,31 +6702,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6786,31 +6786,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6844,36 +6844,36 @@
     },
     "/demo/sandbox/skill": {
       "get": {
-        "description": "Export whatever the visitor built in their sandbox as a shareable **skill** (treg.json manifest\n+ SKILL.md + install commands). Sandbox-only — the payoff that shows what skills are.",
+        "description": "Export whatever the visitor built in their sandbox as a shareable **skill** (stray.json manifest\n+ SKILL.md + install commands). Sandbox-only — the payoff that shows what skills are.",
         "operationId": "demo_sandbox_skill_demo_sandbox_skill_get",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6911,31 +6911,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -6992,31 +6992,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7054,31 +7054,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7129,31 +7129,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7191,31 +7191,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7224,7 +7224,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/treg__routers__hub__RunIn"
+                "$ref": "#/components/schemas/stray__routers__hub__RunIn"
               }
             }
           },
@@ -7269,31 +7269,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7332,31 +7332,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7405,31 +7405,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7480,31 +7480,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7550,31 +7550,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7620,31 +7620,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7700,31 +7700,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7802,31 +7802,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7870,31 +7870,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -7973,31 +7973,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8048,31 +8048,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8111,31 +8111,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8169,7 +8169,7 @@
     },
     "/meta": {
       "get": {
-        "description": "Open: what the dashboard needs to render correct, shareable snippets — the public proxy URL\n(so copy/paste snippets use the real domain, not whatever origin the browser happens to be on)\n— plus the bundle version, so an open tab can detect a new deploy and offer a refresh.\n\n`treg_version` and `app_version` answer DIFFERENT questions and both are worth having.\n`app_version` hashes the dashboard entry and rollout policy: it changes with either, which is\nwhat an open tab compares to offer a refresh. `treg_version` is the released package version,\nwhich is what a release check needs — after publishing 0.9.0 there was no way to confirm from the\nlive path which version was actually serving, only the commit id.",
+        "description": "Open: what the dashboard needs to render correct, shareable snippets — the public proxy URL\n(so copy/paste snippets use the real domain, not whatever origin the browser happens to be on)\n— plus the bundle version, so an open tab can detect a new deploy and offer a refresh.\n\n`stray_version` and `app_version` answer DIFFERENT questions and both are worth having.\n`app_version` hashes the dashboard entry and rollout policy: it changes with either, which is\nwhat an open tab compares to offer a refresh. `stray_version` is the released package version,\nwhich is what a release check needs — after publishing 0.9.0 there was no way to confirm from the\nlive path which version was actually serving, only the commit id.",
         "operationId": "meta_meta_get",
         "responses": {
           "200": {
@@ -8248,7 +8248,7 @@
     },
     "/oauth/providers": {
       "get": {
-        "description": "Providers treg holds its own approved app for. `configured` is false when this deployment\nhasn't set that provider's client credentials — listed, but its flow can't run here.",
+        "description": "Providers stray holds its own approved app for. `configured` is false when this deployment\nhasn't set that provider's client credentials — listed, but its flow can't run here.",
         "operationId": "oauth_providers_list_oauth_providers_get",
         "responses": {
           "200": {
@@ -8276,31 +8276,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8357,31 +8357,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8420,31 +8420,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8493,31 +8493,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8573,31 +8573,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8636,31 +8636,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8699,31 +8699,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8762,31 +8762,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8825,31 +8825,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8898,31 +8898,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -8979,31 +8979,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9050,31 +9050,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9132,31 +9132,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9205,31 +9205,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9267,31 +9267,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9330,31 +9330,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9398,7 +9398,7 @@
     },
     "/orgs/{org_id}": {
       "delete": {
-        "description": "Delete a team and everything in it (owner only). `?confirm=<slug>` must match.\n\nThe confirmation is REQUIRED by the API, not just collected by the clients that already ask for\nit. This route is irreversible and sits one path segment above every other org route, so any\nclient that normalizes `..` turns `DELETE /orgs/{id}/<anything>/..` into this call — that is how\n`treg org unpin ..` deleted a team during testing. A request arriving without the slug it is\nabout to destroy is not a request anyone meant to send.",
+        "description": "Delete a team and everything in it (owner only). `?confirm=<slug>` must match.\n\nThe confirmation is REQUIRED by the API, not just collected by the clients that already ask for\nit. This route is irreversible and sits one path segment above every other org route, so any\nclient that normalizes `..` turns `DELETE /orgs/{id}/<anything>/..` into this call — that is how\n`stray org unpin ..` deleted a team during testing. A request arriving without the slug it is\nabout to destroy is not a request anyone meant to send.",
         "operationId": "delete_org_orgs__org_id__delete",
         "parameters": [
           {
@@ -9422,31 +9422,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9478,7 +9478,7 @@
         "summary": "Delete Org"
       },
       "patch": {
-        "description": "Change the team's display name and/or slug. Admin+.\n\nThe old slug is kept as an alias (`Org.previous_slug`): copied keys, `~/.treg` and MCP pins\nthat name it keep working. Stripe metadata and the analytics group key are not rewritten.",
+        "description": "Change the team's display name and/or slug. Admin+.\n\nThe old slug is kept as an alias (`Org.previous_slug`): copied keys, `~/.stray` and MCP pins\nthat name it keep working. Stripe metadata and the analytics group key are not rewritten.",
         "operationId": "rename_org_orgs__org_id__patch",
         "parameters": [
           {
@@ -9492,31 +9492,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9574,31 +9574,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9647,31 +9647,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9729,31 +9729,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9813,31 +9813,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9894,31 +9894,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -9966,31 +9966,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10056,31 +10056,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10146,31 +10146,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10226,31 +10226,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10306,31 +10306,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10389,31 +10389,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10469,31 +10469,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10549,31 +10549,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10607,7 +10607,7 @@
     },
     "/orgs/{org_id}/balance": {
       "get": {
-        "description": "The org's prepaid balance. Amounts are integer micro-USD (`*_micro`) with a display-only USD\ntwin — never compute against the USD field (see domain/money on why money is integers here).\n\n**Two audiences, one route.** Any MEMBER sees the figure and the in-flight holds: they are the\nones spending it, every agent is told to run `treg balance` after a call, and a 402 already hands\nthem `balance_micro` anyway — refusing the same number here while shipping it in an error was\nincoherent. The FUNDING DETAIL is admin+: the credit blocks (what was bought, when, what is left\nof each) and the ledger, which together are the org's purchase history, not its wallet.",
+        "description": "The org's prepaid balance. Amounts are integer micro-USD (`*_micro`) with a display-only USD\ntwin — never compute against the USD field (see domain/money on why money is integers here).\n\n**Two audiences, one route.** Any MEMBER sees the figure and the in-flight holds: they are the\nones spending it, every agent is told to run `stray balance` after a call, and a 402 already hands\nthem `balance_micro` anyway — refusing the same number here while shipping it in an error was\nincoherent. The FUNDING DETAIL is admin+: the credit blocks (what was bought, when, what is left\nof each) and the ledger, which together are the org's purchase history, not its wallet.",
         "operationId": "org_balance_orgs__org_id__balance_get",
         "parameters": [
           {
@@ -10641,31 +10641,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10729,31 +10729,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10813,31 +10813,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -10913,31 +10913,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11001,31 +11001,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11082,31 +11082,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11155,31 +11155,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11245,31 +11245,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11316,31 +11316,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11388,31 +11388,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11478,31 +11478,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11549,31 +11549,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11620,31 +11620,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11703,31 +11703,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11781,31 +11781,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11872,31 +11872,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -11963,31 +11963,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12031,7 +12031,7 @@
     },
     "/orgs/{org_id}/pins": {
       "delete": {
-        "description": "Remove a pin (admin+) — the capability goes back to the caller's choice.\n\nThe capability is a QUERY parameter, not a path segment, and that is a safety decision rather\nthan a style one. As `/orgs/{id}/pins/{capability}` it was one keystroke from a catastrophe:\nevery normalizing HTTP client (httpx included) rewrites `/orgs/1/pins/..` to `/orgs/1` BEFORE\nsending it — which is DELETE /orgs/{id}, the delete-the-team route. `treg org unpin ..` really\ndid destroy an org in testing. Server-side validation cannot defend against it, because the\nrewrite happens in the client; taking the value out of the path removes the class entirely.",
+        "description": "Remove a pin (admin+) — the capability goes back to the caller's choice.\n\nThe capability is a QUERY parameter, not a path segment, and that is a safety decision rather\nthan a style one. As `/orgs/{id}/pins/{capability}` it was one keystroke from a catastrophe:\nevery normalizing HTTP client (httpx included) rewrites `/orgs/1/pins/..` to `/orgs/1` BEFORE\nsending it — which is DELETE /orgs/{id}, the delete-the-team route. `stray org unpin ..` really\ndid destroy an org in testing. Server-side validation cannot defend against it, because the\nrewrite happens in the client; taking the value out of the path removes the class entirely.",
         "operationId": "clear_capability_pin_orgs__org_id__pins_delete",
         "parameters": [
           {
@@ -12056,31 +12056,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12126,31 +12126,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12199,31 +12199,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12267,7 +12267,7 @@
     },
     "/orgs/{org_id}/policy/cli-deny": {
       "get": {
-        "description": "READ-ONLY: every CLI tool's effective argv deny patterns, so the Policy screen can show the\nwhole \"what is blocked\" picture in one place. These live on the TOOL (treg.json `cli.deny` +\ncatalog defaults, see `localrun.effective_profile`), not in the DenyRule table — editing them\nmeans editing the skill or the catalog, which is why this endpoint only reports (admin+).",
+        "description": "READ-ONLY: every CLI tool's effective argv deny patterns, so the Policy screen can show the\nwhole \"what is blocked\" picture in one place. These live on the TOOL (stray.json `cli.deny` +\ncatalog defaults, see `localrun.effective_profile`), not in the DenyRule table — editing them\nmeans editing the skill or the catalog, which is why this endpoint only reports (admin+).",
         "operationId": "list_cli_deny_orgs__org_id__policy_cli_deny_get",
         "parameters": [
           {
@@ -12281,31 +12281,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12356,31 +12356,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12429,31 +12429,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12520,31 +12520,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12635,31 +12635,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12710,31 +12710,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12780,31 +12780,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12852,31 +12852,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -12922,31 +12922,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13004,31 +13004,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13086,31 +13086,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13184,31 +13184,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13242,36 +13242,36 @@
     },
     "/referrals": {
       "get": {
-        "description": "This person's referral link and everyone who has used it.\n\nAlso runs the payout sweep, scoped to this user. There is no scheduler in treg, so the two\ntrigger points are any top-up (`billing._credit`) and this page — which means someone checking\nwhether their reward has landed is the one who makes it land. That is the same lazy,\ncaller-pays-for-their-own-cleanup bargain as `ledger.reap_stale_holds`.",
+        "description": "This person's referral link and everyone who has used it.\n\nAlso runs the payout sweep, scoped to this user. There is no scheduler in stray, so the two\ntrigger points are any top-up (`billing._credit`) and this page — which means someone checking\nwhether their reward has landed is the one who makes it land. That is the same lazy,\ncaller-pays-for-their-own-cleanup bargain as `ledger.reap_stale_holds`.",
         "operationId": "my_referrals_referrals_get",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13310,31 +13310,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13372,31 +13372,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13440,36 +13440,36 @@
     },
     "/run": {
       "post": {
-        "description": "Run a tool's CLI **on the treg server**, with its `cli.inject` secrets injected into the\nchild process — the caller never holds the key. Both run tiers read the same `Tool.cli`\nprofile; any tool WITH a profile is server-runnable (no per-tool opt-in — unlike the local\ntier, the key never reaches the member, and the bin allow-list still gates what executes).\nSee docs/CLI-RUN-PLAN.md.\n\nmember+ (executing argv server-side is a register-tier capability, not a read); the sandbox is\nexcluded (it never touches the real world). A non-zero CLI exit is a normal 200 result with\n`exit_code` set; only a failure to *start* (not enabled / CLI absent) is a 4xx.",
+        "description": "Run a tool's CLI **on the stray server**, with its `cli.inject` secrets injected into the\nchild process — the caller never holds the key. Both run tiers read the same `Tool.cli`\nprofile; any tool WITH a profile is server-runnable (no per-tool opt-in — unlike the local\ntier, the key never reaches the member, and the bin allow-list still gates what executes).\nSee docs/CLI-RUN-PLAN.md.\n\nmember+ (executing argv server-side is a register-tier capability, not a read); the sandbox is\nexcluded (it never touches the real world). A non-zero CLI exit is a normal 200 result with\n`exit_code` set; only a failure to *start* (not enabled / CLI absent) is a 4xx.",
         "operationId": "run_tool_server_run_post",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13478,7 +13478,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/treg__api__RunIn"
+                "$ref": "#/components/schemas/stray__api__RunIn"
               }
             }
           },
@@ -13513,7 +13513,7 @@
     },
     "/runs": {
       "get": {
-        "description": "Audit log for CLI executions (`treg run`, both tiers), scoped to the caller's org — each row\ntagged `where`: \"server\" (RunRecord) or \"local\" (a `local_run` GRANT on the member's machine).\nLocal successes carry no exit code (only failures report back), so `exit_code` is null for them.\nIds are prefixed (s/l) so the two sources never collide as list keys.",
+        "description": "Audit log for CLI executions (`stray run`, both tiers), scoped to the caller's org — each row\ntagged `where`: \"server\" (RunRecord) or \"local\" (a `local_run` GRANT on the member's machine).\nLocal successes carry no exit code (only failures report back), so `exit_code` is null for them.\nIds are prefixed (s/l) so the two sources never collide as list keys.",
         "operationId": "list_runs_runs_get",
         "parameters": [
           {
@@ -13544,31 +13544,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13609,31 +13609,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13672,31 +13672,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13753,31 +13753,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13822,31 +13822,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13895,31 +13895,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -13963,36 +13963,36 @@
     },
     "/skills/analyze": {
       "post": {
-        "description": "Classify an uploaded skill folder WITHOUT registering — the dashboard's verify step. Same\nclassifier as `treg upload skills`: recipe-only vs contract vs generated, plus readiness gaps.",
+        "description": "Classify an uploaded skill folder WITHOUT registering — the dashboard's verify step. Same\nclassifier as `stray upload skills`: recipe-only vs contract vs generated, plus readiness gaps.",
         "operationId": "analyze_skill_folder_skills_analyze_post",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14036,36 +14036,36 @@
     },
     "/skills/import": {
       "post": {
-        "description": "Register selected skills from an uploaded folder: scan → build the payload (secret VALUES from\nthe uploaded files / provided env values) → register each as a bundle. Mirrors `treg upload skills`.",
+        "description": "Register selected skills from an uploaded folder: scan → build the payload (secret VALUES from\nthe uploaded files / provided env values) → register each as a bundle. Mirrors `stray upload skills`.",
         "operationId": "import_skill_folder_skills_import_post",
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14109,7 +14109,7 @@
     },
     "/skills/samples": {
       "get": {
-        "description": "The hosted sample skills the landing offers — each with its files (SKILL.md/treg.json/.secret)\nand the prompt to try. Public: the landing renders these as file packages.",
+        "description": "The hosted sample skills the landing offers — each with its files (SKILL.md/stray.json/.secret)\nand the prompt to try. Public: the landing renders these as file packages.",
         "operationId": "skill_samples_skills_samples_get",
         "responses": {
           "200": {
@@ -14137,31 +14137,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14200,31 +14200,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14282,31 +14282,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14354,31 +14354,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14436,31 +14436,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14517,31 +14517,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14586,31 +14586,31 @@
           },
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }
@@ -14659,31 +14659,31 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-treg-token",
+            "name": "x-stray-token",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Token",
+              "title": "X-Stray-Token",
               "type": "string"
             }
           },
           {
             "in": "header",
-            "name": "x-treg-org",
+            "name": "x-stray-org",
             "required": false,
             "schema": {
               "default": "",
-              "title": "X-Treg-Org",
+              "title": "X-Stray-Org",
               "type": "string"
             }
           },
           {
             "in": "cookie",
-            "name": "treg_session",
+            "name": "stray_session",
             "required": false,
             "schema": {
               "default": "",
-              "title": "Treg Session",
+              "title": "Stray Session",
               "type": "string"
             }
           }

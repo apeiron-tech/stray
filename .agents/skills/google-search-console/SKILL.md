@@ -1,16 +1,16 @@
 ---
 name: google-search-console
-description: Traps to avoid when querying Google Search Console through treg — cases where the API returns a confident wrong answer instead of an error, especially around totals and recent-date trends. Use whenever answering questions about organic search clicks, impressions, rankings, or index status.
+description: Traps to avoid when querying Google Search Console through stray — cases where the API returns a confident wrong answer instead of an error, especially around totals and recent-date trends. Use whenever answering questions about organic search clicks, impressions, rankings, or index status.
 ---
 
-# Search Console via treg — what will silently mislead you
+# Search Console via stray — what will silently mislead you
 
 You already know the Search Console API. This file is **only** the things that return a plausible
 wrong answer with no error. Verified live on 2026-07-22 against `sc-domain:example.com`, with
 each trap confirmed by watching three independent agents.
 
-Site id: `treg connections ls` → `resource_ref`. If it's empty, **no site is pinned** — list them
-with `treg connections resources <id>` and say which one you chose and why. Don't present an
+Site id: `stray connections ls` → `resource_ref`. If it's empty, **no site is pinned** — list them
+with `stray connections resources <id>` and say which one you chose and why. Don't present an
 inferred site as configured, and don't report the blank as a fault — it isn't one.
 
 When nothing is pinned and the question doesn't name a site, **pick the site whose domain matches

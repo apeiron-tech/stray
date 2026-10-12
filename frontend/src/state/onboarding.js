@@ -32,11 +32,11 @@ maybeOnboard(){  // first-run: a brand-new user with no team yet is asked to NAM
       if(this.pendingInvites.length){ this.openInviteChoice(); return; }
       this.openWelcome(); },
 openWelcome(){ this.welcome.name=this._suggestTeamName(); this._welcomeAgentFromRef(); this.welcome.on=true; },
-_welcomeAgentFromRef(){  // /grokbot's "Setup treg" CTA → the welcome already has Grok Bot picked; any other ref is ignored
-      const r=storageGet('treg-ref'); storageRemove('treg-ref');
+_welcomeAgentFromRef(){  // /grokbot's "Setup stray" CTA → the welcome already has Grok Bot picked; any other ref is ignored
+      const r=storageGet('stray-ref'); storageRemove('stray-ref');
       if(r && this.welcomeAgents.concat(this.welcomeMoreAgents).some(a=>a.id===r)) this.welcome.agent=r; },
 _restoreAgent(){  // the picked agent survives a reload, so Getting started keeps showing the right setup steps
-      const r=storageGet('treg-agent');
+      const r=storageGet('stray-agent');
       if(r && this.welcomeAgents.concat(this.welcomeMoreAgents).some(a=>a.id===r)) this.welcome.agent=r; },
 openInviteChoice(){  // seed the multi-select: ALL pending invites checked by default
       this.inviteErr=''; this.inviteSel={}; this.pendingInvites.forEach(i=>{ this.inviteSel[i.id]=true; });

@@ -1,12 +1,12 @@
-"""`treg host`: reference-file hosting for AIGC endpoints (docs/context/architecture/media.md)."""
+"""`stray host`: reference-file hosting for AIGC endpoints (docs/context/architecture/media.md)."""
 from datetime import timedelta
 
 from httpx import AsyncClient
 from sqlalchemy import update
 
-from treg.application import media as media_app
-from treg.infra.db import session_maker
-from treg.models import Media, _now
+from stray.application import media as media_app
+from stray.infra.db import session_maker
+from stray.models import Media, _now
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 
@@ -16,7 +16,7 @@ async def test_host_then_fetch_roundtrip_is_byte_exact_and_public(clients: Async
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["url"].endswith("/m/" + body["token"]) and body["size"] == len(PNG)
-    # The vendor's fetcher holds no treg token: the URL alone must serve the bytes.
+    # The vendor's fetcher holds no stray token: the URL alone must serve the bytes.
     anon = AsyncClient(transport=clients._transport, base_url="http://registry")
     g = await anon.get(f"/m/{body['token']}")
     assert g.status_code == 200 and g.content == PNG and g.headers["content-type"] == "image/png"

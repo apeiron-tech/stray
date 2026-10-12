@@ -48,7 +48,7 @@ export default async function boot(){
     if(this.catalogFromPath(location.pathname)?.view==='find'){ this.publicCatalog=true; this.view='find'; this.bootReady=true; }
     // /meta and /auth/me do not depend on each other or on the bundle, so index.html starts both
     // before this code has even downloaded; a boot without them (tests, a remount) starts its own.
-    const early=window.__tregBoot||{}; delete window.__tregBoot;
+    const early=window.__strayBoot||{}; delete window.__strayBoot;
     const headers={'ngrok-skip-browser-warning':'1'};
     const metaReq=early.meta||fetch('/meta',{headers}).then(r=>r.json());
     const meReq=early.me||fetch('/auth/me',{credentials:'include',headers}).then(r=>r.ok?r.json():null);
@@ -65,7 +65,7 @@ export default async function boot(){
     const qs = new URLSearchParams(location.search);
     const linkOrg = qs.get('invite_org'), inv = qs.get('invite'), ref = qs.get('ref'), oauthSignin = qs.get('signin')==='oauth';
     this.oauthSignin=oauthSignin;
-    if(ref) storageSet('treg-ref', ref);  // survives the sign-in reload so the welcome can preselect the agent the landing was about (see maybeOnboard)
+    if(ref) storageSet('stray-ref', ref);  // survives the sign-in reload so the welcome can preselect the agent the landing was about (see maybeOnboard)
     if(linkOrg || inv || qs.get('invite_expired') || ref || oauthSignin){ history.replaceState(null,'',location.pathname+location.hash); }  // strip one-shot params so reload/share doesn't replay them
     if(linkOrg){ this.inviteLinkOrg=parseInt(linkOrg,10)||null; }
     // A shared detail deep link (/app/skills/<x>, /app/tools/<x>) — from the URL itself, or stashed
@@ -78,8 +78,8 @@ export default async function boot(){
     // fallback (see `_spa_catalog_page`) now that the real UI is about to take over.
     const catRoute=this.catalogFromPath(location.pathname);
     if(catRoute){ this.publicCatalog=true; document.getElementById('prerender')?.remove(); }
-    const stashed=storageGet('treg-next');
-    if(stashed){ storageRemove('treg-next');
+    const stashed=storageGet('stray-next');
+    if(stashed){ storageRemove('stray-next');
       if(!route && !mkRoute){
         route=this.routeFromPath(stashed); mkRoute=this.mkFromPath(stashed);
         if(route||mkRoute) history.replaceState(null,'',stashed);
@@ -141,7 +141,7 @@ export default async function boot(){
       if(catRoute.view==='find'){ this.view='find'; this.loadPlatforms(); } else if(catRoute.slug) this.openPlatform(catRoute.slug, true); else { this.view='catalog'; this.loadConnections(); }
       return; }
     if(!inv && !linkOrg && !route && !qs.get('invite_expired') && !ref && !oauthSignin){ location.replace('/'); return; }  // logged-out plain visit → the marketing landing owns the front door. `ref` is a use-case page's CTA (/app?ref=p1), so keep that attribution while opening sign-in in place.
-    if(route){ this.shareGate=route; this.demo.signin=true; }  // shared link while logged out: the focused gate (no sandbox mint, no tour); after sign-in the boot lands on it (email verify reloads in place; OAuth restores via the treg-next stash)
+    if(route){ this.shareGate=route; this.demo.signin=true; }  // shared link while logged out: the focused gate (no sandbox mint, no tour); after sign-in the boot lands on it (email verify reloads in place; OAuth restores via the stray-next stash)
     else this.demo.signin=true;  // OAuth returns, use-case CTA arrivals (?ref=) and every other logged-out flow open sign-in; nothing mints a sandbox any more
     if(inv){ this.invitePrefill=inv; this.emailInput=inv; this.emailStage=false; this.demo.signin=true; }  // legacy code link while logged out: prefill + open sign-in; the invite auto-accepts after login (maybeOnboard)
   }

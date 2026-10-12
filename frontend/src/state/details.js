@@ -38,7 +38,7 @@ async autoAcceptShare(route){  // a share-link invite: clicking the emailed "Sig
         const r=await this.api('/invites/'+inv.id+'/accept',{method:'POST'});
         this.pendingInvites=this.pendingInvites.filter(i=>i.id!==inv.id);
         this.onboarded=true; try{ await this.api('/onboard/skip',{method:'POST'}); }catch(e){}
-        if(r&&r.org){ this.activeSlug=r.org; storageSet('treg-active',r.org); }
+        if(r&&r.org){ this.activeSlug=r.org; storageSet('stray-active',r.org); }
         await this.loadAll();
         this.inviteLinkOrg=null;
         this.orgMsg='You joined '+((r&&r.name)||inv.name)+' — this page was shared with you.';
@@ -51,13 +51,13 @@ async findDetailOrg(){  // the link may belong to another of MY teams — probe 
       const path=(this.detail.kind==='skill'?'/bundles/by-name/':'/tools/by-name/')+encodeURIComponent(this.detail.name);
       for(const o of others){
         let h;
-        if(this.sessionMode) h={'X-Treg-Org':o.slug};
-        else { const t=(this.cfg.orgs[o.slug]||{}).token; if(!t) continue; h={'X-Treg-Token':t}; }
+        if(this.sessionMode) h={'X-Stray-Org':o.slug};
+        else { const t=(this.cfg.orgs[o.slug]||{}).token; if(!t) continue; h={'X-Stray-Token':t}; }
         try{
           const r=await fetch(path,{credentials:'include',headers:{'ngrok-skip-browser-warning':'1',...h}});
           if(!r.ok) continue;
           const data=await r.json();
-          if(this.sessionMode){ this.activeSlug=o.slug; storageSet('treg-active',o.slug); }
+          if(this.sessionMode){ this.activeSlug=o.slug; storageSet('stray-active',o.slug); }
           else { this.cfg.active=o.slug; this.save(); }
           this.detailData=data; this.detailErr='';
           this.orgMsg='Switched to '+(o.name||o.slug)+' — this '+this.detail.kind+' lives there.';

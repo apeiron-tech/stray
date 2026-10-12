@@ -97,7 +97,7 @@ async addFunds(amount){ this.billingBusy=true; this.topupAmount=amount; this.err
       // Named differently from the server's topup_started (same click, two vantage points —
       // a shared name would double-count in trends); this one exists to link session replays.
       this.track('topup_checkout_opened',{amount_usd:amount});
-      try{ const out=await this.api('/billing/topup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({amount_usd:amount,checkout_source:window.TregTracking?.checkoutSource()||'app'})});
+      try{ const out=await this.api('/billing/topup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({amount_usd:amount,checkout_source:window.StrayTracking?.checkoutSource()||'app'})});
         // Stripe's own hosted page does the payment; the balance moves when its webhook lands, never
         // on the return redirect (which a payer could simply type). Same tab, so the return lands here.
         window.location.href=out.url; }
@@ -136,7 +136,7 @@ async payTopup(){ const usd=this.topupUsd; if(!this.topupValid) return;
         // The request below carries the ACTIVE team; after a switch it would buy credit for the
         // other team, so the payment stops here instead.
         if(this.activeOrgId!==org) throw {detail:'the active team changed'};
-        const out=await this.api('/billing/topup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({amount_usd:usd,checkout_source:window.TregTracking?.checkoutSource()||'app'})});
+        const out=await this.api('/billing/topup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({amount_usd:usd,checkout_source:window.StrayTracking?.checkoutSource()||'app'})});
         window.location.href=out.url; }
       catch(e){ this.topupErr='Could not start the payment: '+(e.detail||e.status); this.billingBusy=false; } },
 // The toggle itself never arms auto top-up - it can only DISARM (off is safe) or open the

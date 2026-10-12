@@ -4,7 +4,7 @@ The people at a company, each with a work email that has been checked. One call.
 
 ## What it does
 
-1. Searches the company for people (routed: treg picks the provider).
+1. Searches the company for people (routed: stray picks the provider).
 2. For each person, finds a work email. Skipped when the search row already has one.
 3. Verifies every email.
 4. With `include_phone`, also finds a phone number.

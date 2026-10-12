@@ -4,9 +4,9 @@ import httpx
 import pytest
 from httpx import AsyncClient
 
-from treg.api import app
-from treg.config import get_settings
-from treg.domain.capacity import collectors
+from stray.api import app
+from stray.config import get_settings
+from stray.domain.capacity import collectors
 
 PROFILE = 'harvestapi.linkedin.user.profile'
 
@@ -28,8 +28,8 @@ def response(status, *, json):
 
 @pytest.fixture
 def harvest_on(monkeypatch):
-    monkeypatch.setenv('TREG_PLATFORM_KEY_HARVESTAPI', 'TEST-PLATFORM-HARVEST')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'harvestapi')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_HARVESTAPI', 'TEST-PLATFORM-HARVEST')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'harvestapi')
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -89,7 +89,7 @@ async def test_harvest_settles_reported_cost_including_billed_misses(clients, mo
         r = await clients.get(f'/call/{PROFILE}?publicIdentifier=example')
     assert r.status_code == 200, r.text
     assert r.json() == body
-    assert r.headers['x-treg-cost-micro'] == str(charge)
+    assert r.headers['x-stray-cost-micro'] == str(charge)
     after = await balance(clients)
     assert after['balance_micro'] == before['balance_micro'] - charge
     entries = after['entries']['items']

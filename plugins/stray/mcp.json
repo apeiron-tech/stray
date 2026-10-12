@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "stray": {
+      "url": "https://treg.to/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${env:STRAY_TOKEN}"
+      }
+    }
+  }
+}

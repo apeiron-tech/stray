@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 from sqlalchemy import event, select
 
-from treg import archive, archive_bodies, audit, bootstrap
-from treg.application.call import service
-from treg.config import get_settings
-from treg.infra import db
-from treg.models import ArchiveKey, ArchiveSnapshot
+from stray import archive, archive_bodies, audit, bootstrap
+from stray.application.call import service
+from stray.config import get_settings
+from stray.infra import db
+from stray.models import ArchiveKey, ArchiveSnapshot
 from tests.fake_object_store import MemoryObjectStore
 from tests.test_marketplace_call import _fake_relay
 
@@ -22,14 +22,14 @@ URL = '/call/' + EP + '?aweme_id=7'
 
 @pytest.fixture
 async def r2(monkeypatch):
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TIKHUB', 'test-platform-key')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'tikhub')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TIKHUB', 'test-platform-key')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'tikhub')
     get_settings.cache_clear()
     s = get_settings()
     for name, value in {
         'archive_mode': 'serve', 'archive_body_write': 'both',
         'archive_serve_endpoints': EP, 'archive_serve_percent': 100,
-        'archive_object_store_endpoint': 'https://' + 'a' * 32 + '.r2.cloudflarestorage.com', 'archive_object_store_bucket': 'treg-dev',
+        'archive_object_store_endpoint': 'https://' + 'a' * 32 + '.r2.cloudflarestorage.com', 'archive_object_store_bucket': 'stray-dev',
         'archive_object_store_access_key_id': 'test-access', 'archive_object_store_secret_access_key': 'test-secret',
     }.items():
         monkeypatch.setattr(s, name, value)
@@ -69,7 +69,7 @@ async def snapshots():
 @pytest.mark.parametrize('path', ['lookup', 'result', 'terminal', 'observation', 'initialization', 'admin', 'arena'])
 @pytest.mark.parametrize('outcome', ['r2', 'db_fallback', 'unavailable'])
 async def test_legacy_read_reports_final_source(r2, monkeypatch, path, outcome):
-    from treg import analytics
+    from stray import analytics
     for setting in ('lookup', 'result', 'terminal'):
         monkeypatch.setattr(get_settings(), 'archive_body_read_' + setting, 'r2-first')
     digest = archive.content_hash(RAW)
@@ -92,7 +92,7 @@ async def test_legacy_read_reports_final_source(r2, monkeypatch, path, outcome):
 
 @pytest.mark.parametrize('outcome', ['r2', 'db_fallback', 'unavailable'])
 async def test_observation_identifies_only_failed_selected_snapshot(clients, r2, monkeypatch, outcome):
-    from treg import analytics
+    from stray import analytics
     monkeypatch.setattr(get_settings(), 'archive_body_read_lookup', 'r2-first')
     for _ in range(2):
         await clients.get(URL, headers={'Cache-Control': 'no-cache'})
@@ -127,7 +127,7 @@ async def test_observation_identifies_only_failed_selected_snapshot(clients, r2,
 @pytest.mark.parametrize('failure', ['db_error', 'cancelled'])
 @pytest.mark.parametrize('snapshot_id', [None, 123])
 async def test_read_failure_and_cancellation_finish_observation(r2, monkeypatch, failure, snapshot_id):
-    from treg import analytics
+    from stray import analytics
     monkeypatch.setattr(get_settings(), 'archive_body_read_result', 'r2-first')
     async def fail(*args):
         if failure == 'cancelled':
@@ -150,7 +150,7 @@ async def test_read_failure_and_cancellation_finish_observation(r2, monkeypatch,
 @pytest.mark.parametrize('source', ['r2', 'db'])
 @pytest.mark.parametrize('analytics_failure', ['queue_full', 'internal_error'])
 async def test_read_survives_analytics_failure(r2, monkeypatch, source, analytics_failure):
-    from treg import analytics
+    from stray import analytics
     monkeypatch.setattr(get_settings(), 'archive_body_read_result', 'r2-first')
     digest = archive.content_hash(RAW)
     if source == 'r2':
@@ -191,7 +191,7 @@ async def test_admin_reads_migrated_reference_and_falls_back_on_admin_pool(clien
         return original()
     monkeypatch.setattr(db, 'admin_session_maker', admin_session)
     response = await clients.get(f'/admin/archive/body?key_hash={key.key_hash}&version=2',
-                                 headers={'X-Treg-Token': 'ADM-TOKEN'})
+                                 headers={'X-Stray-Token': 'ADM-TOKEN'})
     assert response.status_code == 200
     assert response.json()['body_text'] == RAW.decode()
     assert response.json()['carried_by_version'] == 1
@@ -201,7 +201,7 @@ async def test_admin_reads_migrated_reference_and_falls_back_on_admin_pool(clien
 
 async def _arena_migrated_record():
     from tests.test_arena_insights import record
-    from treg.models import CallRecord
+    from stray.models import CallRecord
     raw = b'{"data":{"email":"found@example.test"}}'
     ident = await record('historical', response={'data': {'email': 'found@example.test'}})
     async with db.session_maker() as s:
@@ -216,7 +216,7 @@ async def _arena_migrated_record():
 
 
 async def test_arena_reads_pruned_migrated_body_without_holding_cursor_connection(clients, r2, monkeypatch):
-    from treg.application import arena_insights
+    from stray.application import arena_insights
     monkeypatch.setattr(get_settings(), 'archive_body_read_result', 'r2-first')
     raw = await _arena_migrated_record()
     await audit.drain()
@@ -230,7 +230,7 @@ async def test_arena_reads_pruned_migrated_body_without_holding_cursor_connectio
 
 
 async def test_arena_discards_evidence_when_another_worker_publishes(clients, r2, monkeypatch):
-    from treg.application import arena_insights
+    from stray.application import arena_insights
     monkeypatch.setattr(get_settings(), 'archive_body_read_result', 'r2-first')
     raw = await _arena_migrated_record()
     r2.objects[archive.content_hash(raw)] = raw
@@ -319,9 +319,9 @@ async def test_legacy_initialization_keeps_db_baseline_when_r2_precompare_times_
 async def test_arena_worker_owns_object_store_and_flushes_read_events(r2, monkeypatch):
     from contextlib import asynccontextmanager
     from types import SimpleNamespace
-    from treg import analytics, worker
-    from treg.application import arena_insights
-    from treg.infra import object_store
+    from stray import analytics, worker
+    from stray.application import arena_insights
+    from stray.infra import object_store
     steps = []
     @asynccontextmanager
     async def opened(settings):
@@ -507,7 +507,7 @@ async def test_read_switches_and_fallback_without_db_connection(clients, r2, mon
     elif fallback == 'corrupt':
         r2.objects = {key: b'corrupt' for key in r2.objects}
     elif fallback in {'timeout', 'permission_denied', 'upstream_error', 'store_unavailable'}:
-        from treg.infra.object_store import ObjectStoreError
+        from stray.infra.object_store import ObjectStoreError
         monkeypatch.setattr(get_settings(), 'archive_r2_read_timeout_s', 0.02)
         async def failed_get(key):
             r2.check_io()
@@ -526,7 +526,7 @@ async def test_read_switches_and_fallback_without_db_connection(clients, r2, mon
         await s.commit()
     if path == 'lookup':
         response = await clients.get(URL)
-        assert response.headers.get('x-treg-cache') == 'hit' and response.content == RAW
+        assert response.headers.get('x-stray-cache') == 'hit' and response.content == RAW
     elif path == 'result':
         call = (await clients.get('/calls')).json()[0]
         response = await clients.get(f"/calls/{call['id']}/result")
@@ -601,14 +601,14 @@ async def test_startup_fails_before_db_when_r2_configuration_missing(monkeypatch
 
 
 def test_db_defaults_need_no_r2_configuration():
-    from treg.config import Settings
+    from stray.config import Settings
     s = Settings(_env_file=None)
     assert s.archive_body_write == 'db'
     assert all(getattr(s, 'archive_body_read_' + p) == 'db' for p in ('lookup', 'result', 'terminal'))
 
 
 async def test_checksum_mismatch_is_not_published(clients, r2, monkeypatch):
-    from treg.infra.object_store import ObjectInfo
+    from stray.infra.object_store import ObjectInfo
     async def wrong(body, **kw):
         return ObjectInfo('0' * 64, len(body))
     monkeypatch.setattr(r2, 'put', wrong)
@@ -623,8 +623,8 @@ async def test_checksum_mismatch_is_not_published(clients, r2, monkeypatch):
 
 @pytest.mark.parametrize('path', ['/calls', '/calls/{ref}'])
 async def test_activity_terminal_reads_release_request_session(clients, r2, monkeypatch, path):
-    from treg.models import AsyncTaskRecord, CallRecord
-    from treg.timeutil import utcnow_naive
+    from stray.models import AsyncTaskRecord, CallRecord
+    from stray.timeutil import utcnow_naive
     monkeypatch.setattr(get_settings(), 'archive_body_read_terminal', 'r2-first')
     await clients.get(URL)
     await archive.drain()
@@ -683,7 +683,7 @@ async def test_upload_timeout_retries_once_and_recovers(clients, r2, monkeypatch
 
 
 async def test_obstore_client_uses_one_request_and_checks_hash_and_size():
-    from treg.infra.object_store import R2ObjectStore, ObjectInfo
+    from stray.infra.object_store import R2ObjectStore, ObjectInfo
     from tests.fake_object_store import MemoryObstoreSDK
     sdk = MemoryObstoreSDK()
     store = R2ObjectStore(sdk, 1000)
@@ -710,9 +710,9 @@ async def test_obstore_client_uses_one_request_and_checks_hash_and_size():
 async def test_dev_smoke_refuses_production_bucket(monkeypatch):
     import runpy
     for name, value in {'ENDPOINT': 'https://' + 'a' * 32 + '.r2.cloudflarestorage.com',
-                        'BUCKET': 'treg-archive', 'ACCESS_KEY_ID': 'fake',
+                        'BUCKET': 'stray-archive', 'ACCESS_KEY_ID': 'fake',
                         'SECRET_ACCESS_KEY': 'fake'}.items():
-        monkeypatch.setenv('TREG_ARCHIVE_OBJECT_STORE_' + name, value)
+        monkeypatch.setenv('STRAY_ARCHIVE_OBJECT_STORE_' + name, value)
     smoke = runpy.run_path(str(Path(__file__).parents[1] / 'scripts' / 'smoke_archive_r2.py'))
     with pytest.raises(SystemExit, match='Refusing'):
         await smoke['run']()
@@ -759,14 +759,14 @@ async def test_result_admission_retains_decisive_r2_snapshot(clients, r2, monkey
     assert uncertain.result_observed_version == 2
     assert uncertain.result_state == 'found' and uncertain.ttl_s == first.ttl_s
     cached = await _call(clients, monkeypatch, EMPTY)
-    assert cached.headers['x-treg-cache'] == 'hit' and cached.content == FOUND
+    assert cached.headers['x-stray-cache'] == 'hit' and cached.content == FOUND
     await _call(clients, monkeypatch, FOUND, live=True)
     assert (await _key()).stable_seen == 1  # compare hashes across an uncertain version
     await _call(clients, monkeypatch, EMPTY, live=True)
     empty = await _key()
     assert empty.result_state == 'empty' and empty.change_seen == 1
     miss = await _call(clients, monkeypatch, EMPTY)
-    assert 'x-treg-cache' not in miss.headers and (await _key()).ttl_s == empty.ttl_s
+    assert 'x-stray-cache' not in miss.headers and (await _key()).ttl_s == empty.ttl_s
     history = await archive.resolve_result(first.key_hash, archive.content_hash(FOUND))
     assert history['response']['body_text'] == FOUND.decode()
     await _call(clients, monkeypatch, FOUND)
@@ -778,11 +778,11 @@ async def test_result_admission_retains_decisive_r2_snapshot(clients, r2, monkey
 
 @pytest.mark.parametrize('write_timeout,read_timeout', [(10.0, 2.0), (0.01, 2.0), (30.0, 0.01)])
 async def test_obstore_factory_configuration_and_missing_objects(monkeypatch, write_timeout, read_timeout):
-    from treg.infra.object_store import open_r2
+    from stray.infra.object_store import open_r2
     from tests.fake_object_store import MemoryObstoreSDK
     from obstore.store import S3Store
     import obstore.store
-    from treg.config import Settings
+    from stray.config import Settings
     captured = {}
     class Missing(MemoryObstoreSDK):
         async def head_async(self, path):
@@ -795,7 +795,7 @@ async def test_obstore_factory_configuration_and_missing_objects(monkeypatch, wr
         S3Store(bucket, **kwargs)
         return Missing()
     monkeypatch.setattr(obstore.store, 'S3Store', factory)
-    settings = Settings(_env_file=None, archive_object_store_bucket='treg-dev',
+    settings = Settings(_env_file=None, archive_object_store_bucket='stray-dev',
                         archive_object_store_endpoint='https://' + 'a' * 32 + '.r2.cloudflarestorage.com',
                         archive_object_store_access_key_id='fake', archive_object_store_secret_access_key='fake')
     settings.archive_r2_timeout_s = write_timeout
@@ -815,7 +815,7 @@ async def test_obstore_factory_configuration_and_missing_objects(monkeypatch, wr
                                          ('permission_denied', 'ERROR'), ('hash_mismatch', 'ERROR'),
                                          ('rate_limited', 'WARNING'), ('upstream_error', 'WARNING')])
 async def test_read_fallback_reason_level_and_diagnostics(r2, monkeypatch, caplog, path, reason, level):
-    from treg.infra.object_store import ObjectStoreError
+    from stray.infra.object_store import ObjectStoreError
     monkeypatch.setattr(get_settings(), 'archive_body_read_' + path, 'r2-first')
     monkeypatch.setattr(get_settings(), 'archive_r2_read_timeout_s', 0.01)
     monkeypatch.setattr(get_settings(), 'archive_r2_timeout_s', 30.0)
@@ -850,7 +850,7 @@ async def test_read_fallback_reason_level_and_diagnostics(r2, monkeypatch, caplo
 
 @pytest.mark.parametrize('reason', ['timeout', 'store_error'])
 async def test_read_transient_failure_retries_once_and_recovers(r2, monkeypatch, reason):
-    from treg.infra.object_store import ObjectStoreError
+    from stray.infra.object_store import ObjectStoreError
     monkeypatch.setattr(get_settings(), 'archive_body_read_lookup', 'r2-first')
     monkeypatch.setattr(get_settings(), 'archive_r2_read_timeout_s', 0.08)
     digest = archive.content_hash(RAW)
@@ -890,7 +890,7 @@ async def test_lookup_read_diagnostics_use_existing_tool_called(clients, r2, mon
     monkeypatch.setattr(service.analytics, 'capture', lambda who, event, props, **kw: events.append((event, props)))
     response = await clients.get(URL)
     await archive.drain()
-    assert response.headers['x-treg-cache'] == 'hit'
+    assert response.headers['x-stray-cache'] == 'hit'
     called = [props for name, props in events if name == 'tool_called']
     assert len(called) == 1
     assert called[0]['cache_body_source'] == ('db' if fallback else 'r2')
@@ -926,7 +926,7 @@ async def test_r2_only_missing_body_has_no_db_fallback(clients, r2, monkeypatch,
         calls = r2.put_calls
         response = await clients.get(URL)
         await archive.drain()
-        assert 'x-treg-cache' not in response.headers and response.content == RAW
+        assert 'x-stray-cache' not in response.headers and response.content == RAW
         assert r2.put_calls == calls + 1
     elif path == 'result':
         call = (await clients.get('/calls')).json()[0]
@@ -948,7 +948,7 @@ def test_normalized_mode_and_r2_read_guard(monkeypatch):
 
 @pytest.mark.parametrize('jurisdiction', ['', '.eu', '.fedramp'])
 def test_r2_endpoint_jurisdictions(jurisdiction):
-    from treg.infra.object_store import R2_ENDPOINT_RE
+    from stray.infra.object_store import R2_ENDPOINT_RE
     assert R2_ENDPOINT_RE.fullmatch('https://' + 'a'*32 + jurisdiction + '.r2.cloudflarestorage.com')
     assert not R2_ENDPOINT_RE.fullmatch('https://' + 'a'*32 + '.evil.r2.cloudflarestorage.com')
 
@@ -1107,7 +1107,7 @@ async def test_cancel_before_start_reports_once(clients, r2, monkeypatch):
     (PermissionError, 'permission_denied'), (TimeoutError, 'timeout'),
     (FileNotFoundError, 'not_found'), (RuntimeError, 'store_error')])
 async def test_object_boundary_classifies_put_and_get_by_type(error, reason):
-    from treg.infra.object_store import R2ObjectStore, ObjectStoreError
+    from stray.infra.object_store import R2ObjectStore, ObjectStoreError
     class Broken:
         async def put_async(self, *args, **kwargs):
             raise error('SignatureDoesNotMatch secret text never forwarded')
@@ -1273,7 +1273,7 @@ async def test_singleflight_cancellation_releases_waiters(r2, cancel_leader):
 
 @pytest.mark.parametrize('path', ['lookup', 'result', 'terminal', 'put'])
 async def test_store_error_logs_only_underlying_exception_class(r2, monkeypatch, caplog, path):
-    from treg.infra.object_store import ObjectStoreError
+    from stray.infra.object_store import ObjectStoreError
     async def fail(*args, **kwargs):
         raise ObjectStoreError('store_error', exception_type='GenericError')
     if path == 'put':
@@ -1297,7 +1297,7 @@ async def test_real_obstore_http_status_classification(status, reason):
     from threading import Thread
     from obstore.exceptions import GenericError
     from obstore.store import S3Store
-    from treg.infra.object_store import R2ObjectStore, ObjectStoreError
+    from stray.infra.object_store import R2ObjectStore, ObjectStoreError
 
     calls = []
     class Handler(BaseHTTPRequestHandler):
@@ -1337,7 +1337,7 @@ async def test_real_obstore_http_status_classification(status, reason):
 
 async def test_generic_sdk_body_cannot_spoof_http_status():
     from obstore.exceptions import GenericError
-    from treg.infra.object_store import R2ObjectStore
+    from stray.infra.object_store import R2ObjectStore
     store = R2ObjectStore(None, 1000, status_errors=(GenericError,))
     for text in ('503 secret-body', 'Server returned non-2xx status code: 429 secret-body',
                  'Generic S3 error: Error performing GET https://test/abc in 1ms - '
@@ -1418,7 +1418,7 @@ async def test_change_observation_reads_r2_only_without_db_connection(clients, r
 
 async def test_ignore_learning_reads_r2_only_without_db_connection(clients, r2, monkeypatch):
     monkeypatch.setattr(get_settings(), 'archive_body_read_lookup', 'r2-first')
-    from treg.domain.catalog import store
+    from stray.domain.catalog import store
     monkeypatch.setattr(get_settings(), 'archive_body_write', 'r2')
     monkeypatch.setattr(get_settings(), 'archive_mode', 'shadow')
     monkeypatch.setitem(store.load().by_id[EP], 'cache',

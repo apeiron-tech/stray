@@ -15,7 +15,7 @@ export default { setup: useDashboard }
               <div class="stat"><div class="n">{{hubRuns30()}}</div><div class="l">runs by others, 30 days</div></div>
               <div class="stat"><div class="n">{{hubFailing()}}</div><div class="l">failing</div></div>
             </div>
-            <p class="sub">Create one from your terminal or your agent: <code>treg hub init &lt;name&gt; --script</code> · <code>hub_create</code> over MCP.</p>
+            <p class="sub">Create one from your terminal or your agent: <code>stray hub init &lt;name&gt; --script</code> · <code>hub_create</code> over MCP.</p>
             <p v-if="hub.loading" class="sub">Loading…</p>
             <p v-else-if="!hubNewest().length" class="sub">No hub tools yet.</p>
             <table v-else>
@@ -76,8 +76,8 @@ export default { setup: useDashboard }
               <p class="sub">{{hub.tool.data.rows.toLocaleString()}} rows · {{(hub.tool.data.bytes/1024).toFixed(0)}} KB uploaded with this version (read-only; replace data.csv and publish for a new version)</p></template>
               <div class="lbl">Call it</div>
               <pre style="white-space:pre-wrap;word-break:break-all">{{hubCallLine(hub.tool)}}
-POST {{proxy}}/call/{{hub.tool.tool_id}}    X-Treg-Token · JSON body of inputs</pre>
-              <p class="sub">Files are read-only here; publish a new version from the terminal (<code>treg hub publish .</code>) or your agent (<code>hub_update</code>).</p>
+POST {{proxy}}/call/{{hub.tool.tool_id}}    X-Stray-Token · JSON body of inputs</pre>
+              <p class="sub">Files are read-only here; publish a new version from the terminal (<code>stray hub publish .</code>) or your agent (<code>hub_update</code>).</p>
             </template>
 
             <template v-if="hub.tab==='versions'">
@@ -106,7 +106,7 @@ POST {{proxy}}/call/{{hub.tool.tool_id}}    X-Treg-Token · JSON body of inputs<
             </template>
 
             <template v-if="hub.tab==='listing'">
-              <p class="sub">Neither choice bumps the version. Once listed, every new version and price change waits for treg's review.</p>
+              <p class="sub">Neither choice bumps the version. Once listed, every new version and price change waits for stray's review.</p>
               <div style="margin:14px 0 4px">
                 <div class="lbl">In catalog search</div>
                 <p class="sub" style="margin:4px 0;max-width:70ch">
@@ -117,23 +117,23 @@ POST {{proxy}}/call/{{hub.tool.tool_id}}    X-Treg-Token · JSON body of inputs<
                 <p class="sub" style="margin:4px 0;max-width:70ch">
                   <template v-if="hubListing(hub.tool)==='approved' && hub.tool.listing.capability">Beside the catalog providers of <code>{{hub.tool.listing.capability}}</code>: <code>catalog_get</code> on any of them shows your tool, with its success rate.</template>
                   <template v-else-if="hub.tool.capability">Proposed job: <code>{{hub.tool.capability}}</code>. Once approved, your tool sits beside that job's providers.</template>
-                  <template v-else>No job named. Add <code>"capability"</code> to recipe.json (a capability id from <code>treg catalog search</code>) to sit beside that job's providers once approved.</template>
+                  <template v-else>No job named. Add <code>"capability"</code> to recipe.json (a capability id from <code>stray catalog search</code>) to sit beside that job's providers once approved.</template>
                 </p>
                 <p v-if="hub.tool.listing && hub.tool.listing.update" class="sub" style="margin:4px 0;max-width:70ch">
-                  <template v-if="hub.tool.listing.update.state==='pending'"><b class="warn">An update waits for treg's review:</b>
+                  <template v-if="hub.tool.listing.update.state==='pending'"><b class="warn">An update waits for stray's review:</b>
                     <template v-if="hub.tool.listing.update.version"> version {{hub.tool.listing.update.version}}</template><template v-if="hub.tool.listing.update.version && hub.tool.listing.update.pricing"> and</template>
                     <template v-if="hub.tool.listing.update.pricing"> the price ${{hub.tool.listing.update.pricing.price_usd}}</template>. Callers keep the approved one until then.</template>
                   <template v-else><b class="warn">Your last update was rejected:</b> {{hub.tool.listing.update.reason}}{{/[.!?]$/.test(hub.tool.listing.update.reason)?'':'.'}} The approved version still serves.</template>
                 </p>
                 <button v-if="['none','rejected','unlisted'].includes(hubListing(hub.tool))" class="btn sm primary" :disabled="hub.flagSaving||!canRegister||hub.tool.status!=='live'" @click="setHubFlag('listed',true)">{{hubListing(hub.tool)==='rejected'?'Ask again':hubListing(hub.tool)==='unlisted'?'List it again':'Ask to list it'}}</button>
                 <button v-else class="btn sm" :disabled="hub.flagSaving||!canRegister" @click="setHubFlag('listed',false)">{{hubListing(hub.tool)==='approved'?'Unlist':'Withdraw the request'}}</button>
-                <p class="sub" style="margin:6px 0 0;max-width:70ch">Listed: it appears in catalog search and <code>catalog_search</code>, marked as a hub tool by your team, ranked by relevance with no boost. treg reviews each request, and each later version or price change. Not listed: only someone with the id or the share link can call it.</p>
+                <p class="sub" style="margin:6px 0 0;max-width:70ch">Listed: it appears in catalog search and <code>catalog_search</code>, marked as a hub tool by your team, ranked by relevance with no boost. stray reviews each request, and each later version or price change. Not listed: only someone with the id or the share link can call it.</p>
               </div>
               <div style="margin:14px 0 4px">
                 <label class="tgl" style="font-size:13.5px"><input type="checkbox" :checked="hub.tool.public_log!==false" :disabled="hub.flagSaving||!canRegister||hub.tool.status!=='live'" @change="setHubFlag('public_log',$event.target.checked)"/><span><b>Public run log on the share page</b></span></label>
                 <p class="sub" style="margin:4px 0 0 21px;max-width:70ch">The last 20 runs and runs per day for 30 days: time, outcome, duration, units and the price paid. Never who called, never the inputs, never the output.</p>
               </div>
-              <p class="sub">From the terminal: <code>treg hub list {{hub.tool.tool_id}}</code> · <code>treg hub unlist {{hub.tool.tool_id}}</code> · <code>treg hub log {{hub.tool.tool_id}} --public off</code></p>
+              <p class="sub">From the terminal: <code>stray hub list {{hub.tool.tool_id}}</code> · <code>stray hub unlist {{hub.tool.tool_id}}</code> · <code>stray hub log {{hub.tool.tool_id}} --public off</code></p>
             </template>
 
             <template v-if="hub.tab==='earnings'">
@@ -177,7 +177,7 @@ POST {{proxy}}/call/{{hub.tool.tool_id}}    X-Treg-Token · JSON body of inputs<
                   <span class="muted"> · {{hub.health.fails_in_a_row}} failed in a row · last run {{(hub.health.last_run_at||'-').slice(0,16).replace('T',' ')}}</span>
                   <div v-if="hub.health.last_check" class="sub" style="margin-top:6px">last check: {{hub.health.last_check.status}}<span v-if="hub.health.last_check.scheduled"> (scheduled)</span> at {{(hub.health.last_check.checked_at||'').slice(0,16).replace('T',' ')}}<span v-if="hub.health.last_check.error"> · {{hub.health.last_check.error.error||''}} {{hub.health.last_check.error.message||''}}</span></div>
                 </div>
-                <p class="sub" style="margin-top:10px">A tool is <b>failing</b> after 3 failed runs in a row (callers' runs or the scheduled check). It stays callable; the public page shows the state. Fix and publish a new version, or wait for the next check (<code>treg-worker hub check</code>, every 6 h).</p>
+                <p class="sub" style="margin-top:10px">A tool is <b>failing</b> after 3 failed runs in a row (callers' runs or the scheduled check). It stays callable; the public page shows the state. Fix and publish a new version, or wait for the next check (<code>stray-worker hub check</code>, every 6 h).</p>
               </template>
             </template>
           </template>

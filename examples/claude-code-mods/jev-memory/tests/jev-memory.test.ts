@@ -1,16 +1,16 @@
 import { describe, expect, mock, test } from "claude-code/testing";
 
-// Stubs the world beneath the mod: an in-memory memory file, a Treg whose
+// Stubs the world beneath the mod: an in-memory memory file, a Stray whose
 // answers the test sets, and a record of toasts.
 function world(on: any, initial = "") {
   const w = {
     file: initial,
     pending: [] as string[],
     toasts: [] as string[],
-    tregCalls: [] as string[][],
+    strayCalls: [] as string[][],
     tracked: false,
     judging: false,
-    treg: (_argv: string[]): { exitCode: number; stdout: string; stderr: string } => ({ exitCode: 1, stdout: "", stderr: "down" }),
+    stray: (_argv: string[]): { exitCode: number; stdout: string; stderr: string } => ({ exitCode: 1, stdout: "", stderr: "down" }),
   };
   const clock = mock.clock(on);
   mock.env(on, { HOME: "/home/me" });
@@ -49,8 +49,8 @@ function world(on: any, initial = "") {
   });
   on("process.run", ($: any, e: any) => {
     if (e.argv[0] === "git") return { value: { exitCode: w.tracked ? 0 : 1, stdout: "", stderr: "" } };
-    w.tregCalls.push([...e.argv]);
-    return { value: w.treg([...e.argv]) };
+    w.strayCalls.push([...e.argv]);
+    return { value: w.stray([...e.argv]) };
   });
   return { w, clock };
 }
@@ -60,7 +60,7 @@ const jev = (answers: Record<string, number>, charged = 20) => () => ({
   stderr: "",
   stdout: JSON.stringify({
     result: { answers: Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, { noul: v }])) },
-    _treg: { http_status: 200, call_id: "c1", charged_micro: charged },
+    _stray: { http_status: 200, call_id: "c1", charged_micro: charged },
   }),
 });
 
@@ -92,7 +92,7 @@ async function finishTurn($: any, w: any, clock: any, prompts: string[]) {
 describe("jev-memory", () => {
   test("saves sentences at 0.8 or higher, toasts, and counts the turn", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = jev({ q1: 0.93, q2: 0.1, q3: 0.79 });
+    w.stray = jev({ q1: 0.93, q2: 0.1, q3: 0.79 });
     const ui = await start($, on);
     expect(await ui.find({ type: "Text", text: "◆ jev memory" })).toBeDefined();
     expect(await ui.find({ type: "Text", text: "0 remembered" })).toBeDefined();
@@ -112,9 +112,9 @@ describe("jev-memory", () => {
     expect(await ui.find({ type: "Text", text: "Always use pnpm here." })).toBeDefined();
 
     // one request, JSON output, the sentences escaped into the state
-    expect(w.tregCalls.length).toBe(1);
-    const argv = w.tregCalls[0];
-    expect(argv[0]).toBe("/home/me/.local/bin/treg");
+    expect(w.strayCalls.length).toBe(1);
+    const argv = w.strayCalls[0];
+    expect(argv[0]).toBe("/home/me/.local/bin/stray");
     expect(argv).toContain("--json");
     const body = JSON.parse(argv[argv.indexOf("--data") + 1]);
     expect(body.model).toBe("typesafe/jev-1.13");
@@ -129,26 +129,26 @@ describe("jev-memory", () => {
       played.push(e.clip);
       return { value: undefined };
     });
-    w.treg = jev({ q1: 0.93 });
+    w.stray = jev({ q1: 0.93 });
     const ui = await start($, on);
     await finishTurn($, w, clock, ["Always use pnpm here."]);
     expect(played).toEqual([{ asset: "sounds/coin.wav" }]);
-    w.treg = jev({ q1: 0.1 });
+    w.stray = jev({ q1: 0.1 });
     await finishTurn($, w, clock, ["Fix the login bug please."]);
     expect(played.length).toBe(1);
     await ui.unmount();
   });
 
-  test("shows the Treg cost in dollars", async ($, on) => {
+  test("shows the Stray cost in dollars", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = jev({ q1: 0.1 }, 300);
+    w.stray = jev({ q1: 0.1 }, 300);
     const ui = await start($, on);
     await finishTurn($, w, clock, ["Please rename the helper function."]);
     expect(await ui.find({ type: "Text", text: "$0.00030" })).toBeDefined();
     await ui.unmount();
   });
 
-  test("a failed Treg call is skipped silently and counted", async ($, on) => {
+  test("a failed Stray call is skipped silently and counted", async ($, on) => {
     const { w, clock } = world(on, "- Existing rule here.\n");
     const ui = await start($, on);
     await finishTurn($, w, clock, ["Always use pnpm here."]);
@@ -159,9 +159,9 @@ describe("jev-memory", () => {
     await ui.unmount();
   });
 
-  test("garbage from Treg counts as a failure", async ($, on) => {
+  test("garbage from Stray counts as a failure", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = () => ({ exitCode: 0, stdout: "not json", stderr: "" });
+    w.stray = () => ({ exitCode: 0, stdout: "not json", stderr: "" });
     const ui = await start($, on);
     await finishTurn($, w, clock, ["Always use pnpm here."]);
     expect(w.file).toBe("");
@@ -172,7 +172,7 @@ describe("jev-memory", () => {
   test("no duplicates, and lines are trimmed to 300 characters", async ($, on) => {
     const { w, clock } = world(on, "- always use pnpm here.\n");
     const long = `Never ${"x".repeat(400)}.`;
-    w.treg = jev({ q1: 0.9, q2: 0.95 });
+    w.stray = jev({ q1: 0.9, q2: 0.95 });
     const ui = await start($, on);
     await finishTurn($, w, clock, [`Always use pnpm here. ${long}`]);
 
@@ -186,20 +186,20 @@ describe("jev-memory", () => {
 
   test("sends at most six sentences in one request", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = jev({});
+    w.stray = jev({});
     const ui = await start($, on);
     await finishTurn($, w, clock, [Array.from({ length: 9 }, (_, i) => `Sentence number ${i} here.`).join(" ")]);
-    const argv = w.tregCalls[0];
+    const argv = w.strayCalls[0];
     const body = JSON.parse(argv[argv.indexOf("--data") + 1]);
     expect(Object.keys(body.questions).length).toBe(6);
-    expect(w.tregCalls.length).toBe(1);
+    expect(w.strayCalls.length).toBe(1);
     await ui.unmount();
   });
 
-  test("the turn does not wait for Treg", async ($, on) => {
+  test("the turn does not wait for Stray", async ($, on) => {
     const { w, clock } = world(on);
     let released = false;
-    w.treg = () => {
+    w.stray = () => {
       released = true;
       return jev({ q1: 0.9 })();
     };
@@ -216,24 +216,24 @@ describe("jev-memory", () => {
 
   test("prompts that are not the user's own are not judged", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = jev({ q1: 0.99 });
+    w.stray = jev({ q1: 0.99 });
     const ui = await start($, on);
     await $.prompt.submit({ text: "Always use pnpm here." } as any); // origin: a plugin
     await $.turn.complete({ reason: "answer", answer: "ok", durationMs: 1 } as any);
     await clock.advance(1);
-    expect(w.tregCalls).toEqual([]);
+    expect(w.strayCalls).toEqual([]);
     await ui.unmount();
   });
 
   test("subagent turns and unanswered turns judge nothing", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = jev({ q1: 0.99 });
+    w.stray = jev({ q1: 0.99 });
     const ui = await start($, on);
     w.pending.push(...["Always use pnpm here."]);
     await $.turn.complete({ reason: "answer", answer: "ok", durationMs: 1, agentId: "sub" } as any);
     await $.turn.complete({ reason: "aborted", answer: "", durationMs: 1, isAborted: true } as any);
     await clock.advance(1);
-    expect(w.tregCalls).toEqual([]);
+    expect(w.strayCalls).toEqual([]);
     await ui.unmount();
   });
 
@@ -275,7 +275,7 @@ describe("jev-memory", () => {
 
   test("a judge cut off by a reload does not stop judging", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = jev({ q1: 0.9 });
+    w.stray = jev({ q1: 0.9 });
     w.judging = true;
     const ui = await start($, on); // session.start fires again on every reload
     await finishTurn($, w, clock, ["Always use pnpm here."]);
@@ -283,9 +283,9 @@ describe("jev-memory", () => {
     await ui.unmount();
   });
 
-  test("reads the bare body printed by treg before 0.22.0", async ($, on) => {
+  test("reads the bare body printed by stray before 0.22.0", async ($, on) => {
     const { w, clock } = world(on);
-    w.treg = () => ({ exitCode: 0, stderr: "", stdout: JSON.stringify({ answers: { q1: { type: "noul", noul: 0.9 } } }) });
+    w.stray = () => ({ exitCode: 0, stderr: "", stdout: JSON.stringify({ answers: { q1: { type: "noul", noul: 0.9 } } }) });
     const ui = await start($, on);
     await finishTurn($, w, clock, ["Always use pnpm here."]);
     expect(w.file).toBe("- Always use pnpm here.\n");

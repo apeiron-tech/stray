@@ -66,7 +66,7 @@ export default {
             <span class="pl-meta">{{authLabel(p)}}<template v-if="n"> · {{n}} connected</template></span></span>
           <span class="cn-prov-a" @click.stop>
             <button class="pl-btn sm ghost" :disabled="connBusy"
-                    @click="startConnect(p)" :title="pasted ? 'Paste your own '+p.display_name+' key; treg keeps it server-side' : 'Log in to '+p.display_name+' and approve access'">
+                    @click="startConnect(p)" :title="pasted ? 'Paste your own '+p.display_name+' key; stray keeps it server-side' : 'Log in to '+p.display_name+' and approve access'">
               {{connectLabel(p, n)}}</button>
           </span>
         </div>

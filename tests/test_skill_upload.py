@@ -16,7 +16,7 @@ CONTRACT = json.dumps({
 FILES = [
     {"path": "stop-slop/SKILL.md", "content": "# stop-slop\nA knowledge skill. No API."},
     {"path": "intercom/SKILL.md", "content": "# intercom\nCall the Intercom API."},
-    {"path": "intercom/treg.json", "content": CONTRACT},
+    {"path": "intercom/stray.json", "content": CONTRACT},
     {"path": "intercom/.secrets/token", "content": "SEKRET-TOKEN"},
 ]
 
@@ -49,7 +49,7 @@ async def test_import_flags_missing_env_secret(clients: AsyncClient):
                       "secrets": [{"env": "X_KEY", "name": "x", "kind": "env"}],
                       "bindings": [{"secret": "x", "injector": "env", "location": "header",
                                     "name": "Authorization", "format": "Bearer {secret}"}]})
-    files = [{"path": "x/SKILL.md", "content": "# x"}, {"path": "x/treg.json", "content": bad}]
+    files = [{"path": "x/SKILL.md", "content": "# x"}, {"path": "x/stray.json", "content": bad}]
     a = (await clients.post("/skills/analyze", json={"files": files})).json()["skills"][0]
     # value can still be supplied at import time
     r = await clients.post("/skills/import", json={"files": files, "select": ["x"],
@@ -67,7 +67,7 @@ async def test_edit_recipe_content(clients: AsyncClient):
 
 async def test_reimport_is_idempotent_not_500(clients: AsyncClient):
     files = [{"path": "dup/SKILL.md", "content": "# dup"},
-             {"path": "toolx/SKILL.md", "content": "# toolx"}, {"path": "toolx/treg.json", "content": CONTRACT.replace("intercom", "toolx")},
+             {"path": "toolx/SKILL.md", "content": "# toolx"}, {"path": "toolx/stray.json", "content": CONTRACT.replace("intercom", "toolx")},
              {"path": "toolx/.secrets/token", "content": "S"}]
     r1 = await clients.post("/skills/import", json={"files": files, "select": ["dup", "toolx"]})
     assert r1.status_code == 200 and all(x["ok"] for x in r1.json()["results"])

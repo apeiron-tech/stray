@@ -7,7 +7,7 @@ export default { components: { BrandMark }, setup: useDashboard }
 <template>
 <header class="rd-top" >
       <div class="rd-identity">
-        <a class="rd-brand brand" href="/" aria-label="treg home"><BrandMark/>treg</a>
+        <a class="rd-brand brand" href="/" aria-label="stray home"><BrandMark/>stray</a>
         <div class="orgblock" v-if="authed">
           <div class="orgmain" :ref="el => setElement('orgmain', el)" @click="toggleOrgMenu" role="button" tabindex="0" @keydown.enter="toggleOrgMenu" @keydown.space.prevent="toggleOrgMenu" aria-haspopup="true" :aria-expanded="orgMenu" aria-label="Teams">
             <span class="role" :class="activeRole">{{activeRole}}</span>
@@ -53,7 +53,7 @@ export default { components: { BrandMark }, setup: useDashboard }
             <button v-if="billing" @click="orgTab='billing'; go('orgs'); elements.accountMenu.open=false">Billing</button>
             <button v-if="isAdmin" @click="go('admin'); elements.accountMenu.open=false">Admin</button>
             <a href="/tutorial">Tutorial</a>
-            <a href="https://github.com/superdesigndev/treg" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">GitHub</a>
             <a href="https://discord.gg/6mQYYfFMAn" target="_blank" rel="noopener">Discord</a>
             <a href="https://x.com/treg_ai" target="_blank" rel="noopener">Follow on X</a>
             <button @click="logout">Sign out</button>

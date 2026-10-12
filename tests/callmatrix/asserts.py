@@ -9,7 +9,7 @@ from typing import Any, Mapping
 
 from httpx import AsyncClient, Response
 
-from treg import audit
+from stray import audit
 
 from test_marketplace_call import _balance, _entries, _telemetry
 
@@ -28,7 +28,7 @@ class Expect:
     status: int
     body: bytes | None = None
     cost_micro: int | None = None
-    treg_error: bool = False
+    stray_error: bool = False
     balance_delta: int = 0
     ledger_kinds: tuple[str, ...] = ()
     ledger_reason: str | None = None
@@ -59,7 +59,7 @@ async def assert_outcome(
         await asyncio.wait_for(audit.drain(), timeout=90)
     except asyncio.TimeoutError:
         import traceback
-        from treg.infra.db import _engine
+        from stray.infra.db import _engine
         lines = [f"audit.drain stalled; pending={len(audit._pending)}"]
         try:
             lines.append(f"pool: {_engine.pool.status()}")
@@ -79,12 +79,12 @@ async def assert_outcome(
     assert response.status_code == expect.status, response.text
     if expect.body is not None:
         assert response.content == expect.body
-    call_id = response.headers.get("X-Treg-Call-Id")
-    assert (response.headers.get("X-Treg-Error") == "1") is expect.treg_error
+    call_id = response.headers.get("X-Stray-Call-Id")
+    assert (response.headers.get("X-Stray-Error") == "1") is expect.stray_error
     if expect.cost_micro is None:
-        assert "X-Treg-Cost-Micro" not in response.headers
+        assert "X-Stray-Cost-Micro" not in response.headers
     else:
-        assert response.headers.get("X-Treg-Cost-Micro") == str(expect.cost_micro)
+        assert response.headers.get("X-Stray-Cost-Micro") == str(expect.cost_micro)
 
     balance = await _balance(clients)
     assert balance - before.balance_micro == expect.balance_delta
@@ -108,5 +108,5 @@ async def assert_outcome(
         assert row[key] == value, f"audit {key}: {row[key]!r} != {value!r}"
 
     assert len(provider.hits) - before.hit_count == expect.upstream_hits
-    assert call_id, "every /call response must carry X-Treg-Call-Id"
+    assert call_id, "every /call response must carry X-Stray-Call-Id"
     return row

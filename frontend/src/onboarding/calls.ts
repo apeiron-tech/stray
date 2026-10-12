@@ -46,7 +46,7 @@ const shellQuote = (s: string) => (/^[\w@%+=:,./-]+$/.test(s) ? s : "'" + s.repl
 export function cliLine(c: LibCall): string {
   const q = Object.entries(c.query).map(([k, v]) => ' --query ' + shellQuote(`${k}=${v}`)).join('')
   const body = Object.keys(c.body).length ? ' --body ' + shellQuote(JSON.stringify(c.body)) : ''
-  return `treg call ${c.endpoint}${q}${body}`
+  return `stray call ${c.endpoint}${q}${body}`
 }
 
 export type CallResult = {
@@ -60,7 +60,7 @@ export async function runCall(c: LibCall, headers: Record<string, string>, signa
   const qs = new URLSearchParams(Object.entries(c.query).map(([k, v]) => [k, String(v)])).toString()
   const opts: RequestInit = {
     method: c.method, credentials: 'include', signal,
-    headers: { ...headers, 'X-Treg-Client': 'onboarding', 'X-Treg-Route-Max-Cost': '0.05' },
+    headers: { ...headers, 'X-Stray-Client': 'onboarding', 'X-Stray-Route-Max-Cost': '0.05' },
   }
   if (c.method !== 'GET') {
     opts.body = JSON.stringify(c.body)
@@ -75,12 +75,12 @@ export async function runCall(c: LibCall, headers: Record<string, string>, signa
     const err = r.ok ? '' : errorText(r.status, body)
     return {
       call: c, status: r.status, ms: Math.round(performance.now() - t0),
-      costMicro: Number(r.headers.get('X-Treg-Cost-Micro') || 0),
-      servedBy: r.headers.get('X-Treg-Served-By') || '', body, error: err,
+      costMicro: Number(r.headers.get('X-Stray-Cost-Micro') || 0),
+      servedBy: r.headers.get('X-Stray-Served-By') || '', body, error: err,
     }
   } catch (e) {
     return { call: c, status: 0, ms: Math.round(performance.now() - t0), costMicro: 0, servedBy: '', body: null,
-      error: (e as Error)?.name === 'AbortError' ? 'The call took too long.' : 'The call could not reach treg.' }
+      error: (e as Error)?.name === 'AbortError' ? 'The call took too long.' : 'The call could not reach stray.' }
   }
 }
 
@@ -98,9 +98,9 @@ export async function runPreviewCall(id: string, c: LibCall, headers: Record<str
     if (!r.ok) return { call: c, status: r.status, ms, costMicro: 0, servedBy: '', body: null, error: errorText(r.status, d) }
     const status = Number(d.status) || 0
     return { call: c, status, ms, costMicro: Number(d.cost_micro) || 0, servedBy: d.served_by || '', body: d.body,
-      error: status >= 200 && status < 300 ? '' : status ? errorText(status, d.body) : 'The call could not reach treg.' }
+      error: status >= 200 && status < 300 ? '' : status ? errorText(status, d.body) : 'The call could not reach stray.' }
   } catch {
-    return { call: c, status: 0, ms: Math.round(performance.now() - t0), costMicro: 0, servedBy: '', body: null, error: 'The call could not reach treg.' }
+    return { call: c, status: 0, ms: Math.round(performance.now() - t0), costMicro: 0, servedBy: '', body: null, error: 'The call could not reach stray.' }
   }
 }
 

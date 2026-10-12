@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Give the same tool to the agent: one tab per way an agent connects. Paste works for any agent;
 // the terminal command installs the CLI and the MCP server everywhere it can; Cursor installs the MCP
-// server from a link; Claude.ai and ChatGPT add treg as a connector over OAuth; Grok Bot has a plugin.
+// server from a link; Claude.ai and ChatGPT add stray as a connector over OAuth; Grok Bot has a plugin.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { command, iconUrl, setupText } from '../agent-setup/data'
 
@@ -41,7 +41,7 @@ const pasteHead = computed(() => setupText(command(base.value), props.team, '\u0
 const terminalText = computed(() => `curl -fsSL ${base.value}/install.sh | sh -s -- --token ${props.token}`)
 const cursorLink = computed(() => {
   const config = { url: mcpUrl.value, headers: { Authorization: 'Bearer ' + props.token } }
-  return 'cursor://anysphere.cursor-deeplink/mcp/install?name=treg&config=' + encodeURIComponent(btoa(JSON.stringify(config)))
+  return 'cursor://anysphere.cursor-deeplink/mcp/install?name=stray&config=' + encodeURIComponent(btoa(JSON.stringify(config)))
 })
 const capSentence = computed(() => taskSentence.value.charAt(0).toUpperCase() + taskSentence.value.slice(1))
 const COPY: Record<string, () => string> = {
@@ -141,7 +141,7 @@ const hide = (e: Event) => { (e.target as HTMLElement).style.visibility = 'hidde
         </span></div>
 
         <div v-if="method==='grok'" class="gb-cmd center">
-          <a class="ob-btn oneclick" :href="GROK_PLUGIN" target="_blank" rel="noopener"><span class="glyph" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="149.5" width="140.5" height="140.5" rx="20"/></svg></span>Install the treg plugin</a>
+          <a class="ob-btn oneclick" :href="GROK_PLUGIN" target="_blank" rel="noopener"><span class="glyph" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="0" width="140.5" height="140.5" rx="20"/><rect x="0" y="149.5" width="140.5" height="140.5" rx="20"/><rect x="220" y="220" width="70" height="70" rx="14"/></svg></span>Install the stray plugin</a>
         </div>
         <div v-if="method==='paste' || method==='grok'" class="gb-cmd multi">
           <span class="ps" aria-hidden="true">$</span>
@@ -160,7 +160,7 @@ const hide = (e: Event) => { (e.target as HTMLElement).style.visibility = 'hidde
         </div>
 
         <div v-if="method==='cursor'" class="gb-cmd center">
-          <a class="ob-btn oneclick" :href="cursorLink" @click="emit('copied','cursor')"><span class="glyph" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="149.5" width="140.5" height="140.5" rx="20"/></svg></span>Add to Cursor</a>
+          <a class="ob-btn oneclick" :href="cursorLink" @click="emit('copied','cursor')"><span class="glyph" aria-hidden="true"><svg viewBox="0 0 290 290"><rect width="140.5" height="140.5" rx="20"/><rect x="149.5" y="0" width="140.5" height="140.5" rx="20"/><rect x="0" y="149.5" width="140.5" height="140.5" rx="20"/><rect x="220" y="220" width="70" height="70" rx="14"/></svg></span>Add to Cursor</a>
         </div>
 
         <ol v-if="method==='connector'" class="gb-steps">

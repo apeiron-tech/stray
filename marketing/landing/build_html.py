@@ -4,7 +4,7 @@
     python3 build.py && python3 build_html.py
 
 Reads   marketing/landing/dist/*.md   (produced by build.py — shared blocks already expanded)
-Writes  src/treg/web/usecase-<key>.html
+Writes  src/stray/web/usecase-<key>.html
 
 The markdown stays the single source of truth. NEVER hand-edit the generated HTML; it is
 overwritten on every run.
@@ -21,7 +21,7 @@ import markdown as md
 
 HERE = pathlib.Path(__file__).parent
 DIST = HERE / "dist"
-WEB = HERE.parent.parent / "src" / "treg" / "web"
+WEB = HERE.parent.parent / "src" / "stray" / "web"
 
 # page id -> url slug + the file key we write. Kept explicit rather than derived from the
 # filename so a renamed source file can never silently change a live URL.
@@ -125,7 +125,7 @@ def code_text(b):
     return "\n".join(b.splitlines()[1:-1])
 
 
-# Display name → the slug treg already serves at /logos/<slug>.svg. The provider tables ARE the
+# Display name → the slug stray already serves at /logos/<slug>.svg. The provider tables ARE the
 # evidence on these pages; a wall of names reads as assertion, the same table with real brand marks
 # reads as a record. Longest keys first so "Hunter Discover" never matches as "Hunter".
 LOGOS = {
@@ -142,18 +142,18 @@ _LOGO_KEYS = sorted(LOGOS, key=len, reverse=True)
 PROVIDERS_SEEN = set()
 
 
-# The page said "copy this into Claude Code" while never telling a first-time visitor how treg gets
+# The page said "copy this into Claude Code" while never telling a first-time visitor how stray gets
 # INTO Claude Code. Pasting the workflow with no account and no MCP server does nothing, so the
 # advertised conversion — a first successful call — was unreachable from the page. This box is
 # rendered immediately before the first prompt on every page.
-SETUP_BOX = """<div class="steplabel"><span class="n">1</span><b>Set treg up in your agent</b>
+SETUP_BOX = """<div class="steplabel"><span class="n">1</span><b>Set stray up in your agent</b>
   <span class="once">first time only</span></div>
 <p class="stephint">Paste this into the same agent. It installs the CLI, signs you in and registers the
 tools. One line, once. Already set up? Skip to step 2.</p>
 <div class="promptbox">
   <div class="ph"><span>setup</span>
     <button class="copybtn" data-copy="#setup" data-ev="lp_copy_setup" data-page="{page_id}">copy</button>
-  </div><pre id="setup">set up treg &mdash; https://treg.to/llms.txt</pre>
+  </div><pre id="setup">set up stray &mdash; https://treg.to/llms.txt</pre>
 </div>
 <div class="steplabel"><span class="n">2</span><b>Run the workflow</b></div>"""
 
@@ -247,7 +247,7 @@ def render_hero(body, page_id):
             head = s[4:].strip()
         elif s.startswith("```"):
             # The hero's fence is the example prompt. inline() knows nothing about fences, so the
-            # first cut shipped `<code>text\nUsing treg…` — the info string and all. Strip it with
+            # first cut shipped `<code>text\nUsing stray…` — the info string and all. Strip it with
             # code_text like every other section, and give it the same copy affordance.
             lede = (f'<div class="promptbox"><div class="ph"><span>the prompt</span>'
                     f'<button class="copybtn" data-copy="#heroprompt" data-ev="lp_copy_hero" '
@@ -450,7 +450,7 @@ def generate_jsonld(slug, h1, category):
     """Generate JSON-LD for BreadcrumbList and FAQPage."""
     global FAQ_PAIRS
     ld = []
-    # BreadcrumbList - note: breadcrumb uses "treg.to" not bare "treg"
+    # BreadcrumbList - note: breadcrumb uses "treg.to" not bare "stray"
     ld.append({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
@@ -527,7 +527,7 @@ TEMPLATE = """<!doctype html>
   <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
   <div class="links">
     <a class="hidem" href="/tutorial">docs</a>
-    <a class="hidem" href="https://github.com/superdesigndev/treg" target="_blank" rel="noopener">repo</a>
+    <a class="hidem" href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">repo</a>
     <a class="candy sm" href="/app?ref={page_id}" data-ev="lp_cta_primary" data-page="{page_id}">Start free</a>
   </div>
 </nav></div>
@@ -540,7 +540,7 @@ TEMPLATE = """<!doctype html>
     <span class="note">100% open source</span>
     <span class="sp"></span>
     <a href="/resources">resources</a><a href="/tutorial">docs</a><a href="/llms.txt">llms.txt</a>
-    <a href="https://github.com/superdesigndev/treg" target="_blank" rel="noopener">github &#8599;</a>
+    <a href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">github &#8599;</a>
     <a href="/terms">terms</a><a href="/privacy">privacy</a>
   </div>
 </footer>
@@ -550,12 +550,12 @@ TEMPLATE = """<!doctype html>
    not the signup — see marketing/landing/_measurement.md. `lp_copy_prompt` is the leading
    indicator we score pages on, so it fires from every copy affordance.
    INTEGRATION POINT: this forwards to window.posthog if the page ever loads it. Until then
-   events are queued on window.tregEvents so nothing is silently lost. */
+   events are queued on window.strayEvents so nothing is silently lost. */
 (function(){{
-  window.tregEvents = window.tregEvents || [];
+  window.strayEvents = window.strayEvents || [];
   function ev(name, props){{
     var p = Object.assign({{page: document.body.dataset.page}}, props || {{}});
-    window.tregEvents.push([name, p, Date.now()]);
+    window.strayEvents.push([name, p, Date.now()]);
     if (window.posthog && window.posthog.capture) window.posthog.capture(name, p);
   }}
   ev('lp_view');
@@ -719,7 +719,7 @@ HUB = """<!doctype html>
   <a class="brand" href="/"><span class="glyph">&#9626;</span> treg.to</a>
   <div class="links">
     <a class="hidem" href="/tutorial">docs</a>
-    <a class="hidem" href="https://github.com/superdesigndev/treg" target="_blank" rel="noopener">repo</a>
+    <a class="hidem" href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">repo</a>
     <a class="candy sm" href="/app?ref=hub">Start free</a>
   </div>
 </nav></div>
@@ -755,7 +755,7 @@ HUB = """<!doctype html>
     <span class="note">100% open source</span>
     <span class="sp"></span>
     <a href="/resources">resources</a><a href="/tutorial">docs</a><a href="/llms.txt">llms.txt</a>
-    <a href="https://github.com/superdesigndev/treg" target="_blank" rel="noopener">github &#8599;</a>
+    <a href="https://github.com/apeiron-tech/stray" target="_blank" rel="noopener">github &#8599;</a>
     <a href="/terms">terms</a><a href="/privacy">privacy</a>
   </div>
 </footer>

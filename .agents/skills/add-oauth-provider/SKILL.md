@@ -1,19 +1,19 @@
 ---
 name: add-oauth-provider
-description: Add a provider to treg's OAuth registry (the ones treg holds its own approved app for). Use when asked to "add YouTube/Notion/Meta OAuth", "support connecting X", "add a new OAuth provider", or when a connect flow, capability picker, channel/account picker, or provider health probe needs building. Covers the code changes, the platform-side approval steps, and the pitfalls that don't announce themselves.
+description: Add a provider to stray's OAuth registry (the ones stray holds its own approved app for). Use when asked to "add YouTube/Notion/Meta OAuth", "support connecting X", "add a new OAuth provider", or when a connect flow, capability picker, channel/account picker, or provider health probe needs building. Covers the code changes, the platform-side approval steps, and the pitfalls that don't announce themselves.
 metadata:
-  internal: true  # repo tooling: hidden from `npx skills add superdesigndev/treg`
+  internal: true  # repo tooling: hidden from `npx skills add apeiron-tech/stray`
 ---
 
 # Adding an OAuth provider
 
 Two connect modes exist. **BYO** (`POST /oauth/start` with a caller-supplied
 client_id/secret) already works for any OAuth2 provider and needs no code. This
-skill is the **registry** path: treg owns the registered app, so the user picks a
-provider and supplies nothing. Only add a provider here if treg holds — or is
+skill is the **registry** path: stray owns the registered app, so the user picks a
+provider and supplies nothing. Only add a provider here if stray holds — or is
 willing to go get — the platform approval behind it.
 
-Read `src/treg/oauth_providers.py`'s module docstring first. The rule it states is
+Read `src/stray/oauth_providers.py`'s module docstring first. The rule it states is
 the one most easily broken: **scopes are per capability, never per provider.**
 
 ## The code changes
@@ -21,16 +21,16 @@ the one most easily broken: **scopes are per capability, never per provider.**
 All of these, in order. Skipping any one produces a provider that looks fine in
 `/oauth/providers` and fails somewhere the tests don't reach.
 
-### 1. Credentials → `src/treg/config.py`
+### 1. Credentials → `src/stray/config.py`
 
 Add `<name>_client_id` / `<name>_client_secret` to `Settings`, loaded from
-`TREG_<NAME>_CLIENT_ID` / `_SECRET`. **Reuse an existing pair when the platform
+`STRAY_<NAME>_CLIENT_ID` / `_SECRET`. **Reuse an existing pair when the platform
 uses one app for several products** — all four Google providers plus YouTube
 share `google_client_id`, because Google verification and API audits are scoped to
 the *Cloud project*, not to the OAuth client. A second client in the same project
 isolates nothing.
 
-### 2. The provider → `src/treg/oauth_providers.py`
+### 2. The provider → `src/stray/oauth_providers.py`
 
 Add the `OAuthProvider` and **register it in `REGISTRY`** (easy to forget; the
 provider silently doesn't exist until you do).
@@ -85,7 +85,7 @@ Prefer the path that returns a *human-recognisable* field, and keep it identical
 the sample path in step 5 — `openUse` prefers `health_check.path` over the sample
 map, so if they differ the prefill silently changes after a reconnect.
 
-### 5. Dashboard → `src/treg/web/index.html`
+### 5. Dashboard → `src/stray/web/index.html`
 
 Provider rows, the Connect button and the pickers are all data-driven from
 `listing()`. **No new provider needs a UI change** — except:
@@ -111,7 +111,7 @@ The code is an afternoon. Approval is weeks. Do these in parallel, not in series
 1. **Enable the APIs** on the project *before* touching the consent screen — scope
    pickers usually only list scopes belonging to enabled APIs.
 2. **Add the scopes.** Ask only for what you can *demonstrate*; see pitfalls.
-3. **Redirect URI** must match `{TREG_PUBLIC_URL}/oauth/callback` exactly.
+3. **Redirect URI** must match `{STRAY_PUBLIC_URL}/oauth/callback` exactly.
 4. **Verification / app review**, where the platform gates sensitive scopes.
 5. **Separate product audits** — these are extra and often slower than the OAuth
    review: YouTube's compliance audit + quota extension, Business Profile API
@@ -149,7 +149,7 @@ returned: `expires_in` absent does not mean "never expires", and the 3600s defau
 `exchange_code` will happily invent an expiry that isn't real.
 
 **Publishing status "Testing" expires refresh tokens after 7 days.** Every
-connection then breaks weekly — fatal for treg, and invisible until day 8. Confirm
+connection then breaks weekly — fatal for stray, and invisible until day 8. Confirm
 the app is **In production** before trusting any connection made during setup.
 
 **The "hasn't verified this app" interstitial is expected pre-approval.** Click
@@ -159,7 +159,7 @@ through via Advanced. Demo videos are necessarily filmed in that state.
 `yt-analytics.readonly` does not contain the string "youtube". Use the "manually
 add scopes" box when the picker won't cooperate.
 
-**`TREG_PUBLIC_URL` decides the redirect_uri, not the port you're browsing.**
+**`STRAY_PUBLIC_URL` decides the redirect_uri, not the port you're browsing.**
 Running two dev servers and connecting from the wrong one sends the callback to
 the other server, where your session cookie doesn't apply.
 

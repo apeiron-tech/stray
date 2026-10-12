@@ -4,9 +4,9 @@ One Search Console property's health, in one call, on **your own** Google accoun
 
 ## Before you call it
 
-Connect Google Search Console to your treg team once (the dashboard, or `treg connect
+Connect Google Search Console to your stray team once (the dashboard, or `stray connect
 google-search-console`). Every step runs on that connection, with your consent, and costs nothing
-in provider money. The tool never sees your Google token; treg injects it.
+in provider money. The tool never sees your Google token; stray injects it.
 
 ## What it does, all at the same time
 

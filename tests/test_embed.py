@@ -6,7 +6,7 @@ import json
 
 import httpx
 
-from treg.infra import embed as embed_infra
+from stray.infra import embed as embed_infra
 
 KW = dict(api_key="k", model="voyageai/voyage-4-lite", url="https://embed.test/v1/embeddings", timeout_s=1.0)
 

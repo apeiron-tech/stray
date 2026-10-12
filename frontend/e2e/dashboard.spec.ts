@@ -106,7 +106,7 @@ test('a routed tool can be tried by hand, and says who serves it in one line', a
   await signIn(page, 'routed-try')
   // The browser-test server holds no platform keys; answer the access dry-run the way a deployment
   // with two providers keyed would.
-  await page.route('**/catalog/endpoints/treg.companies.enrich/access', route => route.fulfill(json({
+  await page.route('**/catalog/endpoints/stray.companies.enrich/access', route => route.fulfill(json({
     tier: 'routed', detail: 'routed',
     plan: [{ endpoint_id: 'dropleads.companies.enrich', provider: 'dropleads', tier: 'platform' },
            { endpoint_id: 'hunter.companies.enrich', provider: 'hunter', tier: 'platform' }],
@@ -114,7 +114,7 @@ test('a routed tool can be tried by hand, and says who serves it in one line', a
   })))
   await page.goto('/app#platform/companies/enrich')
   await page.locator('.pl-autocard').getByRole('button', { name: 'Try it', exact: true }).click()
-  const drawer = page.getByRole('dialog', { name: /treg\.companies\.enrich/ })
+  const drawer = page.getByRole('dialog', { name: /stray\.companies\.enrich/ })
   await expect(drawer.getByText(/One call: 2 providers can serve it for this team now/)).toBeVisible()
   await drawer.getByRole('button', { name: 'Manual', exact: true }).click()
   await expect(drawer.getByRole('button', { name: /Run/ })).toBeVisible()
@@ -126,7 +126,7 @@ test("a tool drawer's primary button is the next step to an agent using the tool
   const primary = () => drawer.locator('.td-act .pl-btn:not(.ghost)').first()
   await page.goto('/catalog/companies/enrich')
   await page.getByRole('table').getByRole('row').filter({ hasText: 'Crustdata' }).first().click()
-  await expect(primary()).toHaveText('Copy for your agent')        // treg's key serves it: hand it over
+  await expect(primary()).toHaveText('Copy for your agent')        // stray's key serves it: hand it over
   await expect(drawer.getByRole('button', { name: 'Try it' })).toHaveClass(/ghost/)
   await page.getByRole('table').getByRole('row').filter({ hasText: 'Ocean' }).first().click()
   await expect(primary()).toHaveText(/^Add your .+ key$/)          // only your own key can call it

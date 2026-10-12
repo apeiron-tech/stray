@@ -2,7 +2,7 @@
 
 Two halves, and the second is the one that matters. A new entrance onto a paid catalog is only safe
 if it cannot see another team's data, cannot spend past the caps, and cannot be talked into serving
-an endpoint whose price nobody knows. `mcp.py` gets that by routing through treg's own API rather
+an endpoint whose price nobody knows. `mcp.py` gets that by routing through stray's own API rather
 than reaching into the internals — these tests are what proves the routing is real and not merely
 intended.
 
@@ -19,7 +19,7 @@ from contextlib import asynccontextmanager
 import pytest
 from httpx import AsyncClient
 
-from treg.api import app
+from stray.api import app
 
 
 MCP_HEADERS = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
@@ -83,22 +83,22 @@ async def mcp_session(client: AsyncClient):
     `app.mount()` does not run it, and the transport builds its task group there. It caught me here
     first, which is the cheapest place for it to happen.
 
-    The default `X-Treg-Token` is dropped: MCP carries identity in `Authorization`, and leaving a
+    The default `X-Stray-Token` is dropped: MCP carries identity in `Authorization`, and leaving a
     second credential on the client would let a test pass for the wrong reason.
     """
     from fastapi import FastAPI
     from httpx import ASGITransport, AsyncClient as _AC
 
-    from treg import mcp as _mcp
+    from stray import mcp as _mcp
 
     # A FRESH transport per test: `StreamableHTTPSessionManager.run()` may be called once per
     # instance, so the module-level one cannot be restarted between tests. The tools are the same
     # objects either way — they hang off the shared `mcp` server — and they still reach the real
-    # `treg.api.app` internally, so the enforcement under test is the production path.
+    # `stray.api.app` internally, so the enforcement under test is the production path.
     fresh = _mcp.build_mcp_app()
     host = FastAPI()
     host.mount("/mcp", fresh)
-    client.headers.pop("X-Treg-Token", None)
+    client.headers.pop("X-Stray-Token", None)
     reader = app.state.endpoint_observation_reader
     _mcp.configure_endpoint_observation_reader(reader)
     try:
@@ -128,7 +128,7 @@ async def test_openai_clients_get_no_review_tool_or_review_instruction(clients):
     """OpenAI's plugin review reads an agent-initiated `review` as analytics collection, so its
     clients (ChatGPT and the reviewer: openai-mcp/, Codex: codex-mcp-client/) get no review tool and
     no review sentence. Every other client keeps both."""
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
 
     async def surface(ua: str):
         headers = {**MCP_HEADERS, "Authorization": f"Bearer {token}", "User-Agent": ua}
@@ -159,40 +159,40 @@ async def _tool_names(clients, token):
 
 
 async def test_hub_tools_are_listed_only_to_a_team_that_may_use_the_hub(clients, monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
     hub = {"hub_create", "hub_update", "hub_mine"}
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     me = (await clients.get("/orgs")).json()[0]["slug"]
     other = (await clients.post("/users", json={"email": "hub-outsider@superdesign.dev"})).json()["token"]
     try:
-        monkeypatch.setenv("TREG_HUB_ENABLED", "1")
+        monkeypatch.setenv("STRAY_HUB_ENABLED", "1")
         get_settings.cache_clear()
         assert hub <= await _tool_names(clients, other)                 # open to every team
-        monkeypatch.setenv("TREG_HUB_TEAMS", me)
+        monkeypatch.setenv("STRAY_HUB_TEAMS", me)
         get_settings.cache_clear()
         assert hub <= await _tool_names(clients, token)                 # a listed team
         assert not hub & await _tool_names(clients, other)              # everyone else
-        monkeypatch.setenv("TREG_HUB_TEAMS", "")
-        monkeypatch.setenv("TREG_HUB_USERS", "hub-outsider@superdesign.dev")
+        monkeypatch.setenv("STRAY_HUB_TEAMS", "")
+        monkeypatch.setenv("STRAY_HUB_USERS", "hub-outsider@superdesign.dev")
         get_settings.cache_clear()
         assert hub <= await _tool_names(clients, other)                 # a listed person
         assert not hub & await _tool_names(clients, token)              # not on the person list
     finally:
-        monkeypatch.delenv("TREG_HUB_USERS", raising=False)
-        monkeypatch.delenv("TREG_HUB_TEAMS", raising=False)
-        monkeypatch.delenv("TREG_HUB_ENABLED", raising=False)
+        monkeypatch.delenv("STRAY_HUB_USERS", raising=False)
+        monkeypatch.delenv("STRAY_HUB_TEAMS", raising=False)
+        monkeypatch.delenv("STRAY_HUB_ENABLED", raising=False)
         get_settings.cache_clear()
 
 
 async def test_call_media_returns_native_audio_with_structured_metadata(clients, monkeypatch):
     import base64
 
-    from treg.application.call import service as call_service
-    from treg.application.call.types import UpstreamResponse
-    from treg.config import get_settings
+    from stray.application.call import service as call_service
+    from stray.application.call.types import UpstreamResponse
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FISHAUDIO", "PLATFORM-FISH")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "fishaudio")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FISHAUDIO", "PLATFORM-FISH")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "fishaudio")
     get_settings.cache_clear()
 
     async def relay(*args, **kwargs):
@@ -205,7 +205,7 @@ async def test_call_media_returns_native_audio_with_structured_metadata(clients,
         return UpstreamResponse(200, ((b"content-type", b"audio/mpeg"),), stream(), close)
 
     monkeypatch.setattr(call_service, "relay", relay)
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     try:
         async with mcp_session(clients) as c:
             await _rpc(c, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
@@ -231,12 +231,12 @@ async def test_call_accepts_base64_multipart_uploads_and_resources_list_reads_th
 ):
     import base64
 
-    from treg.application.call import service as call_service
-    from treg.application.call.types import UpstreamResponse
-    from treg.config import get_settings
+    from stray.application.call import service as call_service
+    from stray.application.call.types import UpstreamResponse
+    from stray.config import get_settings
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FISHAUDIO", "PLATFORM-FISH")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "fishaudio")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FISHAUDIO", "PLATFORM-FISH")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "fishaudio")
     get_settings.cache_clear()
 
     async def relay(*args, **kwargs):
@@ -249,7 +249,7 @@ async def test_call_accepts_base64_multipart_uploads_and_resources_list_reads_th
         return UpstreamResponse(201, ((b"content-type", b"application/json"),), stream(), close)
 
     monkeypatch.setattr(call_service, "relay", relay)
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     try:
         async with mcp_session(clients) as c:
             created = await _call_tool(c, "call", {
@@ -271,8 +271,8 @@ async def test_call_accepts_base64_multipart_uploads_and_resources_list_reads_th
 
 
 async def test_resources_list_uses_and_normalizes_fish_byok_voices(clients, monkeypatch):
-    from treg.application.call import service as call_service
-    from treg.application.call.types import UpstreamResponse
+    from stray.application.call import service as call_service
+    from stray.application.call.types import UpstreamResponse
 
     await clients.post("/secrets", json={"name": "fishaudio", "value": "OWN-FISH"})
 
@@ -287,7 +287,7 @@ async def test_resources_list_uses_and_normalizes_fish_byok_voices(clients, monk
             200, ((b"content-type", b"application/json"),), stream(), close)
 
     monkeypatch.setattr(call_service, "relay", relay)
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with mcp_session(clients) as c:
         listed = await _call_tool(c, "resources_list", {
             "provider": "fishaudio", "kind": "voice",
@@ -315,7 +315,7 @@ async def test_catalog_search_returns_priced_results(clients):
 
 
 async def test_no_key_needed_is_false_when_the_deploy_holds_no_key(clients):
-    """`no_key_needed` must mean "THIS deploy will serve it on treg's key", not "the row is priced".
+    """`no_key_needed` must mean "THIS deploy will serve it on stray's key", not "the row is priced".
     The test env configures no platform keys at all, so every result — however eligible its price —
     must say False; anything else re-opens the advertise-then-refuse gap this field had."""
     token = (await clients.post("/users", json={"email": "keyless@superdesign.dev"})).json()["token"]
@@ -336,9 +336,9 @@ async def test_search_says_so_when_nothing_matches(clients):
     # the HTTP route's logging never sees it; the tool must log its own.
     from sqlmodel import select
 
-    from treg import audit
-    from treg.infra.db import session_maker
-    from treg.models import SearchMiss
+    from stray import audit
+    from stray.infra.db import session_maker
+    from stray.models import SearchMiss
 
     await audit.drain()
     async with session_maker() as s:
@@ -352,8 +352,8 @@ async def test_catalog_request_files_the_gap_with_attribution(clients):
     and the stored row says who asked (the bearer), not just that someone did."""
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import ToolRequest
+    from stray.infra.db import session_maker
+    from stray.models import ToolRequest
 
     token = (await clients.post("/users", json={"email": "wisher@superdesign.dev"})).json()["token"]
     async with mcp_session(clients) as c:
@@ -371,13 +371,13 @@ async def test_catalog_request_files_the_gap_with_attribution(clients):
 
 async def test_a_team_default_token_resolves_its_team(clients):
     """A CLI login with a chosen team receives that team's Default key, so MCP can resolve billing
-    without a second X-Treg-Org header."""
+    without a second X-Stray-Org header."""
     r = await clients.post("/users", json={"email": "identity-user@superdesign.dev"})
     per_org = r.json()["token"]
-    clients.headers["X-Treg-Token"] = per_org
+    clients.headers["X-Stray-Token"] = per_org
     slug = (await clients.get("/orgs")).json()[0]["slug"]
     identity = (await clients.get(
-        "/auth/cli-token", headers={"X-Treg-Org": slug},
+        "/auth/cli-token", headers={"X-Stray-Org": slug},
     )).json()["token"]
     assert identity == per_org  # deterministic Default key for this membership generation
 
@@ -392,7 +392,7 @@ async def test_one_team_cannot_read_another_teams_tools(clients):
     registered tools. This is the property a second front door is most likely to lose."""
     a = (await clients.post("/users", json={"email": "org-a@superdesign.dev"})).json()["token"]
     b = (await clients.post("/users", json={"email": "org-b@superdesign.dev"})).json()["token"]
-    clients.headers["X-Treg-Token"] = a
+    clients.headers["X-Stray-Token"] = a
     made = await clients.post("/tools", json={"name": "a-only-tool", "base_url": "http://upstream"})
     assert made.status_code == 200, made.text
 
@@ -430,11 +430,11 @@ async def test_an_unknown_host_is_refused(clients):
 
 
 async def test_the_deployments_own_host_is_allowed():
-    """The list must contain the host treg actually answers on, or production 421s every call."""
+    """The list must contain the host stray actually answers on, or production 421s every call."""
     from urllib.parse import urlsplit
 
-    from treg.config import get_settings
-    from treg.mcp import _allowed_hosts
+    from stray.config import get_settings
+    from stray.mcp import _allowed_hosts
 
     assert urlsplit(get_settings().public_url).netloc in _allowed_hosts()
 
@@ -446,9 +446,9 @@ async def test_every_tool_declares_what_it_can_do(clients):
     tool's real behaviour, and a model consults them before acting. The four reading tools change
     nothing; `call` is the honest exception — it relays whatever the caller asks to whichever
     upstream the endpoint names, which can be a POST that publishes, an email that sends or a DELETE.
-    treg does not model the upstream, so it cannot promise the call is safe, and saying otherwise
+    stray does not model the upstream, so it cannot promise the call is safe, and saying otherwise
     here would be a false assurance in the exact place it matters."""
-    from treg.mcp import mcp as server
+    from stray.mcp import mcp as server
 
     ann = {t.name: t.annotations for t in await server.list_tools()}
     assert set(ann) == {"catalog_search", "catalog_get", "call", "call_media", "resources_list", "balance", "my_tools",
@@ -462,7 +462,7 @@ async def test_every_tool_declares_what_it_can_do(clients):
         a = ann[name]
         assert a.read_only_hint is False
         assert a.destructive_hint is True and a.open_world_hint is True
-    # These write nothing upstream and spend nothing, but their text reaches the treg team (and a
+    # These write nothing upstream and spend nothing, but their text reaches the stray team (and a
     # review's reason may be quoted on a public catalog page), so they are open world.
     for name in ("catalog_request", "feedback", "review"):
         a = ann[name]
@@ -480,7 +480,7 @@ async def test_the_domain_challenge_is_404_until_configured(clients):
 async def test_the_domain_challenge_returns_the_token_ALONE(clients, monkeypatch):
     """The portal is explicit: that URL must return the token and nothing else — not JSON, not a
     list, not several tokens. Returning a JSON body here is a documented rejection."""
-    from treg import config
+    from stray import config
 
     settings = config.get_settings()
     monkeypatch.setattr(settings, "openai_apps_challenge", "tok-abc-123", raising=False)
@@ -497,7 +497,7 @@ async def test_a_BROWSER_origin_is_accepted(clients):
 
     Nothing caught it: the suite and every CLI client send NO Origin header, so the check never ran
     until a real web page called /mcp/. This test sends one deliberately."""
-    from treg.config import get_settings
+    from stray.config import get_settings
 
     origin = get_settings().public_url.rstrip("/")
     token = (await clients.post("/users", json={"email": "browser@superdesign.dev"})).json()["token"]
@@ -524,7 +524,7 @@ async def test_an_UNKNOWN_origin_is_still_refused(clients):
 async def test_every_tool_declares_what_it_RETURNS(clients):
     """ChatGPT's connector review flags a tool with no output schema, and a model that has to guess
     at field names guesses. Each tool now declares its shape."""
-    from treg.mcp import mcp as server
+    from stray.mcp import mcp as server
 
     for t in await server.list_tools():
         assert t.output_schema, f"{t.name} has no output schema"
@@ -538,7 +538,7 @@ async def test_the_output_schema_does_not_BREAK_the_error_paths(clients):
 
     Every field is optional so both shapes pass. A schema is a hint to the model, not a gate on our
     own error handling."""
-    from treg.mcp import mcp as server
+    from stray.mcp import mcp as server
 
     for t in await server.list_tools():
         assert not t.output_schema.get("required"), (
@@ -564,7 +564,7 @@ async def test_the_schema_tolerates_NULLS_not_just_missing_keys(clients):
 
     So EVERY field of EVERY tool must allow null, not just the ones known to carry data nulls.
     Asserted on the schema so the next field added is held to the same rule."""
-    from treg.mcp import mcp as server
+    from stray.mcp import mcp as server
 
     for t in await server.list_tools():
         schemas = [t.output_schema] + list(t.output_schema.get("$defs", {}).values())
@@ -585,7 +585,7 @@ async def test_structured_content_VALIDATES_against_the_advertised_schema(client
     the strict client, so a serialization change in the SDK cannot regress this silently."""
     import jsonschema
 
-    from treg.mcp import mcp as server
+    from stray.mcp import mcp as server
 
     schemas = {t.name: t.output_schema for t in await server.list_tools()}
     token = (await clients.post("/users", json={"email": "strict@superdesign.dev"})).json()["token"]
@@ -700,7 +700,7 @@ async def test_a_protected_tool_answers_401_with_WWW_Authenticate(clients, tool)
 
 
 async def test_EAGER_auth_challenges_initialize_itself(clients):
-    """Eager, not lazy. Every treg tool needs auth, so there is nothing to browse anonymously — and
+    """Eager, not lazy. Every stray tool needs auth, so there is nothing to browse anonymously — and
     the spec's canonical flow challenges the client's FIRST request (`initialize`) so OAuth runs
     before the session proceeds. Leaving it open was why a client showed "Connected" and never
     prompted. So `initialize` and `tools/list` without a credential are 401 + WWW-Authenticate, same
@@ -733,7 +733,7 @@ async def test_a_notification_and_ping_pass_without_a_token(clients):
 
 async def test_auth_body_replay_waits_for_the_real_disconnect_on_a_long_response() -> None:
     """A completed request body is not a disconnect; long responses keep the live receive channel."""
-    from treg.mcp import RequireAuthForProtectedTools
+    from stray.mcp import RequireAuthForProtectedTools
 
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"}).encode()
     original_calls = 0
@@ -781,7 +781,7 @@ async def test_discover_disables_unused_change_capabilities(clients) -> None:
 
 
 async def test_subscription_listen_is_not_served(clients) -> None:
-    """SDK 2.0 registers listen by default; treg refuses it through the public middleware seam."""
+    """SDK 2.0 registers listen by default; stray refuses it through the public middleware seam."""
     async with mcp_session(clients) as c:
         r = await _modern_rpc(c, "subscriptions/listen", {
             "notifications": {"toolsListChanged": True},
@@ -795,7 +795,7 @@ async def test_subscription_listen_is_not_served(clients) -> None:
 
 async def test_auth_middleware_preserves_a_real_mid_body_disconnect() -> None:
     """Authentication inspection replays each partial request message and the real disconnect."""
-    from treg.mcp import RequireAuthForProtectedTools
+    from stray.mcp import RequireAuthForProtectedTools
 
     received = []
 
@@ -845,11 +845,11 @@ async def test_call_accepts_an_ARRAY_body(clients):
     Found by trying a real call for the demo, not by reading the signature."""
     token = (await clients.post("/users", json={"email": "arraybody@superdesign.dev"})).json()["token"]
     # register the tool AS THAT TOKEN's org — a tool created in another org is correctly invisible
-    prev = clients.headers.get("X-Treg-Token")
-    clients.headers["X-Treg-Token"] = token
+    prev = clients.headers.get("X-Stray-Token")
+    clients.headers["X-Stray-Token"] = token
     made = await clients.post("/tools", json={"name": "echo", "base_url": "http://upstream"})
     if prev:
-        clients.headers["X-Treg-Token"] = prev
+        clients.headers["X-Stray-Token"] = prev
     assert made.status_code == 200, made.text
 
     async with mcp_session(clients) as c:
@@ -874,13 +874,13 @@ def test_stripping_the_link_keeps_the_DIAGNOSIS(clients):
     """Removing the invitation to pay must not remove the explanation. An agent still needs to know
     it ran out of money, how short it was, and that its own key is an alternative — otherwise the
     refusal is indistinguishable from a broken endpoint."""
-    from treg.mcp import _without_purchase_pointers
+    from stray.mcp import _without_purchase_pointers
 
     real = {"detail": {
         "error": "insufficient_balance",
         "message": ("akta.companies.enrich would cost ~$0.875 and this team's balance is $0.5765."
                     "\n  add funds:      https://treg.to/app#billing"
-                    "\n  or use your own key: treg connections connect --provider akta"),
+                    "\n  or use your own key: stray connections connect --provider akta"),
         "balance_micro": 576500, "estimated_cost_micro": 875000}}
     out = _without_purchase_pointers(real)
     blob = json.dumps(out)
@@ -892,9 +892,9 @@ def test_stripping_the_link_keeps_the_DIAGNOSIS(clients):
 def test_the_strip_does_not_depend_on_which_host_we_run_as(clients):
     """A first version matched `public_url`, which differs per environment — so it stripped nothing
     anywhere except production, and the local test passed while the deployed behaviour was wrong."""
-    from treg.mcp import _without_purchase_pointers
+    from stray.mcp import _without_purchase_pointers
 
-    for host in ("https://treg.ngrok.app", "http://127.0.0.1:18790", "https://anything.example"):
+    for host in ("https://stray.ngrok.app", "http://127.0.0.1:18790", "https://anything.example"):
         out = _without_purchase_pointers({"m": f"pay here: {host}/app#billing"})
         assert "http" not in json.dumps(out), host
 
@@ -909,20 +909,20 @@ async def test_a_402_THROUGH_THE_CALL_TOOL_carries_no_link(clients, monkeypatch)
     """
     from sqlmodel import select
 
-    from treg.config import get_settings
-    from treg.infra.db import session_maker
-    from treg.models import Org
+    from stray.config import get_settings
+    from stray.infra.db import session_maker
+    from stray.models import Org
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "PLATKEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "PLATKEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
 
     token = (await clients.post("/users", json={"email": "broke402@superdesign.dev"})).json()["token"]
-    prev = clients.headers.get("X-Treg-Token")
-    clients.headers["X-Treg-Token"] = token
+    prev = clients.headers.get("X-Stray-Token")
+    clients.headers["X-Stray-Token"] = token
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     if prev:
-        clients.headers["X-Treg-Token"] = prev
+        clients.headers["X-Stray-Token"] = prev
     async with session_maker() as db:
         org = (await db.execute(select(Org).where(Org.id == org_id))).scalar_one()
         org.balance_micro = 0            # spent out
@@ -950,9 +950,9 @@ async def test_an_EXPIRED_access_token_gets_401_invalid_token(clients):
     refresh grant. Our first challenge only covered the missing-header case, so an expired token
     sailed through to the tool's friendly prose in a 200 — and Claude Code, told nothing, gave up
     with "requires re-authorization" instead of refreshing."""
-    from treg.domain.identity import mcp_oauth
+    from stray.domain.identity import mcp_oauth
     dead = mcp_oauth.make_access_token(user_id=7, org_id=3, audience=mcp_oauth.mcp_resource_url(),
-                                       scope="treg:call", ttl=-60)  # born expired
+                                       scope="stray:call", ttl=-60)  # born expired
     async with mcp_session(clients) as c:
         r = await c.post("http://localhost/mcp/", json={
             "jsonrpc": "2.0", "id": 1, "method": "tools/call",
@@ -968,9 +968,9 @@ async def test_an_EXPIRED_access_token_gets_401_invalid_token(clients):
 async def test_a_wrong_audience_access_token_gets_401_invalid_token(clients):
     """A grant consented to a DIFFERENT resource must not be honoured here — and the refusal should
     still be the machine-readable 401, not tool prose."""
-    from treg.domain.identity import mcp_oauth
+    from stray.domain.identity import mcp_oauth
     other = mcp_oauth.make_access_token(user_id=7, org_id=3,
-                                        audience="https://evil.example/mcp/", scope="treg:call")
+                                        audience="https://evil.example/mcp/", scope="stray:call")
     async with mcp_session(clients) as c:
         r = await c.post("http://localhost/mcp/", json={
             "jsonrpc": "2.0", "id": 1, "method": "tools/call",
@@ -985,20 +985,20 @@ async def test_the_same_key_through_MCP_bills_once(clients, monkeypatch):
     once, and the balance moves once."""
     from sqlmodel import select
 
-    from treg.config import get_settings
-    from treg.infra.db import session_maker
-    from treg.models import Org
+    from stray.config import get_settings
+    from stray.infra.db import session_maker
+    from stray.models import Org
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "PLATKEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "PLATKEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
 
     token = (await verified_signup(clients, json={"email": "mcponce@superdesign.dev"})).json()["token"]
-    prev = clients.headers.get("X-Treg-Token")
-    clients.headers["X-Treg-Token"] = token
+    prev = clients.headers.get("X-Stray-Token")
+    clients.headers["X-Stray-Token"] = token
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     if prev:
-        clients.headers["X-Treg-Token"] = prev
+        clients.headers["X-Stray-Token"] = prev
 
     async def balance() -> int:
         async with session_maker() as db:
@@ -1026,9 +1026,9 @@ async def test_the_same_key_through_MCP_bills_once(clients, monkeypatch):
 
 
 # ---------------------------------------------------------------------------------------------
-# `call` request-shape parity with the CLI (`treg call`)
+# `call` request-shape parity with the CLI (`stray call`)
 #
-# Every flag on `treg call` exists because a real endpoint needed it — --query alongside --data
+# Every flag on `stray call` exists because a real endpoint needed it — --query alongside --data
 # (Bright Data's ?dataset_id=… + array body), --header (Google Ads' login-customer-id), raw
 # non-JSON bodies, repeated query keys, inline ?a=b in a passthrough URL that httpx silently
 # drops. The MCP tool must express the same shapes or a class of endpoints is CLI-only.
@@ -1038,7 +1038,7 @@ async def test_the_same_key_through_MCP_bills_once(clients, monkeypatch):
 async def _register_echo(clients) -> str:
     made = await clients.post("/tools", json={"name": "echo", "base_url": "http://upstream"})
     assert made.status_code == 200, made.text
-    return clients.headers.get("X-Treg-Token")
+    return clients.headers.get("X-Stray-Token")
 
 
 async def test_call_sends_query_AND_body_together(clients):
@@ -1056,19 +1056,19 @@ async def test_call_sends_query_AND_body_together(clients):
     assert json.loads(seen["body"]) == [{"url": "https://example.com/in/someone"}]
 
 
-async def test_call_relays_extra_headers_but_never_tregs_own(clients):
-    """--header parity (login-customer-id is the canonical need). treg's own auth/routing headers
+async def test_call_relays_extra_headers_but_never_strays_own(clients):
+    """--header parity (login-customer-id is the canonical need). stray's own auth/routing headers
     are filtered from the relay: the MCP bearer IS the identity and must not be maskable."""
     token = await _register_echo(clients)
     async with mcp_session(clients) as c:
         out = await _call_tool(c, "call", {
             "endpoint_id": "echo/ads",
-            "headers": {"login-customer-id": "1234567890", "X-Treg-Token": "evil",
+            "headers": {"login-customer-id": "1234567890", "X-Stray-Token": "evil",
                         "Authorization": "Bearer evil"}}, token=token)
     assert out.get("status") == 200, out
     seen = out["body"] if isinstance(out["body"], dict) else json.loads(out["body"])
     assert seen["headers"].get("login-customer-id") == "1234567890"
-    assert seen["headers"].get("x-treg-token") != "evil"
+    assert seen["headers"].get("x-stray-token") != "evil"
 
 
 async def test_call_sends_a_raw_string_body_with_content_type(clients):
@@ -1158,8 +1158,8 @@ async def test_catalog_query_arrays_use_the_endpoints_declared_wire_encoding(mon
     team tool keeps the longstanding repeated-key default. This goes through `call`, not only
     `_query_values`: the first version stayed green if the MCP call site stopped using the helper.
     """
-    from treg.domain.catalog import store as cs
-    from treg import mcp as _mcp
+    from stray.domain.catalog import store as cs
+    from stray import mcp as _mcp
 
     cat = cs.load()
     meta = cat.by_id["meta-ad-library.meta-ads.library.search"]
@@ -1197,7 +1197,7 @@ async def test_catalog_query_arrays_use_the_endpoints_declared_wire_encoding(mon
 async def test_an_unset_query_param_is_omitted_rather_than_sent_as_None(clients):
     """`None` means "no value", and `?limit=None` is not that — it is a string an upstream parses."""
     assert (await clients.post("/tools", json={"name": "echo", "base_url": "http://upstream"})).status_code == 200
-    token = clients.headers.get("X-Treg-Token")
+    token = clients.headers.get("X-Stray-Token")
     async with mcp_session(clients) as c:
         out = await _call_tool(c, "call", {"endpoint_id": "echo/anything",
                                            "params": {"kept": True, "off": False,
@@ -1214,7 +1214,7 @@ async def test_search_survives_missing_a_few_words_of_an_agent_sentence(clients)
     endpoints matched 6 of its 7 words — the only miss was "linkedin" on rows shelved under
     `companies`, or "open" on the one shelved under `linkedin`. A query may now miss one word in
     three, and idf weighting keeps the order on the rare words rather than the filler."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
     cat = cs.load()
     # the two logged SearchMiss queries, verbatim
     # Enrichlayer adds a relevant job-search result ahead of the older ninth-place match.
@@ -1264,11 +1264,11 @@ async def test_search_survives_missing_a_few_words_of_an_agent_sentence(clients)
         assert cs.near_misses(zero_q, cat), "a zero result must surface its near-misses"
 
 
-async def test_search_breaks_ties_on_what_treg_has_MEASURED(clients):
+async def test_search_breaks_ties_on_what_stray_has_MEASURED(clients):
     """Token scoring ties by the dozen — every "ad library" match scores 6 — so with a default limit
     of 8 the rows an agent saw were decided by file order: seven tikhub rows, one of them
     uncallable, and the cheapest endpoint with a perfect record cut off below the fold."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
     cat = cs.load()
     ranked, _, truncated = cs.rank_band("ad library", cat, 8)
     assert not truncated, "24 matches sit well inside the band"
@@ -1298,7 +1298,7 @@ async def test_balance_says_WHOSE_grant_and_which_team_by_name(clients):
     assert out["team"] and out["team_name"]
     assert out["identity"] == "whose@superdesign.dev"
     # This one is a HEADER token, whose team is baked in — so it is labelled, but not sent to
-    # `treg mcp grants`, which would list nothing for it. The OAuth half is asserted in
+    # `stray mcp grants`, which would list nothing for it. The OAuth half is asserted in
     # test_mcp_oauth.py::test_balance_tells_an_oauth_caller_how_to_move_the_team.
     assert "use-team" not in (out.get("hint") or "")
 
@@ -1308,7 +1308,7 @@ async def test_the_tie_band_covers_the_WHOLE_equal_scoring_group(clients, monkey
     band therefore keeps taking while the score stays equal — and when a query ties so broadly that
     even the ceiling can't hold the group, it SAYS so rather than presenting an unranked tail as a
     ranked answer."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
     cat = cs.load()
     rows, total, truncated = cs.rank_band("ad library", cat, 8)
     scores = [s for _, s in rows]
@@ -1341,9 +1341,9 @@ async def test_the_tie_band_covers_the_WHOLE_equal_scoring_group(clients, monkey
 async def test_a_near_miss_never_suggests_a_DIFFERENT_provider(clients):
     """A suggestion claims the caller mistyped. `apollo.people.email.find` is not a typo for
     `hunter.people.email.find` — it is another vendor, another price and another credential, so on a
-    path that spends money that is provider routing wearing a spellcheck's clothes. treg compares
+    path that spends money that is provider routing wearing a spellcheck's clothes. stray compares
     providers and the caller chooses."""
-    from treg.domain.catalog import store as cs
+    from stray.domain.catalog import store as cs
     cat = cs.load()
     assert cs.near_ids("lusha.companies-signals", cat) == ["lusha.x.companies-signals"]
     for crossing in ("apollo.people.email.find", "fake.companies-signals", "hunter.tiktok.video.comments"):
@@ -1365,9 +1365,9 @@ async def test_the_SEARCH_TOOL_itself_ranks_on_evidence_not_just_the_helper(clie
     """The helpers were tested; the wiring was not. `rerank()` could have been dropped from both
     call sites and every ranking test would still have passed, because they call the helper
     directly. This one goes through the MCP tool with real rows in the database."""
-    from treg.domain.catalog import stats as endpoint_stats
-    from treg.infra.db import session_maker
-    from treg.models import CallRecord
+    from stray.domain.catalog import stats as endpoint_stats
+    from stray.infra.db import session_maker
+    from stray.models import CallRecord
 
     broken = "apify.tiktok-ads.library.search"  # earlier in file order: rerank must move it
     good = "tikhub.x.tiktok-ads-search-ads"
@@ -1401,14 +1401,14 @@ from test_marketplace_call import platform_on  # noqa: F401,E402 — tier 4 on f
 # The hub over MCP (phase 4): a maker's agent publishes a tool with no person in the loop
 
 async def test_hub_create_over_mcp_publishes_and_names_refusals(clients, monkeypatch, platform_on):
-    from treg.config import get_settings
-    monkeypatch.setenv("TREG_HUB_ENABLED", "1")
+    from stray.config import get_settings
+    monkeypatch.setenv("STRAY_HUB_ENABLED", "1")
     get_settings.cache_clear()
-    from treg.application.call import service as call_service
+    from stray.application.call import service as call_service
     from test_marketplace_call import _fake_relay
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"data": {"domain": "figma.com"}}'))
     token = (await funded_user(clients, "maker@superdesign.dev"))["token"]
-    h = {"X-Treg-Token": token}
+    h = {"X-Stray-Token": token}
     sid = (await clients.post("/secrets", json={"name": "sb", "value": "K"}, headers=h)).json()["id"]
     await clients.post("/tools", json={"name": "supabase", "base_url": "https://x.supabase.co", "secret_id": sid}, headers=h)
     manifest = {"name": "leads-db", "summary": "Leads.", "inputs": {"domain": {"type": "string", "example": "figma.com"}},
@@ -1432,22 +1432,22 @@ async def test_hub_create_over_mcp_publishes_and_names_refusals(clients, monkeyp
         assert run["status"] == 200 and run["body"]["output"] == {"leads": {"domain": "figma.com"}}, run
         assert run["body"]["recipe"].startswith(out["tool_id"] + "@")
         # with the hub off the same id is refused as before
-        monkeypatch.setenv("TREG_HUB_ENABLED", "0"); get_settings.cache_clear()
+        monkeypatch.setenv("STRAY_HUB_ENABLED", "0"); get_settings.cache_clear()
         off = await _call_tool(c, "call", {"endpoint_id": out["tool_id"], "params": {"domain": "figma.com"}}, token=token)
         assert off.get("error", "").startswith("unknown endpoint")
-        monkeypatch.setenv("TREG_HUB_ENABLED", "1"); get_settings.cache_clear()
+        monkeypatch.setenv("STRAY_HUB_ENABLED", "1"); get_settings.cache_clear()
 # ---- the overflow relay is disclosed on THIS surface, not only in a header ------------------
 # 2026-09-08: apollo.people.search (catalog cost free) was served through Orthogonal 8,810 times
-# at $0.002 while treg's Apollo account was out. `/call/` said so in X-Treg-Served-Via; an MCP
+# at $0.002 while stray's Apollo account was out. `/call/` said so in X-Stray-Served-Via; an MCP
 # client never sees headers, so the agent reported a free call that billed. Six reports.
 
 from test_capacity_overflow import VENDOR_BODY, _orthogonal, _route, overflow_on, platform_on  # noqa: E402,F401
 
 
 async def _overflow_rescued(monkeypatch, price_cents: float = 0.3):
-    """Vendor 402 on treg's own key, Orthogonal answers: the shape of every rescued call."""
-    from treg.application.call import overflow as O
-    from treg.application.call import service as call_service
+    """Vendor 402 on stray's own key, Orthogonal answers: the shape of every rescued call."""
+    from stray.application.call import overflow as O
+    from stray.application.call import service as call_service
     from test_marketplace_call import _fake_relay
 
     await _route(price_micro=3_000)
@@ -1459,7 +1459,7 @@ async def _overflow_rescued(monkeypatch, price_cents: float = 0.3):
 
 
 async def test_a_call_served_by_the_overflow_relay_says_so_and_prices_it(clients, overflow_on, monkeypatch):  # noqa: F811 - fixture imported above
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     seen = await _overflow_rescued(monkeypatch)
     async with mcp_session(clients) as c:
         out = await _call_tool(c, "call", {"endpoint_id": "tikhub.tiktok.video.comments",
@@ -1468,12 +1468,12 @@ async def test_a_call_served_by_the_overflow_relay_says_so_and_prices_it(clients
     assert out["served_via"] == "overflow:orthogonal" and out["cost_usd"] == 0.003
     assert out["body"] == VENDOR_BODY, "the vendor's body, verbatim, through the relay"
     hint = out.get("hint") or ""
-    assert "overflow relay (orthogonal)" in hint and "treg's tikhub account is out" in hint, hint
+    assert "overflow relay (orthogonal)" in hint and "stray's tikhub account is out" in hint, hint
     assert "real price" in hint and len(seen) == 1
 
 
 async def test_a_direct_call_carries_no_served_via(clients, platform_on):  # noqa: F811 - fixture imported above
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with mcp_session(clients) as c:
         out = await _call_tool(c, "call", {"endpoint_id": "tikhub.tiktok.video.comments",
                                            "params": {"aweme_id": "7"}}, token=token)
@@ -1485,7 +1485,7 @@ async def test_the_directory_surface_discloses_the_relay_the_same_way(clients, o
     """`/mcp/v2/` builds the same result through `_call_impl`; reviewed against both on purpose."""
     from test_mcp_directory import _call_tool as _directory_call, directory_session
 
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     await _overflow_rescued(monkeypatch)
     async with directory_session() as client:
         out = await _directory_call(client, "catalog_call_read",
@@ -1501,7 +1501,7 @@ async def test_catalog_get_shows_what_a_FREE_endpoint_bills_through_the_relay(cl
     from test_capacity_overflow import APOLLO_SEARCH_EP, APOLLO_SEARCH_PATH
     from test_mcp_directory import _call_tool as _directory_call, directory_session
 
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     await _route(endpoint_id=APOLLO_SEARCH_EP, provider="apollo", method="POST", path=APOLLO_SEARCH_PATH,
                  price_micro=2_000, ratio=None)
     async with mcp_session(clients) as c:

@@ -4,11 +4,11 @@ import json
 
 import pytest
 
-from treg.application.call import service as call_service
-from treg.application.call import settle as call_settle
-from treg.application.call.resolve import MarketplaceCall
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
+from stray.application.call import service as call_service
+from stray.application.call import settle as call_settle
+from stray.application.call.resolve import MarketplaceCall
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
 
 
 def _mk(*, endpoint_id="scrubby.people.email.verify", unit_micro=8_000):
@@ -44,8 +44,8 @@ def test_scrubby_settles_from_reported_credits(credits, expected):
 
 
 async def test_scrubby_platform_settles_exact_usage_and_byok_wins(clients, monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_SCRUBBY", "PLATFORM-SCRUBBY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "scrubby")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_SCRUBBY", "PLATFORM-SCRUBBY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "scrubby")
     get_settings.cache_clear()
     monkeypatch.setattr(call_service, "relay", _relay(200, {
         "email": "a@example.com", "result": "Invalid", "status": "HARD_BOUNCE",
@@ -54,14 +54,14 @@ async def test_scrubby_platform_settles_exact_usage_and_byok_wins(clients, monke
     before = await _balance(clients)
     response = await clients.post("/call/scrubby.people.email.verify", json={"email": "a@example.com"})
     assert response.status_code == 200, response.text
-    assert response.headers["x-treg-cost-micro"] == "8000"
+    assert response.headers["x-stray-cost-micro"] == "8000"
     assert await _balance(clients) == before - 8_000
 
     await clients.post("/secrets", json={"name": "scrubby", "value": "OWN-SCRUBBY"})
     before_byok = await _balance(clients)
     response = await clients.post("/call/scrubby.people.email.verify", json={"email": "a@example.com"})
     assert response.status_code == 200
-    assert "x-treg-cost-micro" not in response.headers
+    assert "x-stray-cost-micro" not in response.headers
     assert await _balance(clients) == before_byok
     get_settings.cache_clear()
 

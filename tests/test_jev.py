@@ -13,10 +13,10 @@ from pathlib import Path
 import pytest
 from httpx import AsyncClient
 
-from treg.application import jev_xboost
-from treg.config import get_settings
+from stray.application import jev_xboost
+from stray.config import get_settings
 
-WEB = Path(__file__).parents[1] / "src" / "treg" / "web"
+WEB = Path(__file__).parents[1] / "src" / "stray" / "web"
 
 
 async def test_xboost_json_falls_back_to_the_bundled_snapshot(clients: AsyncClient):
@@ -49,7 +49,7 @@ async def test_judge_refuses_when_the_live_demo_is_not_configured(clients: Async
 
 
 async def test_judge_validates_the_link_before_spending(clients: AsyncClient, monkeypatch):
-    monkeypatch.setattr(get_settings(), "jev_treg_token", "t", raising=False)
+    monkeypatch.setattr(get_settings(), "jev_stray_token", "t", raising=False)
     monkeypatch.setattr(get_settings(), "ai_gateway_api_key", "k", raising=False)
     r = await clients.post("/jev/xboost/judge", json={"url": "https://example.com/not-a-post"})
     assert r.status_code == 400
@@ -57,7 +57,7 @@ async def test_judge_validates_the_link_before_spending(clients: AsyncClient, mo
 
 
 async def test_judge_is_rate_limited_per_ip(clients: AsyncClient, monkeypatch):
-    monkeypatch.setattr(get_settings(), "jev_treg_token", "t", raising=False)
+    monkeypatch.setattr(get_settings(), "jev_stray_token", "t", raising=False)
     monkeypatch.setattr(get_settings(), "ai_gateway_api_key", "k", raising=False)
 
     async def fake_judge(http, url):
@@ -114,13 +114,13 @@ def test_tikhub_tweet_detail_becomes_a_search_row():
 
 async def test_judge_answers_a_known_post_from_the_store_without_spending(clients: AsyncClient, monkeypatch):
     """A post already on the board (daily run or an earlier visitor) is not fetched or billed again."""
-    monkeypatch.setattr(get_settings(), "jev_treg_token", "t", raising=False)
+    monkeypatch.setattr(get_settings(), "jev_stray_token", "t", raising=False)
     monkeypatch.setattr(get_settings(), "ai_gateway_api_key", "k", raising=False)
     calls = []
 
     async def fake_judge(http, url):
         calls.append(url)
-        return {"id": "5555", "authorUsername": "treg_ai", "relevance": "inspiring_launch", "distribution": "organic"}
+        return {"id": "5555", "authorUsername": "stray_ai", "relevance": "inspiring_launch", "distribution": "organic"}
 
     monkeypatch.setattr(jev_xboost, "judge_url", fake_judge)
     first = await clients.post("/jev/xboost/judge", json={"url": "https://x.com/treg_ai/status/5555"})
@@ -140,7 +140,7 @@ def test_generic_reply_check_is_linear_and_keeps_its_verdicts():
     """The old anchored pattern backtracked exponentially on a long near-match (CodeQL py/redos);
     replies are strangers' text, reachable through the public judge endpoint."""
     import time
-    from treg.application.jev_xboost import _is_generic
+    from stray.application.jev_xboost import _is_generic
     for yes in ("great", "@a @b nice!", "🔥🔥🔥", "So true. Facts!", "congrats ❤️", "  wow  "):
         assert _is_generic(yes), yes
     for no in ("", "great product, how does pricing work?", "this broke my build", "greatness", "@someone"[:0]):

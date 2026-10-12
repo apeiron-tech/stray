@@ -1,4 +1,4 @@
-"""The folded read model behind catalog reliability: `treg-worker catalog stats`.
+"""The folded read model behind catalog reliability: `stray-worker catalog stats`.
 
 What these pin: that the buckets say exactly what the live aggregate says for the same rows (the
 judgement calls live once, in `stats.publish`, and the fold mirrors the SQL predicates); that the
@@ -15,12 +15,12 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 
-from treg.application import catalog_stats
-from treg.domain.catalog import stats
-from treg.infra import catalog_observations
-from treg.infra.catalog_observations import PostgresEndpointObservationReader
-from treg.infra.db import session_maker
-from treg.models import CallRecord, EndpointDayStat, EndpointStatCursor
+from stray.application import catalog_stats
+from stray.domain.catalog import stats
+from stray.infra import catalog_observations
+from stray.infra.catalog_observations import PostgresEndpointObservationReader
+from stray.infra.db import session_maker
+from stray.models import CallRecord, EndpointDayStat, EndpointStatCursor
 
 EP = "tikhub.tiktok.user.profile"
 EP2 = "tomba.people.email.find"
@@ -230,7 +230,7 @@ async def test_a_dead_worker_sends_the_reader_back_to_the_live_aggregate(clients
         cursor.updated_at = _now() - timedelta(seconds=catalog_observations.STALE_AFTER_S + 60)
         db.add(cursor)
         await db.commit()
-    with caplog.at_level("WARNING", logger="treg.catalog"):
+    with caplog.at_level("WARNING", logger="stray.catalog"):
         got = (await reader.get_many([EP]))[EP]
     assert got["samples"] == 7 and got["ok_rate"] == round(6 / 7, 4)   # live: sees the seventh row
     assert "computing observations live" in caplog.text

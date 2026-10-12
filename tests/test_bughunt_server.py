@@ -15,12 +15,12 @@ from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
-from treg import audit, crypto, oauth
-from treg.domain.identity import session as sess
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import Secret, User
+from stray import audit, crypto, oauth
+from stray.domain.identity import session as sess
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import Secret, User
 
 
 def make_upstream() -> FastAPI:
@@ -40,7 +40,7 @@ async def c():
     app.state.http = AsyncClient(transport=ASGITransport(app=make_upstream()), base_url="http://upstream")
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://registry",
-        headers={"ngrok-skip-browser-warning": "1", "X-Treg-Key-Protocol": "1"},
+        headers={"ngrok-skip-browser-warning": "1", "X-Stray-Key-Protocol": "1"},
     ) as client:
         yield client
     await app.state.http.aclose()
@@ -60,7 +60,7 @@ async def _otp_login(c: AsyncClient, email: str) -> dict:
 
 
 def _hdr(token: str) -> dict:
-    return {"X-Treg-Token": token}
+    return {"X-Stray-Token": token}
 
 
 # ---- email normalization ------------------------------------------------------------------
@@ -114,7 +114,7 @@ async def test_session_key_not_hardcoded_constant():
 
 # ---- OTP brute-force ----------------------------------------------------------------------
 async def test_otp_code_dies_after_max_wrong_attempts(c):
-    from treg.routers.auth import MAX_OTP_ATTEMPTS
+    from stray.routers.auth import MAX_OTP_ATTEMPTS
     good = (await c.post("/auth/email/start", json={"email": "trinity@matrix.io"})).json()["dev_code"]
     for _ in range(MAX_OTP_ATTEMPTS):
         bad = await c.post("/auth/email/verify", json={"email": "trinity@matrix.io", "code": "000001"})
@@ -200,13 +200,13 @@ async def test_security_headers_on_api(c):
 
 
 async def test_verify_db_refuses_ephemeral_key_on_real_db():
-    from treg.infra import db as dbmod
+    from stray.infra import db as dbmod
     s = get_settings()
     prev = (s.secret_key, s.database_url)
     object.__setattr__(s, "secret_key", "")
     object.__setattr__(s, "database_url", "postgresql+asyncpg://u:p@host/db")
     try:
-        with pytest.raises(RuntimeError, match="TREG_SECRET_KEY"):
+        with pytest.raises(RuntimeError, match="STRAY_SECRET_KEY"):
             await dbmod.verify_db()
     finally:
         object.__setattr__(s, "secret_key", prev[0])
@@ -238,20 +238,20 @@ async def test_proxy_response_is_sandboxed(c):
     sid = (await c.post("/secrets", headers=_hdr(tok), json={"name": "k", "value": "v"})).json()["id"]
     await c.post("/tools", headers=_hdr(tok), json={"name": "t", "base_url": "http://upstream", "secret_id": sid})
     r = await c.get("/call/t/echo", headers=_hdr(tok))
-    # a browser navigating to /call/… must not execute upstream HTML/JS under treg's origin
+    # a browser navigating to /call/… must not execute upstream HTML/JS under stray's origin
     assert r.headers.get("x-content-type-options") == "nosniff"
     assert r.headers.get("content-security-policy") == "sandbox"
 
 
-async def test_upstream_setcookie_cannot_overwrite_treg_cookies(c):
+async def test_upstream_setcookie_cannot_overwrite_stray_cookies(c):
     from starlette.responses import Response
     from httpx import ASGITransport, AsyncClient as AC
     evil = FastAPI()
 
     @evil.api_route("/{p:path}", methods=["GET"])
-    async def h(p):  # an upstream that tries to plant treg's own cookies
+    async def h(p):  # an upstream that tries to plant stray's own cookies
         resp = Response(content=b"{}", media_type="application/json")
-        resp.raw_headers.append((b"set-cookie", b"treg_session=EVIL; Path=/"))
+        resp.raw_headers.append((b"set-cookie", b"stray_session=EVIL; Path=/"))
         resp.raw_headers.append((b"set-cookie", b"good=1; Path=/"))
         return resp
 
@@ -262,7 +262,7 @@ async def test_upstream_setcookie_cannot_overwrite_treg_cookies(c):
     await c.post("/tools", headers=_hdr(tok), json={"name": "ck", "base_url": "http://upstream", "secret_id": sid})
     r = await c.get("/call/ck/x", headers=_hdr(tok))
     setc = r.headers.get_list("set-cookie")
-    assert not any("treg_session" in x for x in setc)  # our session cookie is NOT overwritable by an upstream
+    assert not any("stray_session" in x for x in setc)  # our session cookie is NOT overwritable by an upstream
     assert any("good=1" in x for x in setc)             # other upstream cookies still pass through
 
 
@@ -383,8 +383,8 @@ async def test_bad_binding_format_rejected_at_create(c):
 
 
 async def test_numeric_slug_resolves_as_slug_not_id():
-    from treg.domain.identity.access import _resolve_org
-    from treg.models import Org
+    from stray.domain.identity.access import _resolve_org
+    from stray.models import Org
     await reset_db()
     async with session_maker() as db:
         filler = Org(name="filler", slug="filler")
@@ -582,7 +582,7 @@ async def test_revoke_only_pending_invites(c):
     await c.post("/invites/accept", json={"code": inv.json()["code"], "email": "rvm@team.io"})
     # the invite is now accepted; find its id and try to "revoke" it
     async with session_maker() as db:
-        from treg.models import Invite
+        from stray.models import Invite
         acc = (await db.execute(select(Invite).where(Invite.email == "rvm@team.io"))).scalars().all()
         inv_id = acc[0].id
     r = await c.delete(f"/orgs/{oid}/invites/{inv_id}", headers=_hdr(owner["token"]))
@@ -607,7 +607,7 @@ async def test_register_rejects_internal_webhook(c):
 
 
 def test_safe_webhook_url_blocks_internal():
-    from treg.health import safe_webhook_url
+    from stray.health import safe_webhook_url
     assert safe_webhook_url("https://hooks.example.com/x") is True
     assert safe_webhook_url("http://169.254.169.254/") is False   # link-local (cloud metadata)
     assert safe_webhook_url("http://127.0.0.1/") is False          # loopback
@@ -618,7 +618,7 @@ def test_safe_webhook_url_blocks_internal():
 
 
 async def test_oauth_callback_replay_keeps_done(c):
-    from treg.models import PendingOAuth
+    from stray.models import PendingOAuth
     async with session_maker() as db:
         db.add(PendingOAuth(org_id=1, state="ST123", name="s", owner="o@x.io", client_id="c",
                             client_secret=crypto_encrypt("sec"), auth_uri="a", token_uri="t",
@@ -632,14 +632,14 @@ async def test_oauth_callback_replay_keeps_done(c):
 
 
 def crypto_encrypt(v):
-    from treg import crypto
+    from stray import crypto
     return crypto.encrypt(v)
 
 
 def test_prune_handshakes_evicts_stale():
     from datetime import timedelta
-    from treg.routers import auth as auth_routes
-    from treg.timeutil import utcnow_naive
+    from stray.routers import auth as auth_routes
+    from stray.timeutil import utcnow_naive
     old = utcnow_naive() - timedelta(seconds=auth_routes.HANDSHAKE_TTL + 60)
     auth_routes._cli_states["stale"] = ("lid", old)
     auth_routes._cli_results["lidX"] = ({"token": "T"}, old)
@@ -678,7 +678,7 @@ async def test_deleting_sole_owner_promotes_a_survivor(c):
 
 
 async def _suspend_org(oid: int) -> None:
-    from treg.models import Org
+    from stray.models import Org
     async with session_maker() as db:
         o = await db.get(Org, oid)
         o.suspended = True
@@ -753,7 +753,7 @@ async def test_failed_call_is_audited(c):
 
 
 async def test_expired_oauth_pending_rejected(c):
-    from treg.models import PendingOAuth
+    from stray.models import PendingOAuth
     from datetime import datetime, timedelta, timezone
     async with session_maker() as db:
         db.add(PendingOAuth(org_id=1, state="OLD", name="s", owner="o@x.io", client_id="c",

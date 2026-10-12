@@ -24,13 +24,13 @@ export default { setup: useDashboard }
             <div class="card">
               <div class="lbl">Who it's for</div>
               <p class="sub" style="margin:6px 0 0">People who send real volume: an audience, a newsletter,
-                a community, or a team that builds on treg for clients.</p>
+                a community, or a team that builds on stray for clients.</p>
               <div class="lbl" style="margin-top:16px">What you earn</div>
               <p class="sub" style="margin:6px 0 0">A share of what your referrals top up, paid to you in
                 cash monthly. Not credit, and no {{ref.cap.limit}}-referral cap.</p>
               <div class="lbl" style="margin-top:16px">How to get in</div>
               <p class="sub" style="margin:6px 0 14px">Invite only. Tell us about your audience and how
-                you'd send people to treg, and we'll get back to you.</p>
+                you'd send people to stray, and we'll get back to you.</p>
               <a class="btn primary sm" href="https://forms.gle/5N3DyVPrNJkrGuxF6" target="_blank"
                  rel="noopener" @click="track('affiliate_apply_clicked')" style="text-decoration:none">Apply to be an affiliate partner</a>
             </div>

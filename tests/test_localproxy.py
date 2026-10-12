@@ -1,6 +1,6 @@
-"""The local proxy (`src/treg/localproxy.py`) — P0 (skeleton, blind tunnel) and P1 (certificates).
+"""The local proxy (`src/stray/localproxy.py`) — P0 (skeleton, blind tunnel) and P1 (certificates).
 
-Everything here runs against loopback sockets; nothing reaches the internet and nothing needs a treg
+Everything here runs against loopback sockets; nothing reaches the internet and nothing needs a stray
 server. Two properties are worth naming, because they are what makes the feature safe to install
 before interception exists (P2):
 
@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, timezone
 import httpx
 import pytest
 
-from treg import localproxy as lp
+from stray import localproxy as lp
 
 
 # ---- helpers ------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ class _EchoServer:
 def _proxy_connect(port: int, token: str, target: str) -> socket.socket:
     """Open a CONNECT tunnel through the proxy and return the socket, positioned after the reply."""
     s = socket.create_connection(("127.0.0.1", port), timeout=5)
-    cred = base64.b64encode(f"treg:{token}".encode()).decode()
+    cred = base64.b64encode(f"stray:{token}".encode()).decode()
     s.sendall(
         f"CONNECT {target} HTTP/1.1\r\nHost: {target}\r\n"
         f"Proxy-Authorization: Basic {cred}\r\n\r\n".encode()
@@ -167,14 +167,14 @@ def test_refuses_to_tunnel_to_itself(proxy):
 
 
 def test_unreachable_upstream_is_a_readable_502(proxy):
-    """A treg-side or network failure must not read like the vendor being down."""
+    """A stray-side or network failure must not read like the vendor being down."""
     with socket.socket() as probe:                 # a port nobody is listening on
         probe.bind(("127.0.0.1", 0))
         dead_port = probe.getsockname()[1]
     s = _proxy_connect(proxy.port, proxy.token, f"127.0.0.1:{dead_port}")
     head = _read_head(s)
     assert head.startswith(b"HTTP/1.1 502 ")
-    assert b"treg proxy" in head + s.recv(4096)
+    assert b"stray proxy" in head + s.recv(4096)
     s.close()
 
 
@@ -187,7 +187,7 @@ def test_malformed_request_is_a_400(proxy):
 
 def test_relative_form_request_is_refused(proxy):
     """A request that is not CONNECT and not absolute-form did not come through a proxy setting."""
-    cred = base64.b64encode(f"treg:{proxy.token}".encode()).decode()
+    cred = base64.b64encode(f"stray:{proxy.token}".encode()).decode()
     s = socket.create_connection(("127.0.0.1", proxy.port), timeout=5)
     s.sendall(f"GET /health HTTP/1.1\r\nHost: x\r\nProxy-Authorization: Basic {cred}\r\n\r\n".encode())
     assert _read_head(s).startswith(b"HTTP/1.1 400 ")
@@ -212,7 +212,7 @@ def test_plain_http_is_forwarded(proxy):
         served.set()
 
     threading.Thread(target=_serve, daemon=True).start()
-    cred = base64.b64encode(f"treg:{proxy.token}".encode()).decode()
+    cred = base64.b64encode(f"stray:{proxy.token}".encode()).decode()
     s = socket.create_connection(("127.0.0.1", proxy.port), timeout=5)
     s.sendall(
         f"GET http://127.0.0.1:{port}/thing?a=1 HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n"
@@ -230,7 +230,7 @@ def test_plain_http_is_forwarded(proxy):
 
 # ---- P0 · unit pieces ---------------------------------------------------------------------
 def test_authorized_accepts_only_the_exact_token():
-    ok = {"proxy-authorization": "Basic " + base64.b64encode(b"treg:abc").decode()}
+    ok = {"proxy-authorization": "Basic " + base64.b64encode(b"stray:abc").decode()}
     assert lp.authorized(ok, "abc")
     assert not lp.authorized(ok, "abcd")
     assert not lp.authorized({}, "abc")
@@ -345,7 +345,7 @@ def test_no_leaf_key_is_left_on_disk(ca):
     """`load_cert_chain` only reads from a file, so the leaf touches disk for microseconds. Nothing
     may remain afterwards."""
     ca.context_for("api.stripe.com")
-    leftovers = [p.name for p in ca.dir.iterdir() if p.name.startswith("treg-leaf-")]
+    leftovers = [p.name for p in ca.dir.iterdir() if p.name.startswith("stray-leaf-")]
     assert leftovers == []
 
 
@@ -417,7 +417,7 @@ def test_a_client_trusting_only_the_system_roots_rejects_our_leaf(ca):
 # ---- P1 · the environment we publish -------------------------------------------------------
 def test_proxy_env_carries_the_flags_that_matter(ca):
     env = lp.proxy_env(18791, "tok en/+", ca.bundle_path, "treg.to")
-    assert env["HTTPS_PROXY"] == "http://treg:tok%20en%2F%2B@127.0.0.1:18791"
+    assert env["HTTPS_PROXY"] == "http://stray:tok%20en%2F%2B@127.0.0.1:18791"
     assert env["https_proxy"] == env["HTTPS_PROXY"]        # curl reads lowercase
     assert env["NODE_USE_ENV_PROXY"] == "1"                # Node's fetch ignores the proxy without it
     assert env["NODE_EXTRA_CA_CERTS"] == str(ca.bundle_path)
@@ -432,19 +432,19 @@ def test_proxy_env_carries_the_flags_that_matter(ca):
 def test_handle_env_matches_the_running_proxy(ca):
     handle = lp.start(lp.ProxyConfig(token=lp.mint_token(), port=0, ca=ca))
     try:
-        env = handle.env("treg.example")
+        env = handle.env("stray.example")
         assert f"@127.0.0.1:{handle.port}" in env["HTTPS_PROXY"]
         assert env["SSL_CERT_FILE"] == str(ca.bundle_path)
     finally:
         handle.stop()
 
 
-def test_proxy_dir_follows_treg_config(tmp_path, monkeypatch):
-    """Tests and per-agent identities redirect the CLI with TREG_CONFIG; the CA must follow, or a test
-    run writes into the developer's real ~/.treg."""
-    monkeypatch.setenv("TREG_CONFIG", str(tmp_path / "cfg" / "config.json"))
+def test_proxy_dir_follows_stray_config(tmp_path, monkeypatch):
+    """Tests and per-agent identities redirect the CLI with STRAY_CONFIG; the CA must follow, or a test
+    run writes into the developer's real ~/.stray."""
+    monkeypatch.setenv("STRAY_CONFIG", str(tmp_path / "cfg" / "config.json"))
     assert lp.proxy_dir() == tmp_path / "cfg" / "proxy"
-    monkeypatch.delenv("TREG_CONFIG")
+    monkeypatch.delenv("STRAY_CONFIG")
     assert lp.proxy_dir().name == "proxy"
 
 
@@ -473,7 +473,7 @@ def test_a_broken_connection_does_not_take_the_proxy_down(proxy):
 
 def test_an_oversized_head_is_refused(proxy):
     """A client that never finishes its head must not be able to make us buffer without bound."""
-    cred = base64.b64encode(f"treg:{proxy.token}".encode()).decode()
+    cred = base64.b64encode(f"stray:{proxy.token}".encode()).decode()
     s = socket.create_connection(("127.0.0.1", proxy.port), timeout=10)
     s.sendall(f"CONNECT example.com:443 HTTP/1.1\r\nProxy-Authorization: Basic {cred}\r\n".encode())
     filler = b"X-Pad: " + b"a" * 4000 + b"\r\n"
@@ -506,8 +506,8 @@ async def test_handle_client_survives_an_unexpected_error(monkeypatch):
     assert getattr(writer, "closed", False)
 
 
-# ---- P2 · interception: the call goes to treg, the key never comes here --------------------
-class _FakeTreg:
+# ---- P2 · interception: the call goes to stray, the key never comes here --------------------
+class _FakeStray:
     """Stands in for the registry. Records every request that lands on `/call/` and answers from a
     queue, so a test can assert exactly what the proxy sent — the byte-faithfulness check the plan
     asks for — without a server on a socket."""
@@ -534,19 +534,19 @@ class _FakeTreg:
 
 
 @pytest.fixture()
-def treg():
-    return _FakeTreg()
+def stray():
+    return _FakeStray()
 
 
 @pytest.fixture()
-def intercepting(ca, treg):
+def intercepting(ca, stray):
     """A proxy that intercepts api.stripe.com and nothing else."""
     cfg = lp.ProxyConfig(
         token=lp.mint_token(), port=0, ca=ca,
-        base_url="https://treg.example", treg_token="member-token-abc", org="acme",
+        base_url="https://stray.example", stray_token="member-token-abc", org="acme",
         client_name="claude-code", hosts=frozenset({"api.stripe.com"}),
     )
-    handle = lp.start(cfg, client=treg.client())
+    handle = lp.start(cfg, client=stray.client())
     handle.cfg = cfg
     yield handle
     handle.stop()
@@ -562,29 +562,29 @@ def _trusting(ca) -> ssl.SSLContext:
 
 def _agent(handle, ca) -> httpx.Client:
     """An ordinary HTTP client set up exactly as the agent's process tree will be: pointed at the
-    proxy, trusting our bundle. It has no idea treg exists."""
+    proxy, trusting our bundle. It has no idea stray exists."""
     return httpx.Client(
-        proxy=f"http://treg:{handle.token}@127.0.0.1:{handle.port}",
+        proxy=f"http://stray:{handle.token}@127.0.0.1:{handle.port}",
         verify=_trusting(ca), timeout=10,
     )
 
 
-def test_intercepted_call_is_re_addressed_to_treg(intercepting, ca, treg):
-    """The heart of P2. The agent calls Stripe; the request lands on treg's `/call/` passthrough
-    carrying the member's treg token — and no vendor key exists anywhere on this machine."""
+def test_intercepted_call_is_re_addressed_to_stray(intercepting, ca, stray):
+    """The heart of P2. The agent calls Stripe; the request lands on stray's `/call/` passthrough
+    carrying the member's stray token — and no vendor key exists anywhere on this machine."""
     with _agent(intercepting, ca) as agent:
         r = agent.get("https://api.stripe.com/v1/charges?limit=3")
     assert r.status_code == 200 and r.json() == {"ok": True}
 
-    sent = treg.seen[0]
-    assert str(sent.url) == "https://treg.example/call/https://api.stripe.com/v1/charges?limit=3"
-    assert sent.headers["x-treg-token"] == "member-token-abc"
-    assert sent.headers["x-treg-org"] == "acme"
-    assert sent.headers["x-treg-client"] == "claude-code"
+    sent = stray.seen[0]
+    assert str(sent.url) == "https://stray.example/call/https://api.stripe.com/v1/charges?limit=3"
+    assert sent.headers["x-stray-token"] == "member-token-abc"
+    assert sent.headers["x-stray-org"] == "acme"
+    assert sent.headers["x-stray-client"] == "claude-code"
 
 
-def test_method_body_and_duplicate_headers_survive(intercepting, ca, treg):
-    """Faithful relay: what the agent typed is what treg receives."""
+def test_method_body_and_duplicate_headers_survive(intercepting, ca, stray):
+    """Faithful relay: what the agent typed is what stray receives."""
     with _agent(intercepting, ca) as agent:
         r = agent.request(
             "POST", "https://api.stripe.com/v1/charges?tag=a&tag=b",
@@ -592,29 +592,29 @@ def test_method_body_and_duplicate_headers_survive(intercepting, ca, treg):
             headers=[("Content-Type", "application/json"), ("Cookie", "a=1"), ("Cookie", "b=2")],
         )
     assert r.status_code == 200
-    sent = treg.seen[0]
+    sent = stray.seen[0]
     assert sent.method == "POST"
     assert sent.content == b'{"amount": 100}'
     assert "tag=a&tag=b" in str(sent.url)          # duplicate query keys kept
     assert sent.headers.get_list("cookie") == ["a=1", "b=2"]
 
 
-def test_the_caller_cannot_speak_as_someone_else(intercepting, ca, treg):
-    """An agent that sets its own `X-Treg-Token` must not be able to spend another member's quota
-    through our proxy. The proxy's identity is the only one that reaches treg."""
+def test_the_caller_cannot_speak_as_someone_else(intercepting, ca, stray):
+    """An agent that sets its own `X-Stray-Token` must not be able to spend another member's quota
+    through our proxy. The proxy's identity is the only one that reaches stray."""
     with _agent(intercepting, ca) as agent:
         agent.get("https://api.stripe.com/v1/charges",
-                  headers={"X-Treg-Token": "stolen", "X-Treg-Org": "victim", "X-Treg-Client": "liar"})
-    sent = treg.seen[0]
-    assert sent.headers["x-treg-token"] == "member-token-abc"
-    assert sent.headers["x-treg-org"] == "acme"
-    assert sent.headers["x-treg-client"] == "claude-code"
+                  headers={"X-Stray-Token": "stolen", "X-Stray-Org": "victim", "X-Stray-Client": "liar"})
+    sent = stray.seen[0]
+    assert sent.headers["x-stray-token"] == "member-token-abc"
+    assert sent.headers["x-stray-org"] == "acme"
+    assert sent.headers["x-stray-client"] == "claude-code"
     assert "stolen" not in str(sent.headers)
 
 
-def test_only_allow_listed_hosts_are_decrypted(intercepting, ca, treg):
+def test_only_allow_listed_hosts_are_decrypted(intercepting, ca, stray):
     """Non-negotiable #3. A host that is not a registered tool is tunnelled: no certificate is signed
-    for it, and treg never hears about it."""
+    for it, and stray never hears about it."""
     echo = _EchoServer()
     try:
         s = _proxy_connect(intercepting.port, intercepting.token, f"127.0.0.1:{echo.port}")
@@ -625,24 +625,24 @@ def test_only_allow_listed_hosts_are_decrypted(intercepting, ca, treg):
     finally:
         echo.close()
     assert "127.0.0.1" not in ca._contexts
-    assert treg.seen == []
+    assert stray.seen == []
 
 
-def test_a_response_streams_back_without_a_content_length(intercepting, ca, treg):
-    """treg may answer with no length (a streamed upstream). We must re-frame it ourselves rather
+def test_a_response_streams_back_without_a_content_length(intercepting, ca, stray):
+    """stray may answer with no length (a streamed upstream). We must re-frame it ourselves rather
     than copy framing that no longer applies to our hop."""
     async def _body():
         for part in (b"one ", b"two ", b"three"):
             yield part
 
-    treg.replies.append(httpx.Response(200, content=_body(), headers={"Content-Type": "text/plain"}))
+    stray.replies.append(httpx.Response(200, content=_body(), headers={"Content-Type": "text/plain"}))
     with _agent(intercepting, ca) as agent:
         r = agent.get("https://api.stripe.com/v1/charges")
     assert r.status_code == 200 and r.content == b"one two three"
 
 
-def test_upstream_status_and_headers_come_back_verbatim(intercepting, ca, treg):
-    treg.replies.append(httpx.Response(402, json={"error": "card_declined"},
+def test_upstream_status_and_headers_come_back_verbatim(intercepting, ca, stray):
+    stray.replies.append(httpx.Response(402, json={"error": "card_declined"},
                                        headers={"X-Request-Id": "req_123"}))
     with _agent(intercepting, ca) as agent:
         r = agent.get("https://api.stripe.com/v1/charges")
@@ -651,58 +651,58 @@ def test_upstream_status_and_headers_come_back_verbatim(intercepting, ca, treg):
     assert r.headers["x-request-id"] == "req_123"
 
 
-def test_a_head_request_gets_no_body(intercepting, ca, treg):
-    treg.replies.append(httpx.Response(200, headers={"Content-Length": "1234"}))
+def test_a_head_request_gets_no_body(intercepting, ca, stray):
+    stray.replies.append(httpx.Response(200, headers={"Content-Length": "1234"}))
     with _agent(intercepting, ca) as agent:
         r = agent.head("https://api.stripe.com/v1/charges")
     assert r.status_code == 200 and r.content == b""
 
 
-def test_two_calls_share_one_intercepted_connection(intercepting, ca, treg):
+def test_two_calls_share_one_intercepted_connection(intercepting, ca, stray):
     """Keep-alive: an agent making several calls must not pay for a handshake each time."""
     with _agent(intercepting, ca) as agent:
         assert agent.get("https://api.stripe.com/v1/charges").status_code == 200
         assert agent.get("https://api.stripe.com/v1/customers").status_code == 200
-    assert len(treg.seen) == 2
-    assert str(treg.seen[1].url).endswith("/v1/customers")
+    assert len(stray.seen) == 2
+    assert str(stray.seen[1].url).endswith("/v1/customers")
 
 
-def test_treg_being_down_does_not_look_like_the_vendor_being_down(intercepting, ca, treg):
+def test_stray_being_down_does_not_look_like_the_vendor_being_down(intercepting, ca, stray):
     """An agent told '502 Bad Gateway' would blame Stripe and retry against a healthy service. The
-    message has to name treg, and say the call was not made."""
-    treg.replies.append(httpx.ConnectError("no route"))
+    message has to name stray, and say the call was not made."""
+    stray.replies.append(httpx.ConnectError("no route"))
     with _agent(intercepting, ca) as agent:
         r = agent.get("https://api.stripe.com/v1/charges")
     assert r.status_code == 502
     assert "cannot reach the registry" in r.text and "was NOT made" in r.text
 
 
-def test_an_edge_waf_block_is_retried_base64(intercepting, ca, treg):
+def test_an_edge_waf_block_is_retried_base64(intercepting, ca, stray):
     """Render's edge 403s a body that looks like SQL injection. The CLI already re-sends such a body
-    base64-encoded under X-Treg-Body-Encoding; an intercepted call has to do the same or a
+    base64-encoded under X-Stray-Body-Encoding; an intercepted call has to do the same or a
     legitimate query fails for a reason no one can see."""
-    treg.replies.append(httpx.Response(403, html="<html>blocked</html>"))
-    treg.replies.append(httpx.Response(200, json={"ok": True}))
+    stray.replies.append(httpx.Response(403, html="<html>blocked</html>"))
+    stray.replies.append(httpx.Response(200, json={"ok": True}))
     with _agent(intercepting, ca) as agent:
         r = agent.post("https://api.stripe.com/v1/query", content=b"SELECT * FROM charges")
     assert r.status_code == 200
-    assert len(treg.seen) == 2
-    assert treg.seen[1].headers["x-treg-body-encoding"] == "base64"
-    assert base64.b64decode(treg.seen[1].content) == b"SELECT * FROM charges"
+    assert len(stray.seen) == 2
+    assert stray.seen[1].headers["x-stray-body-encoding"] == "base64"
+    assert base64.b64decode(stray.seen[1].content) == b"SELECT * FROM charges"
 
 
-def test_a_json_403_from_treg_is_not_retried(intercepting, ca, treg):
-    """treg's own refusals are JSON. Retrying one base64-encoded would double every denied call."""
-    treg.replies.append(httpx.Response(403, json={"detail": "you do not have access"}))
+def test_a_json_403_from_stray_is_not_retried(intercepting, ca, stray):
+    """stray's own refusals are JSON. Retrying one base64-encoded would double every denied call."""
+    stray.replies.append(httpx.Response(403, json={"detail": "you do not have access"}))
     with _agent(intercepting, ca) as agent:
         r = agent.post("https://api.stripe.com/v1/charges", content=b"x")
-    assert r.status_code == 403 and len(treg.seen) == 1
+    assert r.status_code == 403 and len(stray.seen) == 1
 
 
-def test_a_pinned_client_fails_alone(intercepting, ca, treg):
+def test_a_pinned_client_fails_alone(intercepting, ca, stray):
     """A client that trusts only the system roots refuses our certificate. That is a known limit —
     what matters is that it takes down nothing but itself."""
-    with httpx.Client(proxy=f"http://treg:{intercepting.token}@127.0.0.1:{intercepting.port}",
+    with httpx.Client(proxy=f"http://stray:{intercepting.token}@127.0.0.1:{intercepting.port}",
                       timeout=10) as strict:
         with pytest.raises(httpx.ConnectError):
             strict.get("https://api.stripe.com/v1/charges")
@@ -711,21 +711,21 @@ def test_a_pinned_client_fails_alone(intercepting, ca, treg):
 
 
 def test_interception_needs_a_credential(ca):
-    """A proxy with no treg identity must not decrypt anything: it would terminate TLS and then have
+    """A proxy with no stray identity must not decrypt anything: it would terminate TLS and then have
     no way to complete the call, breaking the agent for an invisible reason."""
     base = dict(token="t", ca=ca, hosts=frozenset({"api.stripe.com"}))
     assert not lp.ProxyConfig(**base).intercepts("api.stripe.com")                       # no base_url
     assert not lp.ProxyConfig(**base, base_url="https://x").intercepts("api.stripe.com")  # no token
-    full = lp.ProxyConfig(**base, base_url="https://x", treg_token="tok")
+    full = lp.ProxyConfig(**base, base_url="https://x", stray_token="tok")
     assert full.intercepts("api.stripe.com") and full.intercepts("API.STRIPE.COM")
     assert not full.intercepts("api.openai.com")
-    assert not lp.ProxyConfig(token="t", base_url="https://x", treg_token="tok",
+    assert not lp.ProxyConfig(token="t", base_url="https://x", stray_token="tok",
                               hosts=frozenset({"api.stripe.com"})).intercepts("api.stripe.com")  # no CA
 
 
 # ---- P2 · unit pieces ----------------------------------------------------------------------
 def test_forward_headers_drops_transport_and_adds_control():
-    cfg = lp.ProxyConfig(token="t", base_url="https://x", treg_token="tok", org="acme")
+    cfg = lp.ProxyConfig(token="t", base_url="https://x", stray_token="tok", org="acme")
     out = lp._forward_headers(cfg, [("Host", "api.stripe.com"), ("Connection", "keep-alive"),
                                     ("Content-Length", "3"), ("Accept", "application/json")])
     names = {k.lower() for k, _ in out}
@@ -737,31 +737,31 @@ def test_forward_headers_drops_transport_and_adds_control():
 
 
 def test_forward_headers_keeps_the_callers_encoding_choice():
-    cfg = lp.ProxyConfig(token="t", base_url="https://x", treg_token="tok")
+    cfg = lp.ProxyConfig(token="t", base_url="https://x", stray_token="tok")
     out = lp._forward_headers(cfg, [("Accept-Encoding", "gzip")])
     assert [v for k, v in out if k.lower() == "accept-encoding"] == ["gzip"]
 
 
 def test_the_proxys_own_client_ignores_https_proxy(monkeypatch):
-    """Non-negotiable #6. httpx reads HTTPS_PROXY from its own environment — inside a treg shell that
+    """Non-negotiable #6. httpx reads HTTPS_PROXY from its own environment — inside a stray shell that
     points at THIS proxy, so the first intercepted call would come straight back to us and loop."""
     monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:18791")
-    client = lp.treg_client()
+    client = lp.stray_client()
     assert client.trust_env is False
     assert client._mounts == {}          # no proxy transport was mounted from the environment
 
 
 # ---- P2 · end to end, against the real registry ---------------------------------------------
-async def test_the_agent_calls_the_vendor_and_treg_injects_the_key(clients, ca):
+async def test_the_agent_calls_the_vendor_and_stray_injects_the_key(clients, ca):
     """The proof P2 exists for, run against the actual FastAPI app rather than a stand-in.
 
-    A tool is registered with a secret. An ordinary HTTP client — no treg awareness, no key —
+    A tool is registered with a secret. An ordinary HTTP client — no stray awareness, no key —
     calls the vendor URL through the proxy. The credential appears at the upstream because the
     SERVER put it there; the agent never held it, and neither did the proxy.
     """
     from httpx import ASGITransport, AsyncClient
 
-    from treg import api
+    from stray import api
 
     sid = (await clients.post("/secrets", json={"name": "intercom-k", "value": "SEK-live-xyz"})).json()["id"]
     r = await clients.post("/tools", json={"name": "intercom", "base_url": "https://api.intercom.io",
@@ -770,7 +770,7 @@ async def test_the_agent_calls_the_vendor_and_treg_injects_the_key(clients, ca):
 
     cfg = lp.ProxyConfig(
         token=lp.mint_token(), port=0, ca=ca,
-        base_url="http://registry", treg_token=clients.headers["X-Treg-Token"],
+        base_url="http://registry", stray_token=clients.headers["X-Stray-Token"],
         client_name="claude-code", hosts=frozenset({"api.intercom.io"}),
     )
     registry = AsyncClient(transport=ASGITransport(app=api.app), base_url="http://registry")
@@ -778,9 +778,9 @@ async def test_the_agent_calls_the_vendor_and_treg_injects_the_key(clients, ca):
     port = lp.listening_port(server, 0)
 
     def _agent_call():
-        # Deliberately a plain client with no idea treg exists — only the two things the shell's
+        # Deliberately a plain client with no idea stray exists — only the two things the shell's
         # environment gives it: the proxy address and the trust bundle.
-        with httpx.Client(proxy=f"http://treg:{cfg.token}@127.0.0.1:{port}",
+        with httpx.Client(proxy=f"http://stray:{cfg.token}@127.0.0.1:{port}",
                           verify=_trusting(ca), timeout=10) as agent:
             return agent.get("https://api.intercom.io/echo?per_page=5",
                              headers={"X-Custom": "from-the-agent"})
@@ -797,8 +797,8 @@ async def test_the_agent_calls_the_vendor_and_treg_injects_the_key(clients, ca):
     assert echoed["auth"] == "Bearer SEK-live-xyz"      # injected server-side, by the existing relay
     assert echoed["query"]["per_page"] == "5"           # the agent's own query survived the trip
     assert echoed["headers"]["x-custom"] == "from-the-agent"
-    # treg's control headers are the proxy's, and the relay strips them before the vendor sees them.
-    assert "x-treg-token" not in echoed["headers"]
+    # stray's control headers are the proxy's, and the relay strips them before the vendor sees them.
+    assert "x-stray-token" not in echoed["headers"]
     # Nothing the agent's process could read ever contained the key.
     assert "SEK-live-xyz" not in str(cfg) and "SEK-live-xyz" not in str(cfg.__dict__)
     assert "SEK-live-xyz" not in ca.bundle_path.read_text()
@@ -810,7 +810,7 @@ async def test_the_allow_list_comes_from_the_members_own_tool_list(clients, ca):
     per-member tool list and project scope for free — a host they cannot use is never decrypted."""
     from httpx import ASGITransport, AsyncClient
 
-    from treg import api
+    from stray import api
 
     for name, base in (("intercom", "https://api.intercom.io"), ("stripe", "https://api.stripe.com")):
         sid = (await clients.post("/secrets", json={"name": f"{name}-k", "value": "x"})).json()["id"]
@@ -818,7 +818,7 @@ async def test_the_allow_list_comes_from_the_members_own_tool_list(clients, ca):
 
     registry = AsyncClient(transport=ASGITransport(app=api.app), base_url="http://registry")
     try:
-        hosts = await lp.fetch_hosts(registry, "http://registry", clients.headers["X-Treg-Token"])
+        hosts = await lp.fetch_hosts(registry, "http://registry", clients.headers["X-Stray-Token"])
     finally:
         await registry.aclose()
     assert hosts == frozenset({"api.intercom.io", "api.stripe.com"})
@@ -828,7 +828,7 @@ async def test_a_failed_fetch_intercepts_nothing(clients):
     """No answer must never mean 'intercept everything'."""
     from httpx import ASGITransport, AsyncClient
 
-    from treg import api
+    from stray import api
 
     registry = AsyncClient(transport=ASGITransport(app=api.app), base_url="http://registry")
     try:
@@ -846,11 +846,11 @@ async def test_a_failed_fetch_intercepts_nothing(clients):
         await dead.aclose()
 
 
-async def test_refresh_picks_up_a_tool_registered_mid_session(treg):
+async def test_refresh_picks_up_a_tool_registered_mid_session(stray):
     """A tool added ten minutes into a shell session should start working without a restart."""
-    cfg = lp.ProxyConfig(token="t", base_url="http://registry", treg_token="tok")
-    treg.replies.append(httpx.Response(200, json=[{"host": "api.stripe.com"}, {"host": "API.NEW.COM"}]))
-    client = treg.client()
+    cfg = lp.ProxyConfig(token="t", base_url="http://registry", stray_token="tok")
+    stray.replies.append(httpx.Response(200, json=[{"host": "api.stripe.com"}, {"host": "API.NEW.COM"}]))
+    client = stray.client()
     try:
         task = asyncio.create_task(lp.refresh_hosts_forever(cfg, client, interval=0))
         for _ in range(50):
@@ -863,13 +863,13 @@ async def test_refresh_picks_up_a_tool_registered_mid_session(treg):
     assert cfg.hosts == frozenset({"api.stripe.com", "api.new.com"})   # lowercased for matching
 
 
-async def test_a_transient_failure_never_empties_a_working_allow_list(treg):
+async def test_a_transient_failure_never_empties_a_working_allow_list(stray):
     """Applying an empty answer would silently stop injecting for five minutes, and the agent's calls
     would go out with no credential."""
-    cfg = lp.ProxyConfig(token="t", base_url="http://registry", treg_token="tok",
+    cfg = lp.ProxyConfig(token="t", base_url="http://registry", stray_token="tok",
                          hosts=frozenset({"api.stripe.com"}))
-    treg.replies.append(httpx.Response(500))
-    client = treg.client()
+    stray.replies.append(httpx.Response(500))
+    client = stray.client()
     try:
         task = asyncio.create_task(lp.refresh_hosts_forever(cfg, client, interval=0))
         await asyncio.sleep(0.05)
@@ -879,36 +879,36 @@ async def test_a_transient_failure_never_empties_a_working_allow_list(treg):
     assert cfg.hosts == frozenset({"api.stripe.com"})
 
 
-def test_treg_errors_say_who_refused_and_what_fixes_it():
+def test_stray_errors_say_who_refused_and_what_fixes_it():
     """A raw 404 reads as 'the vendor has no such endpoint', and an agent 'fixes' it by rewriting a
-    perfectly good URL. Every message names treg and the next action."""
-    m404 = lp.treg_error_message(404, "api.stripe.com", "no registered tool")
-    assert "treg" in m404 and "treg tools add" in m404
+    perfectly good URL. Every message names stray and the next action."""
+    m404 = lp.stray_error_message(404, "api.stripe.com", "no registered tool")
+    assert "stray" in m404 and "stray tools add" in m404
     assert {"api.stripe.com"} <= set(m404.split())  # the whole host, not a substring of a longer one
     assert "not api.stripe.com's" in m404          # says whose answer this is NOT
-    assert "ask an admin" in lp.treg_error_message(403, "api.stripe.com", "").lower()
-    assert "treg login" in lp.treg_error_message(401, "api.stripe.com", "")
-    assert "daily call limit" in lp.treg_error_message(429, "api.stripe.com", "")
-    assert "more than one" in lp.treg_error_message(409, "api.stripe.com", "")
-    assert "418" in lp.treg_error_message(418, "api.stripe.com", "teapot")
+    assert "ask an admin" in lp.stray_error_message(403, "api.stripe.com", "").lower()
+    assert "stray login" in lp.stray_error_message(401, "api.stripe.com", "")
+    assert "daily call limit" in lp.stray_error_message(429, "api.stripe.com", "")
+    assert "more than one" in lp.stray_error_message(409, "api.stripe.com", "")
+    assert "418" in lp.stray_error_message(418, "api.stripe.com", "teapot")
 
 
 async def test_an_unregistered_host_is_explained_not_just_404d(clients, ca):
-    """End to end: treg marks its own refusal, the proxy turns it into an instruction."""
+    """End to end: stray marks its own refusal, the proxy turns it into an instruction."""
     from httpx import ASGITransport, AsyncClient
 
-    from treg import api
+    from stray import api
 
     cfg = lp.ProxyConfig(
         token=lp.mint_token(), port=0, ca=ca, base_url="http://registry",
-        treg_token=clients.headers["X-Treg-Token"], hosts=frozenset({"api.unregistered.com"}),
+        stray_token=clients.headers["X-Stray-Token"], hosts=frozenset({"api.unregistered.com"}),
     )
     registry = AsyncClient(transport=ASGITransport(app=api.app), base_url="http://registry")
     server = await lp.serve(cfg, client=registry)
     port = lp.listening_port(server, 0)
 
     def _agent_call():
-        with httpx.Client(proxy=f"http://treg:{cfg.token}@127.0.0.1:{port}",
+        with httpx.Client(proxy=f"http://stray:{cfg.token}@127.0.0.1:{port}",
                           verify=_trusting(ca), timeout=10) as agent:
             return agent.get("https://api.unregistered.com/v1/thing")
 
@@ -921,47 +921,47 @@ async def test_an_unregistered_host_is_explained_not_just_404d(clients, ca):
 
     assert resp.status_code == 404
     payload = resp.json()
-    assert payload["source"] == "treg"
+    assert payload["source"] == "stray"
     assert "no tool is registered for api.unregistered.com" in payload["error"]
-    assert "treg tools add" in payload["error"]
+    assert "stray tools add" in payload["error"]
 
 
-def test_a_vendors_own_error_is_never_rewritten(intercepting, ca, treg):
-    """The mapping fires only on treg's `X-Treg-Error` marker. A genuine 404 from the vendor, relayed
-    through treg, must reach the agent exactly as the vendor wrote it."""
-    treg.replies.append(httpx.Response(404, json={"error": {"message": "No such charge: ch_123"}}))
+def test_a_vendors_own_error_is_never_rewritten(intercepting, ca, stray):
+    """The mapping fires only on stray's `X-Stray-Error` marker. A genuine 404 from the vendor, relayed
+    through stray, must reach the agent exactly as the vendor wrote it."""
+    stray.replies.append(httpx.Response(404, json={"error": {"message": "No such charge: ch_123"}}))
     with _agent(intercepting, ca) as agent:
         r = agent.get("https://api.stripe.com/v1/charges/ch_123")
     assert r.status_code == 404
     assert r.json() == {"error": {"message": "No such charge: ch_123"}}
-    assert "treg" not in r.text
+    assert "stray" not in r.text
 
 
-def test_an_older_registry_without_the_marker_passes_through(intercepting, ca, treg):
+def test_an_older_registry_without_the_marker_passes_through(intercepting, ca, stray):
     """Against a registry that predates the marker nothing fires, and the reply is untouched."""
-    treg.replies.append(httpx.Response(403, json={"detail": "tool not in your access list"}))
+    stray.replies.append(httpx.Response(403, json={"detail": "tool not in your access list"}))
     with _agent(intercepting, ca) as agent:
         r = agent.get("https://api.stripe.com/v1/charges")
     assert r.status_code == 403 and r.json() == {"detail": "tool not in your access list"}
 
 
-def test_the_explained_error_keeps_the_connection_usable(intercepting, ca, treg):
+def test_the_explained_error_keeps_the_connection_usable(intercepting, ca, stray):
     """An explained refusal is still an ordinary HTTP response — the next call on the same connection
     has to work."""
-    treg.replies.append(httpx.Response(403, json={"detail": "nope"}, headers={"X-Treg-Error": "1"}))
+    stray.replies.append(httpx.Response(403, json={"detail": "nope"}, headers={"X-Stray-Error": "1"}))
     with _agent(intercepting, ca) as agent:
         first = agent.get("https://api.stripe.com/v1/charges")
         second = agent.get("https://api.stripe.com/v1/customers")
-    assert first.status_code == 403 and first.json()["source"] == "treg"
+    assert first.status_code == 403 and first.json()["source"] == "stray"
     assert second.status_code == 200
 
 
-# ---- the daemon's state file (`treg serve`) --------------------------------------------------
+# ---- the daemon's state file (`stray serve`) --------------------------------------------------
 def test_state_file_is_owner_only(tmp_path, monkeypatch):
-    """`treg shell --proxy` keeps its token in the subshell's environment; a DAEMON has to write it
-    down so another terminal can find it. That file is the whole extra risk of `treg serve`."""
-    monkeypatch.setenv("TREG_CONFIG", str(tmp_path / "config.json"))
-    path = lp.write_state(18791, "tok", os.getpid(), "https://treg.example", "acme", ["b.com", "a.com"])
+    """`stray shell --proxy` keeps its token in the subshell's environment; a DAEMON has to write it
+    down so another terminal can find it. That file is the whole extra risk of `stray serve`."""
+    monkeypatch.setenv("STRAY_CONFIG", str(tmp_path / "config.json"))
+    path = lp.write_state(18791, "tok", os.getpid(), "https://stray.example", "acme", ["b.com", "a.com"])
     assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
     state = lp.read_state()
     assert state["port"] == 18791 and state["token"] == "tok"
@@ -971,23 +971,23 @@ def test_state_file_is_owner_only(tmp_path, monkeypatch):
 def test_a_dead_daemon_does_not_look_alive(tmp_path, monkeypatch):
     """A state file left behind by a killed process would otherwise make `status` insist forever that
     a proxy is running, and `start` refuse to replace it."""
-    monkeypatch.setenv("TREG_CONFIG", str(tmp_path / "config.json"))
-    lp.write_state(18791, "tok", 999_999, "https://treg.example", "", [])
+    monkeypatch.setenv("STRAY_CONFIG", str(tmp_path / "config.json"))
+    lp.write_state(18791, "tok", 999_999, "https://stray.example", "", [])
     assert lp.running() is None
     assert not lp.state_path().exists()                        # and the stale file is cleaned up
     assert not lp.pid_alive(0), "pid 0 is the caller's process group, not a daemon"
 
 
 def test_a_live_daemon_is_reported(tmp_path, monkeypatch):
-    monkeypatch.setenv("TREG_CONFIG", str(tmp_path / "config.json"))
-    lp.write_state(18791, "tok", os.getpid(), "https://treg.example", "", ["a.com"])
+    monkeypatch.setenv("STRAY_CONFIG", str(tmp_path / "config.json"))
+    lp.write_state(18791, "tok", os.getpid(), "https://stray.example", "", ["a.com"])
     assert lp.running()["port"] == 18791
     lp.clear_state()
     assert lp.running() is None
 
 
 def test_a_missing_or_corrupt_state_file_is_just_not_running(tmp_path, monkeypatch):
-    monkeypatch.setenv("TREG_CONFIG", str(tmp_path / "config.json"))
+    monkeypatch.setenv("STRAY_CONFIG", str(tmp_path / "config.json"))
     assert lp.read_state() is None
     lp.state_path().parent.mkdir(parents=True, exist_ok=True)
     lp.state_path().write_text("{ not json")

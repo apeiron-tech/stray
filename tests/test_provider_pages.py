@@ -13,7 +13,7 @@ import re
 
 from httpx import AsyncClient
 
-from treg.routers import web as web_routes
+from stray.routers import web as web_routes
 
 
 def _ld(html: str) -> list[dict]:
@@ -57,7 +57,7 @@ async def test_provider_page_reads_the_observation_reader_not_the_session(client
     app's observation reader; the measured line silently came up empty and every page view logged
     an AttributeError traceback (prod, 2026-09-06)."""
     import logging
-    with caplog.at_level(logging.WARNING, logger="treg.catalog"):
+    with caplog.at_level(logging.WARNING, logger="stray.catalog"):
         r = await clients.get("/tools/dataforseo")
     assert r.status_code == 200
     assert "endpoint stats unavailable" not in caplog.text

@@ -73,17 +73,17 @@ async def test_a_pin_is_scoped_to_one_org(clients: AsyncClient):
     org = await _org_id(clients)
     await clients.post(f"/orgs/{org}/pins", json={"capability": CAP, "provider": PINNED})
     r = await clients.post("/users", json={"email": "stranger@elsewhere.dev"})
-    other = {"X-Treg-Token": r.json()["token"]}
+    other = {"X-Stray-Token": r.json()["token"]}
     mine = await clients.get(f"/call/{OTHER_EP}?uniqueId=tiktok")
     assert mine.json()["detail"]["error"] == "capability_pinned"
     theirs = await clients.get(f"/call/{OTHER_EP}?uniqueId=tiktok", headers=other)
     assert "capability_pinned" not in theirs.text
 
 
-async def test_a_pin_cannot_be_sidestepped_to_spend_TREGS_money(clients: AsyncClient):
+async def test_a_pin_cannot_be_sidestepped_to_spend_STRAYS_money(clients: AsyncClient):
     """The boundary, pinned so nobody later assumes a pin blocks a vendor everywhere.
 
-    A pin gates the catalog ID, and a catalog id is the ONLY route to treg's own key — so the money
+    A pin gates the catalog ID, and a catalog id is the ONLY route to stray's own key — so the money
     we pay for cannot be reached around it. A raw upstream URL resolves against the org's own tools
     instead and 404s without one; if a team does hold its own key there, that is their credential and
     their bill, and `org deny --host` is the tool for that.
@@ -95,14 +95,14 @@ async def test_a_pin_cannot_be_sidestepped_to_spend_TREGS_money(clients: AsyncCl
     assert (by_id.json()["detail"] or {}).get("error") == "capability_pinned"
 
     by_url = await clients.get("/call/https://api.justoneapi.com/api/tiktok/get-user-detail/v1")
-    assert by_url.status_code == 404                      # no org tool → treg's key is unreachable
+    assert by_url.status_code == 404                      # no org tool → stray's key is unreachable
     assert "no registered tool" in by_url.text
 
 
 async def test_a_capability_can_never_restructure_a_url(clients: AsyncClient):
     """The bug this route was born with, and why the value is a query parameter now.
 
-    As `/orgs/{id}/pins/{capability}`, `treg org unpin ..` DELETED THE TEAM: every normalizing HTTP
+    As `/orgs/{id}/pins/{capability}`, `stray org unpin ..` DELETED THE TEAM: every normalizing HTTP
     client (httpx included) rewrites `/orgs/1/pins/..` to `/orgs/1` — the delete-org route — before
     the request leaves the process. Server-side validation cannot see it, because the rewrite happens
     in the client. Two independent defences now hold: the value travels as a query parameter, and
@@ -125,8 +125,8 @@ async def test_two_admins_pinning_at_once_leave_one_row(clients: AsyncClient):
     capability, caused by a policy row. The database is what says no."""
     import asyncio
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import CapabilityPin
+    from stray.infra.db import session_maker
+    from stray.models import CapabilityPin
 
     org = await _org_id(clients)
 

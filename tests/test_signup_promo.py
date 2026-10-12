@@ -10,14 +10,14 @@ from sqlalchemy import create_engine, text
 from sqlmodel import select
 
 from conftest import verified_identity
-from treg.config import get_settings
-from treg.domain import money
-from treg.infra.db import session_maker
-from treg.models import CreditBlock, Hold, LedgerEntry, Org, User
+from stray.config import get_settings
+from stray.domain import money
+from stray.infra.db import session_maker
+from stray.models import CreditBlock, Hold, LedgerEntry, Org, User
 
 
 async def _team(client, token, name):
-    r = await client.post('/orgs', json={'name': name}, headers={'X-Treg-Token': token})
+    r = await client.post('/orgs', json={'name': name}, headers={'X-Stray-Token': token})
     assert r.status_code == 200, r.text
     return r.json()
 
@@ -72,7 +72,7 @@ async def test_deleting_funded_team_does_not_restore_claim(clients):
     first = await _team(clients, token, 'delete-me')
     assert (await _funding([first['org_id']]))[0] == get_settings().promo_grant_micro
     deleted = await clients.request('DELETE', f"/orgs/{first['org_id']}",
-        params={'confirm': first['org']}, headers={'X-Treg-Token': first['token']})
+        params={'confirm': first['org']}, headers={'X-Stray-Token': first['token']})
     assert deleted.status_code == 200, deleted.text
     recreated = await _team(clients, token, 'delete-me')
     assert await _funding([recreated['org_id']]) == (0, [])
@@ -132,7 +132,7 @@ async def test_disabled_promo_does_not_consume_new_user_claim(clients, monkeypat
 
 
 def test_migration_disables_old_users_and_preserves_old_writer_default(tmp_path):
-    path = Path(__file__).parents[1] / 'src/treg/alembic/versions/0033_signup_promo_eligibility.py'
+    path = Path(__file__).parents[1] / 'src/stray/alembic/versions/0033_signup_promo_eligibility.py'
     spec = importlib.util.spec_from_file_location('promo_migration', path)
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)

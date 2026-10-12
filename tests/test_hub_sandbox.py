@@ -1,6 +1,6 @@
 """The hub's script sandbox, hostile suite: what a script cannot do, and how the run ends when it
-tries. Runs the real child process (`python -m treg.hub_sandbox`) with a fake call executor —
-no treg call path here; that is tests/callmatrix/test_hub_run.py."""
+tries. Runs the real child process (`python -m stray.hub_sandbox`) with a fake call executor —
+no stray call path here; that is tests/callmatrix/test_hub_run.py."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import asyncio
 
 import pytest
 
-from treg.application.hub import sandbox
-from treg.application.hub.sandbox import SandboxError, run_script
+from stray.application.hub import sandbox
+from stray.application.hub.sandbox import SandboxError, run_script
 
 
 async def _echo(req: sandbox.CallRequest) -> dict:
@@ -121,10 +121,10 @@ export default async function run(ctx) {
 
 
 async def test_the_child_sees_no_server_environment(monkeypatch):
-    monkeypatch.setenv("TREG_SECRET_KEY", "must-not-leak")
+    monkeypatch.setenv("STRAY_SECRET_KEY", "must-not-leak")
     # the engine has no env API at all; prove the process env is scrubbed by the parent's builder
     env = sandbox._child_env("/tmp/x")
-    assert "TREG_SECRET_KEY" not in env and env["HOME"] == "/tmp/x"
+    assert "STRAY_SECRET_KEY" not in env and env["HOME"] == "/tmp/x"
 
 
 async def test_two_runs_in_parallel_do_not_mix():

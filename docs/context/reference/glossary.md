@@ -2,7 +2,7 @@
 title: Glossary
 status: reference
 sources:
-  - external:meetings/2026-06-30-jason-tools-registry.md
+  - external:meetings/2026-06-30-jason-stray.md
 related:
   - foundation/charter.md
   - architecture/data-model.md
@@ -29,4 +29,4 @@ related:
 - **Consumer / creator / admin** — the three personas of the shippable skill: who calls tools · who
   registers them · who manages + monitors.
 - **Auto-refresh vs manual (OAuth)** — a refreshable token blob (has refresh_token + client creds) is
-  kept fresh by treg; a bare uploaded token is injected as-is and re-uploaded on expiry.
+  kept fresh by stray; a bare uploaded token is injected as-is and re-uploaded on expiry.

@@ -7,9 +7,9 @@ from httpx import AsyncClient
 from sqlalchemy import delete
 from sqlmodel import select
 
-from treg.domain import money as ledger
-from treg.infra.db import session_maker
-from treg.models import Hold, LedgerEntry
+from stray.domain import money as ledger
+from stray.infra.db import session_maker
+from stray.models import Hold, LedgerEntry
 
 
 async def _org_id(client: AsyncClient) -> int:

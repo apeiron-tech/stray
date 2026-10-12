@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from treg.convert import (
+from stray.convert import (
     FILL,
     contract_to_skill_payload,
     find_secret_file,
@@ -83,7 +83,7 @@ def test_find_secret_file_ambiguous(tmp_path):
         find_secret_file(d, "env")     # two plain-text files -> must pass --file
 
 
-# ---- treg.json contract -------------------------------------------------------------------
+# ---- stray.json contract -------------------------------------------------------------------
 def test_generate_contract_single_secret_guesses_base_url(tmp_path):
     d = tmp_path / "helpdesk"  # a name NOT in the catalog, so the base_url guess heuristic still runs
     (d / ".secrets").mkdir(parents=True)
@@ -140,7 +140,7 @@ def test_contract_roundtrip_to_payload(tmp_path):
     c = generate_contract(d)
     c["base_url"] = "https://api.svc.com"      # user fills the heuristic
     c["health"] = {"path": "me"}
-    (d / "treg.json").write_text(json.dumps(c))
+    (d / "stray.json").write_text(json.dumps(c))
     loaded = load_contract(d)
     payload = contract_to_skill_payload(d, loaded)
     assert payload["name"] == "svc" and payload["recipe"] == "recipe body"
@@ -149,11 +149,11 @@ def test_contract_roundtrip_to_payload(tmp_path):
     assert tool["base_url"] == "https://api.svc.com" and tool["health_check"] == {"path": "me"}
 
 
-# ---- bug-hunt regressions: a stale/hand-edited treg.json fails clearly, not with a traceback ---
-def test_malformed_treg_json_raises_clear_value_error(tmp_path):
+# ---- bug-hunt regressions: a stale/hand-edited stray.json fails clearly, not with a traceback ---
+def test_malformed_stray_json_raises_clear_value_error(tmp_path):
     d = tmp_path / "svc"
     d.mkdir()
-    (d / "treg.json").write_text("{ not valid json")
+    (d / "stray.json").write_text("{ not valid json")
     with pytest.raises(ValueError, match="not valid JSON"):
         load_contract(d)
 
@@ -181,7 +181,7 @@ def test_contract_secret_entry_missing_keys_raises(tmp_path):
 
 
 def test_contract_env_sourced_secret_reads_from_environment(tmp_path, monkeypatch):
-    """A treg-import contract with an env-sourced secret (no file) must be readable by
+    """A stray-import contract with an env-sourced secret (no file) must be readable by
     contract_to_skill_payload — it pulls the value from the environment."""
     d = tmp_path / "render"; d.mkdir()
     monkeypatch.setenv("RENDER_API_KEY", "rnd-secret")

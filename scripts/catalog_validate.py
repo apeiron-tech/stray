@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validate the endpoint catalog (src/treg/catalog/*.yaml) — schema shape + referential integrity.
+"""Validate the endpoint catalog (src/stray/catalog/*.yaml) — schema shape + referential integrity.
 
 Run from the repo root: `uv run python scripts/catalog_validate.py [service ...]`
 Exit 0 = valid. Every violation prints one line: `<file>: <problem>`.
 
 Checks (the success criteria from docs/context/architecture/catalog.md):
-  - provider file's `provider` matches its filename and exists in treg.oauth_providers.REGISTRY
+  - provider file's `provider` matches its filename and exists in stray.oauth_providers.REGISTRY
   - endpoint ids unique across the WHOLE catalog; id convention `<provider>.<capability>`
   - `capability` exists in capabilities.yaml OR the file's own proposed_capabilities
   - a proposed capability is not already in capabilities.yaml and carries one description across
@@ -51,15 +51,15 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "src" / "treg" / "catalog"
+CATALOG = ROOT / "src" / "stray" / "catalog"
 sys.path.insert(0, str(ROOT / "src"))
 # The enums the SERVER reads the same files with. Imported, never re-typed: a validator that
 # accepts a unit `cost_view` cannot price is worse than no validator.
-from treg.domain.catalog.store import COST_SOURCES as _SOURCES  # noqa: E402
-from treg.domain.catalog.store import COST_UNITS as _UNITS  # noqa: E402
-from treg.domain.catalog.store import CONFIDENCES as _CONFIDENCES  # noqa: E402
-from treg.domain.catalog.store import effective_async_descriptor  # noqa: E402
-from treg.domain.catalog.routing import paths as _paths  # noqa: E402
+from stray.domain.catalog.store import COST_SOURCES as _SOURCES  # noqa: E402
+from stray.domain.catalog.store import COST_UNITS as _UNITS  # noqa: E402
+from stray.domain.catalog.store import CONFIDENCES as _CONFIDENCES  # noqa: E402
+from stray.domain.catalog.store import effective_async_descriptor  # noqa: E402
+from stray.domain.catalog.routing import paths as _paths  # noqa: E402
 
 SCOPES = {"any_account", "own_account"}
 METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE"}
@@ -683,7 +683,7 @@ def check_spooled_response(ep: dict, effective_async: object, where: str,
 
 def check_resource_ownership(rule: object, where: str, input_schema: object,
                              errors: list[str]) -> None:
-    """Validate declarative ownership of opaque ids on treg's shared provider account."""
+    """Validate declarative ownership of opaque ids on stray's shared provider account."""
     if not isinstance(rule, dict) or not rule or set(rule) - {"requires", "produces"}:
         fail(errors, where, "resource_ownership must contain only requires and/or produces")
         return
@@ -792,7 +792,7 @@ def check_cost(cost: dict, where: str, errors: list[str], warnings: list[str],
                input_schema: object = None, provider: str | None = None) -> None:
     """The price block's own rules — the ones that make a figure BILLABLE rather than decorative.
 
-    A platform key spends treg's money on a caller's behalf, so every number here has to answer
+    A platform key spends stray's money on a caller's behalf, so every number here has to answer
     "how much, per what, says who, checked when". The rules below are what makes each of those four
     unskippable; `catalog_store.Catalog.platform_eligible` is what refuses the ones that fail.
     """
@@ -975,18 +975,18 @@ def check_cost(cost: dict, where: str, errors: list[str], warnings: list[str],
         warnings.append(f"{where}: cost.checked is {age} days old (> {STALE_DAYS}) — re-check the price")
 
 
-SHARED_PLAN_KIND = "treg_shared_plan"
-TRIAL_KIND = "treg_trial"
+SHARED_PLAN_KIND = "stray_shared_plan"
+TRIAL_KIND = "stray_trial"
 
 
 def check_fx(errors: list[str]) -> None:
-    """The fx entries that carry a rate TREG SET, not one the vendor published.
+    """The fx entries that carry a rate STRAY SET, not one the vendor published.
 
-    A `kind: treg_shared_plan` entry is the catalog asserting its own price for a flat-fee provider
+    A `kind: stray_shared_plan` entry is the catalog asserting its own price for a flat-fee provider
     (see docs/SHARED-PLAN-PRICING-PLAN.md). Everything downstream shows the basis string as
     provenance, so the honesty lives in that string — these checks make it impossible to add a
-    treg-set rate that does not say whose price it is, what the vendor fee was, and what volume it
-    breaks even at. A treg rate card with none of that printed is exactly the dishonesty the design
+    stray-set rate that does not say whose price it is, what the vendor fee was, and what volume it
+    breaks even at. A stray rate card with none of that printed is exactly the dishonesty the design
     exists to avoid.
     """
     fx = yaml.safe_load((CATALOG / "fx.yaml").read_text()) or {}
@@ -997,48 +997,48 @@ def check_fx(errors: list[str]) -> None:
         kind = entry.get("kind")
         basis = str(entry.get("basis") or "")
         if kind is None:
-            # a vendor-published rate; but prose claiming a treg rate without the marker is drift
+            # a vendor-published rate; but prose claiming a stray rate without the marker is drift
             # between what the machine knows and what the human reads
-            if "treg shared-plan" in basis.lower():
-                fail(errors, where, "basis claims a treg shared-plan rate but has no "
+            if "stray shared-plan" in basis.lower():
+                fail(errors, where, "basis claims a stray shared-plan rate but has no "
                                     f"`kind: {SHARED_PLAN_KIND}` marker")
             continue
         if kind == TRIAL_KIND:
-            # A ZERO rate treg set: served on treg's own free-tier key as a capped taste. The
+            # A ZERO rate stray set: served on stray's own free-tier key as a capped taste. The
             # allowance is what makes $0 honest — without it the zero reads as unlimited and the
             # shared free key dies to the first looping agent.
             if entry.get("usd") not in (0, 0.0):
-                fail(errors, where, "a treg_trial rate must be exactly 0 — a non-zero treg-set "
+                fail(errors, where, "a stray_trial rate must be exactly 0 — a non-zero stray-set "
                                     "price is a shared plan, not a trial")
             allowance = entry.get("trial_calls_per_team_day")
             if not isinstance(allowance, int) or allowance <= 0:
                 fail(errors, where, "trial_calls_per_team_day (a positive integer) is required — "
                                     "at $0 the allowance is the only congestion control")
-            if not basis.startswith("treg trial rate"):
-                fail(errors, where, "basis must START with 'treg trial rate' so every surface "
+            if not basis.startswith("stray trial rate"):
+                fail(errors, where, "basis must START with 'stray trial rate' so every surface "
                                     "showing provenance says whose $0 this is")
             if not entry.get("source") or not entry.get("checked"):
-                fail(errors, where, "source and checked are required on a treg-set rate")
+                fail(errors, where, "source and checked are required on a stray-set rate")
             continue
         if kind != SHARED_PLAN_KIND:
             fail(errors, where, f"unknown kind {kind!r} (only {SHARED_PLAN_KIND!r} and "
                                 f"{TRIAL_KIND!r} exist)")
             continue
         if not isinstance(entry.get("usd"), (int, float)) or entry["usd"] <= 0:
-            fail(errors, where, "a treg_shared_plan rate must carry a positive usd — null means "
+            fail(errors, where, "a stray_shared_plan rate must carry a positive usd — null means "
                                 "'unpriced', which needs no marker")
-        if not basis.startswith("treg shared-plan rate"):
-            fail(errors, where, "basis must START with 'treg shared-plan rate' so every surface "
+        if not basis.startswith("stray shared-plan rate"):
+            fail(errors, where, "basis must START with 'stray shared-plan rate' so every surface "
                                 "showing provenance says whose price this is")
         if not re.search(r"\$[\d,]+(?:\.\d+)?\s*/\s*(?:mo|yr)", basis):
             fail(errors, where, "basis must name the vendor fee (e.g. '$49.99/mo')")
         if not re.search(r"break-even at [\d,]+ calls/mo", basis):
             fail(errors, where, "basis must state 'break-even at N calls/mo'")
         if not entry.get("source") or not entry.get("checked"):
-            fail(errors, where, "source and checked are required on a treg-set rate")
+            fail(errors, where, "source and checked are required on a stray-set rate")
         fee = entry.get("fee_usd_month")
         if not isinstance(fee, (int, float)) or fee <= 0:
-            fail(errors, where, "fee_usd_month is required on a treg_shared_plan entry — the "
+            fail(errors, where, "fee_usd_month is required on a stray_shared_plan entry — the "
                                 "recovery report computes fee vs collected from it, and a fee that "
                                 "lives only in prose cannot be computed against")
 
@@ -1131,7 +1131,7 @@ def main(argv: list[str]) -> int:
     taxonomy = tax.get("capabilities") or {}
     capabilities = set(taxonomy)
 
-    from treg.oauth_providers import REGISTRY  # noqa: E402
+    from stray.oauth_providers import REGISTRY  # noqa: E402
 
     only = set(argv)
     all_files = sorted(p for p in CATALOG.glob("*.yaml")
@@ -1343,7 +1343,7 @@ def main(argv: list[str]) -> int:
         if extended_file:
             # extended files are machine-generated from PUBLIC specs and public target ids (TikTok
             # secUids, WeChat export ids, CDN URIs, pagination cursors) — long opaque strings that
-            # pattern-match as secrets endlessly. Credentials only ever travel via TREG_CATALOG_CRED
+            # pattern-match as secrets endlessly. Credentials only ever travel via STRAY_CATALOG_CRED
             # env in the verify scripts, so here only the unambiguous leak shape is flagged.
             for m in re.finditer(r"Bearer\s+[A-Za-z0-9+/_=-]{16,}", text):
                 fail(errors, name, f"credential literal in file: '{m.group(0)[:24]}…'")

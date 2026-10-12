@@ -1,7 +1,7 @@
 // lead-pipeline: the people at a company, each with a work email that has been checked.
 //
 // One routed search, then per person: find the email (skipped when the search row already has
-// one), verify it, and optionally find a phone. Every call is a routed catalog endpoint, so treg
+// one), verify it, and optionally find a phone. Every call is a routed catalog endpoint, so stray
 // picks the provider and bills the caller at cost. This tool adds one thing on top: the caller
 // pays the tool's own fee ONLY for people whose email came back `valid` or `risky` (`units` below).
 //
@@ -13,12 +13,12 @@
 
 const SOFT_DEADLINE_MS = 90000;   // stop starting new people here; the run's hard limit is 120 s
 const CALL_CAP = 20;              // the hub's per-run call cap
-// A run that passes its spending ceiling is stopped by treg and returns NOTHING, even though every
+// A run that passes its spending ceiling is stopped by stray and returns NOTHING, even though every
 // call before it was paid. So the script keeps its own count and stops early instead, returning the
 // people already done. This tool declares a $2.00 ceiling (recipe.json `limits.cost_usd`), its fee
 // holds up to $0.09 of it, and the calls get `max_spend_usd` (default $0.80, at most $1.80).
 // First guess of each call's cost, replaced by the most expensive one actually seen in this run.
-const FIRST_GUESS_MICRO = { "treg.people.email.find": 20000, "treg.people.email.verify": 10000, "treg.people.phone.find": 300000 };
+const FIRST_GUESS_MICRO = { "stray.people.email.find": 20000, "stray.people.email.verify": 10000, "stray.people.phone.find": 300000 };
 
 export default async function run(ctx) {
   const started = Date.now();
@@ -47,7 +47,7 @@ export default async function run(ctx) {
   const searchBody = { company_domain: domain };
   if (title) searchBody.title = title;
   if (country) searchBody.country = country;
-  const s = await call("treg.people.search", searchBody);
+  const s = await call("stray.people.search", searchBody);
   if (s.status === 400 || s.status === 404) {
     // no provider found anyone at this company: an empty table, not an error
     ctx.log(`search found nobody at ${domain} (${s.status})`);
@@ -79,8 +79,8 @@ export default async function run(ctx) {
     const who = identity(p, domain);
 
     if (!p.email && who) {
-      if (!affordable("treg.people.email.find")) { stop(p, "spending limit"); continue; }
-      const f = await call("treg.people.email.find", who);
+      if (!affordable("stray.people.email.find")) { stop(p, "spending limit"); continue; }
+      const f = await call("stray.people.email.find", who);
       const out = f.status === 200 && f.json && f.json.output;
       if (out && out.email && workEmail(out.email, domain)) { p.email = out.email; p.email_source = served(f); }
       else if (out && out.email) ctx.log(`dropped ${out.email}: not a work email at ${domain}`);
@@ -88,14 +88,14 @@ export default async function run(ctx) {
     if (p.email && emails.has(p.email)) { p.duplicate = true; continue; }   // same person, another row
     if (p.email) emails.add(p.email);
     if (p.email) {
-      if (!affordable("treg.people.email.verify")) { stop(p, "spending limit"); continue; }
-      const v = await call("treg.people.email.verify", { email: p.email });
+      if (!affordable("stray.people.email.verify")) { stop(p, "spending limit"); continue; }
+      const v = await call("stray.people.email.verify", { email: p.email });
       const out = v.status === 200 && v.json && v.json.output;
       p.email_status = verdict(out);
     }
     if (include_phone && who) {
-      if (!affordable("treg.people.phone.find")) { p.note = "phone not looked up: spending limit"; stoppedEarly = true; continue; }
-      const ph = await call("treg.people.phone.find", who);
+      if (!affordable("stray.people.phone.find")) { p.note = "phone not looked up: spending limit"; stoppedEarly = true; continue; }
+      const ph = await call("stray.people.phone.find", who);
       const out = ph.status === 200 && ph.json && ph.json.output;
       if (out && out.phone) p.phone = out.phone;
     }
@@ -205,8 +205,8 @@ function verdict(out) {
 }
 
 function served(r) {
-  return (r.headers && (r.headers["x-treg-served-by"] || r.headers["X-Treg-Served-By"])) ||
-    (r.json && r.json._treg && r.json._treg.served_by) || null;
+  return (r.headers && (r.headers["x-stray-served-by"] || r.headers["X-Stray-Served-By"])) ||
+    (r.json && r.json._stray && r.json._stray.served_by) || null;
 }
 
 function pick(o, ...keys) {

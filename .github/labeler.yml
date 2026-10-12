@@ -3,41 +3,41 @@
 
 "area:api":
   - changed-files:
-      - any-glob-to-any-file: 'src/treg/api.py'
+      - any-glob-to-any-file: 'src/stray/api.py'
 
 "area:proxy":
   - changed-files:
-      - any-glob-to-any-file: 'src/treg/infra/upstream/relay.py'
+      - any-glob-to-any-file: 'src/stray/infra/upstream/relay.py'
 
 "area:auth-secrets":
   - changed-files:
       - any-glob-to-any-file:
-          - 'src/treg/infra/upstream/injectors.py'
-          - 'src/treg/crypto.py'
-          - 'src/treg/oauth.py'
-          - 'src/treg/domain/identity/session.py'
-          - 'src/treg/email.py'
-          - 'src/treg/health.py'
-          - 'src/treg/ratestore.py'
+          - 'src/stray/infra/upstream/injectors.py'
+          - 'src/stray/crypto.py'
+          - 'src/stray/oauth.py'
+          - 'src/stray/domain/identity/session.py'
+          - 'src/stray/email.py'
+          - 'src/stray/health.py'
+          - 'src/stray/ratestore.py'
 
 "area:cli":
   - changed-files:
       - any-glob-to-any-file:
-          - 'src/treg/cli.py'
-          - 'src/treg/convert.py'
-          - 'src/treg/shell.py'
+          - 'src/stray/cli.py'
+          - 'src/stray/convert.py'
+          - 'src/stray/shell.py'
 
 "area:runner":
   - changed-files:
       - any-glob-to-any-file:
-          - 'src/treg/runner.py'
-          - 'src/treg/localrun.py'
-          - 'src/treg/egress.py'
-          - 'src/treg/fsjail.py'
+          - 'src/stray/runner.py'
+          - 'src/stray/localrun.py'
+          - 'src/stray/egress.py'
+          - 'src/stray/fsjail.py'
 
 "area:dashboard":
   - changed-files:
-      - any-glob-to-any-file: 'src/treg/web/**'
+      - any-glob-to-any-file: 'src/stray/web/**'
 
 "area:docs":
   - changed-files:

@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from treg import cli, cli_analytics
+from stray import cli, cli_analytics
 
 
 @pytest.fixture
@@ -37,17 +37,17 @@ def ingestion():
 
 def test_real_cli_sdk_delivery_and_opt_out(tmp_path, ingestion):
     host, events = ingestion
-    env = {**os.environ, 'TREG_CONFIG': str(tmp_path / 'config.json'),
-           'TREG_TELEMETRY': '1', 'DO_NOT_TRACK': '0',
+    env = {**os.environ, 'STRAY_CONFIG': str(tmp_path / 'config.json'),
+           'STRAY_TELEMETRY': '1', 'DO_NOT_TRACK': '0',
            'PYTHONPYCACHEPREFIX': str(tmp_path / 'bytecode'),
-           'TREG_CLI_POSTHOG_KEY': 'phc_test', 'TREG_CLI_POSTHOG_HOST': host}
+           'STRAY_CLI_POSTHOG_KEY': 'phc_test', 'STRAY_CLI_POSTHOG_HOST': host}
 
     def run(*args):
         # This test asserts delivery, which the production one-second best-effort budget
         # cannot guarantee during cold SDK imports under xdist load. Exercise the real
         # CLI/SDK with a longer test-only join; the slow-ingestion test below separately
         # verifies the unchanged production exit budget.
-        entry = ('from treg import cli, cli_analytics; '
+        entry = ('from stray import cli, cli_analytics; '
                  'cli_analytics.EXIT_WAIT_SECONDS = 10; cli.main()')
         return subprocess.run([sys.executable, '-c', entry, *args], env=env,
                               capture_output=True, text=True, timeout=30)
@@ -80,7 +80,7 @@ def test_real_cli_sdk_delivery_and_opt_out(tmp_path, ingestion):
     assert run('--help').returncode == 0
     assert len(events) == 2
     assert 'secret-token' not in json.dumps(events)
-    env['TREG_TELEMETRY'] = '0'
+    env['STRAY_TELEMETRY'] = '0'
     count = len(events)
     assert run('version').returncode == 0
     assert len(events) == count
@@ -107,10 +107,10 @@ def test_dispatch_result_preserved(monkeypatch, tmp_path, error, expected):
     assert captured[0]['command'] == 'version'
 
 
-@pytest.mark.parametrize('env, base', [({'TREG_TELEMETRY': '0'}, 'https://treg.to'),
+@pytest.mark.parametrize('env, base', [({'STRAY_TELEMETRY': '0'}, 'https://treg.to'),
     ({'DO_NOT_TRACK': '1'}, 'https://treg.to'), ({}, 'https://self.example')])
 def test_disabled_has_no_side_effects(monkeypatch, tmp_path, env, base):
-    for key in ('TREG_TELEMETRY', 'DO_NOT_TRACK', 'TREG_CLI_POSTHOG_KEY'):
+    for key in ('STRAY_TELEMETRY', 'DO_NOT_TRACK', 'STRAY_CLI_POSTHOG_KEY'):
         monkeypatch.delenv(key, raising=False)
     for key, value in env.items():
         monkeypatch.setenv(key, value)
@@ -121,7 +121,7 @@ def test_disabled_has_no_side_effects(monkeypatch, tmp_path, env, base):
 
 
 def test_slow_ingestion_does_not_block_exit(monkeypatch, tmp_path):
-    monkeypatch.setenv('TREG_TELEMETRY', '1')
+    monkeypatch.setenv('STRAY_TELEMETRY', '1')
     monkeypatch.delenv('DO_NOT_TRACK', raising=False)
     finished = threading.Event()
     monkeypatch.setattr(cli_analytics, '_send', lambda *args: finished.wait(5))

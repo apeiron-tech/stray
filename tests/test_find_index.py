@@ -9,11 +9,11 @@ import pytest
 
 from tests.fake_object_store import MemoryObjectStore
 from tests.test_find_recall import _cat
-from treg.application import find_index
-from treg.config import get_settings
-from treg.domain.catalog import find_recall as fr
-from treg.domain.catalog import store as catalog_store
-from treg.infra import embed as embed_infra
+from stray.application import find_index
+from stray.config import get_settings
+from stray.domain.catalog import find_recall as fr
+from stray.domain.catalog import store as catalog_store
+from stray.infra import embed as embed_infra
 
 TOPICS = (("image", "picture", "photo"), ("email", "mail"), ("comment",), ("people", "person"))
 
@@ -120,7 +120,7 @@ async def test_the_channel_is_off_without_a_key_and_a_failed_query_vector_is_rep
     monkeypatch.setattr(get_settings(), "platform_key_openrouter", "", raising=False)
     assert (await find_index.semantic("x", cat, ix)).error == "off"
     monkeypatch.setattr(get_settings(), "platform_key_openrouter", "or-key", raising=False)
-    assert find_index.api_key() == "or-key"                             # treg's OpenRouter key, on OpenRouter
+    assert find_index.api_key() == "or-key"                             # stray's OpenRouter key, on OpenRouter
     monkeypatch.setattr(get_settings(), "find_embed_url", "https://embeddings.example/v1", raising=False)
     assert find_index.api_key() == ""
     monkeypatch.setattr(get_settings(), "find_embed_api_key", "test-key", raising=False)
@@ -152,7 +152,7 @@ def test_stored_vectors_carry_their_card_and_size():
 
 async def test_the_object_store_names_only_find_vectors():
     from tests.fake_object_store import MemoryObstoreSDK
-    from treg.infra.object_store import R2ObjectStore
+    from stray.infra.object_store import R2ObjectStore
 
     sdk = MemoryObstoreSDK()
     store = R2ObjectStore(sdk, 1000)

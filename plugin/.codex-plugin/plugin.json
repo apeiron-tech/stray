@@ -1,5 +1,5 @@
 {
-  "name": "treg",
+  "name": "stray",
   "version": "0.22.0",
   "description": "People, company, AEO, ads and social data for your agent.",
   "author": {
@@ -8,7 +8,7 @@
     "url": "https://treg.to"
   },
   "homepage": "https://treg.to",
-  "repository": "https://github.com/superdesigndev/treg",
+  "repository": "https://github.com/apeiron-tech/stray",
   "license": "Apache-2.0",
   "keywords": [
     "api",
@@ -23,7 +23,7 @@
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Treg",
+    "displayName": "Stray",
     "shortDescription": "Live data for AI agents",
     "longDescription": "People and company enrichment, AEO and SEO, ads and social data, plus UGC video and images - all in one place, with no provider API keys to manage.",
     "developerName": "superdesign",
@@ -37,9 +37,9 @@
     "privacyPolicyURL": "https://treg.to/privacy",
     "termsOfServiceURL": "https://treg.to/terms",
     "defaultPrompt": [
-      "Find the work email for a person at a company using treg.",
-      "Use treg to get the backlink profile for a domain.",
-      "Search treg's catalog for a way to get keyword search volume and compare the options."
+      "Find the work email for a person at a company using stray.",
+      "Use stray to get the backlink profile for a domain.",
+      "Search stray's catalog for a way to get keyword search volume and compare the options."
     ],
     "brandColor": "#e0703f",
     "composerIcon": "./assets/icon.svg",

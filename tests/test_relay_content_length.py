@@ -12,9 +12,9 @@ import json
 import httpx
 import pytest
 
-from treg.application.call.types import GatewayFailed, UpstreamRequest
-from treg.infra.upstream import relay as relay_module
-from treg.models import Tool
+from stray.application.call.types import GatewayFailed, UpstreamRequest
+from stray.infra.upstream import relay as relay_module
+from stray.models import Tool
 
 
 def _tool() -> Tool:

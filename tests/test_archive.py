@@ -12,13 +12,13 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from treg import archive, audit
-from treg.application.call import service as call_service
-from treg.archive import cache_key, policy, storable
-from treg.config import get_settings
-from treg.domain.catalog import store as catalog_store
-from treg.infra.db import session_maker
-from treg.models import ArchiveKey, ArchiveSnapshot
+from stray import archive, audit
+from stray.application.call import service as call_service
+from stray.archive import cache_key, policy, storable
+from stray.config import get_settings
+from stray.domain.catalog import store as catalog_store
+from stray.infra.db import session_maker
+from stray.models import ArchiveKey, ArchiveSnapshot
 
 
 # ---------------------------------------------------------------------------------------------
@@ -36,13 +36,13 @@ def test_mode_defaults_off():
     ("on", "off"), ("true", "off"), ("", "off"), ("srve", "off"),  # typos degrade to off
 ])
 def test_mode_parses_and_degrades(monkeypatch, raw, expected):
-    from treg.config import get_settings
+    from stray.config import get_settings
     monkeypatch.setattr(get_settings(), "archive_mode", raw)
     assert archive.mode() == expected
 
 
 def test_serve_implies_recording(monkeypatch):
-    from treg.config import get_settings
+    from stray.config import get_settings
     monkeypatch.setattr(get_settings(), "archive_mode", "serve")
     assert archive.recording() and archive.serving()
     monkeypatch.setattr(get_settings(), "archive_mode", "shadow")
@@ -68,7 +68,7 @@ def test_policy_defaults():
 def test_sharing_is_whose_question_not_whether_bytes_are_kept():
     """Storage (the licence) and sharing (who asked) are separate dimensions."""
     judged = {"scope": "any_account", "cache": {"mode": "transient", "license_quote": "q"}}
-    # treg's platform key: public, whatever the entry says.
+    # stray's platform key: public, whatever the entry says.
     assert archive.sharing(judged, own_credential=False) == "public"
     assert archive.sharing({"scope": "own_account"}, own_credential=False) == "public"
     # The org's own credential: the org's question by default - a judged licence does NOT
@@ -138,7 +138,7 @@ def test_key_ignores_caller_noise_headers():
     quiet = cache_key("GET", "p.e", "https://api.x/q?a=1")
     noisy = cache_key("GET", "p.e", "https://api.x/q?a=1", headers={
         "Authorization": "Bearer zzz", "Cookie": "s=1", "User-Agent": "curl",
-        "X-Treg-Token": "t", "Accept-Encoding": "gzip", "traceparent": "00-x",
+        "X-Stray-Token": "t", "Accept-Encoding": "gzip", "traceparent": "00-x",
     })
     assert quiet == noisy
     # …but Accept genuinely changes some vendors' answers, so it keys.
@@ -162,8 +162,8 @@ EP = "tikhub.tiktok.video.comments"   # tier-4 eligible in the test allow-list, 
 @pytest.fixture
 def platform_on(monkeypatch):
     """Tier 4 the way a deploy turns it on (mirrors test_marketplace_call)."""
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "PLATFORM-TIKHUB-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "PLATFORM-TIKHUB-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -289,7 +289,7 @@ def test_every_declared_cache_field_in_the_catalog_is_valid():
 # The phase-0 report (PR 3): GET /admin/archive
 
 async def test_admin_archive_report(clients: AsyncClient, shadow, monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", "ADM-TOKEN")
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", "ADM-TOKEN")
     get_settings.cache_clear()
     try:
         monkeypatch.setattr(get_settings(), "archive_mode", "shadow")
@@ -300,7 +300,7 @@ async def test_admin_archive_report(clients: AsyncClient, shadow, monkeypatch):
         await archive.drain()
 
         assert (await clients.get("/admin/archive")).status_code == 403  # org token is not admin
-        r = await clients.get("/admin/archive", headers={"X-Treg-Token": "ADM-TOKEN"})
+        r = await clients.get("/admin/archive", headers={"X-Stray-Token": "ADM-TOKEN"})
         assert r.status_code == 200, r.text
         d = r.json()
         assert d["mode"] == "shadow" and d["keys"] == 2 and d["snapshots"] == 3
@@ -361,7 +361,7 @@ async def test_a_learned_timer_never_outlives_a_volatile_capability(clients, ser
     monkeypatch.setattr(call_service.analytics, "capture",
                         lambda who, event, props, **kw: events.append((event, props)))
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 200 and "x-treg-cache" not in r.headers
+    assert r.status_code == 200 and "x-stray-cache" not in r.headers
     props = [p for e, p in events if e == "tool_called"][-1]
     assert props["cache_outcome"] == "stale" and props["cache_window_s"] == 60
 
@@ -382,17 +382,17 @@ async def _spend_entries(clients):
 
 async def test_a_repeat_hit_serves_stored_bytes_at_the_repeat_price(clients: AsyncClient, serve):
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r1.status_code == 200 and "x-treg-cache" not in r1.headers
+    assert r1.status_code == 200 and "x-stray-cache" not in r1.headers
     await archive.drain()
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     assert r2.status_code == 200, r2.text
-    assert r2.headers["X-Treg-Cache"] == "hit"
-    assert int(r2.headers["X-Treg-Age"]) >= 0 and r2.headers["X-Treg-Fetched-At"]
+    assert r2.headers["X-Stray-Cache"] == "hit"
+    assert int(r2.headers["X-Stray-Age"]) >= 0 and r2.headers["X-Stray-Fetched-At"]
     assert r2.content == r1.content                      # verbatim stored bytes
     # The team paid full price for this question once (the live call); its second call is a
     # REPEAT and settles at archive_hit_repeat_price_percent (10) of the live price. Same
     # reserve/settle shape - the settle just closes the hold for less and refunds the rest.
-    live, hit = int(r1.headers["X-Treg-Cost-Micro"]), int(r2.headers["X-Treg-Cost-Micro"])
+    live, hit = int(r1.headers["X-Stray-Cost-Micro"]), int(r2.headers["X-Stray-Cost-Micro"])
     assert live > 0 and hit == live * 10 // 100
     entries = await _spend_entries(clients)
     assert [e["kind"] for e in entries[:4]] == ["settle", "reserve", "settle", "reserve"]
@@ -406,29 +406,29 @@ async def test_a_repeat_hit_serves_stored_bytes_at_the_repeat_price(clients: Asy
 
 async def test_each_team_pays_full_price_once_per_question(clients: AsyncClient, serve):
     """"Second call per TEAM": another team's first call on a question already in the archive is
-    a hit at FULL price (the archive saved treg a vendor call, not the team its first price);
+    a hit at FULL price (the archive saved stray a vendor call, not the team its first price);
     only that team's own second call is a repeat."""
     from conftest import verified_signup
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     await archive.drain()
-    live = int(r1.headers["X-Treg-Cost-Micro"])
+    live = int(r1.headers["X-Stray-Cost-Micro"])
     other = await verified_signup(clients, json={"email": "second-team@example.com"})
-    headers = {"X-Treg-Token": other.json()["token"]}
+    headers = {"X-Stray-Token": other.json()["token"]}
     b1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)
-    assert b1.status_code == 200 and b1.headers["X-Treg-Cache"] == "hit"
-    assert int(b1.headers["X-Treg-Cost-Micro"]) == live          # B's first: full price
+    assert b1.status_code == 200 and b1.headers["X-Stray-Cache"] == "hit"
+    assert int(b1.headers["X-Stray-Cost-Micro"]) == live          # B's first: full price
     b2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)
-    assert b2.headers["X-Treg-Cache"] == "hit"
-    assert int(b2.headers["X-Treg-Cost-Micro"]) == live * 10 // 100   # B's second: repeat
+    assert b2.headers["X-Stray-Cache"] == "hit"
+    assert int(b2.headers["X-Stray-Cost-Micro"]) == live * 10 // 100   # B's second: repeat
     a2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert int(a2.headers["X-Treg-Cost-Micro"]) == live * 10 // 100   # A's second: repeat
+    assert int(a2.headers["X-Stray-Cost-Micro"]) == live * 10 // 100   # A's second: repeat
     # A different question starts A over at full price, hit or not.
     await clients.get(f"/call/{EP}?aweme_id=8")
     await archive.drain()
     other_q = await clients.get(f"/call/{EP}?aweme_id=8", headers=headers)
-    assert other_q.headers["X-Treg-Cache"] == "hit"
-    assert int(other_q.headers["X-Treg-Cost-Micro"]) == live
-    from treg.models import ArchiveKeyOrg
+    assert other_q.headers["X-Stray-Cache"] == "hit"
+    assert int(other_q.headers["X-Stray-Cost-Micro"]) == live
+    from stray.models import ArchiveKeyOrg
     async with session_maker() as s:
         rows = (await s.execute(select(ArchiveKeyOrg))).scalars().all()
     assert len(rows) == 4 and sorted(r.calls for r in rows) == [1, 1, 2, 2]
@@ -439,8 +439,8 @@ async def test_repeat_price_at_100_percent_bills_like_live(clients: AsyncClient,
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     await archive.drain()
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r2.headers["X-Treg-Cache"] == "hit"
-    assert r2.headers["X-Treg-Cost-Micro"] == r1.headers["X-Treg-Cost-Micro"]
+    assert r2.headers["X-Stray-Cache"] == "hit"
+    assert r2.headers["X-Stray-Cost-Micro"] == r1.headers["X-Stray-Cost-Micro"]
     entries = await _spend_entries(clients)
     assert entries[0]["meta"]["cache_price_percent"] == 100
 
@@ -451,8 +451,8 @@ async def test_a_metered_repeat_hit_after_a_forced_live_call_is_still_a_repeat(c
     live = await clients.get(f"/call/{EP}?aweme_id=7", headers={"Cache-Control": "no-cache"})
     await archive.drain()
     hit = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert hit.headers["X-Treg-Cache"] == "hit"
-    assert int(hit.headers["X-Treg-Cost-Micro"]) == int(live.headers["X-Treg-Cost-Micro"]) * 10 // 100
+    assert hit.headers["X-Stray-Cache"] == "hit"
+    assert int(hit.headers["X-Stray-Cost-Micro"]) == int(live.headers["X-Stray-Cost-Micro"]) * 10 // 100
 
 
 # ---------------------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ def own_key_serve(serve, monkeypatch):
 
 
 OWN = b'{"answer": "fetched on the team\'s own key", "n": 7}'
-PLAT = b'{"answer": "fetched on treg\'s platform key", "n": 7}'
+PLAT = b'{"answer": "fetched on stray\'s platform key", "n": 7}'
 
 
 def _vendor_says(monkeypatch, body: bytes) -> None:
@@ -488,15 +488,15 @@ async def test_an_own_key_answer_is_recorded_and_served_back_free(
     await _own_key(clients)
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     assert r1.status_code == 200 and r1.content == OWN
-    assert "X-Treg-Cost-Micro" not in r1.headers               # own key: never metered
+    assert "X-Stray-Cost-Micro" not in r1.headers               # own key: never metered
     keys, snaps = await _rows()
     org_id = (await clients.get("/orgs")).json()[0]["org_id"]
     assert len(snaps) == 1 and snaps[0].origin_org_id == org_id and snaps[0].body
     _vendor_says(monkeypatch, b'{"changed": true}')            # must not be asked
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r2.status_code == 200 and r2.headers["X-Treg-Cache"] == "hit"
+    assert r2.status_code == 200 and r2.headers["X-Stray-Cache"] == "hit"
     assert r2.content == OWN
-    assert "X-Treg-Cost-Micro" not in r2.headers               # a hit on an own key is free
+    assert "X-Stray-Cost-Micro" not in r2.headers               # a hit on an own key is free
     assert [e["kind"] for e in await _spend_entries(clients)] == ["grant"]  # no money moved
     await audit.drain()
     rows = (await clients.get("/calls")).json()
@@ -519,11 +519,11 @@ async def test_an_own_key_answer_is_the_orgs_question_and_never_another_teams(
     monkeypatch.setattr(call_service.analytics, "capture",
                         lambda who, event, props, **kw: events.append((event, props)))
     other = await verified_signup(clients, json={"email": "stranger@example.com"})
-    headers = {"X-Treg-Token": other.json()["token"]}
+    headers = {"X-Stray-Token": other.json()["token"]}
     _vendor_says(monkeypatch, PLAT)
     r = await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)  # metered, tier 4
-    assert r.status_code == 200 and "x-treg-cache" not in r.headers
-    assert r.content == PLAT                                   # the vendor answered, on treg's key
+    assert r.status_code == 200 and "x-stray-cache" not in r.headers
+    assert r.content == PLAT                                   # the vendor answered, on stray's key
     props = [p for e, p in events if e == "tool_called"][-1]
     assert props["cache_outcome"] == "key_missing"             # the public key had nothing
     assert props["cache_sharing"] == "public"
@@ -533,11 +533,11 @@ async def test_an_own_key_answer_is_the_orgs_question_and_never_another_teams(
     await archive.drain()
     _vendor_says(monkeypatch, b'{"changed": true}')
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)
-    assert r2.headers["X-Treg-Cache"] == "hit" and r2.content == PLAT
-    assert int(r2.headers["X-Treg-Cost-Micro"]) == int(r.headers["X-Treg-Cost-Micro"]) * 10 // 100
+    assert r2.headers["X-Stray-Cache"] == "hit" and r2.content == PLAT
+    assert int(r2.headers["X-Stray-Cost-Micro"]) == int(r.headers["X-Stray-Cost-Micro"]) * 10 // 100
     mine = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert mine.headers["X-Treg-Cache"] == "hit" and mine.content == OWN
-    assert "X-Treg-Cost-Micro" not in mine.headers
+    assert mine.headers["X-Stray-Cache"] == "hit" and mine.content == OWN
+    assert "X-Stray-Cost-Micro" not in mine.headers
     mine_props = [p for e, p in events if e == "tool_called"][-1]
     assert mine_props["cache_price"] == "free" and mine_props["cache_outcome"] == "hit"
     assert mine_props["cache_sharing"] == "org" and mine_props["cache_scope"] == "org"
@@ -556,10 +556,10 @@ async def test_a_judged_licence_does_not_share_an_own_key_answer_but_an_endpoint
     await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     await archive.drain()
     other = await verified_signup(clients, json={"email": "stranger@example.com"})
-    headers = {"X-Treg-Token": other.json()["token"]}
+    headers = {"X-Stray-Token": other.json()["token"]}
     _vendor_says(monkeypatch, PLAT)
     r = await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)
-    assert "x-treg-cache" not in r.headers and r.content == PLAT   # licence says nothing about who asked
+    assert "x-stray-cache" not in r.headers and r.content == PLAT   # licence says nothing about who asked
     # The endpoint itself declares the answer independent of who asked: the own-key answer is
     # recorded under the public key and serves the stranger (a metered caller: first = full).
     monkeypatch.setitem(entry, "cache", {"sharing": "public"})
@@ -570,8 +570,8 @@ async def test_a_judged_licence_does_not_share_an_own_key_answer_but_an_endpoint
     assert sorted(k.scope or "public" for k in keys) == ["org", "public", "public"]
     _vendor_says(monkeypatch, PLAT)
     shared = await clients.get(f"/call/{EP}?aweme_id=8", headers=headers)
-    assert shared.headers["X-Treg-Cache"] == "hit" and shared.content == OWN
-    assert int(shared.headers["X-Treg-Cost-Micro"]) > 0
+    assert shared.headers["X-Stray-Cache"] == "hit" and shared.content == OWN
+    assert int(shared.headers["X-Stray-Cost-Micro"]) > 0
 
 
 async def test_an_own_account_answer_is_the_connections_and_a_reconnect_starts_over(
@@ -583,7 +583,7 @@ async def test_an_own_account_answer_is_the_connections_and_a_reconnect_starts_o
     entry = catalog_store.load().by_id[EP]
     # A legacy/public answer for the same URL, recorded before the scope flips.
     other = await verified_signup(clients, json={"email": "stranger@example.com"})
-    headers = {"X-Treg-Token": other.json()["token"]}
+    headers = {"X-Stray-Token": other.json()["token"]}
     _vendor_says(monkeypatch, PLAT)
     await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)
     await archive.drain()
@@ -594,7 +594,7 @@ async def test_an_own_account_answer_is_the_connections_and_a_reconnect_starts_o
     _vendor_says(monkeypatch, OWN)
     await _own_key(clients)
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert "x-treg-cache" not in r1.headers and r1.content == OWN   # the public answer is not mine
+    assert "x-stray-cache" not in r1.headers and r1.content == OWN   # the public answer is not mine
     props = [p for e, p in events if e == "tool_called"][-1]
     assert props["cache_outcome"] == "key_missing" and props["cache_sharing"] == "connection"
     await archive.drain()
@@ -602,7 +602,7 @@ async def test_an_own_account_answer_is_the_connections_and_a_reconnect_starts_o
     assert sorted(k.scope or "public" for k in keys) == ["conn", "public"]
     _vendor_says(monkeypatch, b'{"changed": true}')
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r2.headers["X-Treg-Cache"] == "hit" and r2.content == OWN
+    assert r2.headers["X-Stray-Cache"] == "hit" and r2.content == OWN
     assert [p for e, p in events if e == "tool_called"][-1]["cache_scope"] == "conn"
     # Reconnect: a new secret is a new connection, and the old answer is not its answer. (The
     # filler row keeps sqlite from handing the recreated secret the deleted row's id back.)
@@ -613,7 +613,7 @@ async def test_an_own_account_answer_is_the_connections_and_a_reconnect_starts_o
     renewed = next(x for x in (await clients.get("/secrets")).json() if x["name"] == "tikhub")
     assert renewed["id"] != secret["id"]
     r3 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert "x-treg-cache" not in r3.headers and r3.content == b'{"changed": true}'
+    assert "x-stray-cache" not in r3.headers and r3.content == b'{"changed": true}'
 
 
 async def test_the_refresh_worker_never_re_asks_a_private_question(
@@ -631,16 +631,16 @@ async def test_a_platform_answer_serves_an_own_key_caller_free(
         clients: AsyncClient, own_key_serve, monkeypatch):
     from conftest import verified_signup
     other = await verified_signup(clients, json={"email": "stranger@example.com"})
-    headers = {"X-Treg-Token": other.json()["token"]}
+    headers = {"X-Stray-Token": other.json()["token"]}
     _vendor_says(monkeypatch, PLAT)
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5", headers=headers)   # tier 4, recorded
-    assert int(r1.headers["X-Treg-Cost-Micro"]) > 0
+    assert int(r1.headers["X-Stray-Cost-Micro"]) > 0
     await archive.drain()
     await _own_key(clients)
     _vendor_says(monkeypatch, OWN)                             # must not be asked
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r2.headers["X-Treg-Cache"] == "hit" and r2.content == PLAT
-    assert "X-Treg-Cost-Micro" not in r2.headers
+    assert r2.headers["X-Stray-Cache"] == "hit" and r2.content == PLAT
+    assert "X-Stray-Cost-Micro" not in r2.headers
 
 
 async def test_an_own_key_answer_echoing_the_key_is_never_recorded(
@@ -653,7 +653,7 @@ async def test_an_own_key_answer_echoing_the_key_is_never_recorded(
     keys, snaps = await _rows()
     assert keys == [] and snaps == []
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r2.status_code == 200 and "x-treg-cache" not in r2.headers
+    assert r2.status_code == 200 and "x-stray-cache" not in r2.headers
     await audit.drain()
     assert (await clients.get("/calls")).json()[0]["has_result"] is False
 
@@ -687,7 +687,7 @@ async def test_an_own_key_call_with_an_unread_body_never_touches_the_archive(
     assert keys == [] and snaps == []
     again = await clients.request("GET", f"/call/{EP}?aweme_id=7", content=chunks(),
                                   headers={"content-type": "application/json"})
-    assert again.status_code == 200 and "x-treg-cache" not in again.headers
+    assert again.status_code == 200 and "x-stray-cache" not in again.headers
 
 
 async def test_own_key_recording_asks_for_identity_encoding(clients: AsyncClient, own_key_serve, monkeypatch):
@@ -714,17 +714,17 @@ async def test_archive_hit_never_invites_review(clients: AsyncClient, serve, mon
         response = original(served, body)
         if not cache_header:
             response.raw_headers = tuple((name, value) for name, value in response.raw_headers
-                                         if name.lower() != b"x-treg-cache")
+                                         if name.lower() != b"x-stray-cache")
         return response
 
     monkeypatch.setattr(call_service, "_served_response", stored_response)
     live = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert live.headers["X-Treg-Hint"] == "review"
-    assert live.headers["X-Treg-Review"] == "requested"
+    assert live.headers["X-Stray-Hint"] == "review"
+    assert live.headers["X-Stray-Review"] == "requested"
     await archive.drain()
     hit = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     assert hit.status_code == 200 and hit.content == live.content
-    assert "X-Treg-Hint" not in hit.headers and "X-Treg-Review" not in hit.headers
+    assert "X-Stray-Hint" not in hit.headers and "X-Stray-Review" not in hit.headers
     await audit.drain()
     assert (await clients.get("/calls")).json()[0]["cached"] is True
 
@@ -739,12 +739,12 @@ async def test_a_hit_is_not_a_new_observation(clients: AsyncClient, serve):
     assert keys[0].last_requested_at is not None          # …but demand was noted
 
 
-@pytest.mark.parametrize("bypass", [{"Cache-Control": "no-cache"}, {"X-Treg-Max-Age": "0"}])
+@pytest.mark.parametrize("bypass", [{"Cache-Control": "no-cache"}, {"X-Stray-Max-Age": "0"}])
 async def test_a_bypass_header_forces_live(clients: AsyncClient, serve, bypass):
     await clients.get(f"/call/{EP}?aweme_id=7")
     await archive.drain()
     r = await clients.get(f"/call/{EP}?aweme_id=7", headers=bypass)
-    assert r.status_code == 200 and "x-treg-cache" not in r.headers
+    assert r.status_code == 200 and "x-stray-cache" not in r.headers
     _, snaps = await _rows()
     assert len(snaps) == 2                                # the forced live call was recorded
 
@@ -758,7 +758,7 @@ async def test_default_forbidden_never_serves(clients: AsyncClient, platform_on,
     await clients.get(f"/call/{EP}?aweme_id=7")
     await archive.drain()
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 200 and "x-treg-cache" not in r.headers
+    assert r.status_code == 200 and "x-stray-cache" not in r.headers
 
 
 async def test_shadow_mode_never_serves(clients: AsyncClient, shadow, monkeypatch):
@@ -766,7 +766,7 @@ async def test_shadow_mode_never_serves(clients: AsyncClient, shadow, monkeypatc
     await clients.get(f"/call/{EP}?aweme_id=7")
     await archive.drain()
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 200 and "x-treg-cache" not in r.headers
+    assert r.status_code == 200 and "x-stray-cache" not in r.headers
 
 
 # ---------------------------------------------------------------------------------------------
@@ -799,7 +799,7 @@ async def test_always_changing_key_marks_itself_never_cache(clients: AsyncClient
     # …and a fresh call is NOT served from the store, however young the newest snapshot is.
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"price": 99}'))
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert "x-treg-cache" not in r.headers
+    assert "x-stray-cache" not in r.headers
 
 
 # ---------------------------------------------------------------------------------------------
@@ -840,7 +840,7 @@ async def test_refresh_worker_refreshes_a_due_demanded_key(clients: AsyncClient,
     call = fake.calls[0]
     assert call["method"] == "GET" and "fetch_post_comment" in call["url"]
     assert ("aweme_id", "7") in [tuple(x) for x in _qs(call["url"])]
-    # treg's platform key rode the provider's own injection shape (tikhub: Bearer header).
+    # stray's platform key rode the provider's own injection shape (tikhub: Bearer header).
     assert call["headers"].get("Authorization") == "Bearer PLATFORM-TIKHUB-KEY"
     keys, snaps = await _rows()
     assert [s_.origin for s_ in snaps] == ["caller", "refresh"]
@@ -897,7 +897,7 @@ async def test_refresh_disabled_off_serve_or_at_cap_zero(clients: AsyncClient, s
 # The panel (PR 6): the keys endpoint, the extended report, and the page shell
 
 async def test_admin_archive_keys_endpoint(clients: AsyncClient, serve, monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", "ADM-TOKEN")
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", "ADM-TOKEN")
     get_settings.cache_clear()
     try:
         monkeypatch.setattr(get_settings(), "archive_mode", "serve")
@@ -912,7 +912,7 @@ async def test_admin_archive_keys_endpoint(clients: AsyncClient, serve, monkeypa
 
         assert (await clients.get(f"/admin/archive/keys?endpoint_id={EP}")).status_code == 403
         r = await clients.get(f"/admin/archive/keys?endpoint_id={EP}",
-                              headers={"X-Treg-Token": "ADM-TOKEN"})
+                              headers={"X-Stray-Token": "ADM-TOKEN"})
         assert r.status_code == 200, r.text
         d = r.json()
         assert d["endpoint_id"] == EP and len(d["keys"]) == 1
@@ -922,12 +922,12 @@ async def test_admin_archive_keys_endpoint(clients: AsyncClient, serve, monkeypa
         # events carry the hit/live distinction the panel's feed shows
         assert [e["cached"] for e in d["events"]] == [True, False]
 
-        rep = (await clients.get("/admin/archive", headers={"X-Treg-Token": "ADM-TOKEN"})).json()
+        rep = (await clients.get("/admin/archive", headers={"X-Stray-Token": "ADM-TOKEN"})).json()
         assert rep["hits_today"] == 1 and "worker_on" in rep and "refresh_daily_cap" in rep
         assert rep["change_outcomes"] == dict(archive.change_outcomes)
         assert rep["body_outcomes"] == dict(archive.archive_bodies.outcomes)
         monkeypatch.setitem(archive.change_outcomes, "observation_failed", 123)
-        cached = (await clients.get("/admin/archive", headers={"X-Treg-Token": "ADM-TOKEN"})).json()
+        cached = (await clients.get("/admin/archive", headers={"X-Stray-Token": "ADM-TOKEN"})).json()
         assert cached["change_outcomes"]["observation_failed"] == 123
         row = next(x for x in rep["endpoints"] if x["endpoint_id"] == EP)
         assert row["hits"] == 1 and row["kept_bytes"] > 0
@@ -936,7 +936,7 @@ async def test_admin_archive_keys_endpoint(clients: AsyncClient, serve, monkeypa
 
 
 async def test_admin_archive_body_viewer(clients: AsyncClient, serve, monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", "ADM-TOKEN")
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", "ADM-TOKEN")
     get_settings.cache_clear()
     try:
         monkeypatch.setattr(get_settings(), "archive_mode", "serve")
@@ -949,7 +949,7 @@ async def test_admin_archive_body_viewer(clients: AsyncClient, serve, monkeypatc
         keys, snaps = await _rows()
         kh = keys[0].key_hash
         assert (await clients.get(f"/admin/archive/body?key_hash={kh}&version=1")).status_code == 403
-        adm = {"X-Treg-Token": "ADM-TOKEN"}
+        adm = {"X-Stray-Token": "ADM-TOKEN"}
         v1 = (await clients.get(f"/admin/archive/body?key_hash={kh}&version=1", headers=adm)).json()
         assert v1["stored"] is True and v1["body_text"] and v1["carried_by_version"] is None
         # v2 was identical ⇒ stored by reference; the viewer follows to the carrier
@@ -967,8 +967,8 @@ async def test_admin_archive_body_viewer(clients: AsyncClient, serve, monkeypatc
 # gate 3); every other row answers `stored: false` with a note saying which case it is.
 
 async def _make_org_and_token(name: str, email: str) -> str:
-    from treg import crypto
-    from treg.models import Membership, Org, User
+    from stray import crypto
+    from stray.models import Membership, Org, User
     async with session_maker() as db:
         org = Org(name=name, slug=name)
         db.add(org)
@@ -996,8 +996,8 @@ async def test_a_recorded_call_links_to_its_stored_answer(clients: AsyncClient, 
     assert d["stored"] is True and d["note"] is None and d["cached"] is False
     assert d["endpoint_id"] == EP
     assert d["response"]["body_text"] == r1.text            # the exact bytes the caller got
-    # The X-Treg-Call-Id the call returned reaches the same record as the audit row id.
-    by_ref = await clients.get(f"/calls/{r1.headers['X-Treg-Call-Id']}/result")
+    # The X-Stray-Call-Id the call returned reaches the same record as the audit row id.
+    by_ref = await clients.get(f"/calls/{r1.headers['X-Stray-Call-Id']}/result")
     assert by_ref.status_code == 200 and by_ref.json()["id"] == row["id"]
     assert d["response"]["status_code"] == 200 and d["response"]["origin"] == "caller"
     assert d["request"]["method"] == "GET"
@@ -1009,7 +1009,7 @@ async def test_a_served_hit_links_to_the_same_answer(clients: AsyncClient, serve
     r1 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
     await archive.drain()
     r2 = await clients.get(f"/call/{EP}?aweme_id=7&count=5")
-    assert r2.headers["X-Treg-Cache"] == "hit"
+    assert r2.headers["X-Stray-Cache"] == "hit"
     await audit.drain()
     rows = (await clients.get("/calls")).json()
     hit, live = rows[0], rows[1]
@@ -1068,13 +1068,13 @@ async def test_a_result_is_scoped_to_the_team(clients: AsyncClient, shadow):
     row = (await clients.get("/calls")).json()[0]
     assert (await clients.get(f"/calls/{row['id']}/result")).status_code == 200
     outsider = await _make_org_and_token("other-team", "outsider@example.com")
-    denied = await clients.get(f"/calls/{row['id']}/result", headers={"X-Treg-Token": outsider})
+    denied = await clients.get(f"/calls/{row['id']}/result", headers={"X-Stray-Token": outsider})
     assert denied.status_code == 404
 
 
 async def test_the_result_never_carries_failure_evidence(clients: AsyncClient, shadow):
     # The redacted error columns stay admin-only: a failed call answers with a note, nothing more.
-    from treg.models import CallRecord
+    from stray.models import CallRecord
     assert (await clients.get(f"/call/{EP}?aweme_id=7&count=5")).status_code == 200
     await archive.drain()
     await audit.drain()
@@ -1105,7 +1105,7 @@ async def test_endpoint_stats_match_direct_aggregation(clients: AsyncClient, sha
     await clients.get(f"/call/{EP}?aweme_id=8")            # second key
     await archive.drain()
 
-    from treg.models import ArchiveEndpointStat
+    from stray.models import ArchiveEndpointStat
     async with session_maker() as s:
         st = (await s.execute(select(ArchiveEndpointStat)
                               .where(ArchiveEndpointStat.endpoint_id == EP))).scalars().one()
@@ -1132,7 +1132,7 @@ async def test_big_bodies_compress_and_serve_back_identical(clients: AsyncClient
     assert snaps[0].enc == "zlib" and len(snaps[0].body) < len(big)
     assert snaps[0].size_bytes == len(big)
     r2 = await clients.get(f"/call/{EP}?aweme_id=7")     # a hit, decompressed on the way out
-    assert r2.headers.get("x-treg-cache") == "hit" and r2.content == big == r1.content
+    assert r2.headers.get("x-stray-cache") == "hit" and r2.content == big == r1.content
 
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"n": 1}'))
     await clients.get(f"/call/{EP}?aweme_id=8")
@@ -1188,7 +1188,7 @@ async def test_pruner_strips_old_undemanded_bodies_keeps_rows(clients: AsyncClie
     bodies = [s for s in snaps if s.body is not None]
     assert len(bodies) == 2
     assert max(s.version for s in bodies) == 4           # the newest survives whole
-    from treg.models import ArchiveEndpointStat
+    from stray.models import ArchiveEndpointStat
     async with session_maker() as s:
         st = (await s.execute(select(ArchiveEndpointStat)
                               .where(ArchiveEndpointStat.endpoint_id == EP))).scalars().one()
@@ -1324,7 +1324,7 @@ async def test_locked_key_refreshes_identity_map_state(clients: AsyncClient, sha
     """The locking read observes changes committed after the session's initial unlocked lookup."""
     from sqlalchemy import update as sa_update
 
-    from treg.infra.db import background_session_maker
+    from stray.infra.db import background_session_maker
 
     await archive._store(
         method="GET", endpoint_id=EP, provider="tikhub",
@@ -1482,11 +1482,11 @@ async def test_a_capability_family_allowlist_gates_serving(clients, serve, monke
     await archive.drain()
     monkeypatch.setattr(get_settings(), "archive_serve_endpoints", "capability:people.")
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert "x-treg-cache" not in r.headers
+    assert "x-stray-cache" not in r.headers
     monkeypatch.setattr(get_settings(), "archive_serve_endpoints",
                         "capability:" + capability.split(".")[0] + ".")
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.headers["X-Treg-Cache"] == "hit"
+    assert r.headers["X-Stray-Cache"] == "hit"
 
 
 @pytest.mark.parametrize("endpoints,percent,reason", [
@@ -1503,7 +1503,7 @@ async def test_rollout_bypass_never_queries_cache(clients, serve, monkeypatch,
     monkeypatch.setattr(call_service.analytics, "capture",
                         lambda who, event, props, **kw: events.append((event, props)))
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 200 and "x-treg-cache" not in r.headers
+    assert r.status_code == 200 and "x-stray-cache" not in r.headers
     props = [p for e, p in events if e == "tool_called"][-1]
     assert props["cache_outcome"] == reason
     assert not archive.worker_enabled()
@@ -1576,10 +1576,10 @@ async def test_serve_caps_learned_ttl_only_by_declared_and_caller_limits(
     events = []
     monkeypatch.setattr(call_service.analytics, "capture",
                         lambda who, event, props, **kw: events.append((event, props)))
-    headers = {} if wanted is None else {"X-Treg-Max-Age": str(wanted)}
+    headers = {} if wanted is None else {"X-Stray-Max-Age": str(wanted)}
     response = await clients.get(f"/call/{EP}?aweme_id=7", headers=headers)
     assert response.status_code == 200
-    assert (response.headers.get("x-treg-cache") == "hit") == (outcome == "hit")
+    assert (response.headers.get("x-stray-cache") == "hit") == (outcome == "hit")
     props = [p for e, p in events if e == "tool_called"][-1]
     assert props["cache_outcome"] == outcome
     if window is not None:
@@ -1613,7 +1613,7 @@ def test_change_summary_bounds_and_non_json():
 
 
 async def test_change_observation_is_read_only(clients, shadow, monkeypatch):
-    from treg import analytics
+    from stray import analytics
     from tests.test_marketplace_call import _fake_relay
     events = []
     monkeypatch.setattr(analytics, "capture", lambda who, name, props, **kw: events.append((name, props)))
@@ -1729,7 +1729,7 @@ def test_ignore_normalization(old, new, paths, equal):
 
 @pytest.mark.parametrize('paths,expected', [([], (0, 1, 1800)), (['request_id'], (1, 0, 5400))])
 async def test_ignore_only_changes_learning(clients, serve, monkeypatch, paths, expected):
-    from treg import analytics
+    from stray import analytics
     from tests.test_marketplace_call import _fake_relay
     monkeypatch.setitem(catalog_store.load().by_id[EP], 'cache',
                         {'mode': 'transient', 'ignore_paths': paths})
@@ -1739,7 +1739,7 @@ async def test_ignore_only_changes_learning(clients, serve, monkeypatch, paths, 
     for raw in bodies:
         monkeypatch.setattr(call_service, 'relay', _fake_relay(200, raw))
         r = await clients.get(f'/call/{EP}?aweme_id=7', headers={'Cache-Control': 'no-cache'})
-        assert r.content == raw and 'x-treg-cache' not in r.headers
+        assert r.content == raw and 'x-stray-cache' not in r.headers
         await archive.drain()
     keys, snaps = await _rows()
     assert (keys[0].stable_seen, keys[0].change_seen, keys[0].ttl_s) == expected
@@ -1749,14 +1749,14 @@ async def test_ignore_only_changes_learning(clients, serve, monkeypatch, paths, 
         result = await archive.resolve_result(keys[0].key_hash, archive.content_hash(raw))
         assert result['response']['body_text'] == raw.decode()
     hit = await clients.get(f'/call/{EP}?aweme_id=7')
-    assert hit.headers['x-treg-cache'] == 'hit' and hit.content == bodies[-1]
+    assert hit.headers['x-stray-cache'] == 'hit' and hit.content == bodies[-1]
     await archive.drain()
     observed = [p for name, p in events if name == 'archive_change_observed']
     assert len(observed) == 1 and observed[0]['masked_by_ignore'] is bool(paths)
 
 
 async def test_missing_ignore_baseline_falls_back_to_bytes(clients, shadow, monkeypatch):
-    from treg import archive_bodies
+    from stray import archive_bodies
     from tests.test_marketplace_call import _fake_relay
     monkeypatch.setitem(catalog_store.load().by_id[EP], 'cache',
                         {'mode': 'transient', 'ignore_paths': ['request_id']})
@@ -1802,7 +1802,7 @@ async def test_ignore_rechecks_baseline_after_concurrent_recording(clients, shad
 
 
 async def test_refresh_observation_and_terminal_exclusion(clients, shadow, monkeypatch):
-    from treg import analytics
+    from stray import analytics
     events = []
     monkeypatch.setattr(analytics, 'capture', lambda who, name, props, **kw: events.append((name, props)))
     monkeypatch.setitem(catalog_store.load().by_id[EP], 'cache',

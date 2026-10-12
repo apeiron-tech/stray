@@ -2,62 +2,62 @@
 title: Data model — the registry tables, async DB, audit writer
 status: shipped
 sources:
-  - src/treg/alembic/versions/0042_pinned_read_scope.py
+  - src/stray/alembic/versions/0042_pinned_read_scope.py
   - alembic.ini
-  - src/treg/alembic/env.py
-  - src/treg/alembic/versions/0001_baseline_current_schema.py
-  - src/treg/alembic/versions/0002_archive_tables.py
-  - src/treg/alembic/versions/0003_callrecord_cached.py
-  - src/treg/alembic/versions/0004_archivekey_request_shape.py
-  - src/treg/alembic/versions/0005_capacity_policy_snapshot.py
-  - src/treg/alembic/versions/0006_overflow_route.py
-  - src/treg/alembic/versions/0007_overflow_spend.py
-  - src/treg/alembic/versions/0008_org_platform_overflow_disabled.py
-  - src/treg/alembic/versions/0009_callrecord_hit.py
-  - src/treg/alembic/versions/0017_async_task_record.py
-  - src/treg/alembic/versions/0018_async_resource_ownership.py
-  - src/treg/alembic/versions/0019_async_poll_failures.py
-  - src/treg/alembic/versions/0020_callrecord_created_at_indexes.py
-  - src/treg/alembic/versions/0021_ledgerentry_org_created_at_index.py
-  - src/treg/alembic/versions/0022_org_spent_today_counter.py
-  - src/treg/alembic/versions/0023_callrecord_org_user_created_at_index.py
-  - src/treg/alembic/versions/0024_membership_calls_today_counter.py
-  - src/treg/alembic/versions/0027_enrich_arena.py
-  - src/treg/alembic/versions/0028_arena_insights.py
-  - src/treg/alembic/versions/0029_arena_verification_snapshot.py
+  - src/stray/alembic/env.py
+  - src/stray/alembic/versions/0001_baseline_current_schema.py
+  - src/stray/alembic/versions/0002_archive_tables.py
+  - src/stray/alembic/versions/0003_callrecord_cached.py
+  - src/stray/alembic/versions/0004_archivekey_request_shape.py
+  - src/stray/alembic/versions/0005_capacity_policy_snapshot.py
+  - src/stray/alembic/versions/0006_overflow_route.py
+  - src/stray/alembic/versions/0007_overflow_spend.py
+  - src/stray/alembic/versions/0008_org_platform_overflow_disabled.py
+  - src/stray/alembic/versions/0009_callrecord_hit.py
+  - src/stray/alembic/versions/0017_async_task_record.py
+  - src/stray/alembic/versions/0018_async_resource_ownership.py
+  - src/stray/alembic/versions/0019_async_poll_failures.py
+  - src/stray/alembic/versions/0020_callrecord_created_at_indexes.py
+  - src/stray/alembic/versions/0021_ledgerentry_org_created_at_index.py
+  - src/stray/alembic/versions/0022_org_spent_today_counter.py
+  - src/stray/alembic/versions/0023_callrecord_org_user_created_at_index.py
+  - src/stray/alembic/versions/0024_membership_calls_today_counter.py
+  - src/stray/alembic/versions/0027_enrich_arena.py
+  - src/stray/alembic/versions/0028_arena_insights.py
+  - src/stray/alembic/versions/0029_arena_verification_snapshot.py
 
-  - src/treg/alembic/versions/0011_callrecord_archive_link.py
-  - src/treg/alembic/versions/0015_idempotentcall_membership_cascade.py
-  - src/treg/alembic/versions/0053_idempotentcall_membership_expires_index.py
-  - src/treg/alembic/versions/0054_callrecord_org_id_id.py
-  - src/treg/alembic/versions/0061_remove_redundant_unique_indexes.py
-  - src/treg/alembic/versions/0034_managed_api_keys.py
-  - src/treg/alembic/versions/0035_default_key_generation.py
-  - src/treg/alembic/versions/0036_activity_key_indexes.py
-  - src/treg/alembic/versions/0038_endpoint_day_stats.py
-  - src/treg/maintenance.py
-  - src/treg/web/sitetrack.js
-  - src/treg/models.py
-  - src/treg/alembic/versions/0052_async_task_hit.py
-  - src/treg/alembic/versions/0031_archive_result_admission.py
-  - src/treg/alembic/versions/0032_archive_body_storage.py
-  - src/treg/alembic/versions/0039_archive_own_key_and_repeat_pricing.py
-  - src/treg/alembic/versions/0043_provider_resources.py
-  - src/treg/domain/provider_resources.py
-  - src/treg/routers/provider_resources.py
-  - src/treg/alembic/versions/0033_signup_promo_eligibility.py
-  - src/treg/alembic/versions/0041_searchlog.py
-  - src/treg/alembic/versions/0055_find_v2_log.py
-  - src/treg/alembic/versions/0056_searchlog_verdict.py
-  - src/treg/timeutil.py
-  - src/treg/infra/db.py
-  - src/treg/domain/referrals.py
-  - src/treg/audit.py
-  - src/treg/application/evidence_retention.py
-  - src/treg/analytics.py
-  - src/treg/bootstrap_handlers.py
-  - src/treg/ratestore.py
-  - src/treg/application/auth.py
+  - src/stray/alembic/versions/0011_callrecord_archive_link.py
+  - src/stray/alembic/versions/0015_idempotentcall_membership_cascade.py
+  - src/stray/alembic/versions/0053_idempotentcall_membership_expires_index.py
+  - src/stray/alembic/versions/0054_callrecord_org_id_id.py
+  - src/stray/alembic/versions/0061_remove_redundant_unique_indexes.py
+  - src/stray/alembic/versions/0034_managed_api_keys.py
+  - src/stray/alembic/versions/0035_default_key_generation.py
+  - src/stray/alembic/versions/0036_activity_key_indexes.py
+  - src/stray/alembic/versions/0038_endpoint_day_stats.py
+  - src/stray/maintenance.py
+  - src/stray/web/sitetrack.js
+  - src/stray/models.py
+  - src/stray/alembic/versions/0052_async_task_hit.py
+  - src/stray/alembic/versions/0031_archive_result_admission.py
+  - src/stray/alembic/versions/0032_archive_body_storage.py
+  - src/stray/alembic/versions/0039_archive_own_key_and_repeat_pricing.py
+  - src/stray/alembic/versions/0043_provider_resources.py
+  - src/stray/domain/provider_resources.py
+  - src/stray/routers/provider_resources.py
+  - src/stray/alembic/versions/0033_signup_promo_eligibility.py
+  - src/stray/alembic/versions/0041_searchlog.py
+  - src/stray/alembic/versions/0055_find_v2_log.py
+  - src/stray/alembic/versions/0056_searchlog_verdict.py
+  - src/stray/timeutil.py
+  - src/stray/infra/db.py
+  - src/stray/domain/referrals.py
+  - src/stray/audit.py
+  - src/stray/application/evidence_retention.py
+  - src/stray/analytics.py
+  - src/stray/bootstrap_handlers.py
+  - src/stray/ratestore.py
+  - src/stray/application/auth.py
   - tests/test_postgres_reset.py
   - tests/test_alembic_expand_safety.py
   - tests/test_redundant_index_migration.py
@@ -116,7 +116,7 @@ verified upload finishes outside any DB session; `content_hash` is the object na
 backfill, body-column removal or destructive migration occurs. Double-write rows retain their DB
 body/carrier; R2-only rows require no carrier pointer. See [archive](archive.md#body-storage-and-r2-double-writing).
 Migration `0039` adds nullable `ArchiveSnapshot.origin_org_id` (the team whose own credential
-fetched the answer; NULL = treg's platform key, every row before it - provenance), nullable
+fetched the answer; NULL = stray's platform key, every row before it - provenance), nullable
 `ArchiveKey.scope` (`org` | `conn` for a key private to an org or a connection; NULL = public,
 every key before it - the sharing scope is also folded into the key hash) and the
 `ArchiveKeyOrg` table, unique on `(org_id, key_hash)`: which teams have paid for which archived
@@ -142,7 +142,7 @@ See [signup eligibility](money.md#signup-credit-eligibility).
   category/message/references, authenticated org and user attribution, and the references verified
   against that team's call records or ledger. Revision `0025`; `domain.feedback` owns inserts;
   `application.feedback` commits. Team deletion removes these rows. See [feedback](feedback.md).
-- **`Media`** - a reference file a member hosted for a vendor to fetch (`treg host`): opaque
+- **`Media`** - a reference file a member hosted for a vendor to fetch (`stray host`): opaque
   token, org, media type, size, the bytes, created and expiry. Revision `0037`;
   `application.media` is the only writer and sweeps expired rows on each upload. Team deletion
   removes these rows. See [media](media.md).
@@ -150,7 +150,7 @@ See [signup eligibility](money.md#signup-credit-eligibility).
   versioned history (revision 0030), owned by this schema and written only by the private admin
   service. Both cascade from the original report. See [feedback](feedback.md).
 
-`src/treg/models.py` is authoritative for columns, indexes and defaults. This section records
+`src/stray/models.py` is authoritative for columns, indexes and defaults. This section records
 ownership and behavior that a field declaration alone does not explain.
 [Multi-tenancy](multi-tenancy.md) defines org scoping and role gates.
 
@@ -165,15 +165,15 @@ uses this metadata, never the encrypted token's shape.
   are locked to `/call` + reads and may never act as a user; gated in
   `domain.identity.access.require_member` / `require_identity`), `created_at`.
   **`ad_gclid`/`ad_click_id_type`/`ad_click_at`/`ad_landing`**
-  (migration A37, all nullable) - set once, at signup, from the first-party `treg_ad` cookie; never
+  (migration A37, all nullable) - set once, at signup, from the first-party `stray_ad` cookie; never
   overwritten. The historically named `ad_gclid` holds the click value; `ad_click_id_type` says
   `gclid`/`gbraid`/`wbraid`, with NULL meaning a legacy GCLID. **`utm_source`/`utm_medium`/
   `utm_campaign`/`utm_term`/`utm_content`/`utm_referrer`** (migration A40, all nullable) - first-touch
-  traffic source from the first-party `treg_utm` cookie (`web/sitetrack.js`, set on the visitor's
+  traffic source from the first-party `stray_utm` cookie (`web/sitetrack.js`, set on the visitor's
   FIRST page, first touch wins, 90 days), persisted once at signup in both doors. This is the column
   set that answers "how many teams did campaign X bring" - the `ad_*` columns only know Google
   clicks. `utm_referrer` is the referring hostname, kept even when no `utm_*` tag was present.
-  The first page itself is a separate first-touch cookie, `treg_landing` (path only, set on every
+  The first page itself is a separate first-touch cookie, `stray_landing` (path only, set on every
   first visit, utm or not); it is ranking evidence for the first-run onboarding and is not stored
   on the team.
   **`first_call_at`** (same migration as `ad_*`) -
@@ -230,11 +230,11 @@ uses this metadata, never the encrypted token's shape.
   `owner`, `base_url`, `host` (netloc of base_url, **indexed** for URL-passthrough resolution),
   `bindings` (a **JSON list** - see below), `health_check` (optional JSON), `examples` (optional JSON
   list `[{method,path,note}]` surfaced in the dashboard), `cli` (optional JSON local-run profile for
-  `treg run --local` - see [local-run](local-run.md)), `bundle_id` (FK).
+  `stray run --local` - see [local-run](local-run.md)), `bundle_id` (FK).
 - **`Bundle`** - a skill (pure packaging): `org_id` (FK), `name`, `owner`, `recipe` (the SKILL.md text),
   **`files`** (JSON `{relpath: content}` - the rest of the folder: reference docs, scripts, nested subdirs,
   minus secrets + binaries, so a WHOLE skill folder travels via `skill install`), grouping its secrets +
-  tool(s). Run config for **both** `treg run` tiers now lives on **`Tool.cli`** (the tool-side
+  tool(s). Run config for **both** `stray run` tiers now lives on **`Tool.cli`** (the tool-side
   unification, PR #3); the old bundle-side `runtime`/`package`/`entrypoint`/`runnable` columns were folded
   into `Tool.cli` by a startup migration and are no longer declared (they may persist physically in old
   DBs, unread).
@@ -263,11 +263,11 @@ uses this metadata, never the encrypted token's shape.
   for the per-member daily counts; 0016 already pairs
   `(endpoint_id, id)` for the newest-N feed and 0012 a partial index on `cached`. The cost of
   getting this wrong is not a slow page: all three connection pools share one Postgres, so a scan
-  here queues every other query and the API pool empties into `503 treg_saturated` - see
+  here queues every other query and the API pool empties into `503 stray_saturated` - see
   [deploy](../ops/deploy.md) § Database pools. The table has no retention sweep yet, so it only grows.
 
   **Nothing on the request path aggregates it any more.** The two readers that did, the catalog's
-  observed reliability and the Arena's rolling insights, are scheduled `treg-worker` commands
+  observed reliability and the Arena's rolling insights, are scheduled `stray-worker` commands
   that walk it incrementally by primary key. Revision 0038 adds their catalog half:
   `EndpointDayStat` (one row per endpoint per UTC day: counts, newest success, hit tallies and a
   bounded latency sample; primary key `(endpoint_id, day)`, indexed by `day` for the window prune)
@@ -301,7 +301,7 @@ uses this metadata, never the encrypted token's shape.
   walked the primary key testing `org_id` and the second read the team's whole history. The
   Activity feed's calls page by time on `(org_id, created_at)`.
 
-  `refused_by` distinguishes a treg refusal (`auth`, `policy`, `balance`, `cap`, `resolution`,
+  `refused_by` distinguishes a stray refusal (`auth`, `policy`, `balance`, `cap`, `resolution`,
   `request`, and other mechanism-specific values) from an upstream answer, where it is null.
   In-handler audits mark their own outcome; the shared exception handler records earlier
   refusals using request-state identity, anonymously for invalid authentication.
@@ -311,7 +311,7 @@ uses this metadata, never the encrypted token's shape.
   own-key and own-tool calls. Successes leave them empty. Captured provider headers use an
   allowlist covering retry/auth/rate-limit and request/trace identifiers. `/calls` neither fetches
   nor exposes these wide fields; `GET /admin/errors` owns read access (read-only) and the
-  `treg-worker admin purge-evidence` cron (`application/evidence_retention.py`) the 14-day
+  `stray-worker admin purge-evidence` cron (`application/evidence_retention.py`) the 14-day
   retention purge, replacing expired evidence with `<expired>`.
 
   Redaction in `application.call.evidence` is security-sensitive:
@@ -336,7 +336,7 @@ uses this metadata, never the encrypted token's shape.
 
   `upstream_ms` (Alembic `0063`) is the provider's share of `duration_ms`: from sending the request
   until its answer is read (or, when the answer streams on, until its headers arrive). It leaves
-  out token refresh, archive lookup, a `retry-after` sleep and treg's own work. NULL when no
+  out token refresh, archive lookup, a `retry-after` sleep and stray's own work. NULL when no
   request reached the provider, and on rows written before the column existed.
 - **`IdempotentCall`** - a caller-scoped, 24-hour replay cache for metered successes, keyed by
   `(membership_id, key)` and also carrying `org_id` for team cleanup. It is not an audit record: once
@@ -386,7 +386,7 @@ uses this metadata, never the encrypted token's shape.
   `engine` (v1 | v2) and v2's readings: `platform_choice`, `platform_conf`, `name_p`, `recall_ms`,
   `embed_ms`, `embed_error`, and `units` as `[kind, id, p]` rows ([find](find.md)); 0056 adds
   `verdict`, the verdict a v2 answer ended on with its reason after a colon (`none:gap`).
-- **`RunRecord`** - the **server-side run** audit row (a `treg run --server` CLI execution - the "kind"
+- **`RunRecord`** - the **server-side run** audit row (a `stray run --server` CLI execution - the "kind"
   `server_run` in usage rollups): `org_id`, `user_email`, `bundle_name` (holds the **tool** name since the
   tool-side run unification; column name is historical), `argv` (JSON - never carries a secret value;
   secrets are injected via env, not the command line), `exit_code`, `duration_ms`, `created_at`. Written
@@ -420,25 +420,25 @@ uses this metadata, never the encrypted token's shape.
   and exists so approval-required actions can land here later without a migration, mirroring the
   `verdict` vocabulary `localrun.py` already uses. Enforcement: [proxy-model](proxy-model.md).
 - **Runtime attribution** - `CallRecord.client` + `RunRecord.client` (migration A23, `''` default):
-  which coding agent made the call (`X-Treg-Client`, self-reported by the CLI via env fingerprints;
+  which coding agent made the call (`X-Stray-Client`, self-reported by the CLI via env fingerprints;
   attribution, never authentication). Feeds `GET /orgs/{id}/agents/observed` - one row per
   (member, runtime), the auto-captured half of the agents story. `Membership.created_by` (same
   step) names the admin who minted an agent; `''` for door/invite joins.
 
-- **`CapacityPolicy` / `CapacitySnapshot`** - what each treg-owned vendor account (tier 4) meters and
+- **`CapacityPolicy` / `CapacitySnapshot`** - what each stray-owned vendor account (tier 4) meters and
   how it is funded, and the append-only observations of what it has left. `capacity_type` includes
   `rolling_quota` for allowances measured over moving windows rather than calendar resets. Written
-  by the worker's `treg-worker capacity sweep` only, never by the call path; the sweep also publishes a per-provider
+  by the worker's `stray-worker capacity sweep` only, never by the call path; the sweep also publishes a per-provider
   latest state into `Ephemeral` under `capacity:state:<provider>`, which the dataplane reads on a
   TTL beside its own breaker locks (`capacity:lock:<key>`, written by the call path only). Numbers
   only - never a credential. See `ops/capacity.md`. Alembic revision `0005` creates these two tables.
 - **`OverflowRoute`** - one `(endpoint_id, aggregator)` pair: the same vendor endpoint served through a
-  treg-owned aggregator account, with the aggregator's price, the price ratio, verification stamp and a
-  DERIVED `enabled`. Filled by `treg-worker overflow sync` only (Alembic `0006`); read-only for the call
+  stray-owned aggregator account, with the aggregator's price, the price ratio, verification stamp and a
+  DERIVED `enabled`. Filled by `stray-worker overflow sync` only (Alembic `0006`); read-only for the call
   path. See `ops/capacity.md`.
 - `Org.platform_overflow_disabled` - the team's overflow opt-out (Alembic `0008`). See `ops/capacity.md`.
 - **`OverflowSpend`** - per aggregator per UTC day: calls, the aggregator's charge, the delta against
-  treg's direct price. Written inside the overflow child's settle transaction (and by the shadow probe);
+  stray's direct price. Written inside the overflow child's settle transaction (and by the shadow probe);
   the $20/day budget reads it. Alembic `0007`. Not a balance.
 
 `CallReview` (revision 0026) stores one private usefulness rating per unique call reference.
@@ -452,7 +452,7 @@ applies **all** of a tool's bindings (e.g. google-ads = an oauth bearer + a `dev
 The API builds a single-binding tool from flat fields via `_flat_binding()`; injection is in
 [auth-secrets](auth-secrets.md).
 
-## Async DB (`src/treg/infra/db.py`)
+## Async DB (`src/stray/infra/db.py`)
 Three async SQLAlchemy engines against one database, declared by `POOL_SPECS` and exposed as
 `session_maker` (api), `admin_session_maker` (`/admin/*`) and `background_session_maker` (audit,
 archive writes, the ads worker) - a bulkhead, so no class of work can exhaust another's slots; sizes,
@@ -476,7 +476,7 @@ Shared request-time conversions live in `timeutil.utcnow_naive` and `timeutil.as
 temporarily as `api._utcnow_naive` and `api._as_naive` during the staged router migration. Query
 parameters compared with timestamp columns follow the same constraint as inserted or updated values.
 
-`TREG_READ_DATABASE_URL` optionally adds a separate SQLite / PostgreSQL engine and
+`STRAY_READ_DATABASE_URL` optionally adds a separate SQLite / PostgreSQL engine and
 `read_session_maker`. PostgreSQL defaults its transactions to read-only; SQLite enables
 `PRAGMA query_only` on dedicated read connections without affecting the primary. These guard
 accidental writes, not deliberate SQL that disables the settings. The engine is included in
@@ -494,7 +494,7 @@ database runs `alembic upgrade head`. A non-empty unstamped database is refused 
 writes and must pass through adoption release 0.14.x. Explicit upgrade also refuses an unknown-newer
 revision because it cannot safely migrate across a rollback floor.
 
-Migration scripts live under `src/treg/alembic/`, inside the shipped wheel. The repo-root
+Migration scripts live under `src/stray/alembic/`, inside the shipped wheel. The repo-root
 `alembic.ini` points there for developer CLI use, while `maintenance._alembic_config` resolves the
 installed package resource and supplies the configured database URL. Alembic commands run through
 `asyncio.to_thread` because the environment owns its own `asyncio.run`. On Postgres, `env.py` sets
@@ -544,7 +544,7 @@ payment); it queues up to `_MAX_PENDING` events (drop-newest past the bound) and
 micro-batches them (`_BATCH_MAX` per POST, at most every `_FLUSH_INTERVAL_S`) via a per-flush httpx
 client - no semaphore, because HTTP to PostHog never touches the DB pool. **Empty `posthog_key` = the
 module is off** (self-hosters and the test suite send nothing). `$groups: {team: org_slug}` mirrors the
-browser's `posthog.group('team', slug)`. Every event also carries `build` (`TREG_BUILD`, else the
+browser's `posthog.group('team', slug)`. Every event also carries `build` (`STRAY_BUILD`, else the
 commit variable the host exports, else the installed package version; `build_id`) and
 `archive_config` (a 12-hex digest of the archive settings that change what a call does:
 mode, serving allowlist and percentage, repeat price, age ceilings, body write and all three read modes, change
@@ -553,7 +553,7 @@ the role and those archive settings. They exist so an analysis can be bounded to
 or one cache configuration instead of a remembered deploy time: a property that an older build
 never emitted reads as null there, and without the boundary that null looks like a state. Attributed product events use the caller's email and team group,
 so they join the same PostHog person/group the SPA identifies. A pre-identity `call_intake_failed` event
-instead uses the fixed `treg-server` identity and no team because authentication could not obtain a DB
+instead uses the fixed `stray-server` identity and no team because authentication could not obtain a DB
 connection. Emitters:
 `call_tool`'s `_audit` funnel (`tool_called`, with the catalog `provider` as vendor or the upstream host
 for own tools; the field list is in [proxy-model](proxy-model.md)), `bootstrap_handlers._pool_saturated`
@@ -562,25 +562,25 @@ gated on `fresh`). Drained in the lifespan `finally` **last** - after `audit.dra
 `archive.drain()`, because it is the sink those two report their losses into and draining it first
 strands those events behind a cancelled flusher. The engine adds Postgres pool
 hygiene (`pool_pre_ping`/`pool_recycle`/sizing) for non-SQLite URLs, and `verify_db` refuses to start with
-no `TREG_SECRET_KEY` on a real DB (an ephemeral key would lose every stored secret on restart).
+no `STRAY_SECRET_KEY` on a real DB (an ephemeral key would lose every stored secret on restart).
 
 Arena adds `arena_run_started` / `arena_run_completed` after its claim/final save; ordinary
 `tool_called.client=enrich-arena` still attributes each lookup, Try and verification. Browser
-`TregTracking.identify` joins those email identities to anonymous Arena pageviews and the active
+`StrayTracking.identify` joins those email identities to anonymous Arena pageviews and the active
 team group. Email OTP and social auth emit `signup_completed` only after committing a newly
-created user. `treg_entry_surface` is a first-observed, 90-day product-surface cookie; server
+created user. `stray_entry_surface` is a first-observed, 90-day product-surface cookie; server
 `funnel_surface` accepts only fixed surface names, never URLs or search data. Manual top-up events
 include this acquisition surface and a separate `checkout_source`, also copied through Stripe
 metadata into the durable top-up ledger metadata. See [Arena conversion tracking](../interface/enrich-arena.md#conversion-tracking)
 for event definitions, conversion denominators and the person-to-team payment join.
 
 Infrastructure faults use the same DB-independent queue through `capture_fault`: PostHog `$exception`
-events have the fixed `treg-server` identity and carry only the exception class, at most 500 characters
+events have the fixed `stray-server` identity and carry only the exception class, at most 500 characters
 of its string, an unhandled mechanism, and component/logger labels. URL query strings in the exception
 value are replaced with `?[redacted]` **before truncation**, so query-injected credentials cannot leak;
 frames, locals, request bodies, and user identity are never included. `FaultCaptureHandler` mirrors ERROR+
 records while analytics is enabled; it ignores the
-`treg.analytics` logger tree, marks records to prevent duplicate root/Uvicorn delivery, and uses a
+`stray.analytics` logger tree, marks records to prevent duplicate root/Uvicorn delivery, and uses a
 thread-local re-entry guard plus a never-raise `emit`. The lifespan installs the
 handler on root and directly on `uvicorn.error` (Uvicorn's default parent does not propagate to root),
 then removes it after shutdown drain. `bootstrap_handlers._pool_saturated` calls `capture_fault` directly
@@ -645,7 +645,7 @@ evidence while leaving its live descendants usable. `OAuthClient` is not org-sco
 global, and nothing about it belongs to one team. Each `OAuthRefresh.org_id` is immutable issue
 provenance; moving a family updates only `OAuthGrant.current_org_id`.
 
-## Caller tags (`X-Treg-Meta`)
+## Caller tags (`X-Stray-Meta`)
 
 Two new tables and a handful of columns carry a reselling builder's attribution. The design rationale
 lives in [money](money.md); this is the shape.
@@ -655,7 +655,7 @@ lives in [money](money.md); this is the shape.
 | `TagSpend` | what one call cost, attributed to ONE of its tags | `domain/money` only, in the money transaction |
 | `TagBudget` | one builder-set limit on one `(dim, val)`, and the registry entry that bounds cardinality | `api.py` (auto-created on first sighting) |
 
-`CallRecord` gains `call_ref` (the `X-Treg-Call-Id` echoed to the caller and used as the ledger's
+`CallRecord` gains `call_ref` (the `X-Stray-Call-Id` echoed to the caller and used as the ledger's
 `call_id` on a metered call - one value joins the audit row, the money rows and the builder's own
 records), `budget_dim`/`budget_val` (the indexed copy of the primary pair) and `tags` (the whole bag).
 

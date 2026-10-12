@@ -4,8 +4,8 @@ import hashlib
 
 import pytest
 
-from treg import hints
-from treg.config import get_settings
+from stray import hints
+from stray.config import get_settings
 
 
 @pytest.mark.parametrize('kind,field', [('review', 'review_sample_rate'), ('feedback', 'feedback_hint_rate')])
@@ -29,15 +29,15 @@ def test_sampling_boundaries_stability_and_salt(monkeypatch, kind, field):
     ('own', 200, {}, True, False), ('direct', 200, {}, False, False),
     ('direct', 199, {}, True, False), ('direct', 300, {}, True, False),
     ('direct', 503, {}, True, False),
-    ('direct', 200, {'X-Treg-Idempotent-Replay': 'true'}, True, False),
+    ('direct', 200, {'X-Stray-Idempotent-Replay': 'true'}, True, False),
     ('cached', 200, {}, True, False),
     ('direct', 200, {}, 'exception', False),
 ])
 async def test_header_before_stream_without_changing_response(
     clients, monkeypatch, catalog, status, headers, sample, expected,
 ):
-    from treg.routers import call
-    from treg.application.call.types import UpstreamResponse
+    from stray.routers import call
+    from stray.application.call.types import UpstreamResponse
 
     consumed = []
     async def stream():
@@ -68,15 +68,15 @@ async def test_header_before_stream_without_changing_response(
     response = await clients.get('/call/example.search')
     assert response.status_code == status
     assert response.content == b'exact upstream bytes'
-    assert (response.headers.get('X-Treg-Hint') == 'review') is expected
-    assert (response.headers.get('X-Treg-Review') == 'requested') is expected  # CLI <= 0.18
+    assert (response.headers.get('X-Stray-Hint') == 'review') is expected
+    assert (response.headers.get('X-Stray-Review') == 'requested') is expected  # CLI <= 0.18
     assert consumed == ['body', 'close']
 
 
 def _platform_call(monkeypatch, *, tier='platform', own=False):
-    """A stubbed 2xx call on treg's platform key (or an own tool) with a static body."""
-    from treg.routers import call
-    from treg.application.call.types import UpstreamResponse
+    """A stubbed 2xx call on stray's platform key (or an own tool) with a static body."""
+    from stray.routers import call
+    from stray.application.call.types import UpstreamResponse
 
     async def stream():
         yield b'{}'
@@ -93,7 +93,7 @@ def _platform_call(monkeypatch, *, tier='platform', own=False):
 
 
 async def test_review_budget_caps_a_team_per_hour_and_every_invitation_is_an_event(clients, monkeypatch):
-    from treg import analytics
+    from stray import analytics
 
     _platform_call(monkeypatch)
     monkeypatch.setattr(get_settings(), 'review_sample_rate', 1)
@@ -103,9 +103,9 @@ async def test_review_budget_caps_a_team_per_hour_and_every_invitation_is_an_eve
     monkeypatch.setattr(analytics, 'capture', lambda *args, **kw: events.append((args, kw)))
     kinds = []
     for _ in range(4):
-        response = await clients.get('/call/example.search', headers={'X-Treg-Client': 'claude-code'})
+        response = await clients.get('/call/example.search', headers={'X-Stray-Client': 'claude-code'})
         assert response.status_code == 200
-        kinds.append(response.headers.get('X-Treg-Hint'))
+        kinds.append(response.headers.get('X-Stray-Hint'))
     assert kinds == ['review', 'review', None, None]
     sent = [(a[2], kw) for a, kw in events if a[1] == 'hint_attached']
     assert [p['kind'] for p, _ in sent] == ['review', 'review']
@@ -116,20 +116,20 @@ async def test_review_budget_caps_a_team_per_hour_and_every_invitation_is_an_eve
 
 
 async def test_budget_is_per_team(clients, monkeypatch):
-    from treg.application.call import invite
-    from treg.infra import kv
+    from stray.application.call import invite
+    from stray.infra import kv
 
     _platform_call(monkeypatch)
     monkeypatch.setattr(get_settings(), 'review_sample_rate', 1)
     monkeypatch.setattr(get_settings(), 'review_budget_per_hour', 1)
-    assert (await clients.get('/call/example.search')).headers.get('X-Treg-Hint') == 'review'
-    assert (await clients.get('/call/example.search')).headers.get('X-Treg-Hint') is None
+    assert (await clients.get('/call/example.search')).headers.get('X-Stray-Hint') == 'review'
+    assert (await clients.get('/call/example.search')).headers.get('X-Stray-Hint') is None
     # Another team's budget is untouched: its key has never been taken.
     assert await kv.store().take(invite.budget_key(999), 1, 60)
 
 
 async def test_unavailable_store_withholds_the_review_but_not_the_answer(clients, monkeypatch):
-    from treg.infra import kv
+    from stray.infra import kv
 
     class Down:
         async def take(self, key, limit, ttl_s):
@@ -144,8 +144,8 @@ async def test_unavailable_store_withholds_the_review_but_not_the_answer(clients
     monkeypatch.setattr(get_settings(), 'feedback_hint_rate', 1)
     response = await clients.get('/call/example.search')
     assert response.status_code == 200 and response.content == b'{}'
-    assert response.headers.get('X-Treg-Hint') == 'feedback'  # the lighter hint still rides along
-    assert 'X-Treg-Review' not in response.headers
+    assert response.headers.get('X-Stray-Hint') == 'feedback'  # the lighter hint still rides along
+    assert 'X-Stray-Review' not in response.headers
 
 
 @pytest.mark.parametrize('own', [True, False])
@@ -154,5 +154,5 @@ async def test_feedback_hint_rides_plain_http_on_any_successful_call(clients, mo
     monkeypatch.setattr(get_settings(), 'review_sample_rate', 0)
     monkeypatch.setattr(get_settings(), 'feedback_hint_rate', 1)
     response = await clients.get('/call/example.search')
-    assert response.headers.get('X-Treg-Hint') == 'feedback'
-    assert 'X-Treg-Review' not in response.headers
+    assert response.headers.get('X-Stray-Hint') == 'feedback'
+    assert 'X-Stray-Review' not in response.headers

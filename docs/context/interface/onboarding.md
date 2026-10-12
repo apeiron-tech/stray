@@ -2,20 +2,20 @@
 title: Onboarding — the first-run demo team (dashboard + CLI)
 status: shipped
 sources:
-  - src/treg/application/auth.py
-  - src/treg/application/onboard/__init__.py
-  - src/treg/application/onboard/demo.py
-  - src/treg/application/onboard/first_run.py
-  - src/treg/application/onboard/lookup.py
-  - src/treg/application/onboard/page.py
-  - src/treg/application/onboard/tasks.py
-  - src/treg/application/onboard/work_email.py
-  - src/treg/application/house_calls.py
-  - src/treg/infra/llm.py
-  - src/treg/web/sitetrack.js
-  - src/treg/cli.py
-  - src/treg/routers/auth.py
-  - src/treg/routers/onboard.py
+  - src/stray/application/auth.py
+  - src/stray/application/onboard/__init__.py
+  - src/stray/application/onboard/demo.py
+  - src/stray/application/onboard/first_run.py
+  - src/stray/application/onboard/lookup.py
+  - src/stray/application/onboard/page.py
+  - src/stray/application/onboard/tasks.py
+  - src/stray/application/onboard/work_email.py
+  - src/stray/application/house_calls.py
+  - src/stray/infra/llm.py
+  - src/stray/web/sitetrack.js
+  - src/stray/cli.py
+  - src/stray/routers/auth.py
+  - src/stray/routers/onboard.py
   - frontend/src/state/onboarding.js
   - frontend/src/dialogs/WelcomeDialog.vue
   - frontend/src/onboarding/OnboardingFlow.vue
@@ -31,11 +31,11 @@ related:
 
 # Onboarding
 
-A brand-new user's fastest path to *believing* treg ("call a real API with no key on your machine")
+A brand-new user's fastest path to *believing* stray ("call a real API with no key on your machine")
 is to **do it** on a team that's already alive. So onboarding hands them a **team they own**,
 seeded with teammates, a working tool, and a real audit trail — one backend brain, two faces.
 
-## The one brain - `src/treg/application/onboard/demo.py`
+## The one brain - `src/stray/application/onboard/demo.py`
 
 `provision(db, owner, team_name)` seeds a REAL org owned by the caller, marked `Org.demo=True`.
 It shares the 10-owned-team cap with regular creation, with the user lock held until
@@ -45,12 +45,12 @@ a new demo team over the cap returns HTTP 403.
 The seeded content includes:
 
 - **Fake teammates** (`TEAMMATES`): Ada·admin, Ben·member, Cora·viewer — roster-only `User` rows
-  with `demo=True` on the unusable domain **`demo.treg.local`** (`DEMO_DOMAIN`). Reused across demo
+  with `demo=True` on the unusable domain **`demo.stray.local`** (`DEMO_DOMAIN`). Reused across demo
   orgs (email is unique); they get a Membership but **no personal org** and **cannot log in** (see
   the OTP guard below).
 - **Owner key controls:** the real owner's membership gets only its default signed-key control. Fake
   demo teammates get neither human default keys nor unreachable hash-backed compatibility keys.
-- **A working tool** (`echo` → `postman-echo.com`) + its `echo-key` secret, so **Try-it / `treg call`
+- **A working tool** (`echo` → `postman-echo.com`) + its `echo-key` secret, so **Try-it / `stray call`
   returns 200 with the injected `Authorization: Bearer sk-demo-…`** — the aha.
 - **Sample activity** (`SAMPLE_CALLS`): a few `CallRecord`s attributed to teammates so Activity is alive.
 
@@ -65,7 +65,7 @@ the answer rather than assuming: `platform` → state the price, confirm, call, 
 `credential`/`tool` → call it and say plainly that your own key is not metered; anything else → an
 honest dead-end naming the one command that fixes it, and **nothing is called**.
 
-That last branch is not hypothetical: with `TREG_PLATFORM_PROVIDERS` unset (as in production today)
+That last branch is not hypothetical: with `STRAY_PLATFORM_PROVIDERS` unset (as in production today)
 every user lands there. Asking the server instead of hardcoding a demo endpoint is what lets the same
 path become the price-and-call flow the moment the switch is flipped — and stops the walkthrough
 rotting when the catalog moves. A TTY run opens with a one-second `_splash` decrypt
@@ -98,14 +98,14 @@ you admin → **Share your own**, else **the catalog**) applies **only non-inter
   ("Auto-discover local skills & env" — read-only, "this is just a DEMO, nothing is uploaded") → ② "Share
   credentials & skills with your team" (example roles owner/admin/member/viewer) → ③ `_demo_teammate_call` —
   auto-picks ONE **real** callable tool the active team has (excludes `echo`), **displays the real upstream
-  URL** (`treg call https://api.resend.com/domains`) so it's unmistakably a real API but **executes via the
+  URL** (`stray call https://api.resend.com/domains`) so it's unmistakably a real API but **executes via the
   tool-name form** (reliable; the host-passthrough form can be ambiguous with duplicate hosts); Stripe
   example if none → ④ `_demo_call_log` — an illustrative ledger: the call you just made plus example
   teammates on YOUR email domain (so they read as real). The `echo` tool and the old seed-a-team flow are gone.
 
 `provision` (full auto-seed) backs the Demo path. The narrower helpers — `seed_tool(db, org, owner_email)`
 (adds the `echo` tool+secret, idempotent) and `accept_demo_invite(db, org_id, invite)` (creates the fake
-teammate `demo=True` and accepts a pending invite; `GUIDED_TEAMMATE` = Alex Rivera, `alex@demo.treg.local`,
+teammate `demo=True` and accepts a pending invite; `GUIDED_TEAMMATE` = Alex Rivera, `alex@demo.stray.local`,
 member) — were the dashboard stepper's backing; with the stepper removed they have no UI caller, though
 their endpoints remain.
 
@@ -131,18 +131,18 @@ tool seeding, and teammate acceptance run in short use-case-owned sessions.
   the caller) → `application.onboard.first_run`; see the first-run flow below. `GET /auth/me` adds
   `onboarding_v2: true` when it is.
 - `GET /auth/me` returns `onboarded`; `GET /orgs` rows carry `demo`. `create_invite` **skips the Resend
-  email** for `@demo.treg.local` invitees.
-- **Guards:** `auth_email_start` refuses any `@demo.treg.local` email (400) — fake teammates are never
+  email** for `@demo.stray.local` invitees.
+- **Guards:** `auth_email_start` refuses any `@demo.stray.local` email (400) — fake teammates are never
   a login. `admin_stats` excludes the whole demo footprint (demo users, demo orgs, and everything
   scoped to them) so platform totals stay honest.
 - **Schema:** `User.onboarded` / `User.demo` / `Org.demo` (see [data-model](../architecture/data-model.md);
-  schema changes are Alembic revisions under `src/treg/alembic/`).
+  schema changes are Alembic revisions under `src/stray/alembic/`).
 
-## CLI face (`treg onboard`)
+## CLI face (`stray onboard`)
 
 Colourful (ANSI truecolor, Ledger palette; suppressed off-TTY / under `NO_COLOR`). `cmd_onboard` first
 ensures an active org (`_pick_active_org` — the flows need an identity token so requests carry
-`X-Treg-Org`; a per-org agent token is org-bound), plays `_splash` (skipped for scripted `--path`/`--yes`
+`X-Stray-Org`; a per-org agent token is org-bound), plays `_splash` (skipped for scripted `--path`/`--yes`
 runs), then routes through `_pick_path` → `_dispatch_onboard`. Slow steps (team lookup, scans, network
 fetches) show a `_spinner`; `_onboard_active_org` caches its `/orgs` result in `_ORG_CACHE` so a single run
 never re-fetches. Shared drawing helpers: `_section` dividers, `_brand`, `_cmd` (shows the actual command),
@@ -153,7 +153,7 @@ do real work against the active team; **Demo** (`_run_demo`) is illustrative —
 is uploaded — four beats (`_demo_scan_preview` → roles → `_demo_teammate_call` a real no-key call when a
 callable tool exists → `_demo_call_log`), then `_demo_next_steps`.
 
-After a first **human** `treg login`, `_maybe_offer_onboarding` prompts `[Y/n]` then `_pick_path` +
+After a first **human** `stray login`, `_maybe_offer_onboarding` prompts `[Y/n]` then `_pick_path` +
 `_dispatch_onboard` — **TTY-only / CI-safe**; a decline posts `/onboard/skip` so it never re-asks.
 
 ## Dashboard face (`frontend/src/dialogs/WelcomeDialog.vue`)
@@ -165,15 +165,15 @@ only for a non-onboarded session with **no team yet**. Step 0 names the team (`w
 marks onboarded via `/onboard/skip`); step 1 asks **which agent you're using** (picker with LobeHub icons,
 skippable; **Grok Bot** is a card too, with a bundled mark at `/logos/agents/grokbot.png` — `agentIcon`
 uses an absolute path verbatim); step 2 shows the per-agent **setup block** — for an agent whose entry
-carries a `plugin` URL (Grok Bot → the x.ai plugin page) an **"1. Install the treg plugin"** link comes
+carries a `plugin` URL (Grok Bot → the x.ai plugin page) an **"1. Install the stray plugin"** link comes
 first and the setup line is step 2 — the setup line and the team+token as ONE
 copyable unit (`welcomeSetupFull` copies the real token; `welcomeSetupMasked` renders it masked with a
 Show/Hide-key toggle, `startTokenShow`); step 3 is **"Try it out"** — a "waiting for your agent" status (pulsing `.wc-waitdot`, no 🎉), the
 same `tryExamples` copy cards AND the `tryOauth` connect chips as the Getting-started page, footer
 **"Skip"** (`welcomeFinish`) + **"Browse all catalog →"** (`go('connections')`). A use-case landing's CTA
-(`/app?ref=grokbot` from `/grokbot`'s "Setup treg") **preselects that agent**: the `ref` param is stashed in
-`localStorage` (`treg-ref`) because sign-in reloads the page, and `_welcomeAgentFromRef` consumes it when the
-welcome opens (unknown refs are ignored). The picked agent itself persists as `treg-agent` (a `welcome.agent`
+(`/app?ref=grokbot` from `/grokbot`'s "Setup stray") **preselects that agent**: the `ref` param is stashed in
+`localStorage` (`stray-ref`) because sign-in reloads the page, and `_welcomeAgentFromRef` consumes it when the
+welcome opens (unknown refs are ignored). The picked agent itself persists as `stray-agent` (a `welcome.agent`
 watcher; `_restoreAgent` at boot) so Getting started keeps showing the same steps after a reload. Finishing (or skipping) lands on **`#start`** (Getting started) — also the default
 view for ANY signed-in arrival at `/app` with no deep link or hash — **except** when the welcome
 modal opened over a platform detail page (arrival via `/search`): `welcomeFinish` leaves the view
@@ -218,7 +218,7 @@ which arm it is in is PostHog's.
    The order is fixed when the sheet opens. The library's `parse` and `calls` turn the blank into
    catalog calls, and the dashboard applies the same rule (`calls.ts`).
 3. **The first call.** The task runs as the team's own `/call/` from the browser
-   (`X-Treg-Client: onboarding`, `X-Treg-Route-Max-Cost: 0.05`): an ordinary metered call that sets
+   (`X-Stray-Client: onboarding`, `X-Stray-Route-Max-Cost: 0.05`): an ordinary metered call that sets
    `first_call_at`. `extract.ts` draws each answer. A failed call shows no error; it goes to PostHog
    as an exception. The connect block hands the same task to the agent. "Open the dashboard" marks
    the user onboarded.
@@ -226,15 +226,15 @@ which arm it is in is PostHog's.
 **The lookup** (`application/onboard/lookup.py`) never raises and never spends the user's credit;
 each step is optional and skipped when its setting is empty or it fails, and the whole lookup has a
 deadline. GitHub (the GitHub door's login, else a commit search with `onboarding_github_token`), then
-the company record (`treg.companies.enrich`, short timeout) and the homepage (read directly through
-the SSRF check; a script-only page also through `treg.web.extract`). The LLM (`infra/llm.py`, the
+the company record (`stray.companies.enrich`, short timeout) and the homepage (read directly through
+the SSRF check; a script-only page also through `stray.web.extract`). The LLM (`infra/llm.py`, the
 Vercel AI Gateway, `onboarding_llm_model`) proposes inputs from that evidence only; Jev
 (`openrouter.ai-judge.decide`) ranks the tasks, with the landing path and referrer as evidence, and
 keeps a proposed term, competitor or topic only when its real results fit. A slot nothing grounds
 keeps its labelled example.
 
 Every catalog call of the lookup is a house call (`application/house_calls.py`): an ordinary metered
-call with the house team's `onboarding_treg_token` at `onboarding_treg_url` (empty: this registry),
+call with the house team's `onboarding_stray_token` at `onboarding_stray_url` (empty: this registry),
 capped per signup by `onboarding_max_house_micro`. `OnboardingProfile` (one row per user, payload
 encrypted; `first_run.py` its only writer) holds the rows, evidence, ranking, fills and `here_for`.
 `GET /onboarding` never returns the evidence.

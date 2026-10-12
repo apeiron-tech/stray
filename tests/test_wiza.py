@@ -10,16 +10,16 @@ import httpx
 import pytest
 from sqlmodel import select
 
-from treg import audit
-from treg.application import asynctasks as async_task_app
-from treg.application.call import service as call_service
-from treg.application.call import route as call_route
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
-from treg.domain.capacity import collectors, policy
-from treg.domain.catalog import store as catalog_store
-from treg.infra.db import session_maker
-from treg.models import AsyncTaskRecord, CallRecord, Hold
+from stray import audit
+from stray.application import asynctasks as async_task_app
+from stray.application.call import service as call_service
+from stray.application.call import route as call_route
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
+from stray.domain.capacity import collectors, policy
+from stray.domain.catalog import store as catalog_store
+from stray.infra.db import session_maker
+from stray.models import AsyncTaskRecord, CallRecord, Hold
 
 
 async def _balance(clients) -> int:
@@ -29,8 +29,8 @@ async def _balance(clients) -> int:
 
 @pytest.fixture
 def wiza_platform_on(monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "wiza")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_WIZA", "PLATFORM-WIZA")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "wiza")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -112,8 +112,8 @@ async def test_wiza_routed_email_waits_for_terminal_result_and_settles_exact_usa
     monkeypatch.setattr(call_service, "relay", relay)
     before = await _balance(clients)
     result = await clients.post(
-        "/call/treg.people.email.find",
-        headers={"X-Treg-Route-Prefer": "wiza"},
+        "/call/stray.people.email.find",
+        headers={"X-Stray-Route-Prefer": "wiza"},
         json={"full_name": "Jane Example", "domain": "example.com"},
     )
     assert result.status_code == 200, result.text
@@ -121,8 +121,8 @@ async def test_wiza_routed_email_waits_for_terminal_result_and_settles_exact_usa
         "email": "jane@example.com", "first_name": "Jane", "last_name": "Example",
         "verified": True,
     }
-    assert result.json()["_treg"]["served_by"] == "wiza.people.email.find"
-    assert result.headers["x-treg-cost-micro"] == "50000"
+    assert result.json()["_stray"]["served_by"] == "wiza.people.email.find"
+    assert result.headers["x-stray-cost-micro"] == "50000"
     assert await _balance(clients) == before - 50_000
     assert calls[0][2] == {
         "individual_reveal": {"full_name": "Jane Example", "domain": "example.com"},
@@ -182,7 +182,7 @@ async def test_wiza_direct_hit_waits_for_terminal_result(
     })
     assert response.status_code == 200
     assert response.json()["data"]["status"] == "queued"
-    call_ref = response.headers["x-treg-call-id"]
+    call_ref = response.headers["x-stray-call-id"]
     await audit.drain()
     async with session_maker() as db:
         original = (await db.execute(select(CallRecord).where(
@@ -238,7 +238,7 @@ async def test_wiza_terminal_hit_precedes_audit_insert(clients, monkeypatch, wiz
                           "accept_generic": False},
     })
     assert response.status_code == 200
-    call_ref = response.headers["x-treg-call-id"]
+    call_ref = response.headers["x-stray-call-id"]
     await clients.get("/call/wiza.people.reveal.get", params={"id": 9876})
     await clients.get("/call/wiza.people.reveal.get", params={"id": 9876})
     await audit.drain()
@@ -290,7 +290,7 @@ async def test_wiza_terminal_poll_does_not_wait_for_audit_writer(
                               "accept_generic": False},
         }), timeout=5)
         assert submitted.status_code == 200
-        call_ref = submitted.headers["x-treg-call-id"]
+        call_ref = submitted.headers["x-stray-call-id"]
         await asyncio.wait_for(writer_entered.wait(), timeout=5)
         polled = await asyncio.wait_for(clients.get(
             "/call/wiza.people.reveal.get", params={"id": 5432}), timeout=5)
@@ -338,13 +338,13 @@ async def test_wiza_routed_child_records_terminal_verdict(
 
     monkeypatch.setattr(call_service, "relay", relay)
     result = await clients.post(
-        f"/call/treg.people.{capability}.find",
-        headers={"X-Treg-Route-Prefer": "wiza", "X-Treg-Route-Waterfall": "0"},
+        f"/call/stray.people.{capability}.find",
+        headers={"X-Stray-Route-Prefer": "wiza", "X-Stray-Route-Waterfall": "0"},
         json={"full_name": "Person Example", "domain": "sample.example"},
     )
     assert result.status_code == 200, result.text
-    assert result.json()["_treg"]["served_by"] == endpoint
-    assert result.json()["_treg"]["outcome"] == ("hit" if expected_hit else "miss")
+    assert result.json()["_stray"]["served_by"] == endpoint
+    assert result.json()["_stray"]["outcome"] == ("hit" if expected_hit else "miss")
     assert polls == 2
     await audit.drain()
     async with session_maker() as db:
@@ -376,22 +376,22 @@ async def test_wiza_routed_timeout_is_pending_keeps_hold_and_does_not_resubmit(
 
     monkeypatch.setattr(call_service, "relay", relay)
     monkeypatch.setattr(call_route, "ROUTED_ASYNC_WAIT_SECONDS", 0.01)
-    headers = {"X-Treg-Route-Prefer": "wiza", "Idempotency-Key": "wiza-pending-once"}
+    headers = {"X-Stray-Route-Prefer": "wiza", "Idempotency-Key": "wiza-pending-once"}
     first = await clients.post(
-        "/call/treg.people.phone.find", headers=headers,
+        "/call/stray.people.phone.find", headers=headers,
         json={"linkedin_url": "https://www.linkedin.com/in/example"},
     )
     second = await clients.post(
-        "/call/treg.people.phone.find", headers=headers,
+        "/call/stray.people.phone.find", headers=headers,
         json={"linkedin_url": "https://www.linkedin.com/in/example"},
     )
     assert first.status_code == second.status_code == 202
     assert submissions == 1
-    meta = first.json()["_treg"]
+    meta = first.json()["_stray"]
     assert meta["outcome"] == "pending" and meta["charged_micro"] is None
     assert meta["reserved_micro"] == 150_000 and meta["call_ref"]
-    assert "x-treg-cost-micro" not in first.headers
-    assert first.headers["x-treg-reserved-micro"] == "150000"
+    assert "x-stray-cost-micro" not in first.headers
+    assert first.headers["x-stray-reserved-micro"] == "150000"
     async with session_maker() as db:
         task = (await db.execute(select(AsyncTaskRecord))).scalars().first()
         assert task.status == "pending" and task.reserved_micro == 150_000
@@ -401,8 +401,8 @@ async def test_wiza_routed_timeout_is_pending_keeps_hold_and_does_not_resubmit(
 async def test_wiza_routed_poll_404_stays_pending_without_paid_fallback(
     clients, monkeypatch, wiza_platform_on,
 ):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_HUNTER", "PLATFORM-HUNTER")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "wiza,hunter")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_HUNTER", "PLATFORM-HUNTER")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "wiza,hunter")
     get_settings.cache_clear()
     endpoint = catalog_store.load().by_id["wiza.people.email.find"]
     monkeypatch.setitem(endpoint["async"], "interval", 0.01)
@@ -432,13 +432,13 @@ async def test_wiza_routed_poll_404_stays_pending_without_paid_fallback(
     monkeypatch.setattr(call_service, "relay", relay)
     before = await _balance(clients)
     result = await clients.post(
-        "/call/treg.people.email.find",
-        headers={"X-Treg-Route-Prefer": "wiza"},
+        "/call/stray.people.email.find",
+        headers={"X-Stray-Route-Prefer": "wiza"},
         json={"full_name": "Jane Example", "domain": "example.com"},
     )
     assert result.status_code == 202, result.text
-    assert result.json()["_treg"]["outcome"] == "pending"
-    assert result.json()["_treg"]["charged_micro"] is None
+    assert result.json()["_stray"]["outcome"] == "pending"
+    assert result.json()["_stray"]["charged_micro"] is None
     assert calls == [("wiza", "POST"), ("wiza", "GET")]
     assert await _balance(clients) == before - 75_000
 
@@ -492,12 +492,12 @@ async def test_wiza_failed_reveal_releases_hold_and_is_a_waterfall_miss(
     monkeypatch.setattr(call_service, "relay", relay)
     before = await _balance(clients)
     result = await clients.post(
-        "/call/treg.people.email.find", headers={"X-Treg-Route-Prefer": "wiza"},
+        "/call/stray.people.email.find", headers={"X-Stray-Route-Prefer": "wiza"},
         json={"full_name": "Nobody Here", "domain": "example.com"},
     )
     assert result.status_code == 200
-    assert result.json()["_treg"]["outcome"] == "miss"
-    assert result.headers["x-treg-cost-micro"] == "0"
+    assert result.json()["_stray"]["outcome"] == "miss"
+    assert result.headers["x-stray-cost-micro"] == "0"
     assert await _balance(clients) == before
     async with session_maker() as db:
         task = (await db.execute(select(AsyncTaskRecord))).scalars().first()

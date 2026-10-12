@@ -5,12 +5,12 @@ from datetime import timedelta
 import pytest
 from sqlalchemy import select
 
-from treg.application import arena_insights as service
-from treg.domain import arena_insights as rules
-from treg.domain.catalog import store
-from treg.infra.db import session_maker
-from treg.models import ArenaInsightState, ArenaObservation, ArchiveKey, ArchiveSnapshot, CallRecord
-from treg.timeutil import utcnow_naive as now
+from stray.application import arena_insights as service
+from stray.domain import arena_insights as rules
+from stray.domain.catalog import store
+from stray.infra.db import session_maker
+from stray.models import ArenaInsightState, ArenaObservation, ArchiveKey, ArchiveSnapshot, CallRecord
+from stray.timeutil import utcnow_naive as now
 
 EP = "tomba.people.email.find"
 
@@ -220,7 +220,7 @@ async def test_malformed_evidence_cannot_block_the_collection_cursor(clients, mo
 
 @pytest.mark.parametrize('read_mode', ['db', 'r2-first'])
 async def test_corrupt_compressed_body_does_not_block_other_arena_evidence(clients, monkeypatch, read_mode):
-    from treg.config import get_settings
+    from stray.config import get_settings
     monkeypatch.setattr(get_settings(), 'archive_body_read_result', read_mode)
     await record('broken', response={'data': {'email': 'broken@example.test'}})
     async with session_maker() as db:

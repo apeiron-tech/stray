@@ -39,13 +39,13 @@ Neither of the first two fetches a second page. The join in agent three is a mer
 
 ```bash
 # join.sh — last 7 days of raises → the revenue leader at each → ranked
-treg call predictleads.financing.discover --query 'days=7' --query 'min_amount=5000000' \
+stray call predictleads.financing.discover --query 'days=7' --query 'min_amount=5000000' \
   | jq -c '.data[] | {domain:.attributes.domain, amount:.attributes.amount, date:.attributes.date}' > raises.jsonl
 
 while read -r R; do
   D=$(echo "$R" | jq -r .domain)
-  P=$(treg call icypeas.people.search --method POST --data "{\"query\":{\"currentCompanyWebsite\":{\"include\":[\"$D\"]},\"currentJobTitle\":{\"include\":[\"VP Sales\",\"CRO\",\"Head of Revenue\"]}},\"pagination\":{\"size\":1}}" | jq -c '.items[0]')
-  PROF=$(treg call scrapecreators.linkedin.user.profile --query "url=$(echo "$P" | jq -r .linkedinUrl)")
+  P=$(stray call icypeas.people.search --method POST --data "{\"query\":{\"currentCompanyWebsite\":{\"include\":[\"$D\"]},\"currentJobTitle\":{\"include\":[\"VP Sales\",\"CRO\",\"Head of Revenue\"]}},\"pagination\":{\"size\":1}}" | jq -c '.items[0]')
+  PROF=$(stray call scrapecreators.linkedin.user.profile --query "url=$(echo "$P" | jq -r .linkedinUrl)")
   jq -n --argjson r "$R" --argjson p "$P" --argjson prof "$PROF" '{trigger:$r, person:$p, record:$prof}'
 done < raises.jsonl > joined.jsonl
 ```

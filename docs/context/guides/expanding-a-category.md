@@ -2,13 +2,13 @@
 title: Expanding a catalog category — the add-a-provider playbook
 status: guide
 sources:
-  - src/treg/oauth_providers.py
-  - src/treg/domain/connections/authorization.py
-  - src/treg/domain/connections/oauth_flow.py
-  - src/treg/infra/oauth_exchange.py
-  - src/treg/application/connect.py
-  - src/treg/routers/connections.py
-  - src/treg/config.py
+  - src/stray/oauth_providers.py
+  - src/stray/domain/connections/authorization.py
+  - src/stray/domain/connections/oauth_flow.py
+  - src/stray/infra/oauth_exchange.py
+  - src/stray/application/connect.py
+  - src/stray/routers/connections.py
+  - src/stray/config.py
 related:
   - architecture/auth-secrets.md
   - interface/api.md
@@ -44,7 +44,7 @@ Tests extend the existing auth, capacity and marketplace files. See [catalog](..
 ## The two kinds of provider
 - **API-key** (`auth_kind="key"`) — the user pastes a key; self-serve; **the fast path** (research → implement
   → live-test in one session). This is the workhorse and where almost all growth happens.
-- **OAuth** (`auth_kind="oauth"`) — treg holds its own registered app; **heavy** (needs a dev-app registration
+- **OAuth** (`auth_kind="oauth"`) — stray holds its own registered app; **heavy** (needs a dev-app registration
   + client credentials). Add as **unconfigured** entries (they list `configured:false` until this deployment
   sets the credentials).
 - **token** (Slack) — bring-your-own bot token; shares the pasted-secret path via `uses_pasted_secret`.
@@ -73,8 +73,8 @@ Tests extend the existing auth, capacity and marketplace files. See [catalog](..
    - `404`/`502` in the reason → wrong probe path / host → fix `base_url`/`probe_path`.
    This one step caught Apollo (`is_logged_in`), Akta (trailing slash), Majestic (`Code`), and ScrapeCreators
    (accepts any key). **Never ship a key provider you haven't watched reject a bogus key.** Run in a throwaway
-   org and delete it after (test users are `e2e-…@treg.local`).
-7. **Run the suite, [sync docs](../../../.agents/skills/tools-registry-context/MAINTAINING.md), commit + push.**
+   org and delete it after (test users are `e2e-…@stray.local`).
+7. **Run the suite, [sync docs](../../../.agents/skills/stray-context/MAINTAINING.md), commit + push.**
 
 ## The verify toolbox — which `OAuthProvider` field for which bad-key behavior
 
@@ -151,7 +151,7 @@ selected method on the pending flow and secret. Add endpoint authorization metad
 resolution selects by provider and grant identity before it compares shared upstream hosts.
 Instagram direct Login plus optional Facebook Page tools is the reference implementation; see
 [instagram-oauth](../architecture/instagram-oauth.md).
-1. treg must register its **own** dev app on the network → `client_id`/`client_secret` → add the two settings
+1. stray must register its **own** dev app on the network → `client_id`/`client_secret` → add the two settings
    to `config.py` (`Settings`) so they load from env; the registry entry names them via
    `client_id_setting`/`client_secret_setting`.
 2. Add the `OAuthProvider` with `auth_uri`/`token_uri`/`scopes`/`base_url`/`token_endpoint_auth_method`, a

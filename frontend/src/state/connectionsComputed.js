@@ -5,7 +5,7 @@ const RANK = {reconnect:0, second:1, failing:2, setup:3, choose:4, ok:5}
 
 export default {
 providerIndex(){ return new Map(this.providers.map(p=>[p.service,p])); },
-// A provider key saved as a secret NAMED for the provider (`treg secret add apollo …`, or a
+// A provider key saved as a secret NAMED for the provider (`stray secret add apollo …`, or a
     // Secrets row) rather than connected. The credential ladder uses it all the same, so it belongs
     // beside the connections, not among the team's own-tool secrets. A connected credential for the
     // same provider outranks it, and its card says so.

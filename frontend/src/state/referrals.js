@@ -2,7 +2,7 @@
 export default {
 // ---- referrals ----
     // GET /referrals also runs the payout sweep server-side, so simply opening this page is what
-    // makes a reward whose hold has elapsed actually land. That is deliberate: treg has no
+    // makes a reward whose hold has elapsed actually land. That is deliberate: stray has no
     // scheduler, so the work rides on a request someone is already making.
     async loadReferrals(){ if(!this.authed) return;
       this.ref={...this.ref, loading:true};

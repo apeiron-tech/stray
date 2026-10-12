@@ -15,7 +15,7 @@ Convert n reference images (at least one contains a person) into ONE AIGC image 
 2. **Lock absence too.** Anything a model might add but the reference does not contain is stated explicitly as `"none"` (glasses, hat, earrings, bag, second person, text, logos, props, sweat, tattoos elsewhere) and also listed in `negative_prompt`.
 3. **Fields are open-ended.** The Schema below is a minimum floor, not a limit. Add any key, nested object or array needed to pin a variable. Prefer splitting one vague field into several precise sub-fields. More locked fields is always better than fewer.
 4. **Always de-slopped.** Every output, version and revision applies the full De-slop step, regardless of the reference's style, medium or polish.
-5. **JSON only.** Reply with exactly one ```json code block and nothing else. Only exception: if no image contains a person, ask one short clarifying question in the user's language. Generating the image is a separate step that runs only after the user approves the JSON (§ Generate through treg).
+5. **JSON only.** Reply with exactly one ```json code block and nothing else. Only exception: if no image contains a person, ask one short clarifying question in the user's language. Generating the image is a separate step that runs only after the user approves the JSON (§ Generate through stray).
 6. **Top-level constraints.** `critical_constraints` and `negative_prompt` are top-level keys, right after `prompt_id` / `prompt_language`.
 7. **Complete output.** Always output the full JSON, even for a one-field revision, with the `prompt_id` version suffix bumped (`_v1`, `_v2`, ...).
 
@@ -118,17 +118,17 @@ Start from the Schema, fill every key, then add every extra key the audit produc
 - **Consistency check**: no contradiction between positive fields and `negative_prompt` (e.g. positive noise vs negative "film grain" → write "heavy film grain"); ring, bracelet and tattoo sides agree across all sections; `output.resolution` matches `output.aspect_ratio`; every color has a hex and the palette lists the main ones.
 - **Drift check**: every drift axis found in step 4 appears in both `critical_constraints` and `negative_prompt`.
 
-## Generate through treg
+## Generate through stray
 
-Once the user approves the JSON, generate the image **through treg**, never with a vendor key on this machine. treg injects the credential server-side and the charge lands on the team's prepaid balance. If `treg --version` fails, install it first:
+Once the user approves the JSON, generate the image **through stray**, never with a vendor key on this machine. stray injects the credential server-side and the charge lands on the team's prepaid balance. If `stray --version` fails, install it first:
 
 ```bash
 curl -fsSL https://treg.to/install.sh | sh
-treg login
+stray login
 ```
 
-1. Host the reference images: `treg host ref1.jpg` prints a public URL that serves raw image bytes (7-day TTL). Never use paste hosts; vendors probe the URL and reject HTML file pages.
-2. Serialize the approved JSON as the prompt string and submit. Say the price before running; `treg catalog get <id>` shows the live table.
+1. Host the reference images: `stray host ref1.jpg` prints a public URL that serves raw image bytes (7-day TTL). Never use paste hosts; vendors probe the URL and reject HTML file pages.
+2. Serialize the approved JSON as the prompt string and submit. Say the price before running; `stray catalog get <id>` shows the live table.
 
 | Endpoint | Price (1K) | Notes |
 |---|---|---|
@@ -138,14 +138,14 @@ treg login
 | `piapi.image-gen.gemini-3-pro-image` | $0.105 | same model, when reAPI is down |
 
 ```bash
-treg call reapi.image-gen.gemini-3-pro-image --method POST --data '{
+stray call reapi.image-gen.gemini-3-pro-image --method POST --data '{
   "model": "gemini-3-pro-image-preview",
   "prompt": "<the approved JSON, minified>",
   "size": "9:16", "resolution": "1K",
-  "image_urls": ["<treg host URL of the anchor image>"]
+  "image_urls": ["<stray host URL of the anchor image>"]
 }'
 # -> {"id": "task_...", "status": "processing"}
-treg call reapi.tasks.get --query id=task_...   # poll every 5 s, free; output.image_urls when status == completed
+stray call reapi.tasks.get --query id=task_...   # poll every 5 s, free; output.image_urls when status == completed
 ```
 
 - A catalog id takes its parameters in `--data` or `--query`, never as a URL path.

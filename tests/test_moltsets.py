@@ -4,17 +4,17 @@ import json
 import httpx
 import pytest
 
-from treg.application.call import service
-from treg.config import get_settings
-from treg.domain.capacity import collectors
-from treg.domain.capacity.policy import default_policy
+from stray.application.call import service
+from stray.config import get_settings
+from stray.domain.capacity import collectors
+from stray.domain.capacity.policy import default_policy
 from test_marketplace_call import _balance, _entries, _fake_relay, platform_on
 
 
 @pytest.fixture
 def moltsets_on(monkeypatch, platform_on):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_MOLTSETS", "PLATFORM-MOLTSETS")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "moltsets")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_MOLTSETS", "PLATFORM-MOLTSETS")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "moltsets")
     get_settings.cache_clear()
 
 
@@ -57,7 +57,7 @@ async def test_variable_search_tools_are_not_shared_key_offers(
     assert not [e for e in await _entries(clients) if e["kind"] in ("reserve", "settle", "release")]
 
 
-async def test_byok_can_call_blocked_search_tools_without_treg_meter(clients, moltsets_on):
+async def test_byok_can_call_blocked_search_tools_without_stray_meter(clients, moltsets_on):
     await clients.post("/secrets", json={"name": "moltsets", "value": "OWN-MOLTSETS"})
     before = await _balance(clients)
     bodies = {
@@ -70,7 +70,7 @@ async def test_byok_can_call_blocked_search_tools_without_treg_meter(clients, mo
         assert response.status_code == 200, response.text
         echoed = response.json()
         assert echoed["auth"] == "Bearer OWN-MOLTSETS"
-        assert echoed["headers"]["user-agent"] == "treg/1.0 (+https://treg.to)"
+        assert echoed["headers"]["user-agent"] == "stray/1.0 (+https://treg.to)"
         assert json.loads(echoed["body"]) == body
     assert await _balance(clients) == before
     assert not [e for e in await _entries(clients) if e["kind"] in ("reserve", "settle", "release")]
@@ -95,7 +95,7 @@ async def test_capacity_probe_and_policy(five_hour, weekly, token_balance, expec
     def probe(request):
         assert request.method == "POST" and json.loads(request.content) == {}
         assert request.headers["authorization"] == "Bearer test"
-        assert request.headers["user-agent"] == "treg/1.0 (+https://treg.to)"
+        assert request.headers["user-agent"] == "stray/1.0 (+https://treg.to)"
         return httpx.Response(200, json={"results": account, "status": "ok"})
     async with httpx.AsyncClient(transport=httpx.MockTransport(probe)) as client:
         row = await collectors._moltsets(client, "test")

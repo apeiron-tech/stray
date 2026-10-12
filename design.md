@@ -1,9 +1,9 @@
 ---
-name: treg-design-guidelines
-description: Design and implement treg product interfaces using the redesigned Getting started experience as the visual baseline. Covers brand, layout, typography, color, components, responsive behavior, interaction, and accessibility.
+name: stray-design-guidelines
+description: Design and implement stray product interfaces using the redesigned Getting started experience as the visual baseline. Covers brand, layout, typography, color, components, responsive behavior, interaction, and accessibility.
 ---
 
-# Design interfaces like treg
+# Design interfaces like stray
 
 Help users understand what their agent can do and take the next step immediately: set up an agent, find a tool, connect their own account, or inspect calls and spending. The interface should feel clear, light, and technically literate. Establish its identity through pixel typography, soft surfaces, and concrete task imagery.
 
@@ -16,10 +16,10 @@ The following sources were checked on 2026-09-07:
 | Source | Purpose |
 | --- | --- |
 | [Vercel design.md](https://vercel.com/design.md) | Reference for organizing task priorities, design rules, visual systems, interactions, and validation. Do not inherit Vercel branding, CSS, or its report-specific layouts |
-| [Live redesign prototype](https://treg-design.vercel.app/#start) | Inspect deployed HTML, CSS, and interaction source |
-| [Design repository](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | Pinned reference revision; its `styles.css` was byte-identical to the live CSS retrieved for this review |
-| [Complete redesigned Figma page, 12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=12-596) | Design context and screenshot inspected; primary visual reference for Getting started |
-| [Figma workspace, 1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=1-3) | Contains multiple versions; the sidebar layout in `12:33` is not the default shell for the redesign |
+| [Live redesign prototype](https://stray-design.vercel.app/#start) | Inspect deployed HTML, CSS, and interaction source |
+| [Design repository](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | Pinned reference revision; its `styles.css` was byte-identical to the live CSS retrieved for this review |
+| [Complete redesigned Figma page, 12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=12-596) | Design context and screenshot inspected; primary visual reference for Getting started |
+| [Figma workspace, 1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=1-3) | Contains multiple versions; the sidebar layout in `12:33` is not the default shell for the redesign |
 
 Visual review used the Figma screenshot; deployed styles and behavior were checked through source code. Live browser rendering and interaction acceptance checks have not been completed.
 
@@ -35,12 +35,12 @@ Below, “reference values” come from these designs or their source. “Implem
 
 ## 2. Product language
 
-- Write the brand as **treg**, always lowercase. Describe tasks an agent can complete; avoid vague capability claims.
+- Write the brand as **stray**, always lowercase. Describe tasks an agent can complete; avoid vague capability claims.
 - **a tool**: what an agent calls.
 - **the catalog**: publicly discoverable tools.
 - **your own tools**: tools supported by the team's own keys and skills.
 - **registry**: the server itself only. Do not call either half of the product a vault, marketplace, or registry.
-- A team's own key takes precedence, is never metered by treg, and never participates in routing or overflow. Preserve this distinction in billing copy.
+- A team's own key takes precedence, is never metered by stray, and never participates in routing or overflow. Preserve this distinction in billing copy.
 - Do not broadly promise to “automatically choose the best provider.” Describe such behavior only within the explicitly disclosed routed-endpoint and overflow cases.
 - Provider counts, prices, balances, connection states, and rewards must come from real data. The prototype's team name, avatar, balance, and demo token are not production defaults.
 
@@ -96,7 +96,7 @@ Use fluid layout instead of copying Figma's absolute coordinates. Set `min-width
 
 Interface text uses the operating system's UI font (`--sans`: SF Pro on Apple platforms, Segoe UI on Windows, Roboto on Android), as ChatGPT's product does. It downloads nothing, so text is final from the first paint and never reflows when a web font arrives; the brand is carried by Geist Pixel titles and DM Mono figures, not by body text. Those two faces are the only web fonts: pinned `@fontsource` npm packages (OFL-1.1), bundled same-origin with the Dashboard. Do not add a body web font without a brand reason strong enough to pay for its download and swap. Code falls back to system monospace. If Geist Pixel is unavailable, fall back to mono without blocking the page. Chinese content needs a system font fallback with complete glyph coverage; do not force it into a pixel font with missing glyphs.
 
-Preserve DM Mono for balances as a treg detail instead of adopting Vercel's rule of using Sans for every financial figure. Use tabular numerals for comparisons, with consistent units and precision.
+Preserve DM Mono for balances as a stray detail instead of adopting Vercel's rule of using Sans for every financial figure. Use tabular numerals for comparisons, with consistent units and precision.
 
 The wordmark target is the system UI font at 15px / 500 (Figma used Google Sans Flex). The current prototype's `.brand` still inherits an earlier mono declaration. This is a known discrepancy, not a second brand typography rule.
 
@@ -133,7 +133,7 @@ Default to light mode. Provide Light / Dark in the account menu and remember an 
 | Use | Reference radius |
 | --- | --- |
 | Main setup card | 32px; 24px on narrow screens |
-| Try it out and Build on treg outer containers | 24px |
+| Try it out and Build on stray outer containers | 24px |
 | Setup groups and task-image cards | 20px |
 | Code surfaces, image previews, and task text overlays | 16px |
 | Catalog platform cards | 15px |
@@ -150,19 +150,19 @@ Allow these brand effects within the following limits:
 - **Localized blur**: reference blur is 14px for the top bar and 32px for task-card text overlays. Provide a sufficiently opaque, readable background when filters are unsupported.
 - **Localized gradients**: retain image overlays that aid readability, the balance pill's very subtle gradient, and the designed referral entry treatment. Do not expand these into site-wide gradient buttons, glowing borders, or gradient text.
 
-Do not directly apply Vercel's blanket restrictions on textures, images, or blur to treg. Equally, do not turn these limited exceptions into decoration required on every page.
+Do not directly apply Vercel's blanket restrictions on textures, images, or blur to stray. Equally, do not turn these limited exceptions into decoration required on every page.
 
 ## 8. Core components and task flows
 
 ### Getting started
 
-Organize the page as “Set up your agent → Try it out → optional Build on treg.” Step numbers represent action order, not decorative chapter numbers.
+Organize the page as “Set up your agent → Try it out → optional Build on stray.” Step numbers represent action order, not decorative chapter numbers.
 
 - The setup card shows the selected agent, its instructions, and a copyable command or prompt together. When the agent changes, keep this content and any applicable imagery consistent.
-- Mask treg tokens by default. Reveal and copy are separate actions. Copy the complete value the user is authorized to access, never the masked string; successful copying does not automatically reveal the token.
+- Mask stray tokens by default. Reveal and copy are separate actions. Copy the complete value the user is authorized to access, never the masked string; successful copying does not automatically reveal the token.
 - Make the whole example card copy its prompt, with a local `Copied` confirmation. Do not present copying as an executed call.
 - Group OAuth connections by user task. Identify the service at the entry point; obtain actual permission scopes, review status, and errors from product logic.
-- Build on treg is optional. A segmented control presents the relevant instructions for its two audiences; progressively disclose manual setup.
+- Build on stray is optional. A segmented control presents the relevant instructions for its two audiences; progressively disclose manual setup.
 
 ### Catalog
 
@@ -189,7 +189,7 @@ Task cards may rise subtly by 1-2px. Movement must not interfere with clicking o
 
 Background video and agent previews are optional brand media. A static poster must provide a complete experience. Video must not block the page, carry status information, or autoplay sound. Respect reduced motion by stopping both types of autoplay video and nonessential movement while retaining static images. Long-running autoplay also needs an accessible pause mechanism. Pausing only the ASCII background while continuing the agent preview is incomplete support.
 
-Obtain assets from the design repository's [`assets/figma/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) and [`assets/icons/treg/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/treg). Reuse the real treg mark, provider logos, and icons instead of emoji or hand-drawn approximations. Set explicit image dimensions to prevent layout shifts. Ship project-hosted assets rather than depending on temporary Figma export URLs.
+Obtain assets from the design repository's [`assets/figma/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) and [`assets/icons/stray/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/stray). Reuse the real stray mark, provider logos, and icons instead of emoji or hand-drawn approximations. Set explicit image dimensions to prevent layout shifts. Ship project-hosted assets rather than depending on temporary Figma export URLs.
 
 ## 10. Responsive behavior and accessibility
 
@@ -216,11 +216,11 @@ Critical scripts must follow the project's same-origin asset convention. The pag
 
 ## 12. Pre-delivery checks
 
-1. The first viewport communicates the current task, next action, and treg identity. Brand decoration has not delayed the primary operation.
+1. The first viewport communicates the current task, next action, and stray identity. Brand decoration has not delayed the primary operation.
 2. Typography, image crops, radii, and alignment match the specified Figma version without importing the old sidebar design.
 3. Both themes are readable. There is no missing focus, essential low-contrast copy, overflow, or necessary entry point lost on narrow screens.
 4. Agent selection, copying, token reveal, search, filters, menus, and theme switching work. Success, failure, empty, and loading states are clear.
-5. Copy follows treg vocabulary. Balances and states come from real data. There are no demo tokens, simulated successes, or invented capabilities.
+5. Copy follows stray vocabulary. Balances and states come from real data. There are no demo tokens, simulated successes, or invented capabilities.
 6. Reduced motion, font failures, and media failures all have complete fallbacks.
 7. Compare the first viewport and full page in a real browser. Check desktop, mobile, keyboard paths, and dark mode. Record anything unverified explicitly; source inspection is not visual acceptance testing.
 

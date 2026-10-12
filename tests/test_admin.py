@@ -9,25 +9,25 @@ from sqlmodel import select
 
 from conftest import make_upstream
 
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import CreditBlock, LedgerEntry
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import CreditBlock, LedgerEntry
 
 ADMIN = "ENV-ADMIN-SECRET"
 
 
 def _h(t: str) -> dict:
-    return {"X-Treg-Token": t}
+    return {"X-Stray-Token": t}
 
 
 def _a() -> dict:
-    return {"X-Treg-Token": ADMIN}
+    return {"X-Stray-Token": ADMIN}
 
 
 @pytest.fixture
 async def c(monkeypatch):
-    monkeypatch.setenv("TREG_ADMIN_TOKEN", ADMIN)
+    monkeypatch.setenv("STRAY_ADMIN_TOKEN", ADMIN)
     get_settings.cache_clear()
     await reset_db()
     app.state.http = AsyncClient(transport=ASGITransport(app=make_upstream()), base_url="http://upstream")
@@ -274,8 +274,8 @@ async def test_stats_count_calls_from_the_day_table_not_the_call_table(c):
     """It loaded every call row to count them, which timed out at production size and answered
     502. Windowed call numbers now come from `endpointdaystat`."""
     from datetime import datetime, timedelta, timezone
-    from treg.infra.db import session_maker
-    from treg.models import EndpointDayStat
+    from stray.infra.db import session_maker
+    from stray.models import EndpointDayStat
 
     await _seed(c)
     today = datetime.now(timezone.utc).date()
@@ -292,7 +292,7 @@ async def test_stats_count_calls_from_the_day_table_not_the_call_table(c):
 async def test_admin_calls_reads_new_rows_after_a_cursor_by_provider(c):
     """A live poller reads only what is new: `since_id` returns rows after it oldest first, with
     the provider, charge and timing; `provider` alone is refused so the read stays a key range."""
-    from treg.models import CallRecord
+    from stray.models import CallRecord
     async with session_maker() as s:
         for i, (prov, ok) in enumerate((("crawl4ai", 200), ("firecrawl", 200), ("crawl4ai", 502), ("crawl4ai", 200))):
             s.add(CallRecord(org_id=1, user_email="u@example.com", tool_name=f"{prov}.web.scrape", method="POST",

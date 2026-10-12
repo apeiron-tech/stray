@@ -2,18 +2,18 @@
 title: Landing sandbox backend - front-end entry removed
 status: shipped
 sources:
-  - src/treg/sandbox.py
-  - src/treg/sandbox_identity.py
-  - src/treg/application/onboard/pubfeed.py
-  - src/treg/application/onboard/sandbox.py
-  - src/treg/application/onboard/__init__.py
-  - src/treg/domain/governance/sandbox.py
-  - src/treg/api.py
-  - src/treg/routers/onboard.py
-  - src/treg/routers/web.py
+  - src/stray/sandbox.py
+  - src/stray/sandbox_identity.py
+  - src/stray/application/onboard/pubfeed.py
+  - src/stray/application/onboard/sandbox.py
+  - src/stray/application/onboard/__init__.py
+  - src/stray/domain/governance/sandbox.py
+  - src/stray/api.py
+  - src/stray/routers/onboard.py
+  - src/stray/routers/web.py
   - frontend/src/state/boot.js
   - frontend/src/components/SignedOutPage.vue
-  - src/treg/web/install.sh
+  - src/stray/web/install.sh
 related:
   - interface/dashboard.md
   - interface/onboarding.md
@@ -23,10 +23,10 @@ related:
 # Landing sandbox backend
 
 > **Front-end entry removed.** The logged-out SPA no longer renders the sandbox studio or its coach
-> tour, stores `localStorage['treg-sbx']`, or calls `POST /demo/sandbox`. A use-case CTA arriving at
+> tour, stores `localStorage['stray-sbx']`, or calls `POST /demo/sandbox`. A use-case CTA arriving at
 > `/app?ref=<page>` keeps the parameter for attribution, strips it as a one-shot parameter, and opens
 > the sign-in modal. Plain logged-out `/app` still redirects to `/`. `SignedOutPage.vue` (`/app` while
-> signed out) is now a plain "Sign in to treg" page plus the share-link gate — the marketing hero,
+> signed out) is now a plain "Sign in to stray" page plus the share-link gate — the marketing hero,
 > key-leak explanation and footer CTA it used to render were dropped from this component along with
 > the sandbox studio; that marketing content now lives on the public landing page (`/`) instead.
 
@@ -36,7 +36,7 @@ path in the Dashboard components. Provisioning, export, samples, and garbage col
 remain in `routers/onboard.py`. Their removal is intentionally deferred to the backend follow-up.
 
 ## The throwaway team (`application/onboard/sandbox.py`)
-`mint(db)` creates a login-free team: a `visitor-<hex>@sandbox.treg.local` `User` (can never sign in),
+`mint(db)` creates a login-free team: a `visitor-<hex>@sandbox.stray.local` `User` (can never sign in),
 a `demo` `Org` slugged `sbx-<hex>`, a member `Membership` whose **token is returned** (unlike
 onboarding's `demo.py`, which discards it), plus seeded starters from `DEFAULTS` — real-brand names,
 **fake keys**. To keep the story clean the seed leaves **one** working endpoint on arrival:
@@ -52,7 +52,7 @@ key, so `mint` creates the secret but no Tool); the removed studio used it for i
 user happens to name "sbx …" (slug `sbx-…`) is not misread as a sandbox. It also stays distinct from
 onboarding demo teams (also `demo`, but team-named).
 
-`is_sandbox_user(user)` is the companion check on the **visitor** (email ends in `@sandbox.treg.local`,
+`is_sandbox_user(user)` is the companion check on the **visitor** (email ends in `@sandbox.stray.local`,
 `SANDBOX_DOMAIN`). Such a login-free visitor may act ONLY inside its own sandbox org — it can **never
 create a real team** (`POST /orgs` → `create_org` returns 403: "sign in with GitHub, Google, or email")
 nor otherwise graduate to a real account. Escaping the sandbox requires a real sign-in door.
@@ -60,14 +60,14 @@ nor otherwise graduate to a real account. Escaping the sandbox requires a real s
 ## Safety: sandbox calls never touch the network (except the one live wire)
 `application.call.service` checks `demo_sandbox.is_sandbox(caller.org)` and, for a sandbox, short-circuits to
 `sandbox.synthesize(...)` instead of `relay()`. `synthesize` runs the **real** `injectors.inject` to
-compute exactly what treg would send upstream (the injected header/query), then returns a **labelled
+compute exactly what stray would send upstream (the injected header/query), then returns a **labelled
 dummy** response — brand-shaped via `SAMPLE_BODIES` (Stripe charge list / PostHog events). So the
 injected credential shown is 100% real, but no outbound request is ever made: no SSRF, no open relay,
 regardless of the (arbitrary) base_url the visitor typed. Org-scoped tool resolution already prevents a
 sandbox token from reaching any tool it didn't register.
 
 ## The one live wire (real Stripe test charges)
-There is a single deliberate exception, gated on env `TREG_DEMO_STRIPE_KEY` (`settings.demo_stripe_key`,
+There is a single deliberate exception, gated on env `STRAY_DEMO_STRIPE_KEY` (`settings.demo_stripe_key`,
 a Stripe **restricted test key** limited to Charges). When it is set, a sandbox call to the exact seeded
 stripe tool relays for real. The call use case matches the tool with `demo_sandbox.is_live_tool(tool)` — a strict
 fingerprint (`LIVE_HOST == "api.stripe.com"` and `base_url.rstrip("/") == LIVE_BASE
@@ -93,7 +93,7 @@ visitor `curl` → live wire relays a Stripe test charge → Stripe fires `charg
 (`landing_stripe_feed`) streams it over Server-Sent Events via `pubfeed.stream()`. The webhook verifies the
 `Stripe-Signature` with `pubfeed.verify_signature` (constant-time HMAC-SHA256 over `{t}.{body}`, timestamps
 older than `SIG_TOLERANCE_S` rejected as replays, any of several `v1` signatures accepted during rotation);
-it returns **404 when `TREG_DEMO_STRIPE_WEBHOOK_SECRET` (`settings.demo_stripe_webhook_secret`) is unset**, so
+it returns **404 when `STRAY_DEMO_STRIPE_WEBHOOK_SECRET` (`settings.demo_stripe_webhook_secret`) is unset**, so
 a deploy without the secret exposes no unauthenticated POST surface. Design points:
 - **In-memory + tiny.** A `deque(maxlen=FEED_MAX)` ring buffer plus a set of per-subscriber `asyncio.Queue`s;
   it is a marketing surface, not a system of record. A dropped event on restart costs nothing (Stripe retries),
@@ -122,28 +122,28 @@ import is disabled in the sandbox"), because a skill package could register unli
 the `MAX_TOOLS`/`MAX_SECRETS` cap.
 
 `export_skill(db, org)` → `GET /demo/sandbox/skill` turns whatever the visitor built into a shareable
-skill manifest (treg.json + SKILL.md, secret values redacted to placeholders).
+skill manifest (stray.json + SKILL.md, secret values redacted to placeholders).
 
 ## Hosted sample skills + the "Run in Claude Code" flow
 `SAMPLE_SKILLS` (`posthog-insights`, `stripe-billing`) each mirror a seeded tool so an installed skill's
 proxied calls resolve against the visitor's sandbox. `skill_files(name, base, token)` builds the three
-files a skill folder is — `SKILL.md` (agent recipe: call the treg proxy, key injected server-side),
-`treg.json` (wiring: base_url + which secret by name), `.secret` (empty; value stays in the vault).
+files a skill folder is — `SKILL.md` (agent recipe: call the stray proxy, key injected server-side),
+`stray.json` (wiring: base_url + which secret by name), `.secret` (empty; value stays in the vault).
 - `GET /skills/samples` (`skill_samples`) — public JSON of each sample + its files (for the landing).
 - `GET /skills/{name}/install.sh?token=` (`skill_install`) — `install_script(name, base, token)` emits a
   POSIX `sh` that `mkdir -p ./.claude/skills/<name>` and writes the files (token baked in via quoted
   heredocs), so `curl … | sh` from a project dir installs the skill for Claude Code to load. Its recipe
-  calls `{BASE}/call/…` with the caller's treg token — the API key never lands on the machine. The
+  calls `{BASE}/call/…` with the caller's stray token — the API key never lands on the machine. The
   `token` query param is **charset-restricted** (`re.fullmatch(r"[A-Za-z0-9_\-]{1,200}")`, else 422)
   because it is interpolated into that shell script — a crafted value can't inject a newline + extra
   commands into the generated `curl … | sh`.
 
 ## CLI installer
-`GET /install.sh` (`install_sh`) serves `src/treg/web/install.sh`, `{BASE}`-templated like `llms.txt`
+`GET /install.sh` (`install_sh`) serves `src/stray/web/install.sh`, `{BASE}`-templated like `llms.txt`
 (so it targets whatever host is live — a dev box or the real domain). The script now installs from
-**PyPI** (`SRC="tools-registry"`, the light CLI package; the FastAPI/DB server stack is the separate
-`tools-registry[server]` extra for self-hosters) via `uv tool install --force` → `pipx install --force` →
-`pip3 install --user --upgrade`, then runs `treg config --base-url {BASE}`. The uv/pipx paths pin the
+**PyPI** (`SRC="stray"`, the light CLI package; the FastAPI/DB server stack is the separate
+`stray[server]` extra for self-hosters) via `uv tool install --force` → `pipx install --force` →
+`pip3 install --user --upgrade`, then runs `stray config --base-url {BASE}`. The uv/pipx paths pin the
 supported interpreter range (`PYREQ`, kept in sync with `requires-python` in `pyproject.toml`): without
 it uv resolves against its *default* interpreter — its own managed Python first — and a machine whose
 default falls outside the range fails resolution instead of picking (or auto-downloading) a compatible
@@ -151,13 +151,13 @@ one. The pip3 path cannot pick an interpreter at all, so it checks `pip3 --versi
 first and, outside it, prints which Python pip3 belongs to plus the uv one-liner instead of letting
 pip fail with its "Ignored the following versions" wall (a real user hit exactly that). It also
 installs the official
-**tools-registry skill** into every detected agent via `treg skill bootstrap` (Claude Code, Cursor, Codex,
+**stray skill** into every detected agent via `stray skill bootstrap` (Claude Code, Cursor, Codex,
 Gemini, Copilot, OpenCode, Windsurf …), together with every other skill in
 `/.well-known/skills/index.json` (the workflow skills such as `make-ugc` and `lead-signals`; best-effort,
 and an index name must be a plain slug before it becomes a folder), falling back on older CLIs to a Claude-only drop that curls
-`{BASE}/skill.md` into `~/.claude/skills/treg`. Because the package is public on PyPI,
+`{BASE}/skill.md` into `~/.claude/skills/stray`. Because the package is public on PyPI,
 `curl … /install.sh | sh` now works for anyone with no repo/git access needed. The **Getting started**
-dashboard view (`view==='start'`) surfaces this install command + `treg login`/`onboard`/`add`/`call` and
+dashboard view (`view==='start'`) surfaces this install command + `stray login`/`onboard`/`add`/`call` and
 links to the tutorial and `/llms.txt`; `llms.txt` has a matching **Install the CLI** section.
 
 ## Backend follow-up

@@ -1,7 +1,7 @@
 // Hacker News through Algolia's public HN search API. The team registers the host once as its own
 // tool, with no secret:
-//   treg tool add hn --base-url https://hn.algolia.com
-// and lists "hn" in `uses`. treg makes the request; the script never opens a socket.
+//   stray tool add hn --base-url https://hn.algolia.com
+// and lists "hn" in `uses`. stray makes the request; the script never opens a socket.
 export default async function run(ctx) {
   const { query, days, kind, sort, min_points, limit } = ctx.inputs;
   const since = Math.floor(Date.now() / 1000) - days * 86400;

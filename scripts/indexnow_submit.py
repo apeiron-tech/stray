@@ -21,7 +21,7 @@ import re
 import sys
 import urllib.request
 
-KEY = "7c2e4a91b5d3f8e6treg2026"  # must match INDEXNOW_KEY in src/treg/routers/web.py
+KEY = "7c2e4a91b5d3f8e6stray2026"  # must match INDEXNOW_KEY in src/stray/routers/web.py
 
 
 def main() -> int:
@@ -58,7 +58,7 @@ def main() -> int:
 
     # Google retired its sitemap ping endpoint (June 2023); the only supported path is Search
     # Console, which needs the property owner's OAuth. Through the catalog:
-    #   treg call google-search-console.x.webmasters-sitemaps-submit --method PUT \
+    #   stray call google-search-console.x.webmasters-sitemaps-submit --method PUT \
     #     --query siteUrl=sc-domain:treg.to --query feedpath=https://treg.to/sitemap.xml
     print("Google: resubmit through Search Console (google-search-console.x.webmasters-sitemaps-submit)")
     return 0

@@ -1,6 +1,6 @@
-"""Caller tags (`X-Treg-Meta`) — the attribution half of builder-pays billing.
+"""Caller tags (`X-Stray-Meta`) — the attribution half of builder-pays billing.
 
-A builder reselling treg runs their whole user base through ONE org, ONE balance and ONE token, and
+A builder reselling stray runs their whole user base through ONE org, ONE balance and ONE token, and
 tags each call with their own ids (`customer=cust_8123, workspace=ws_9`). This file covers phase 0:
 the tags are parsed once, validated strictly, recorded on the audit row, and never reach the provider.
 
@@ -17,14 +17,14 @@ import pytest
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg import audit, crypto
-from treg.domain import money as ledger
-from treg.application.call import service as call_service
-from treg.application.call import settle as call_settle
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
-from treg.infra.db import session_maker
-from treg.models import Membership, Org, TagSpend, User
+from stray import audit, crypto
+from stray.domain import money as ledger
+from stray.application.call import service as call_service
+from stray.application.call import settle as call_settle
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
+from stray.infra.db import session_maker
+from stray.models import Membership, Org, TagSpend, User
 
 EP = "tikhub.tiktok.video.comments"
 _EPOCH = datetime(2000, 1, 1)
@@ -46,7 +46,7 @@ async def test_tags_land_on_the_audit_row(clients: AsyncClient):
     """The whole bag is recorded, and the primary dimension is copied out to its own columns."""
     await _mk_echo_tool(clients)
     r = await clients.get("/call/echo/anything", headers={
-        "X-Treg-Meta": "customer=cust_8123, workspace=ws_9, feature=email-finder"})
+        "X-Stray-Meta": "customer=cust_8123, workspace=ws_9, feature=email-finder"})
     assert r.status_code == 200, r.text
     row = await _newest_call(clients)
     assert row["tags"] == {"customer": "cust_8123", "workspace": "ws_9", "feature": "email-finder"}
@@ -57,7 +57,7 @@ async def test_tags_land_on_the_audit_row(clients: AsyncClient):
 async def test_a_bag_without_the_primary_dimension_still_records_its_tags(clients: AsyncClient):
     """Tagging by workspace alone is legitimate — it just has no primary value to index."""
     await _mk_echo_tool(clients)
-    await clients.get("/call/echo/x", headers={"X-Treg-Meta": "workspace=ws_9"})
+    await clients.get("/call/echo/x", headers={"X-Stray-Meta": "workspace=ws_9"})
     row = await _newest_call(clients)
     assert row["tags"] == {"workspace": "ws_9"}
     assert row["budget_dim"] == "" and row["budget_val"] == ""
@@ -85,14 +85,14 @@ async def test_oversized_and_malformed_bags_are_refused(clients: AsyncClient):
         "customer=",                                # empty value
         "customer=a,customer=b",                    # names one key twice
     ):
-        r = await clients.get("/call/echo/x", headers={"X-Treg-Meta": bad})
+        r = await clients.get("/call/echo/x", headers={"X-Stray-Meta": bad})
         assert r.status_code == 422, f"{bad!r} should be refused, got {r.status_code}"
 
 
 async def test_email_shaped_values_are_refused(clients: AsyncClient):
     """The ledger is append-only, so a tag written today cannot be erased on request tomorrow."""
     await _mk_echo_tool(clients)
-    r = await clients.get("/call/echo/x", headers={"X-Treg-Meta": "customer=jane@example.com"})
+    r = await clients.get("/call/echo/x", headers={"X-Stray-Meta": "customer=jane@example.com"})
     assert r.status_code == 422
     assert "append-only" in r.json()["detail"]
 
@@ -101,7 +101,7 @@ async def test_a_refused_bag_never_reaches_the_provider(clients: AsyncClient):
     """Parsing happens before anything is resolved or relayed, so a 422 costs nothing upstream."""
     await _mk_echo_tool(clients)
     before = len((await clients.get("/calls")).json())
-    r = await clients.get("/call/echo/x", headers={"X-Treg-Meta": "a=1,b=2,c=3,d=4,e=5,f=6"})
+    r = await clients.get("/call/echo/x", headers={"X-Stray-Meta": "a=1,b=2,c=3,d=4,e=5,f=6"})
     assert r.status_code == 422
     await audit.drain()
     rows = (await clients.get("/calls")).json()
@@ -114,25 +114,25 @@ async def test_a_malformed_bag_does_not_burn_an_idempotency_label(clients: Async
     for 24 hours and the retry would 409 against a call that never happened."""
     await _mk_echo_tool(clients)
     hdr = {"Idempotency-Key": "retry-1"}
-    bad = await clients.get("/call/echo/x", headers={**hdr, "X-Treg-Meta": "customer"})
+    bad = await clients.get("/call/echo/x", headers={**hdr, "X-Stray-Meta": "customer"})
     assert bad.status_code == 422
-    good = await clients.get("/call/echo/x", headers={**hdr, "X-Treg-Meta": "customer=cust_1"})
+    good = await clients.get("/call/echo/x", headers={**hdr, "X-Stray-Meta": "customer=cust_1"})
     assert good.status_code == 200, good.text
 
 
 # ---- egress ------------------------------------------------------------------------------------
-async def test_no_treg_header_reaches_the_upstream(clients: AsyncClient):
+async def test_no_stray_header_reaches_the_upstream(clients: AsyncClient):
     """Customer ids must not be handed to third-party providers. Asserted by PREFIX, not by name:
-    the old per-name list had already missed `x-treg-client`, which leaked to every provider."""
+    the old per-name list had already missed `x-stray-client`, which leaked to every provider."""
     await _mk_echo_tool(clients)
     r = await clients.get("/call/echo/anything", headers={
-        "X-Treg-Meta": "customer=cust_8123",
-        "X-Treg-Client": "claude-code",
-        "X-Treg-Future": "not-invented-yet",     # a header that does not exist yet must also be dropped
+        "X-Stray-Meta": "customer=cust_8123",
+        "X-Stray-Client": "claude-code",
+        "X-Stray-Future": "not-invented-yet",     # a header that does not exist yet must also be dropped
     })
     assert r.status_code == 200, r.text
     seen = {k.lower() for k in r.json()["headers"]}
-    assert not [k for k in seen if k.startswith("x-treg-")], f"treg headers leaked upstream: {seen}"
+    assert not [k for k in seen if k.startswith("x-stray-")], f"stray headers leaked upstream: {seen}"
 
 
 async def test_tags_do_not_disturb_the_relayed_request(clients: AsyncClient):
@@ -140,7 +140,7 @@ async def test_tags_do_not_disturb_the_relayed_request(clients: AsyncClient):
     await _mk_echo_tool(clients)
     plain = (await clients.get("/call/echo/thing?q=1")).json()
     tagged = (await clients.get("/call/echo/thing?q=1",
-                                headers={"X-Treg-Meta": "customer=cust_1"})).json()
+                                headers={"X-Stray-Meta": "customer=cust_1"})).json()
     assert plain["raw_path"] == tagged["raw_path"]
     assert plain["query"] == tagged["query"]
     assert plain["auth"] == tagged["auth"]
@@ -148,7 +148,7 @@ async def test_tags_do_not_disturb_the_relayed_request(clients: AsyncClient):
 
 
 # ---- phase 1: the money rows --------------------------------------------------------------------
-# Tier 4 (treg's own key, metered against the org balance) is the only path that spends money, so the
+# Tier 4 (stray's own key, metered against the org balance) is the only path that spends money, so the
 # tests below turn it on the way a deploy does. A fresh org already holds the $1 promo grant.
 EP_MICRO = 1_000  # tikhub comments: $0.001/call
 
@@ -156,8 +156,8 @@ EP_MICRO = 1_000  # tikhub comments: $0.001/call
 @pytest.fixture
 def platform_on(monkeypatch):
     for name, value in {"TIKHUB": "PLATFORM-TIKHUB-KEY"}.items():
-        monkeypatch.setenv(f"TREG_PLATFORM_KEY_{name}", value)
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+        monkeypatch.setenv(f"STRAY_PLATFORM_KEY_{name}", value)
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -186,9 +186,9 @@ async def test_a_metered_call_attributes_its_spend_to_every_tag(clients: AsyncCl
     is expected and is why an invoice always names the dimension it is grouping by."""
     org_id = await _org_id(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7",
-                          headers={"X-Treg-Meta": "customer=cust_A, workspace=ws_9"})
+                          headers={"X-Stray-Meta": "customer=cust_A, workspace=ws_9"})
     assert r.status_code == 200, r.text
-    charged = int(r.headers["X-Treg-Cost-Micro"])
+    charged = int(r.headers["X-Stray-Cost-Micro"])
     assert charged == EP_MICRO
 
     async with session_maker() as db:
@@ -214,7 +214,7 @@ async def test_a_released_call_bills_no_tag(clients: AsyncClient, platform_on, m
     and the tag rows go with it rather than lingering as phantom spend."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(503, b"nope"))
     org_id = await _org_id(clients)
-    await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     async with session_maker() as db:
         assert await ledger.tag_invoice_since(db, org_id, "customer", "cust_A", _EPOCH) == 0
         assert await ledger.tag_spent_since(db, org_id, "customer", "cust_A", _EPOCH) == 0
@@ -235,11 +235,11 @@ async def test_in_flight_spend_counts_toward_a_cap_but_not_an_invoice(clients: A
 
 
 async def test_caller_tags_cannot_overwrite_ledger_provenance(clients: AsyncClient, platform_on):
-    """A hostile bag must not rewrite the money journal. treg's own keys merge LAST now — before this
+    """A hostile bag must not rewrite the money journal. stray's own keys merge LAST now — before this
     change a caller could zero `charged_micro` or forge the `tier` that reconcile.py reads."""
     org_id = await _org_id(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7",
-                          headers={"X-Treg-Meta": "charged_micro=0, margin=9, tier=free"})
+                          headers={"X-Stray-Meta": "charged_micro=0, margin=9, tier=free"})
     assert r.status_code == 200, r.text
     entries = (await clients.get(f"/orgs/{org_id}/balance")).json()["entries"]["items"]
     settle = next(e for e in entries if e["kind"] == "settle")
@@ -254,7 +254,7 @@ async def test_deleting_a_team_takes_its_tag_rows(clients: AsyncClient, platform
     """`TagSpend` is org-scoped, so it must go when the team does (tests/test_orgs.py enforces the
     registration; this proves the cascade order actually works with a live row present)."""
     org_id = await _org_id(clients)
-    await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     slug = (await clients.get("/orgs")).json()[0]["slug"]
     r = await clients.delete(f"/orgs/{org_id}?confirm={slug}")
     assert r.status_code == 200, r.text
@@ -282,11 +282,11 @@ async def _declare_dims(org_id: int, *dims: str) -> None:
 async def test_a_blocked_tag_is_refused(clients: AsyncClient, platform_on):
     org_id = await _org_id(clients)
     await _set_budget(clients, org_id, "customer", "cust_A", status="blocked")
-    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     assert r.status_code == 403, r.text
     assert r.json()["detail"]["error"] == "tag_blocked"
     # ...and a different user of the same builder is untouched.
-    ok = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_B"})
+    ok = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_B"})
     assert ok.status_code == 200, ok.text
 
 
@@ -294,21 +294,21 @@ async def test_a_blocked_tag_is_refused_before_any_cached_answer(clients: AsyncC
     """Blocking must beat the idempotency replay, or a user blocked at noon keeps being served the
     answer they paid for at 11 — and keeps holding a lock while doing it."""
     org_id = await _org_id(clients)
-    hdr = {"X-Treg-Meta": "customer=cust_A", "Idempotency-Key": "retry-1"}
+    hdr = {"X-Stray-Meta": "customer=cust_A", "Idempotency-Key": "retry-1"}
     first = await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr)
     assert first.status_code == 200, first.text
     await _set_budget(clients, org_id, "customer", "cust_A", status="blocked")
     again = await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr)
     assert again.status_code == 403
-    assert "X-Treg-Idempotent-Replay" not in again.headers
+    assert "X-Stray-Idempotent-Replay" not in again.headers
 
 
 async def test_a_spend_cap_refuses_and_names_its_dimension(clients: AsyncClient, platform_on):
     org_id = await _org_id(clients)
     await _set_budget(clients, org_id, "customer", "cust_A", daily_cap_micro=EP_MICRO)
-    first = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    first = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     assert first.status_code == 200, first.text          # exactly at the cap
-    second = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    second = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     assert second.status_code == 429, second.text
     d = second.json()["detail"]
     assert d["error"] == "tag_spend_cap_reached"
@@ -322,7 +322,7 @@ async def test_a_tag_refusal_leaks_nothing_about_the_team(clients: AsyncClient, 
     org_id = await _org_id(clients)
     slug = (await clients.get("/orgs")).json()[0]["slug"]
     await _set_budget(clients, org_id, "customer", "cust_A", daily_cap_micro=1)
-    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     assert r.status_code == 429
     assert set(r.json()["detail"]) == {
         "error", "dim", "val", "spent_micro", "cap_micro", "period", "estimated_cost_micro", "message"}
@@ -338,8 +338,8 @@ async def test_stacked_budgets_refuse_independently(clients: AsyncClient, platfo
     await _set_budget(clients, org_id, "workspace", "ws_1", daily_cap_micro=EP_MICRO * 5)
     await _set_budget(clients, org_id, "customer", "cust_A", daily_cap_micro=EP_MICRO)
 
-    hdr_a = {"X-Treg-Meta": "customer=cust_A, workspace=ws_1"}
-    hdr_b = {"X-Treg-Meta": "customer=cust_B, workspace=ws_1"}
+    hdr_a = {"X-Stray-Meta": "customer=cust_A, workspace=ws_1"}
+    hdr_b = {"X-Stray-Meta": "customer=cust_B, workspace=ws_1"}
     assert (await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr_a)).status_code == 200
     capped = await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr_a)
     assert capped.status_code == 429
@@ -355,10 +355,10 @@ async def test_the_workspace_ceiling_bites_once_its_users_together_exceed_it(cli
     await _set_budget(clients, org_id, "workspace", "ws_1", daily_cap_micro=EP_MICRO * 2)
     for who in ("cust_A", "cust_B"):
         r = await clients.get(f"/call/{EP}?aweme_id=7",
-                              headers={"X-Treg-Meta": f"customer={who}, workspace=ws_1"})
+                              headers={"X-Stray-Meta": f"customer={who}, workspace=ws_1"})
         assert r.status_code == 200, r.text
     blocked = await clients.get(f"/call/{EP}?aweme_id=7",
-                                headers={"X-Treg-Meta": "customer=cust_C, workspace=ws_1"})
+                                headers={"X-Stray-Meta": "customer=cust_C, workspace=ws_1"})
     assert blocked.status_code == 429
     assert blocked.json()["detail"]["dim"] == "workspace"
 
@@ -391,11 +391,11 @@ async def test_two_users_can_reuse_one_idempotency_label(clients: AsyncClient, p
     stored response body — the exact failure IdempotentCall exists to prevent, one level down."""
     hdr = {"Idempotency-Key": "retry-1"}
     a = await clients.get(f"/call/{EP}?aweme_id=7",
-                          headers={**hdr, "X-Treg-Meta": "customer=cust_A"})
+                          headers={**hdr, "X-Stray-Meta": "customer=cust_A"})
     b = await clients.get(f"/call/{EP}?aweme_id=7",
-                          headers={**hdr, "X-Treg-Meta": "customer=cust_B"})
+                          headers={**hdr, "X-Stray-Meta": "customer=cust_B"})
     assert a.status_code == 200 and b.status_code == 200, (a.text, b.text)
-    assert "X-Treg-Idempotent-Replay" not in b.headers, "cust_B was served cust_A's stored answer"
+    assert "X-Stray-Idempotent-Replay" not in b.headers, "cust_B was served cust_A's stored answer"
     # Both really called the provider, and both were billed.
     org_id = await _org_id(clients)
     async with session_maker() as db:
@@ -406,15 +406,15 @@ async def test_two_users_can_reuse_one_idempotency_label(clients: AsyncClient, p
 async def test_one_user_still_replays_their_own_label(clients: AsyncClient, platform_on):
     """Scoping must not break what idempotency is for: the SAME user retrying is still answered from
     the stored response and billed once."""
-    hdr = {"Idempotency-Key": "retry-1", "X-Treg-Meta": "customer=cust_A"}
+    hdr = {"Idempotency-Key": "retry-1", "X-Stray-Meta": "customer=cust_A"}
     first = await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr)
     again = await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr)
     assert first.status_code == 200 and again.status_code == 200
-    assert again.headers.get("X-Treg-Idempotent-Replay") == "true"
+    assert again.headers.get("X-Stray-Idempotent-Replay") == "true"
     # A client summing the cost header must not count the call twice.
-    assert first.headers["X-Treg-Cost-Micro"] == str(EP_MICRO)
-    assert again.headers["X-Treg-Cost-Micro"] == "0"
-    assert again.headers["X-Treg-Original-Cost-Micro"] == str(EP_MICRO)
+    assert first.headers["X-Stray-Cost-Micro"] == str(EP_MICRO)
+    assert again.headers["X-Stray-Cost-Micro"] == "0"
+    assert again.headers["X-Stray-Original-Cost-Micro"] == str(EP_MICRO)
     org_id = await _org_id(clients)
     async with session_maker() as db:
         assert await ledger.tag_invoice_since(db, org_id, "customer", "cust_A", _EPOCH) == EP_MICRO
@@ -422,8 +422,8 @@ async def test_one_user_still_replays_their_own_label(clients: AsyncClient, plat
 
 async def test_a_reused_label_on_a_different_request_still_says_so(clients: AsyncClient, platform_on):
     """The fingerprint refusal survives scoping, and the message quotes the label the CALLER wrote —
-    not treg's internal scoped form."""
-    hdr = {"Idempotency-Key": "retry-1", "X-Treg-Meta": "customer=cust_A"}
+    not stray's internal scoped form."""
+    hdr = {"Idempotency-Key": "retry-1", "X-Stray-Meta": "customer=cust_A"}
     await clients.get(f"/call/{EP}?aweme_id=7", headers=hdr)
     clash = await clients.get(f"/call/{EP}?aweme_id=99", headers=hdr)
     assert clash.status_code == 422
@@ -485,7 +485,7 @@ async def test_usage_by_tag_reconciles_and_reports_the_unattributed(clients: Asy
                  "customer=cust_B, workspace=ws_1",
                  "customer=cust_C, workspace=ws_2"):
         assert (await clients.get(f"/call/{EP}?aweme_id=7",
-                                  headers={"X-Treg-Meta": tags})).status_code == 200
+                                  headers={"X-Stray-Meta": tags})).status_code == 200
     await clients.get(f"/call/{EP}?aweme_id=7")          # untagged
 
     for key, expected_rows in (("customer", 3), ("workspace", 2)):
@@ -501,15 +501,15 @@ async def test_usage_by_tag_reconciles_and_reports_the_unattributed(clients: Asy
 async def test_usage_by_tag_is_admin_only(clients: AsyncClient):
     org_id = await _org_id(clients)
     token = await _mint_agent(clients, org_id, "viewer-bot", role="viewer")
-    r = await clients.get(f"/orgs/{org_id}/usage/by-tag", headers={"X-Treg-Token": token})
+    r = await clients.get(f"/orgs/{org_id}/usage/by-tag", headers={"X-Stray-Token": token})
     assert r.status_code == 403
 
 
 async def test_every_call_returns_a_join_key(clients: AsyncClient, platform_on):
-    """X-Treg-Call-Id is what lets a builder line our records up against their own, row for row."""
-    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    """X-Stray-Call-Id is what lets a builder line our records up against their own, row for row."""
+    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     assert r.status_code == 200
-    ref = r.headers["X-Treg-Call-Id"]
+    ref = r.headers["X-Stray-Call-Id"]
     assert ref
 
     await audit.drain()
@@ -526,12 +526,12 @@ async def test_the_join_key_is_scoped_to_the_team(clients: AsyncClient, platform
     """A reference is not a capability: another team holding one must not be able to read the call,
     or one builder could enumerate another's usage by guessing ids."""
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    ref = r.headers["X-Treg-Call-Id"]
+    ref = r.headers["X-Stray-Call-Id"]
     assert (await clients.get(f"/calls/{ref}")).status_code == 200
 
     other_org = await _make_org("other", "other-team")
     outsider = await _mint("outsider@example.com", other_org, "admin")
-    denied = await clients.get(f"/calls/{ref}", headers={"X-Treg-Token": outsider})
+    denied = await clients.get(f"/calls/{ref}", headers={"X-Stray-Token": outsider})
     assert denied.status_code == 404
 
 
@@ -566,7 +566,7 @@ async def test_a_tag_value_cannot_smuggle_the_idempotency_separator(clients: Asy
     is the exact cross-tenant leak the scoping exists to close."""
     await _mk_echo_tool(clients)
     for hostile in ("customer=A\x1fB", "customer=a b", "customer=a/b", "customer=a,b", "customer=<script>"):
-        r = await clients.get("/call/echo/x", headers={"X-Treg-Meta": hostile})
+        r = await clients.get("/call/echo/x", headers={"X-Stray-Meta": hostile})
         assert r.status_code == 422, f"{hostile!r} must be refused, got {r.status_code}"
 
 
@@ -575,7 +575,7 @@ async def test_ordinary_customer_ids_still_pass(clients: AsyncClient):
     await _mk_echo_tool(clients)
     for good in ("cust_8123", "ws-9", "acct.42", "tenant:eu-west",
                  "6f1c2b4e-8a9d-4c31-9f77-1a2b3c4d5e6f"):
-        r = await clients.get("/call/echo/x", headers={"X-Treg-Meta": f"customer={good}"})
+        r = await clients.get("/call/echo/x", headers={"X-Stray-Meta": f"customer={good}"})
         assert r.status_code == 200, f"{good!r} should be accepted: {r.text}"
 
 
@@ -603,7 +603,7 @@ async def test_usage_survives_a_dead_audit_pipeline(clients: AsyncClient, platfo
     monkeypatch.setattr(audit, "_enqueue", lambda model, fields: None)
     org_id = await _org_id(clients)
     for who in ("cust_A", "cust_B"):
-        r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": f"customer={who}"})
+        r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": f"customer={who}"})
         assert r.status_code == 200, r.text
 
     await audit.drain()
@@ -638,7 +638,7 @@ async def test_a_reaped_stale_hold_bills_nobody(clients: AsyncClient):
     go with it, or a builder invoices their user for a call that never completed."""
     from datetime import timedelta
 
-    from treg.models import Hold
+    from stray.models import Hold
 
     org_id = await _org_id(clients)
     async with session_maker() as db:
@@ -656,11 +656,11 @@ async def test_another_team_cannot_read_budgets_or_usage(clients: AsyncClient, p
     """Budgets and usage name a builder's own customers. Another team must reach none of it."""
     org_id = await _org_id(clients)
     await _set_budget(clients, org_id, "customer", "cust_A", daily_cap_micro=5_000)
-    await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
 
     other_org = await _make_org("rival", "rival-team")
     rival = await _mint("rival@example.com", other_org, "owner")
-    h = {"X-Treg-Token": rival}
+    h = {"X-Stray-Token": rival}
 
     assert (await clients.get(f"/orgs/{org_id}/budgets", headers=h)).status_code == 403
     assert (await clients.get(f"/orgs/{org_id}/usage/by-tag", headers=h)).status_code == 403
@@ -676,16 +676,16 @@ async def test_a_provider_credential_refusal_is_never_billed(clients: AsyncClien
                                                              monkeypatch):
     """A 4xx that means OUR key was rejected, exhausted or throttled must not be charged, even on a
     per_call endpoint. The provider bills nothing for these, and passing them on would turn an
-    expired platform key into real spend on a team's balance — and, for a builder reselling treg,
+    expired platform key into real spend on a team's balance — and, for a builder reselling stray,
     onto their own customers' invoices."""
     org_id = await _org_id(clients)
     before = (await clients.get(f"/orgs/{org_id}/balance")).json()["balance_micro"]
 
     for status in (401, 402, 403, 407, 408, 429):
         monkeypatch.setattr(call_service, "relay", _fake_relay(status, b'{"message":"out of credits"}'))
-        r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+        r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
         assert r.status_code == status, r.text
-        assert r.headers.get("X-Treg-Cost-Micro") == "0", f"{status} was billed"
+        assert r.headers.get("X-Stray-Cost-Micro") == "0", f"{status} was billed"
 
     assert (await clients.get(f"/orgs/{org_id}/balance")).json()["balance_micro"] == before
     async with session_maker() as db:
@@ -699,9 +699,9 @@ async def test_a_caller_input_4xx_may_bill_only_on_a_per_call_endpoint(clients: 
     `test_a_4xx_bills_only_what_the_provider_reports` in test_marketplace_call.py). The status
     gate itself is asserted here because tikhub comments is per_success and always releases."""
     monkeypatch.setattr(call_service, "relay", _fake_relay(400, b'{"error":"bad param"}'))
-    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=cust_A"})
+    r = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=cust_A"})
     assert r.status_code == 400
-    assert r.headers.get("X-Treg-Cost-Micro") == "0"
+    assert r.headers.get("X-Stray-Cost-Micro") == "0"
     assert call_settle._platform_billable(400, "per_call") is True
     assert call_settle._platform_billable(404, "per_call") is True
     assert call_settle._platform_billable(402, "per_call") is False
@@ -717,9 +717,9 @@ async def test_a_default_applies_to_every_value_without_an_override(clients: Asy
     assert r.status_code == 200 and r.json()["is_default"], r.text
 
     for who in ("alice", "bob"):                      # neither has ever been seen before
-        ok = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": f"customer={who}"})
+        ok = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": f"customer={who}"})
         assert ok.status_code == 200, ok.text
-        capped = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": f"customer={who}"})
+        capped = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": f"customer={who}"})
         assert capped.status_code == 429, f"{who} should have hit the default"
         assert capped.json()["detail"]["dim"] == "customer"
 
@@ -733,8 +733,8 @@ async def test_an_override_beats_the_default_in_both_directions(clients: AsyncCl
 
     for _ in range(3):                                 # vip sails past the default
         assert (await clients.get(f"/call/{EP}?aweme_id=7",
-                                  headers={"X-Treg-Meta": "customer=vip"})).status_code == 200
-    tight = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=tight"})
+                                  headers={"X-Stray-Meta": "customer=vip"})).status_code == 200
+    tight = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=tight"})
     assert tight.status_code == 429
 
 
@@ -744,9 +744,9 @@ async def test_being_seen_does_not_create_an_override(clients: AsyncClient, plat
     applied to anybody who had ever called."""
     org_id = await _org_id(clients)
     assert (await clients.get(f"/call/{EP}?aweme_id=7",
-                              headers={"X-Treg-Meta": "customer=seen_first"})).status_code == 200
+                              headers={"X-Stray-Meta": "customer=seen_first"})).status_code == 200
     await clients.put(f"/orgs/{org_id}/budgets/customer", json={"daily_cap_micro": 1})
-    after = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "customer=seen_first"})
+    after = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "customer=seen_first"})
     assert after.status_code == 429, "the default must reach a value that was already registered"
 
 
@@ -755,7 +755,7 @@ async def test_the_budget_list_shows_policy_not_bookkeeping(clients: AsyncClient
     bookkeeping as policy."""
     org_id = await _org_id(clients)
     for who in ("a", "b", "c"):                        # three registry rows, no limits
-        await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": f"customer={who}"})
+        await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": f"customer={who}"})
     assert (await clients.get(f"/orgs/{org_id}/budgets")).json() == []
 
     await clients.put(f"/orgs/{org_id}/budgets/customer", json={"daily_cap_micro": 5_000})
@@ -770,7 +770,7 @@ async def test_tag_keys_reports_what_was_sent_not_only_what_is_budgetable(client
     first list, and was being given the second."""
     org_id = await _org_id(clients)
     await clients.get(f"/call/{EP}?aweme_id=7",
-                      headers={"X-Treg-Meta": "customer=c1, feature=email-finder"})
+                      headers={"X-Stray-Meta": "customer=c1, feature=email-finder"})
     d = (await clients.get(f"/orgs/{org_id}/tag-keys")).json()
     assert "feature" in d["seen"] and "customer" in d["seen"]
     assert d["budgetable"] == ["customer"] and "feature" not in d["budgetable"]
@@ -788,9 +788,9 @@ async def test_setting_a_limit_declares_the_dimension(clients: AsyncClient, plat
         ["customer", "workspace"]
 
     # ...and it now actually enforces, which is the whole point of declaring it.
-    ok = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "workspace=ws_9"})
+    ok = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "workspace=ws_9"})
     assert ok.status_code == 200, ok.text
-    capped = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Treg-Meta": "workspace=ws_9"})
+    capped = await clients.get(f"/call/{EP}?aweme_id=7", headers={"X-Stray-Meta": "workspace=ws_9"})
     assert capped.status_code == 429 and capped.json()["detail"]["dim"] == "workspace"
 
 

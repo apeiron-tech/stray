@@ -1,6 +1,6 @@
-"""Step 6 acceptance: drive treg's authorization server with the MCP SDK's OWN OAuth client.
+"""Step 6 acceptance: drive stray's authorization server with the MCP SDK's OWN OAuth client.
 
-The point is independence. Every test so far has been treg checking treg — my curl against my
+The point is independence. Every test so far has been stray checking stray — my curl against my
 endpoints, my assumptions on both sides. This uses the client implementation shipped in the MCP SDK,
 which is what Claude Code and the rest of the ecosystem use. If it needs a special case to talk to
 us, the design was wrong, and that is the thing worth learning before a public listing.
@@ -36,7 +36,7 @@ async def main() -> int:
         auth_server = prm["authorization_servers"][0]
         # A correct client uses the identifier the METADATA declares, not the URL it dialled. My
         # first version hard-coded the latter and got a token with the wrong audience — which is how
-        # treg's missing `resource` validation was found.
+        # stray's missing `resource` validation was found.
         resource_id = prm["resource"]
         check("discovery: protected resource names an authorization server", bool(auth_server))
         asm = (await c.get(f"{BASE}/.well-known/oauth-authorization-server")).json()
@@ -64,9 +64,9 @@ async def main() -> int:
         params = {"client_id": client_id, "redirect_uri": "http://127.0.0.1:41999/callback",
                   "response_type": "code", "code_challenge": pkce.code_challenge,
                   "code_challenge_method": "S256", "resource": resource_id,
-                  "scope": "treg:call", "state": "acceptance"}
+                  "scope": "stray:call", "state": "acceptance"}
         page = await c.get(f"{BASE}/oauth/authorize", params=params,
-                           headers={"Cookie": f"treg_session={session_cookie}"})
+                           headers={"Cookie": f"stray_session={session_cookie}"})
         check("consent page renders", page.status_code == 200)
         check("consent names the client", "MCP SDK acceptance client" in page.text)
         m = re.search(r'<option value="(\d+)"', page.text)
@@ -74,7 +74,7 @@ async def main() -> int:
         org_id = m.group(1) if m else ""
 
         approved = await c.post(f"{BASE}/oauth/authorize",
-                                headers={"Cookie": f"treg_session={session_cookie}"},
+                                headers={"Cookie": f"stray_session={session_cookie}"},
                                 data={**params, "org_id": org_id, "decision": "allow"})
         check("approval redirects back to the client", approved.status_code == 302)
         loc = approved.headers.get("location", "")
@@ -124,7 +124,7 @@ async def main() -> int:
                   rot.json()["refresh_token"] != body["refresh_token"])
 
     print()
-    print("  RESULT:", "all green — no treg-specific special case needed" if ok else "FAILURES ABOVE")
+    print("  RESULT:", "all green — no stray-specific special case needed" if ok else "FAILURES ABOVE")
     return 0 if ok else 1
 
 

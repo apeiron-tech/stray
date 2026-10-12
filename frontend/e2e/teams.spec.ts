@@ -25,7 +25,7 @@ test('a slow answer for the team you left never replaces the team you switched t
   // The first team's tool list answers late, and names a tool only that team has.
   let released = false
   await page.route('**/tools', async route => {
-    if (route.request().headers()['x-treg-org'] !== first.slug) return route.fallback()
+    if (route.request().headers()['x-stray-org'] !== first.slug) return route.fallback()
     await new Promise(resolve => setTimeout(resolve, 1500))
     released = true
     await route.fulfill(json([{ id: 990001, name: 'first-team-only', base_url: 'https://first.example', bindings: [], bundle_id: null, cli: null }]))

@@ -6,11 +6,11 @@ import sqlalchemy as sa
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
 
-from treg.infra import db
+from stray.infra import db
 from tests.test_alembic_baseline import _drop_everything
 
 
-migration = import_module("treg.alembic.versions.0061_remove_redundant_unique_indexes")
+migration = import_module("stray.alembic.versions.0061_remove_redundant_unique_indexes")
 CASES = (
     ("archivekey", "key_hash", "uq_archive_key_hash"),
     ("oauthrefresh", "token_hash", "uq_oauth_refresh_token"),

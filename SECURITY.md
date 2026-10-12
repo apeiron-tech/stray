@@ -12,14 +12,14 @@ reporters who wish to be named.
 
 ## The security model (what protects your keys)
 
-tools-registry is built so that **reading the source does not help an attacker** — nothing load-bearing
+stray is built so that **reading the source does not help an attacker** — nothing load-bearing
 is hidden in the code. Secrets live in the database (encrypted with a Fernet key held only in the server
 environment) and enforcement happens server-side and in the operating system.
 
 Durable objects created with a shared provider credential are assigned to one organization before
 their upstream id is exposed. Every shared-key read, use, update, or delete checks that assignment
 before contacting the provider; unknown and cross-organization ids return the same denial. If a
-create succeeds upstream but ownership cannot be committed, treg attempts compensating deletion and
+create succeeds upstream but ownership cannot be committed, stray attempts compensating deletion and
 returns an error without exposing the unmanaged id. BYOK objects remain scoped by the customer's
 provider account and bypass this platform ownership table.
 
@@ -33,11 +33,11 @@ provider account and bypass this platform ownership table.
   These scopes do not partition a team's BYOK account or authenticate public media URLs.
 - **SSRF guard.** A tool's upstream host is re-resolved at call time and internal/metadata addresses are
   refused (defeats DNS-rebinding).
-- **Local runs are sandboxed.** `treg run` on a member's machine executes the CLI as a locked-down
-  `treg-run` user, with an egress allow-list and an optional filesystem jail, so a shared key can't be
+- **Local runs are sandboxed.** `stray run` on a member's machine executes the CLI as a locked-down
+  `stray-run` user, with an egress allow-list and an optional filesystem jail, so a shared key can't be
   read, exfiltrated over the network, or written to a member-readable file.
-- **Server runs are resource-limited.** `treg run --server` executes each CLI with a scrubbed environment
-  (treg's own secrets removed), a per-run throwaway home, an allow-list of runnable commands, output
+- **Server runs are resource-limited.** `stray run --server` executes each CLI with a scrubbed environment
+  (stray's own secrets removed), a per-run throwaway home, an allow-list of runnable commands, output
   redaction, and POSIX resource limits (CPU, file size, no core dumps).
 - **Signup credit belongs to a verified account, once.** Only an email OTP, provider-verified
   Google/GitHub email, or inbox-only invitation link marks an identity verified. Legacy `POST /users`
@@ -45,11 +45,11 @@ provider account and bypass this platform ownership table.
   eligibility in the same transaction as the money grant; team deletion never restores it. Accounts
   predating revision `0033` receive no new automatic grant; their existing balances are unchanged.
   New identities can still be farmed through verified inboxes, so this is not a one-human guarantee.
-  `TREG_PROMO_GRANT_MICRO=0` stops new automatic grants after deployment. The domain blocklist
-  (`TREG_BLOCKED_EMAIL_DOMAINS`, unset means no blocks) remains a configurable speed bump at every
+  `STRAY_PROMO_GRANT_MICRO=0` stops new automatic grants after deployment. The domain blocklist
+  (`STRAY_BLOCKED_EMAIL_DOMAINS`, unset means no blocks) remains a configurable speed bump at every
   sign-in/sign-up door and both team-creating endpoints; it fails open on classifier errors.
   Suspend abusive users and teams separately, retaining their records for investigation.
-- **Designated sign-in codes are a password, stored only as a hash.** `TREG_FIXED_LOGIN_CODES`
+- **Designated sign-in codes are a password, stored only as a hash.** `STRAY_FIXED_LOGIN_CODES`
   (unset by default) maps an email with no inbox, such as an app directory reviewer's demo account,
   to the SHA-256 of a fixed code. The email-code door then sends nothing and accepts only that code,
   under the same five-guess and start limits as an emailed code. Use a long random code, give the
@@ -57,11 +57,11 @@ provider account and bypass this platform ownership table.
 
 ## Archive object storage credentials
 
-R2 credentials are server environment settings (`TREG_ARCHIVE_OBJECT_STORE_ACCESS_KEY_ID` and
-`TREG_ARCHIVE_OBJECT_STORE_SECRET_ACCESS_KEY`), never catalog credentials or caller input. Use a token scoped
+R2 credentials are server environment settings (`STRAY_ARCHIVE_OBJECT_STORE_ACCESS_KEY_ID` and
+`STRAY_ARCHIVE_OBJECT_STORE_SECRET_ACCESS_KEY`), never catalog credentials or caller input. Use a token scoped
 to the private archive bucket with object read/write access; bucket administration is unnecessary.
 The configured endpoint must be an HTTPS Cloudflare R2 account endpoint. Object names are always
-SHA-256 hashes computed by treg; clients cannot supply an object path, bucket, host or URL.
+SHA-256 hashes computed by stray; clients cannot supply an object path, bucket, host or URL.
 The obstore compiled wheel exists only in the server extra and is imported lazily by the
 server factory, initialized by bootstrap. Its shared Rust HTTP client uses configured connect and
 request timeouts and zero SDK retries; archive_bodies owns retry policy. SDK exceptions, signed
@@ -74,7 +74,7 @@ required. GET enforces the size limit and checks downloaded bytes against the ob
 hash. The bucket is not public and no object URL is exposed: call-history authorization checks
 the team's CallRecord before resolving its archive reference. A hash is an identity, not an
 access credential. Upstream answers are retained under the existing archive policy. A provider
-that echoes treg's PLATFORM credential in a 2xx body is not sanitized by these guards (judge that
+that echoes stray's PLATFORM credential in a 2xx body is not sanitized by these guards (judge that
 provider's `cache` with it in mind); an answer that echoes a team's OWN credential is refused by
 the recorder (`_echoes_own_credential`). An own-credential answer is stored under a cache key that
 folds in the org (or the connection, on an `own_account` endpoint), so another team never computes
@@ -83,7 +83,7 @@ answer on the public key.
 
 Object I/O never holds the calling task's database connection. Startup refuses incomplete R2
 configuration when archive mode is enabled and any storage switch selects R2. The manual smoke
-script accepts only `treg-archive-dev`, refuses CI, and skips absent credentials. It creates no
+script accepts only `stray-archive-dev`, refuses CI, and skips absent credentials. It creates no
 cloud resources apart from one small test object. Production configuration belongs in the private ops project.
 
 ## Known limitations (by design, documented on purpose)
@@ -94,7 +94,7 @@ Honesty is part of the model. Two items are deliberately deferred:
    service, but a full jail (a locked-down user + egress allow-list, like the local sandbox) requires a
    container deployment and is planned. In the supported hosted configuration the encryption key is
    an environment variable rather than an on-disk secret file, and only allow-listed CLIs may run.
-2. **The CLI-login handshake is in-process.** The short-lived pairing state for `treg login` lives in the
+2. **The CLI-login handshake is in-process.** The short-lived pairing state for `stray login` lives in the
    server process (it self-heals on retry and carries no rate-limit value). Running more than one server
    instance requires sticky routing for that one flow, or moving it to shared storage.
 

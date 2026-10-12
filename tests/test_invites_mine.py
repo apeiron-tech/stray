@@ -8,8 +8,8 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from treg.api import app
-from treg.infra.db import reset_db
+from stray.api import app
+from stray.infra.db import reset_db
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ async def client():
     await reset_db()
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://registry",
-        headers={"ngrok-skip-browser-warning": "1", "X-Treg-Key-Protocol": "1"},
+        headers={"ngrok-skip-browser-warning": "1", "X-Stray-Key-Protocol": "1"},
     ) as c:
         yield c
 
@@ -28,15 +28,15 @@ async def _otp(c: AsyncClient, email: str) -> str:
 
 
 def _h(tok: str, org: str | None = None) -> dict:
-    h = {"X-Treg-Token": tok}
+    h = {"X-Stray-Token": tok}
     if org:
-        h["X-Treg-Org"] = org
+        h["X-Stray-Org"] = org
     return h
 
 
 async def _make_org_with_invite(c: AsyncClient, owner_email: str, invitee: str, role: str = "member"):
     tok = await _otp(c, owner_email)
-    # a fresh user has NO org — creating their first team needs only the identity token (no X-Treg-Org)
+    # a fresh user has NO org — creating their first team needs only the identity token (no X-Stray-Org)
     org = (await c.post("/orgs", json={"name": "Superdesign"}, headers=_h(tok))).json()
     await c.post(f"/orgs/{org['org_id']}/invites", json={"email": invitee, "role": role}, headers=_h(org["token"]))
     return org["token"], org
@@ -87,7 +87,7 @@ async def test_invite_signin_link_never_mints_a_session(client):
         r = await visitor.get(f"/auth/invite-signin?code={code}", follow_redirects=False)
         assert r.status_code == 303
         assert "invite=bob%40x.io" in r.headers["location"]  # → login, email prefilled
-        assert "treg_session" not in r.headers.get("set-cookie", "")  # but NOT logged in
+        assert "stray_session" not in r.headers.get("set-cookie", "")  # but NOT logged in
         # The link created no session, so this visitor stays anonymous on an identity-gated route.
         assert (await visitor.get("/invites/mine")).status_code == 401
 
@@ -95,7 +95,7 @@ async def test_invite_signin_link_never_mints_a_session(client):
 async def test_invite_signin_link_bad_code_lands_on_site(client):
     r = await client.get("/auth/invite-signin?code=nope", follow_redirects=False)
     assert r.status_code == 303 and "invite_expired=1" in r.headers["location"]
-    assert "treg_session" not in r.headers.get("set-cookie", "")
+    assert "stray_session" not in r.headers.get("set-cookie", "")
 
 
 # ---- the emailed link's SECOND secret (email_token): inbox-only, may sign the invitee in ----
@@ -104,7 +104,7 @@ async def test_invite_signin_link_bad_code_lands_on_site(client):
 def sent_invites(monkeypatch):
     """Capture what send_invite is called with — the only place the email_token ever surfaces
     (it's deliberately absent from the create-invite response), exactly like a real inbox."""
-    from treg import email as email_mod
+    from stray import email as email_mod
     sent = []
 
     async def _capture(email, inviter, org_name, role, code, email_token, expires_at="", link_base="",
@@ -137,7 +137,7 @@ async def test_email_link_get_confirms_but_never_mints_a_session(client, sent_in
     async with await _fresh() as visitor:
         r = await visitor.get(f"/auth/invite-signin?t={t}", follow_redirects=False)
         assert r.status_code == 200 and "Continue as bob@x.io" in r.text  # the POST-confirm page
-        assert "treg_session" not in r.headers.get("set-cookie", "")
+        assert "stray_session" not in r.headers.get("set-cookie", "")
         assert (await visitor.get("/invites/mine")).status_code == 401  # still anonymous
         # …and the token is NOT consumed by the GET (a scanner prefetch must not burn the link)
         r2 = await visitor.get(f"/auth/invite-signin?t={t}", follow_redirects=False)
@@ -152,15 +152,15 @@ async def test_email_link_post_signs_in_once_and_lands_on_invite_org(client, sen
                                headers={"content-type": "application/x-www-form-urlencoded"},
                                follow_redirects=False)
         assert r.status_code == 303 and f"invite_org={org['org_id']}" in r.headers["location"]
-        assert "treg_session" in r.headers.get("set-cookie", "")  # signed in (first click = registration)
+        assert "stray_session" in r.headers.get("set-cookie", "")  # signed in (first click = registration)
         mine = (await visitor.get("/invites/mine")).json()  # the cookie authenticates the session
         assert [m["org_id"] for m in mine] == [org["org_id"]]  # invite still PENDING — accepted in the app
         # Inbox-only proof, unlike the admin-visible code, qualifies a new account.
         team = await visitor.post("/orgs", json={"name": "invite-team"})
         assert team.status_code == 200
         balance = await visitor.get(f"/orgs/{team.json()['org_id']}/balance",
-                                    headers={"X-Treg-Token": team.json()["token"]})
-        from treg.config import get_settings
+                                    headers={"X-Stray-Token": team.json()["token"]})
+        from stray.config import get_settings
         assert balance.json()["balance_micro"] == get_settings().promo_grant_micro
 
     # one-time: a second POST (forwarded thread, replay) gets no session
@@ -169,14 +169,14 @@ async def test_email_link_post_signs_in_once_and_lands_on_invite_org(client, sen
                                 headers={"content-type": "application/x-www-form-urlencoded"},
                                 follow_redirects=False)
         assert r.status_code == 303 and "invite_expired=1" in r.headers["location"]
-        assert "treg_session" not in r.headers.get("set-cookie", "")
+        assert "stray_session" not in r.headers.get("set-cookie", "")
 
 
 async def test_email_link_post_refuses_suspended_user(client, sent_invites):
     from sqlmodel import select as _select
 
-    from treg.infra.db import session_maker
-    from treg.models import User
+    from stray.infra.db import session_maker
+    from stray.models import User
 
     await _otp(client, "bob@x.io")  # user exists…
     async with session_maker() as db:
@@ -190,7 +190,7 @@ async def test_email_link_post_refuses_suspended_user(client, sent_invites):
                                headers={"content-type": "application/x-www-form-urlencoded"},
                                follow_redirects=False)
         assert r.status_code == 403  # …but banned: may hold the link, gets no session
-        assert "treg_session" not in r.headers.get("set-cookie", "")
+        assert "stray_session" not in r.headers.get("set-cookie", "")
 
 
 async def test_email_link_dies_with_the_invite(client, sent_invites):
@@ -217,8 +217,8 @@ async def test_invites_mine_newest_first_with_created_at(client, sent_invites, s
     # timestamps also occur on coarse clocks and need a stable newest-inserted tiebreaker.
     from datetime import datetime, timedelta
     from sqlmodel import select
-    from treg.infra.db import session_maker
-    from treg.models import Invite
+    from stray.infra.db import session_maker
+    from stray.models import Invite
 
     async with session_maker() as db:
         invites = (await db.execute(select(Invite).order_by(Invite.id))).scalars().all()

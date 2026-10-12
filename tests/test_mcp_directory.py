@@ -10,11 +10,11 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from starlette.routing import Mount
 
-from treg import mcp
-from treg.domain.identity import mcp_oauth
-from treg.routers import auth as auth_routes
-from treg.bootstrap import create_app
-from treg.config import get_settings
+from stray import mcp
+from stray.domain.identity import mcp_oauth
+from stray.routers import auth as auth_routes
+from stray.bootstrap import create_app
+from stray.config import get_settings
 
 
 MCP_HEADERS = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
@@ -94,7 +94,7 @@ async def _modern_rpc(client: AsyncClient, method: str, params=None,
 async def test_v2_feature_flag_disables_mount_metadata_grants_and_catalog_route(
     monkeypatch, clients,
 ):
-    monkeypatch.setenv("TREG_CLAUDE_CONNECTOR_ENABLED", "false")
+    monkeypatch.setenv("STRAY_CLAUDE_CONNECTOR_ENABLED", "false")
     get_settings.cache_clear()
     try:
         disabled = create_app("all")
@@ -119,7 +119,7 @@ async def test_v2_feature_flag_disables_mount_metadata_grants_and_catalog_route(
 
 
 async def test_v2_feature_flag_enables_mount_metadata_and_resource(monkeypatch):
-    monkeypatch.setenv("TREG_CLAUDE_CONNECTOR_ENABLED", "true")
+    monkeypatch.setenv("STRAY_CLAUDE_CONNECTOR_ENABLED", "true")
     get_settings.cache_clear()
     try:
         enabled = create_app("all")
@@ -152,7 +152,7 @@ async def test_v2_feature_flag_enables_mount_metadata_and_resource(monkeypatch):
 
 async def test_v2_no_slash_path_rejects_a_v1_token_with_the_v2_challenge(monkeypatch):
     """Claude strips the final slash. That spelling must never fall through to the V1 mount."""
-    monkeypatch.setenv("TREG_CLAUDE_CONNECTOR_ENABLED", "true")
+    monkeypatch.setenv("STRAY_CLAUDE_CONNECTOR_ENABLED", "true")
     get_settings.cache_clear()
     try:
         enabled = create_app("all")
@@ -178,13 +178,13 @@ async def test_v2_declares_exact_directory_contract():
         "catalog_call_media", "resources_list", "balance", "catalog_request", "feedback", "review",
     ]
     expected_titles = {
-        "catalog_search": "Search Treg Catalog",
+        "catalog_search": "Search Stray Catalog",
         "catalog_get": "Get Catalog Endpoint",
         "catalog_call_read": "Call a Read Endpoint",
         "catalog_call_write": "Call a Write Endpoint",
         "catalog_call_media": "Call an Audio Endpoint",
         "resources_list": "List Team Resources",
-        "balance": "Check Treg Balance",
+        "balance": "Check Stray Balance",
         "catalog_request": "Request a Catalog Capability",
         "feedback": "Submit Feedback",
         "review": "Review a Catalog Call",
@@ -200,7 +200,7 @@ async def test_v2_declares_exact_directory_contract():
         assert tool.output_schema and tool.output_schema.get("properties")
         assert not tool.output_schema.get("required")
     blob = " ".join(tool.description.lower() for tool in tools.values())
-    for disallowed in ("use treg first", "official", "anthropic verified", "best provider"):
+    for disallowed in ("use stray first", "official", "anthropic verified", "best provider"):
         assert disallowed not in blob
 
 
@@ -293,7 +293,7 @@ async def test_v2_transport_challenges_with_v2_metadata():
 
 
 async def test_v2_shared_catalog_details_balance_and_guidance_work_end_to_end(clients):
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with directory_session() as client:
         search = await _call_tool(client, "catalog_search", {"query": "tiktok comments"}, token)
         endpoint = await _call_tool(client, "catalog_get", {
@@ -311,7 +311,7 @@ async def test_v2_shared_catalog_details_balance_and_guidance_work_end_to_end(cl
 
 
 async def test_team_and_directory_catalog_search_results_and_prices_match(clients):
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     args = {"query": "tiktok comments", "limit": 5}
     async with paired_mcp_session() as client:
         team = await _call_tool(client, "catalog_search", args, token, path="/mcp/")
@@ -327,13 +327,13 @@ async def test_team_and_directory_catalog_search_results_and_prices_match(client
 
 
 async def test_team_and_directory_endpoint_details_and_balance_match(clients):
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     endpoint_args = {"endpoint_id": "tikhub.tiktok.video.comments"}
     async with paired_mcp_session() as client:
         # Endpoint stats come through the stale-while-revalidate cache: a COLD read answers
         # `observed: None` and refreshes in the background, so two reads in a row can differ on
         # nothing but timing (CI, 2026-08-28). Warm it, then compare.
-        from treg import api as A
+        from stray import api as A
         await _call_tool(client, "catalog_get", endpoint_args, token, path="/mcp/")
         await A.app.state.endpoint_observation_reader.wait_for_idle()
         team_endpoint = await _call_tool(
@@ -350,10 +350,10 @@ async def test_team_and_directory_endpoint_details_and_balance_match(clients):
 
 
 async def test_team_and_directory_catalog_call_results_match_except_attribution(clients):
-    from treg import audit
+    from stray import audit
 
     await clients.post("/secrets", json={"name": "tikhub", "value": "PAIRED-KEY"})
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     args = {
         "endpoint_id": "tikhub.tiktok.video.comments",
         "params": {"aweme_id": "7"},
@@ -376,7 +376,7 @@ async def test_team_and_directory_catalog_call_results_match_except_attribution(
 
 
 async def test_team_and_directory_catalog_call_errors_match_or_keep_the_documented_boundary(clients):
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     ambiguous = {
         "endpoint_id": "tikhub.tiktok.video.comments",
         "params": {"aweme_id": "7"},
@@ -401,7 +401,7 @@ async def test_team_and_directory_catalog_call_errors_match_or_keep_the_document
 
 
 async def test_both_mcp_surfaces_preserve_oauth_remediation_fields(clients):
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     args = {"endpoint_id": "instagram.x.hashtag-search"}
     async with paired_mcp_session() as client:
         team = await _call_tool(client, "call", args, token, path="/mcp/")
@@ -420,11 +420,11 @@ async def test_both_mcp_surfaces_preserve_oauth_remediation_fields(clients):
 async def test_v2_search_and_catalog_request_keep_directory_attribution(clients):
     from sqlmodel import select
 
-    from treg import audit
-    from treg.infra.db import session_maker
-    from treg.models import SearchMiss, ToolRequest
+    from stray import audit
+    from stray.infra.db import session_maker
+    from stray.models import SearchMiss, ToolRequest
 
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with directory_session() as client:
         miss = await _call_tool(client, "catalog_search", {
             "query": "zzzz-directory-only-miss",
@@ -444,22 +444,22 @@ async def test_v2_search_and_catalog_request_keep_directory_attribution(clients)
 
 
 async def test_v2_catalog_call_uses_shared_credentials_headers_errors_and_audit(clients):
-    from treg import audit
+    from stray import audit
 
     await clients.post("/secrets", json={"name": "tikhub", "value": "DIRECTORY-KEY"})
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with directory_session() as client:
         result = await _call_tool(client, "catalog_call_read", {
             "endpoint_id": "tikhub.tiktok.video.comments",
             "params": {"aweme_id": "7"},
-            "headers": {"X-Test-Header": "kept", "X-Treg-Token": "blocked"},
-        }, token, {"X-Treg-Meta": "customer=directory_test"})
+            "headers": {"X-Test-Header": "kept", "X-Stray-Token": "blocked"},
+        }, token, {"X-Stray-Meta": "customer=directory_test"})
     await audit.drain()
 
     assert result["status"] == 200
     assert result["body"]["auth"] == "Bearer DIRECTORY-KEY"
     assert result["body"]["headers"]["x-test-header"] == "kept"
-    assert result["body"]["headers"].get("x-treg-token") != "blocked"
+    assert result["body"]["headers"].get("x-stray-token") != "blocked"
     assert "cost_usd" not in result or result["cost_usd"] is None
     row = (await clients.get("/calls")).json()[0]
     assert row["client"] == "claude-connector"
@@ -467,8 +467,8 @@ async def test_v2_catalog_call_uses_shared_credentials_headers_errors_and_audit(
 
 
 async def test_v2_metering_and_idempotency_use_the_shared_money_path(clients, monkeypatch):
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "DIRECTORY-PLATFORM-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "DIRECTORY-PLATFORM-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
     try:
         org_id = (await clients.get("/orgs")).json()[0]["org_id"]
@@ -477,7 +477,7 @@ async def test_v2_metering_and_idempotency_use_the_shared_money_path(clients, mo
             body = (await clients.get(f"/orgs/{org_id}/balance")).json()
             return body["balance_micro"]
 
-        token = clients.headers["X-Treg-Token"]
+        token = clients.headers["X-Stray-Token"]
         args = {
             "endpoint_id": "tikhub.tiktok.video.comments",
             "params": {"aweme_id": "7"},
@@ -502,11 +502,11 @@ async def test_v2_write_call_and_insufficient_balance_errors_use_shared_behavior
 ):
     from sqlmodel import select
 
-    from treg.infra.db import session_maker
-    from treg.models import Org
+    from stray.infra.db import session_maker
+    from stray.models import Org
 
     await clients.post("/secrets", json={"name": "dataforseo", "value": "user:password"})
-    token = clients.headers["X-Treg-Token"]
+    token = clients.headers["X-Stray-Token"]
     async with directory_session() as client:
         write = await _call_tool(client, "catalog_call_write", {
             "endpoint_id": "dataforseo.web.page.audit",
@@ -515,8 +515,8 @@ async def test_v2_write_call_and_insufficient_balance_errors_use_shared_behavior
     assert write["status"] == 200
     assert json.loads(write["body"]["body"]) == [{"url": "https://example.com"}]
 
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TIKHUB", "DIRECTORY-PLATFORM-KEY")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tikhub")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TIKHUB", "DIRECTORY-PLATFORM-KEY")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tikhub")
     get_settings.cache_clear()
     try:
         org_id = (await clients.get("/orgs")).json()[0]["org_id"]
@@ -612,19 +612,19 @@ def test_transport_factory_refuses_a_server_audience_mismatch():
 @pytest.mark.parametrize(('path', 'tool'), [('/mcp/', 'call'), ('/mcp/v2/', 'catalog_call_read')])
 @pytest.mark.parametrize('sampled', [False, True])
 async def test_feedback_hint_only_wraps_successful_sampled_calls(clients, monkeypatch, path, tool, sampled):
-    from treg import analytics, hints
-    from treg.application.call import service as call_service
+    from stray import analytics, hints
+    from stray.application.call import service as call_service
     from test_marketplace_call import _fake_relay
 
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TIKHUB', 'SYNTHETIC-PLATFORM-KEY')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'tikhub')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TIKHUB', 'SYNTHETIC-PLATFORM-KEY')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'tikhub')
     get_settings.cache_clear()
     monkeypatch.setattr(hints, 'sampled', lambda kind, _: sampled if kind == 'feedback' else False)
     events = []
     monkeypatch.setattr(analytics, 'capture', lambda *args, **kw: events.append((args, kw)))
     body = b'{"data":{"items":[]}}'
     monkeypatch.setattr(call_service, 'relay', _fake_relay(200, body))
-    token = clients.headers['X-Treg-Token']
+    token = clients.headers['X-Stray-Token']
     args = {'endpoint_id': 'tikhub.tiktok.video.comments', 'params': {'aweme_id': '7'},
             'idempotency_key': 'feedback-hint-test'}
     try:
@@ -653,12 +653,12 @@ async def test_feedback_hint_only_wraps_successful_sampled_calls(clients, monkey
 
 @pytest.mark.parametrize(('path', 'tool'), [('/mcp/', 'call'), ('/mcp/v2/', 'catalog_call_read')])
 async def test_review_hint_wins_over_feedback_and_replay_wins_over_review(clients, monkeypatch, path, tool):
-    from treg import hints
-    from treg.application.call import service as call_service
+    from stray import hints
+    from stray.application.call import service as call_service
     from test_marketplace_call import _fake_relay
 
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TIKHUB', 'SYNTHETIC-PLATFORM-KEY')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'tikhub')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TIKHUB', 'SYNTHETIC-PLATFORM-KEY')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'tikhub')
     get_settings.cache_clear()
     monkeypatch.setattr(hints, 'sampled', lambda kind, ref: True)
     monkeypatch.setattr(call_service, 'relay', _fake_relay(200, b'{"data":{"items":[]}}'))
@@ -666,8 +666,8 @@ async def test_review_hint_wins_over_feedback_and_replay_wins_over_review(client
             'idempotency_key': 'review-hint-test'}
     try:
         async with paired_mcp_session() as client:
-            first = await _call_tool(client, tool, args, clients.headers['X-Treg-Token'], path=path)
-            replay = await _call_tool(client, tool, args, clients.headers['X-Treg-Token'], path=path)
+            first = await _call_tool(client, tool, args, clients.headers['X-Stray-Token'], path=path)
+            replay = await _call_tool(client, tool, args, clients.headers['X-Stray-Token'], path=path)
         assert first['hint'] == hints.review_hint(first['call_id'])
         assert replay['replayed'] is True
         assert 'stored answer' in replay['hint']
@@ -677,12 +677,12 @@ async def test_review_hint_wins_over_feedback_and_replay_wins_over_review(client
 
 @pytest.mark.parametrize(('path', 'tool'), [('/mcp/', 'call'), ('/mcp/v2/', 'catalog_call_read')])
 async def test_balance_hint_wins_with_all_sampling_enabled(clients, monkeypatch, path, tool):
-    from treg import hints
-    from treg.application.call import service as call_service
+    from stray import hints
+    from stray.application.call import service as call_service
     from test_marketplace_call import _fake_relay
 
-    monkeypatch.setenv('TREG_PLATFORM_KEY_TIKHUB', 'SYNTHETIC-PLATFORM-KEY')
-    monkeypatch.setenv('TREG_PLATFORM_PROVIDERS', 'tikhub')
+    monkeypatch.setenv('STRAY_PLATFORM_KEY_TIKHUB', 'SYNTHETIC-PLATFORM-KEY')
+    monkeypatch.setenv('STRAY_PLATFORM_PROVIDERS', 'tikhub')
     get_settings.cache_clear()
     monkeypatch.setattr(hints, 'sampled', lambda kind, ref: True)
     monkeypatch.setattr(call_service, 'relay', _fake_relay(402, b'{"error":"payment required"}'))
@@ -690,7 +690,7 @@ async def test_balance_hint_wins_with_all_sampling_enabled(clients, monkeypatch,
         async with paired_mcp_session() as client:
             result = await _call_tool(client, tool, {
                 'endpoint_id': 'tikhub.tiktok.video.comments', 'params': {'aweme_id': '7'},
-            }, clients.headers['X-Treg-Token'], path=path)
+            }, clients.headers['X-Stray-Token'], path=path)
         assert result['status'] == 402
         assert result['hint'] == "the team's prepaid balance is not enough for this call"
     finally:

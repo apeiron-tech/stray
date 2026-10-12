@@ -1,25 +1,25 @@
 ---
 name: vendor-listing
 description: >
-  Onboard a vendor who wants their API listed in the treg catalog. Use whenever someone asks
-  "how do we get listed on treg", a vendor sends their API details, or a listing PR/issue needs
+  Onboard a vendor who wants their API listed in the stray catalog. Use whenever someone asks
+  "how do we get listed on stray", a vendor sends their API details, or a listing PR/issue needs
   review. Walks the whole pipeline: eligibility gate → registry entry → platform-key slot → logo
   → tests → LIVE bogus-key test → core catalog YAML → verify → scrub → validate → evidence
   ledger in the PR. Every listing ships tier-4 wiring and a per-endpoint verification table.
   The vendor-facing doc this skill implements is docs/VENDORS.md.
 metadata:
-  internal: true  # repo tooling: hidden from `npx skills add superdesigndev/treg`
+  internal: true  # repo tooling: hidden from `npx skills add apeiron-tech/stray`
 ---
 
 # Vendor listing — add a provider to the catalog
 
 A listing has **three parts**, and all three ship in the same PR:
 
-1. **Registry entry** (`src/treg/oauth_providers.py`) — how a team connects a credential for the
-   provider, and how treg verifies that credential is real.
-2. **Core catalog file** (`src/treg/catalog/<service>.yaml`) — what an agent can *do*: 8–15
+1. **Registry entry** (`src/stray/oauth_providers.py`) — how a team connects a credential for the
+   provider, and how stray verifies that credential is real.
+2. **Core catalog file** (`src/stray/catalog/<service>.yaml`) — what an agent can *do*: 8–15
    curated endpoints with capability mapping, inputs, cost + provenance, and verified examples.
-3. **Platform-key slot** (`config.py` + `render.yaml` + `fx.yaml`) — so treg can serve the
+3. **Platform-key slot** (`config.py` + `render.yaml` + `fx.yaml`) — so stray can serve the
    endpoints on its own key (tier 4). **Always aim for this.** A listing that is BYOK-only is the
    exception and needs a stated reason (no self-serve pricing, `own_account` data, sales-gated).
 
@@ -29,7 +29,7 @@ Deep references (read before non-trivial work; do not duplicate them here):
 - `docs/context/guides/expanding-a-category.md` — the add-a-provider playbook, verify toolbox, traps
 - `docs/context/architecture/catalog.md` — catalog schema, cost provenance, verify pipeline, PII rules
 - `docs/VENDORS.md` — what we told the vendor to prepare (their checklist)
-- `src/treg/web/vendor-listing.md` — the HOSTED instructions (served at `/vendor-listing`) that a
+- `src/stray/web/vendor-listing.md` — the HOSTED instructions (served at `/vendor-listing`) that a
   vendor's own coding agent follows to raise a listing PR; the dashboard's "List as vendor" modal
   (connections view, `vendorAsk` in `index.html`) hands vendors a prompt pointing at it. Keep the
   three vendor-facing surfaces (doc, hosted page, modal prompt) telling one story.
@@ -84,10 +84,10 @@ constant does not appear in `_secret_renderings`' output, and add a test.
 
 The tier-4 wiring is part of the listing, not a follow-up:
 
-- `src/treg/config.py`: `platform_key_<service>: str = ""` with a one-line comment (auth shape,
+- `src/stray/config.py`: `platform_key_<service>: str = ""` with a one-line comment (auth shape,
   what a top-up buys). Pairs (key+secret) use `platform_extra_setting`; see Tomba.
-- `render.yaml`: `- key: TREG_PLATFORM_KEY_<SERVICE>` + `sync: false` + a comment. **No value.**
-- `src/treg/catalog/fx.yaml` `credit_rates_usd`: the USD-per-credit treg actually pays, with
+- `render.yaml`: `- key: STRAY_PLATFORM_KEY_<SERVICE>` + `sync: false` + a comment. **No value.**
+- `src/stray/catalog/fx.yaml` `credit_rates_usd`: the USD-per-credit stray actually pays, with
   `basis` naming the real top-up/receipt (not the pricing page's headline tier), `source`, `checked`.
 - A test asserting `cat.platform_eligible(ep)` for every endpoint in the file (see
   `test_crustdata_and_aviato_catalogs_are_platform_priced`); every cost must therefore be
@@ -95,7 +95,7 @@ The tier-4 wiring is part of the listing, not a follow-up:
 - If the platform key also needs a constant header, `_platform_bindings` must carry it — assert
   the tier-4 binding list equals BYOK's (see `test_crustdata_platform_key_keeps_the_required_version_header`).
 - Hand the **env value** to Jason out-of-band (a file, never the PR, never chat if avoidable) with
-  the `TREG_PLATFORM_PROVIDERS` allow-list entry. Setting it in Render is his ops decision; the PR
+  the `STRAY_PLATFORM_PROVIDERS` allow-list entry. Setting it in Render is his ops decision; the PR
   just makes it possible.
 
 Modal pricing (preview/rescrape/email riders, bulk-per-record) that one scalar can't express: keep
@@ -104,7 +104,7 @@ them generically — do not hardcode credit arithmetic in `api.py` per provider 
 
 ## Step 3 — logo
 
-`src/treg/web/logos/<service>.svg` — a **neutral lettermark**, not the real brand mark.
+`src/stray/web/logos/<service>.svg` — a **neutral lettermark**, not the real brand mark.
 `test_every_provider_has_a_logo` fails without it.
 
 ## Step 4 — tests
@@ -120,12 +120,12 @@ Start the server, `POST /connections/token` with a **garbage key** against the r
 - `404`/`502` in the reason → wrong probe path/host → fix `base_url`/`probe_path`.
 
 **Never ship a key provider you haven't watched reject a bogus key.** Use a throwaway org
-(`e2e-…@treg.local`) and delete it after. Watch for the known traps: trailing-slash 307 (put the
+(`e2e-…@stray.local`) and delete it after. Watch for the known traps: trailing-slash 307 (put the
 slash in `probe_path`), 200-with-error-body (read a body field), CSV/text responses.
 
 ## Step 6 — core catalog YAML
 
-`src/treg/catalog/<service>.yaml`, following the schema in `catalog.md`. In order:
+`src/stray/catalog/<service>.yaml`, following the schema in `catalog.md`. In order:
 
 1. **Ingest** from OpenAPI if published (never hand-transcribe paths); else from docs with
    `source.openapi: null`.
@@ -147,7 +147,7 @@ slash in `probe_path`), 200-with-error-body (read a body field), CSV/text respon
 ## Step 7 — verify, scrub, validate
 
 ```bash
-TREG_CATALOG_CRED='<secret>' uv run --frozen python scripts/catalog_verify.py <service>.yaml
+STRAY_CATALOG_CRED='<secret>' uv run --frozen python scripts/catalog_verify.py <service>.yaml
 uv run --frozen python scripts/catalog_validate.py    # must exit 0
 uv run --frozen python -m pytest -q
 ```
@@ -167,7 +167,7 @@ uv run --frozen python -m pytest -q
   routed waterfall reads only the endpoint's `miss:` block: a 2xx is hit-or-miss by the adapter's
   predicate, and any 4xx is an ERROR unless `miss: {status, means}` names it — one error child
   and the parent cannot answer "miss", so eight clean misses plus one undeclared 404 is a 502
-  (#573: 64% of three days of `treg.people.email.find` 502s were exactly this).
+  (#573: 64% of three days of `stray.people.email.find` 502s were exactly this).
   - LimaData answered 404 for "no email"; the cost `note` said "a 404 miss is free" but no
     `miss:` block existed. Prose in `note` is documentation; only the `miss:` block is read.
   - Prospeo answers 400 for BOTH `NO_MATCH` (a miss) and `INVALID_DATAPOINTS` (a real error). When
@@ -178,11 +178,11 @@ uv run --frozen python -m pytest -q
   - Record the miss-path latency. A provider whose miss is slow (LimaData 404: median 10 s) sits
     late in the ladder or under a tighter child timeout, or a nine-child waterfall blows the
     caller's client timeout.
-  - Test the miss under the ROUTED parent (`treg.<capability>`), not only the direct `/call/`;
+  - Test the miss under the ROUTED parent (`stray.<capability>`), not only the direct `/call/`;
     the direct call looked fine for both providers.
 - **Settle ≤ reserve only on evidence.** If the code settles a modal price below its reserve
   (e.g. drops a documented per-result rider because one 1-row probe didn't charge it), that is an
-  unproven assumption that under-bills treg on every call (#141 inverse). Settle at the estimate
+  unproven assumption that under-bills stray on every call (#141 inverse). Settle at the estimate
   until a multi-row balance delta shows the rider is not billed.
 - **Scrub every captured example** (this repo is public): no named private individuals
   (contact-lookup routes get `untestable:` + no test_request + no example), no third-party
@@ -270,9 +270,9 @@ under the real charge (#141, GitHub→LinkedIn: claimed 1 credit, metered 5). Th
   status, body and latency
 - Platform-key slot shipped: `config.py` setting, `render.yaml` key (no value), `fx.yaml` rate
   from a real top-up, `platform_eligible` test for the whole file; env value handed to Jason
-  out-of-band with the `TREG_PLATFORM_PROVIDERS` entry. Enabling in Render is his call, not
+  out-of-band with the `STRAY_PLATFORM_PROVIDERS` entry. Enabling in Render is his call, not
   automatic — but the PR must make it a one-line ops change.
 - Any settle-below-reserve logic is backed by a multi-row balance delta, and no provider credit
   arithmetic is hardcoded in `api.py` that the YAML doesn't also state
-- Docs synced: run `bash .claude/skills/tools-registry-context/scripts/drift.sh`, update touched
+- Docs synced: run `bash .claude/skills/stray-context/scripts/drift.sh`, update touched
   fragments in the same commit

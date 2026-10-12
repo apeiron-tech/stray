@@ -13,11 +13,11 @@ from sqlalchemy import inspect as sa_inspect
 from sqlmodel import SQLModel
 from sqlmodel import select
 
-from treg import audit
-from treg import crypto
-from treg.infra import db
-from treg.maintenance import _alembic_config
-from treg.models import ApiKey, Membership, Org, User
+from stray import audit
+from stray import crypto
+from stray.infra import db
+from stray.maintenance import _alembic_config
+from stray.models import ApiKey, Membership, Org, User
 
 
 def _drop_present(connection) -> None:
@@ -91,7 +91,7 @@ async def test_managed_key_migration_backfills_human_and_agent_hashes():
             org_id = await _insert_org_at_revision(session, name="Before upgrade", slug="before-upgrade")
             org = Org(id=org_id, name="Before upgrade", slug="before-upgrade")
             human = User(email="human@example.dev")
-            agent = User(email="worker@agents.treg.local")
+            agent = User(email="worker@agents.stray.local")
             session.add(human); session.add(agent)
             await session.flush()
             session.add(Membership(user_id=human.id, org_id=org.id, role="owner",
@@ -104,7 +104,7 @@ async def test_managed_key_migration_backfills_human_and_agent_hashes():
         async with db.session_maker() as session:
             rows = (await session.execute(select(ApiKey).order_by(ApiKey.kind))).scalars().all()
         assert [(row.identity_label, row.kind, row.key_hash) for row in rows] == [
-            ("worker@agents.treg.local", "agent", agent_hash),
+            ("worker@agents.stray.local", "agent", agent_hash),
             ("human@example.dev", "default_human", None),
             ("human@example.dev", "legacy_human", human_hash),
         ]
@@ -167,8 +167,8 @@ async def test_pinned_scope_migration_leaves_legacy_ownership_unattributed():
     await _drop_everything()
     try:
         await _upgrade_to('0041')
-        from treg.models import RunRecord, AsyncTaskRecord, AsyncResourceRecord
-        from treg.timeutil import utcnow_naive
+        from stray.models import RunRecord, AsyncTaskRecord, AsyncResourceRecord
+        from stray.timeutil import utcnow_naive
         async with db.session_maker() as session:
             org_id = await _insert_org_at_revision(session, name='migration', slug='migration')
             rows = [

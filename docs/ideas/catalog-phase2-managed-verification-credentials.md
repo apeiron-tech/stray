@@ -1,15 +1,15 @@
-# Idea: Catalog phase 2 — treg-managed verification credentials
+# Idea: Catalog phase 2 — stray-managed verification credentials
 
 > Extracted from `REFACTOR-PLAN.md` §3.3. This is an idea, not scheduled work, and nothing in it is a
 > completion condition for the architecture refactor. It exists so the refactor plan stays free of
 > detailed non-goals.
 
-In phase 2, treg can become the credential channel for catalog verification:
+In phase 2, stray can become the credential channel for catalog verification:
 
 1. A provider creates a dedicated verification team and stores the test key as a connection.
-2. treg runs a basic liveness check when saving it.
+2. stray runs a basic liveness check when saving it.
 3. The provider authorizes the verification machine for named tools only.
-4. The pipeline calls the real API through treg without exposing plaintext credentials to scripts or
+4. The pipeline calls the real API through stray without exposing plaintext credentials to scripts or
    maintainers.
 5. The provider revokes access by deleting the connection or verification identity.
 
@@ -28,20 +28,20 @@ Before implementation, all of the following must hold:
 
 ---
 
-# 构想：Catalog 二期 —— treg 托管验证凭证（中文）
+# 构想：Catalog 二期 —— stray 托管验证凭证（中文）
 
 > 自 `REFACTOR-PLAN-CN.md` 三.3 抽出。这是构想，未排期，其中任何内容都不是架构改造的完成条件。
 > 单独成文是为了让改造计划里不残留带细节的非目标。
 
-二期可以让 treg 本身成为验证凭证通道：
+二期可以让 stray 本身成为验证凭证通道：
 
-1. 服务商在 treg 创建专用验证团队，把测试 key 存成连接。
-2. treg 在保存时运行基础活体验证。
+1. 服务商在 stray 创建专用验证团队，把测试 key 存成连接。
+2. stray 在保存时运行基础活体验证。
 3. 服务商只授权验证机器调用指定工具。
-4. 验证流水线通过 treg 代理调用真实 API，维护者和脚本都看不到明文 key。
+4. 验证流水线通过 stray 代理调用真实 API，维护者和脚本都看不到明文 key。
 5. 服务商删除连接或移除验证身份即可撤销权限。
 
-附带的好处：服务商亲自经历客户使用 treg 的真实路径。
+附带的好处：服务商亲自经历客户使用 stray 的真实路径。
 
 实现前必须满足以下安全条件：
 

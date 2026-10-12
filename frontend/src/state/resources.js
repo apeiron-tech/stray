@@ -35,10 +35,10 @@ async loadFishVoices(){
           {credentials:'include',headers:{...this.headers()}});
         if(!r.ok) throw new Error((await r.text())||('HTTP '+r.status));
         this.fishVoices=this.fishVoiceRows(await r.json());
-        this.fishVoicesSource=r.headers.get('X-Treg-Resource-Source')||'platform';
+        this.fishVoicesSource=r.headers.get('X-Stray-Resource-Source')||'platform';
         this.fishVoiceNote=this.fishVoicesSource==='byok'
           ?'These voices come from your connected Fish Audio account.'
-          :'These voices belong only to this treg team.';
+          :'These voices belong only to this stray team.';
       }catch(err){ this.fishVoices=[]; this.fishVoiceNote='Could not load voices: '+(err.detail||err); }
       finally{ this.fishVoiceBusy=false; }
     },

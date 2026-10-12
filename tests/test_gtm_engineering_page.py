@@ -9,8 +9,8 @@ import re
 
 from httpx import ASGITransport, AsyncClient
 
-from treg.api import app
-from treg.config import get_settings
+from stray.api import app
+from stray.config import get_settings
 
 PATH = "/gtm-engineering"
 
@@ -61,7 +61,7 @@ async def test_hub_is_linked_from_its_pillars_and_listed(clients: AsyncClient):
 
 
 async def test_hub_404s_on_a_self_hosted_registry(monkeypatch):
-    monkeypatch.setenv("TREG_PUBLIC_URL", "https://registry.example.internal")
+    monkeypatch.setenv("STRAY_PUBLIC_URL", "https://registry.example.internal")
     get_settings.cache_clear()
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://registry") as c:

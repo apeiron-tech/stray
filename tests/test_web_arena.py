@@ -7,15 +7,15 @@ import pytest
 from cryptography.fernet import InvalidToken
 from sqlmodel import select
 
-from treg.domain import web_arena, web_arena_scores
-from treg.application import web_arena as app, web_arena_quality, web_arena_publications
-from treg.application.call import service
-from treg.application.call.types import UpstreamResponse
-from treg.config import get_settings
-from treg.domain.catalog import store as catalog_store
-from treg.infra import db as infra_db
-from treg.infra.db import session_maker
-from treg.models import Hold, LedgerEntry
+from stray.domain import web_arena, web_arena_scores
+from stray.application import web_arena as app, web_arena_quality, web_arena_publications
+from stray.application.call import service
+from stray.application.call.types import UpstreamResponse
+from stray.config import get_settings
+from stray.domain.catalog import store as catalog_store
+from stray.infra import db as infra_db
+from stray.infra.db import session_maker
+from stray.models import Hold, LedgerEntry
 from test_marketplace_call import _balance
 from test_routing import _relay_by_provider
 
@@ -76,7 +76,7 @@ async def test_local_web_arena_quality_skips_daily_caps(monkeypatch):
 
 
 async def test_arena_opens_with_flag_without_benchmark_publication(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
     get_settings.cache_clear()
     try:
         assert (await clients.get("/web-arena")).status_code == 200
@@ -238,7 +238,7 @@ async def test_scheduled_live_totals_refresh_only_when_due(monkeypatch):
 
 
 def test_public_task_previews_show_verified_search_providers(monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
     get_settings.cache_clear()
     try:
         tasks = {row["id"]: row for row in app.tasks()}
@@ -259,10 +259,10 @@ def test_public_task_previews_show_verified_search_providers(monkeypatch):
 
 async def test_sitemap_quotes_use_optional_query_and_first_ten_urls(clients, monkeypatch):
     providers = ("anyapi", "branddev", "firecrawl", "olostep", "search1api", "tavily")
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", ",".join(providers))
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", ",".join(providers))
     for provider in providers:
-        monkeypatch.setenv("TREG_PLATFORM_KEY_" + provider.upper(), "TEST-" + provider)
+        monkeypatch.setenv("STRAY_PLATFORM_KEY_" + provider.upper(), "TEST-" + provider)
     get_settings.cache_clear()
     try:
         without = await clients.post("/web-arena/api/quotes", json={
@@ -276,9 +276,9 @@ async def test_sitemap_quotes_use_optional_query_and_first_ten_urls(clients, mon
             "task": "sitemap", "value": "https://example.com", "query": "pricing", "jev": False})
         assert with_query.status_code == 200, with_query.text
         assert {p["provider"] for p in with_query.json()["providers"]} == set(providers)
-        from treg.application import arena
-        from treg.infra.db import session_maker
-        from treg.models import WebArenaRun
+        from stray.application import arena
+        from stray.infra.db import session_maker
+        from stray.models import WebArenaRun
         async with session_maker() as db:
             row = await db.get(WebArenaRun, with_query.json()["id"])
             attempts = {a["provider"]: a for a in arena._unpack(row.payload)["attempts"]}
@@ -292,9 +292,9 @@ async def test_sitemap_quotes_use_optional_query_and_first_ten_urls(clients, mon
 
 
 async def test_search1api_sitemap_compares_only_first_ten_urls(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "search1api")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_SEARCH1API", "TEST-SEARCH1API")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "search1api")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_SEARCH1API", "TEST-SEARCH1API")
     get_settings.cache_clear()
     seen = []
     links = [f"https://example.com/{index}" for index in range(12)]
@@ -322,9 +322,9 @@ async def test_search1api_sitemap_compares_only_first_ten_urls(clients, monkeypa
 
 
 async def test_battle_quotes_and_settles_direct_search_with_jev_off(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "firecrawl")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "firecrawl")
     get_settings.cache_clear()
     async def no_jev(*args, **kwargs):
         raise AssertionError("Jev must stay off")
@@ -356,9 +356,9 @@ async def test_battle_quotes_and_settles_direct_search_with_jev_off(clients, mon
 
 
 async def test_web_arena_run_is_private_to_its_creator(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "firecrawl")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "firecrawl")
     get_settings.cache_clear()
     try:
         quote = await clients.post("/web-arena/api/quotes", json={
@@ -368,7 +368,7 @@ async def test_web_arena_run_is_private_to_its_creator(clients, monkeypatch):
         path = f"/web-arena/api/runs/{run_id}"
         attempt_id = (await clients.get(path)).json()["attempts"][0]["id"]
         other = (await clients.post("/users", json={"email": "other-web-arena@example.com"})).json()["token"]
-        headers = {"X-Treg-Token": other}
+        headers = {"X-Stray-Token": other}
         assert (await clients.get(path, headers=headers)).status_code == 404
         assert (await clients.post(path + "/start", headers=headers)).status_code == 404
         assert (await clients.post(path + "/cancel", headers=headers)).status_code == 404
@@ -381,9 +381,9 @@ async def test_web_arena_run_is_private_to_its_creator(clients, monkeypatch):
 
 
 async def test_web_arena_releases_api_connection_while_provider_waits(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "firecrawl")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "firecrawl")
     get_settings.cache_clear()
     entered, resume = asyncio.Event(), asyncio.Event()
 
@@ -418,9 +418,9 @@ async def test_web_arena_releases_api_connection_while_provider_waits(clients, m
 
 @pytest.mark.parametrize("stop", ["cancel", "timeout"])
 async def test_web_arena_cancel_or_timeout_closes_one_paid_hold(clients, monkeypatch, stop):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "firecrawl")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_FIRECRAWL", "TEST-FIRECRAWL")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "firecrawl")
     get_settings.cache_clear()
     entered = asyncio.Event()
     wait_forever = asyncio.Event()
@@ -469,9 +469,9 @@ async def test_web_arena_cancel_or_timeout_closes_one_paid_hold(clients, monkeyp
 
 
 async def test_fixed_ten_result_search_can_join_quote(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_BRANDDEV", "TEST-BRANDDEV")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "branddev")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_BRANDDEV", "TEST-BRANDDEV")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "branddev")
     get_settings.cache_clear()
     try:
         response = await clients.post("/web-arena/api/quotes", json={
@@ -484,9 +484,9 @@ async def test_fixed_ten_result_search_can_join_quote(clients, monkeypatch):
 
 
 async def test_tinyfish_first_page_is_capped_for_comparison(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TINYFISH", "TEST-TINYFISH")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tinyfish")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TINYFISH", "TEST-TINYFISH")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tinyfish")
     get_settings.cache_clear()
     seen = []
     rows = [{"url": f"https://example.com/{index}", "title": str(index)} for index in range(11)]
@@ -515,10 +515,10 @@ async def test_tinyfish_first_page_is_capped_for_comparison(clients, monkeypatch
 
 
 async def test_new_search_providers_join_one_ten_link_quote(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tinyfish,serper,spidercloud,octen")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tinyfish,serper,spidercloud,octen")
     for provider in ("TINYFISH", "SERPER", "SPIDERCLOUD", "OCTEN"):
-        monkeypatch.setenv("TREG_PLATFORM_KEY_" + provider, "TEST-" + provider)
+        monkeypatch.setenv("STRAY_PLATFORM_KEY_" + provider, "TEST-" + provider)
     get_settings.cache_clear()
     try:
         response = await clients.post("/web-arena/api/quotes", json={
@@ -535,11 +535,11 @@ async def test_new_search_providers_join_one_ten_link_quote(clients, monkeypatch
 
 
 async def test_news_search_quotes_platform_providers_with_news_parameters(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tinyfish,search1api,exa,anyapi,cloro,serpapi,serper,dataforseo,litescrape,tavily")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tinyfish,search1api,exa,anyapi,cloro,serpapi,serper,dataforseo,litescrape,tavily")
     for provider in ("TINYFISH", "SEARCH1API", "EXA", "ANYAPI", "CLORO", "SERPAPI", "SERPER",
                      "DATAFORSEO", "LITESCRAPE", "TAVILY"):
-        monkeypatch.setenv("TREG_PLATFORM_KEY_" + provider, "TEST-" + provider)
+        monkeypatch.setenv("STRAY_PLATFORM_KEY_" + provider, "TEST-" + provider)
     get_settings.cache_clear()
     try:
         response = await clients.post("/web-arena/api/quotes", json={
@@ -548,7 +548,7 @@ async def test_news_search_quotes_platform_providers_with_news_parameters(client
         quote = response.json()
         assert {p["endpoint_id"] for p in quote["providers"]} == app.NEWS_ENDPOINTS
         async with session_maker() as db:
-            from treg.models import WebArenaRun
+            from stray.models import WebArenaRun
             saved = await db.get(WebArenaRun, quote["id"])
         attempts = {a["provider"]: a for a in app.arena._unpack(saved.payload)["attempts"]}
         assert attempts["tinyfish"]["query"]["domain_type"] == "news"
@@ -576,10 +576,10 @@ async def test_news_search_quotes_platform_providers_with_news_parameters(client
     ("maps", "coffee shops in Austin TX", app.MAPS_ENDPOINTS),
 ])
 async def test_new_search_tasks_quote_platform_lineups(clients, monkeypatch, task, value, expected):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "exa,tinyfish,serper,justoneapi,serpapi,tikhub,apify,dataforseo")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "exa,tinyfish,serper,justoneapi,serpapi,tikhub,apify,dataforseo")
     for provider in ("EXA", "TINYFISH", "SERPER", "JUSTONEAPI", "SERPAPI", "TIKHUB", "APIFY", "DATAFORSEO"):
-        monkeypatch.setenv("TREG_PLATFORM_KEY_" + provider, "TEST-" + provider)
+        monkeypatch.setenv("STRAY_PLATFORM_KEY_" + provider, "TEST-" + provider)
     get_settings.cache_clear()
     try:
         response = await clients.post("/web-arena/api/quotes", json={
@@ -589,7 +589,7 @@ async def test_new_search_tasks_quote_platform_lineups(clients, monkeypatch, tas
         assert {p["endpoint_id"] for p in quote["providers"]} == expected
         assert quote["jev"] is (task != "maps")
         async with session_maker() as db:
-            from treg.models import WebArenaRun
+            from stray.models import WebArenaRun
             saved = await db.get(WebArenaRun, quote["id"])
         attempts = {a["provider"]: a for a in app.arena._unpack(saved.payload)["attempts"]}
         if task == "papers":
@@ -617,9 +617,9 @@ async def test_new_search_tasks_quote_platform_lineups(clients, monkeypatch, tas
     ], "nextToken": "next"}}, 1),
 ])
 async def test_new_search_result_shapes_are_usable(clients, monkeypatch, provider, task, answer, expected_count):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", provider)
-    monkeypatch.setenv("TREG_PLATFORM_KEY_" + provider.upper(), "TEST-" + provider)
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", provider)
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_" + provider.upper(), "TEST-" + provider)
     get_settings.cache_clear()
     seen = []
     monkeypatch.setattr(service, "relay", _relay_by_provider({provider: [(201 if provider == "apify" else 200,
@@ -651,9 +651,9 @@ async def test_new_search_result_shapes_are_usable(clients, monkeypatch, provide
 
 
 async def test_tinyfish_news_rate_limit_explains_retry(clients, monkeypatch):
-    monkeypatch.setenv("TREG_WEB_ARENA_ENABLED", "true")
-    monkeypatch.setenv("TREG_PLATFORM_PROVIDERS", "tinyfish")
-    monkeypatch.setenv("TREG_PLATFORM_KEY_TINYFISH", "TEST-TINYFISH")
+    monkeypatch.setenv("STRAY_WEB_ARENA_ENABLED", "true")
+    monkeypatch.setenv("STRAY_PLATFORM_PROVIDERS", "tinyfish")
+    monkeypatch.setenv("STRAY_PLATFORM_KEY_TINYFISH", "TEST-TINYFISH")
     get_settings.cache_clear()
 
     async def relay(*args, **kwargs):

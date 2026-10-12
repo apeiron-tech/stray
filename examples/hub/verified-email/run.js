@@ -4,7 +4,7 @@
 // This tool does both, and charges its own fee ONLY when the email came back valid or risky
 // (`units` below); an invalid or missing email costs the provider calls and nothing more.
 //
-// Both steps are routed (treg picks the provider). The find takes a LinkedIn URL, or a full
+// Both steps are routed (stray picks the provider). The find takes a LinkedIn URL, or a full
 // name and a domain, or first + last name and a domain. When the find already vouches for
 // deliverability (`verified: true`), the verify step is skipped: no second charge for the same
 // fact. The email status is always one of four values, whatever verifier answered: valid,
@@ -30,9 +30,9 @@ export default async function run(ctx) {
   let spent = 0;
   const call = async (id, body) => { const r = await ctx.call(id, { method: "POST", body }); spent += r.cost_usd || 0; return r; };
 
-  const f = await call("treg.people.email.find", who);
+  const f = await call("stray.people.email.find", who);
   const found = f.status === 200 && f.json && f.json.output;
-  const foundBy = f.status === 200 && f.json && f.json._treg && f.json._treg.served_by || null;
+  const foundBy = f.status === 200 && f.json && f.json._stray && f.json._stray.served_by || null;
   if (found && found.email && !workEmail(found.email, who.domain)) {
     ctx.log(`dropped ${found.email} from ${foundBy}: not a work email${who.domain ? " at " + who.domain : ""}`);
     found.email = null;
@@ -48,10 +48,10 @@ export default async function run(ctx) {
     status = "valid"; verifiedBy = foundBy;                 // the finder checked the mailbox itself
     ctx.log(`found by ${foundBy}, which vouched for it: verify skipped`);
   } else {
-    const v = await call("treg.people.email.verify", { email: found.email });
+    const v = await call("stray.people.email.verify", { email: found.email });
     const out = v.status === 200 && v.json && v.json.output;
     status = verdict(out);
-    verifiedBy = v.status === 200 && v.json && v.json._treg && v.json._treg.served_by || null;
+    verifiedBy = v.status === 200 && v.json && v.json._stray && v.json._stray.served_by || null;
     ctx.log(`found by ${foundBy}, verified by ${verifiedBy}: ${status}`);
   }
   const usable = status === "valid" || status === "risky";

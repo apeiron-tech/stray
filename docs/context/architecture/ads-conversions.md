@@ -2,10 +2,10 @@
 title: Google Ads conversion tracking — capture, outbox, upload
 status: shipped
 sources:
-  - src/treg/adsconv.py
-  - src/treg/application/signup.py
-  - src/treg/web/adtrack.js
-  - src/treg/web/gtag.js
+  - src/stray/adsconv.py
+  - src/stray/application/signup.py
+  - src/stray/web/adtrack.js
+  - src/stray/web/gtag.js
 related:
   - architecture/money.md
   - architecture/multi-tenancy.md
@@ -14,9 +14,9 @@ related:
   - ops/deploy.md
 ---
 
-> Scope note: this fragment is the **Google click-id** path (`treg_ad` → `Org.ad_*` → conversion
+> Scope note: this fragment is the **Google click-id** path (`stray_ad` → `Org.ad_*` → conversion
 > upload). Generic traffic-source attribution — `utm_*` and referrer for sponsor links, newsletters,
-> directories — is the separate `treg_utm` → `Org.utm_*` path in `web/sitetrack.js`, documented in
+> directories — is the separate `stray_utm` → `Org.utm_*` path in `web/sitetrack.js`, documented in
 > [data-model](data-model.md) and [api](../interface/api.md). The two are independent; a Google ad
 > click with utm tags populates both.
 
@@ -33,7 +33,7 @@ read-side Ads catalog calls (`oauth_providers.GOOGLE_ADS`), a separate credentia
 
 1. **Capture** (`web/adtrack.js`, a first-party script). It reads `gclid`/`gbraid`/
    `wbraid` off the URL — `gbraid`/`wbraid` are what Google substitutes on iOS traffic, and omitting
-   them silently drops a large share of mobile conversions — and writes them into a `treg_ad` cookie
+   them silently drops a large share of mobile conversions — and writes them into a `stray_ad` cookie
    (90 days, the length of Google's click-through attribution window; `SameSite=Lax` so it survives
    the cross-site top-level navigation an ad click is). The cookie records the mutually-exclusive
    field name as well as its value (`gclid|…`, `gbraid|…`, or `wbraid|…`); the old `CLICK_ID|landing`
@@ -78,7 +78,7 @@ read-side Ads catalog calls (`oauth_providers.GOOGLE_ADS`), a separate credentia
 
 Two different purposes were once conflated here and no longer are. A **customer** connecting their
 Google Ads account (`oauth_providers.GOOGLE_ADS`) so their agent can read campaign data is one thing;
-**treg** uploading its own marketing conversions to its own ad account is another. The uploader does
+**stray** uploading its own marketing conversions to its own ad account is another. The uploader does
 not borrow the customer-facing provider or any per-org `Secret` — it holds its own PLATFORM
 credential, `settings.ads_conv_refresh_token`, obtained once out of band by an operator via the OAuth
 playground with scope `https://www.googleapis.com/auth/datamanager`. `_auth_headers` exchanges it
@@ -169,7 +169,7 @@ need to rewrite history — conversion happens once, at upload time.
 
 The uploader records `signup`, `first_call` and `paid`. Operators supply their own destination
 account and action configuration. Hosted account IDs, bidding goals and verification evidence live
-in the private [conversion runbook](https://github.com/superdesigndev/treg-internal/blob/main/docs/marketing/ads-conversions.md).
+in the private [conversion runbook](https://github.com/apeiron-tech/stray-internal/blob/main/docs/marketing/ads-conversions.md).
 
 ## API version
 
@@ -181,7 +181,7 @@ for the full four-places-at-once list and the two-failure-modes note (a dead ver
 
 ## Testing: one database per test process
 
-The suite's default SQLite files live under `$TMPDIR/treg-tests/`, one per test process (named by
+The suite's default SQLite files live under `$TMPDIR/stray-tests/`, one per test process (named by
 pid, removed at exit), out of the repo tree so file watchers stay quiet. Concurrent runs in one
 checkout therefore never share a file. Before this, two runs against one file wiped each other's
 tables mid-test and surfaced as a misleading `no such table` error that looked like a flake.
@@ -189,7 +189,7 @@ tables mid-test and surfaced as a misleading `no such table` error that looked l
 ## Not built
 
 - **No router / auto-failover** — not applicable here (there is one destination, Google Ads), but
-  stated for consistency with the rest of the catalog: treg does not model automatic choosing.
+  stated for consistency with the rest of the catalog: stray does not model automatic choosing.
 - **The reconciliation sweep for the `paid` atomicity gap** (above) — named as the cheap fix, not
   implemented.
 - **The live-click verification** — needs a real ad click, cannot be automated, and runs after this

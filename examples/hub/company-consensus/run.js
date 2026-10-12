@@ -1,6 +1,6 @@
 // company-consensus: one company's details from two independent sources, and whether they agree.
 //
-// Routing (treg.companies.enrich) returns the FIRST provider that answers and never asks a second.
+// Routing (stray.companies.enrich) returns the FIRST provider that answers and never asks a second.
 // This tool asks two (or three) providers directly, at the same time, maps each answer onto the
 // contract's fixed fields, and compares field by field. Exact fields (domain, founded, employees,
 // linkedin) are compared in code. Text fields (name, industry, location) go to Jev in ONE call,
@@ -15,7 +15,7 @@ const SOURCES = {
   thecompaniesapi: { call: "thecompaniesapi.companies.enrich", req: d => ({ method: "GET", query: { domain: d } }),   read: readTheCompaniesApi },
   hunter:          { call: "hunter.companies.enrich",          req: d => ({ method: "GET", query: { domain: d } }),   read: readHunter },
 };
-const DEFAULT_SOURCES = ["thecompaniesapi", "hunter"];   // dropleads is third: treg's account was out of credits on 2026-09-23
+const DEFAULT_SOURCES = ["thecompaniesapi", "hunter"];   // dropleads is third: stray's account was out of credits on 2026-09-23
 const FIELDS = ["name", "domain", "website", "description", "industry", "employees", "founded", "location", "linkedin_url"];
 const EXACT = ["domain", "founded", "employees", "linkedin_url", "website"];
 const JUDGED = ["name", "industry", "location"];

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * treg proxy demo — a tiny app that calls a real API it has no key for.
+ * stray proxy demo — a tiny app that calls a real API it has no key for.
  *
  *   node server.js        → the call goes out as-is. No key, so the vendor refuses.
- *   treg node server.js   → the same code, credentialed by your team, server-side.
+ *   stray node server.js   → the same code, credentialed by your team, server-side.
  *
- * Nothing in this file mentions treg, reads a secret, or changes between the two runs. That is the
- * whole point: an ordinary app, and the credential appears only because treg is the parent process.
+ * Nothing in this file mentions stray, reads a secret, or changes between the two runs. That is the
+ * whole point: an ordinary app, and the credential appears only because stray is the parent process.
  *
  * Zero dependencies — node core only. Open http://localhost:3000 and click a button.
  */
@@ -53,13 +53,13 @@ function throughProxy(targetUrl, proxyUrl) {
         return reject(new Error(
           `The proxy at ${proxy.host} refused these credentials (407).\n\n` +
           `HTTPS_PROXY is probably left over from an earlier session. Clear it with:\n` +
-          `  eval "$(treg serve env --unset)"`));
+          `  eval "$(stray serve env --unset)"`));
       }
       if (res.statusCode !== 200) {
         socket.destroy();
         return reject(new Error(`the proxy answered ${res.statusCode} to CONNECT`));
       }
-      // Trust the bundle treg gave us (system roots + its own local authority) for this connection.
+      // Trust the bundle stray gave us (system roots + its own local authority) for this connection.
       const caFile = process.env.SSL_CERT_FILE || process.env.NODE_EXTRA_CA_CERTS;
       const secure = tls.connect(
         { socket, servername: target.hostname, ca: caFile ? fs.readFileSync(caFile) : undefined },
@@ -67,7 +67,7 @@ function throughProxy(targetUrl, proxyUrl) {
           secure.write(
             `GET ${target.pathname}${target.search} HTTP/1.1\r\n` +
               `Host: ${target.hostname}\r\nAccept: application/json\r\n` +
-              `User-Agent: treg-proxy-demo\r\nConnection: close\r\n\r\n`,
+              `User-Agent: stray-proxy-demo\r\nConnection: close\r\n\r\n`,
           );
         },
       );
@@ -83,15 +83,15 @@ function throughProxy(targetUrl, proxyUrl) {
     });
     req.on("error", (err) => {
       // The single most likely cause, by a distance: HTTPS_PROXY is still exported from an earlier
-      // `treg serve` session and that proxy has since stopped. "ECONNREFUSED 127.0.0.1:18791" gives
+      // `stray serve` session and that proxy has since stopped. "ECONNREFUSED 127.0.0.1:18791" gives
       // no hint of that, so say it.
       if (err.code === "ECONNREFUSED") {
         return reject(new Error(
           `No proxy is listening at ${proxy.host}, but HTTPS_PROXY points there.\n\n` +
           `This usually means the variables are left over from an earlier session. Clear them:\n` +
-          `  eval "$(treg serve env --unset)"\n\n` +
-          `Then run the app under treg:\n` +
-          `  treg node server.js`));
+          `  eval "$(stray serve env --unset)"\n\n` +
+          `Then run the app under stray:\n` +
+          `  stray node server.js`));
       }
       reject(err);
     });
@@ -122,7 +122,7 @@ function unchunk(body) {
 function direct(targetUrl) {
   return new Promise((resolve, reject) => {
     https
-      .get(targetUrl, { headers: { Accept: "application/json", "User-Agent": "treg-proxy-demo" } }, (res) => {
+      .get(targetUrl, { headers: { Accept: "application/json", "User-Agent": "stray-proxy-demo" } }, (res) => {
         let body = "";
         res.on("data", (c) => (body += c));
         res.on("end", () => resolve({ status: res.statusCode, body }));
@@ -136,12 +136,12 @@ async function callTarget(which) {
   const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
   const started = Date.now();
   const result = proxy ? await throughProxy(target.url, proxy) : await direct(target.url);
-  return { ...result, url: target.url, ms: Date.now() - started, viaTreg: Boolean(proxy) };
+  return { ...result, url: target.url, ms: Date.now() - started, viaStray: Boolean(proxy) };
 }
 
 const PAGE = `<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>treg proxy demo</title>
+<title>stray proxy demo</title>
 <style>
   :root { --bg:#14120f; --card:#1c1a16; --line:#2e2a24; --ink:#f0ebe3; --muted:#a99e88;
           --clay:#e0703f; --green:#7fae72; --amber:#d0a24a; --mono:ui-monospace,SFMono-Regular,Menlo,monospace }
@@ -172,8 +172,8 @@ const PAGE = `<!doctype html>
   code { font-family:var(--mono); color:var(--clay); font-size:.92em }
 </style>
 <main>
-  <h1>▚ <span>treg</span> proxy demo</h1>
-  <p class="sub">This app has no API key and no treg code. Click a button and see who answers.</p>
+  <h1>▛ <span>stray</span> proxy demo</h1>
+  <p class="sub">This app has no API key and no stray code. Click a button and see who answers.</p>
 
   <div class="mode" id="mode"><span class="dot"></span><span id="modeText">checking…</span></div>
 
@@ -190,16 +190,16 @@ const PAGE = `<!doctype html>
     <pre id="body">Run this app two ways and compare:
 
   node server.js        → no key, so the vendor refuses
-  treg node server.js   → the same code, credentialed by your team</pre>
+  stray node server.js   → the same code, credentialed by your team</pre>
   </div>
 </main>
 <script>
   const $ = (id) => document.getElementById(id);
 
   fetch("/mode").then(r => r.json()).then(m => {
-    $("mode").className = "mode" + (m.viaTreg ? " on" : "");
-    $("modeText").textContent = m.viaTreg
-      ? "running under treg — registered hosts are credentialed by your team"
+    $("mode").className = "mode" + (m.viaStray ? " on" : "");
+    $("modeText").textContent = m.viaStray
+      ? "running under stray — registered hosts are credentialed by your team"
       : "running plain — every call goes out as-is, with no credentials";
   });
 
@@ -214,7 +214,7 @@ const PAGE = `<!doctype html>
       $("meta").innerHTML =
         '<span class="pill ' + (d.status >= 200 && d.status < 300 ? "ok" : "bad") + '">HTTP ' + d.status + "</span>" +
         ' <span class="pill">' + d.ms + " ms</span>" +
-        ' <span class="pill">' + (d.viaTreg ? "through treg" : "direct") + "</span>";
+        ' <span class="pill">' + (d.viaStray ? "through stray" : "direct") + "</span>";
       let text = d.body || "(empty)";
       try { text = JSON.stringify(JSON.parse(text), null, 2); } catch {}
       $("body").textContent = text.slice(0, 4000);
@@ -234,7 +234,7 @@ http
     }
     if (req.url === "/mode") {
       res.writeHead(200, { "content-type": "application/json" });
-      return res.end(JSON.stringify({ viaTreg: Boolean(process.env.HTTPS_PROXY || process.env.https_proxy) }));
+      return res.end(JSON.stringify({ viaStray: Boolean(process.env.HTTPS_PROXY || process.env.https_proxy) }));
     }
     const match = req.url?.match(/^\/call\/(\w+)$/);
     if (match && TARGETS[match[1]]) {
@@ -251,7 +251,7 @@ http
   })
   .listen(PORT, () => {
     const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
-    console.log(`\n  treg proxy demo → http://localhost:${PORT}`);
-    console.log(proxy ? "  running under treg: registered hosts will be credentialed.\n"
-                      : "  running plain: no credentials. Try `treg node server.js` to compare.\n");
+    console.log(`\n  stray proxy demo → http://localhost:${PORT}`);
+    console.log(proxy ? "  running under stray: registered hosts will be credentialed.\n"
+                      : "  running plain: no credentials. Try `stray node server.js` to compare.\n");
   });

@@ -26,7 +26,7 @@ export default { setup: useDashboard }
           </template>
 
           <template v-if="useMode==='run'">
-            <p class="explain">Runs <span class="mono">{{(tryTool.cli&&tryTool.cli.bin)||tryTool.name}}</span> on the registry server with the credential injected there - the key never reaches your machine. Same as <span class="mono">treg run --server {{tryTool.name}}</span>.</p>
+            <p class="explain">Runs <span class="mono">{{(tryTool.cli&&tryTool.cli.bin)||tryTool.name}}</span> on the registry server with the credential injected there - the key never reaches your machine. Same as <span class="mono">stray run --server {{tryTool.name}}</span>.</p>
             <div class="field"><input v-model="runArgsStr" :placeholder="'CLI arguments, e.g. get /v1/balance'" @keyup.enter="doRun" style="width:100%"/></div>
             <div class="muted" style="font-size:12px;margin:6px 0 12px">→ {{(tryTool.cli&&tryTool.cli.bin)||tryTool.name}} {{runArgsStr}}</div>
             <button class="btn primary" @click="doRun" :disabled="running">{{running?'Running…':'❯ Run'}}</button>

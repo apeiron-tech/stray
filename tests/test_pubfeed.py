@@ -10,9 +10,9 @@ import time
 import pytest
 from httpx import AsyncClient
 
-import treg.api as api_mod
-from treg.application.onboard import pubfeed
-from treg.application import onboard as onboard_use_cases
+import stray.api as api_mod
+from stray.application.onboard import pubfeed
+from stray.application import onboard as onboard_use_cases
 
 SECRET = "whsec_test_secret"
 

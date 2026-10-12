@@ -1,6 +1,6 @@
 """Intercom Messenger wiring — OFF by default, secret never leaves the server.
 
-Like analytics.py, the contract is mostly negative space: with no TREG_INTERCOM_APP_ID the widget
+Like analytics.py, the contract is mostly negative space: with no STRAY_INTERCOM_APP_ID the widget
 must not exist anywhere (/meta serves "", the pages' loaders stay inert), and the identity-
 verification secret must never appear in any response — only the derived user_hash does. The markup
 pins keep the web pages honest: the loader must key off /meta, never a hardcoded workspace id, or
@@ -14,9 +14,9 @@ import hmac
 import re
 from pathlib import Path
 
-from treg.config import get_settings
+from stray.config import get_settings
 
-WEB = Path(__file__).resolve().parents[1] / "src" / "treg" / "web"
+WEB = Path(__file__).resolve().parents[1] / "src" / "stray" / "web"
 
 
 async def test_meta_off_by_default(clients):

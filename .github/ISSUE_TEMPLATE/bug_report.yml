@@ -13,7 +13,7 @@ body:
     attributes:
       label: What happened?
       description: A clear description of the bug, and what you expected instead.
-      placeholder: When I run `treg …`, I expected X but got Y.
+      placeholder: When I run `stray …`, I expected X but got Y.
     validations:
       required: true
   - type: textarea
@@ -22,7 +22,7 @@ body:
       label: Steps to reproduce
       description: The exact commands or actions. Redact any secrets.
       placeholder: |
-        1. `treg …`
+        1. `stray …`
         2. …
         3. See error
     validations:
@@ -42,7 +42,7 @@ body:
     attributes:
       label: Where did this happen?
       options:
-        - CLI (treg)
+        - CLI (stray)
         - Web dashboard
         - The API / proxy
         - Self-hosted server
@@ -54,7 +54,7 @@ body:
     id: version
     attributes:
       label: Version / commit
-      description: Output of `treg --version`, or the git commit if self-hosting.
+      description: Output of `stray --version`, or the git commit if self-hosting.
     validations:
       required: false
   - type: textarea

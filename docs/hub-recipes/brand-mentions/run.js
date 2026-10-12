@@ -38,7 +38,7 @@ export default async function run(ctx) {
   }
 
   if (want.has("x")) {
-    const r = await ctx.call("treg.x.search.posts", { method: "POST", body: { q: term } });
+    const r = await ctx.call("stray.x.search.posts", { method: "POST", body: { q: term } });
     if (r.status === 200) {
       const out = (r.json && r.json.output) || {};
       for (const t of out.posts || []) {

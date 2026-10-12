@@ -1,18 +1,18 @@
 ---
-title: MCP — the front door for assistants, and treg as an OAuth authorization server
+title: MCP — the front door for assistants, and stray as an OAuth authorization server
 status: shipped
 sources:
-  - src/treg/application/auth.py
-  - src/treg/mcp.py
-  - src/treg/domain/identity/health.py
-  - src/treg/domain/identity/mcp_oauth.py
-  - src/treg/domain/identity/session.py
-  - src/treg/domain/identity/access.py
-  - src/treg/domain/identity/api_keys.py
-  - src/treg/routers/api_keys.py
-  - src/treg/routers/auth.py
-  - src/treg/web/claude-connector.html
-  - src/treg/web/connect-demo.html
+  - src/stray/application/auth.py
+  - src/stray/mcp.py
+  - src/stray/domain/identity/health.py
+  - src/stray/domain/identity/mcp_oauth.py
+  - src/stray/domain/identity/session.py
+  - src/stray/domain/identity/access.py
+  - src/stray/domain/identity/api_keys.py
+  - src/stray/routers/api_keys.py
+  - src/stray/routers/auth.py
+  - src/stray/web/claude-connector.html
+  - src/stray/web/connect-demo.html
   - tests/test_mcp.py
   - tests/test_mcp_oauth.py
   - tests/test_mcp_directory.py
@@ -24,7 +24,7 @@ related:
   - interface/api.md
 ---
 
-The same authorization server also serves one non-MCP client, "treg for Sheets" (`treg-sheets`):
+The same authorization server also serves one non-MCP client, "stray for Sheets" (`stray-sheets`):
 its own resource (`<public_url>/table`) and scope, a grant that belongs to the person rather than one
 team, and a token accepted only on the table routes. See [table](table.md).
 
@@ -33,7 +33,7 @@ team, and a token accepted only on the table routes. See [table](table.md).
 ## Feedback
 
 Both transports expose `feedback(category, message, call_ids?, endpoint_id?)`, using a four-value
-category enum and the shared HTTP intake. This is an additive, non-destructive write on treg,
+category enum and the shared HTTP intake. This is an additive, non-destructive write on stray,
 not an upstream call. It requires the existing transport identity and spends no balance.
 Both also expose `review(call_id, usefulness, reason?)` as a non-destructive, non-idempotent local
 write relayed to `/reviews`, using the shared usefulness enum and description.
@@ -45,7 +45,7 @@ Both `/mcp/` and `/mcp/v2/` accept an active managed key as a direct bearer. MCP
 bearer to the normal API, so disable and revoke take effect on the next tool call. The transport can
 still list static tool schemas before it validates a non-OAuth bearer; this does not grant data or
 call access. A seven-day `scp=bootstrap` login token is not a team bearer and cannot call either MCP
-surface; `treg mcp install` rejects it before writing any client configuration. Use a team Default,
+surface; `stray mcp install` rejects it before writing any client configuration. Use a team Default,
 Additional, or Agent key instead.
 
 MCP OAuth access and refresh tokens remain typed, short-lived bridge credentials with separate V1
@@ -60,7 +60,7 @@ dashboard action. The team MCP `call` tool and directory MCP `catalog_call_read`
 `catalog_call_write` preserve that body. The agent can tell the human what to authorize and retry
 the same endpoint after consent. No MCP response includes a credential.
 
-Everything else in treg is reached by a CLI or an HTTP call. These are the doors an **assistant**
+Everything else in stray is reached by a CLI or an HTTP call. These are the doors an **assistant**
 comes through: ChatGPT, Claude, Claude Code, Cursor, or anything else that speaks the Model Context
 Protocol. Both use one deployment, database, and enforcement layer:
 
@@ -71,7 +71,7 @@ Protocol. Both use one deployment, database, and enforcement layer:
 ## Why V2 exists
 
 The team `/mcp/` must keep its general `call` tool because existing users use it for catalog
-endpoints, team-owned tools, and imported skills. Treg cannot reliably classify the side effects of
+endpoints, team-owned tools, and imported skills. Stray cannot reliably classify the side effects of
 an arbitrary private tool, so that surface cannot give Claude a precise read-versus-write safety
 signal without breaking its existing contract.
 
@@ -80,7 +80,7 @@ catalog ids and splits calls by the HTTP method stored in the catalog. Claude ca
 GET, HEAD, and OPTIONS as reads and request approval for POST, PUT, PATCH, and DELETE. Both surfaces
 still use the same internal credential, policy, metering, audit, and relay machinery.
 
-The two version labels describe different things. `/mcp/v2/` is Treg's second MCP transport
+The two version labels describe different things. `/mcp/v2/` is Stray's second MCP transport
 surface. **Connector release V1** is the first product release submitted to Claude's directory.
 
 `NormalizeDirectoryMCPPath` makes `/mcp/v2` and `/mcp/v2/` the same V2 resource. This is required
@@ -89,7 +89,7 @@ request can fall through to the team `/mcp` mount and receive the wrong OAuth re
 
 ## Claude connector feature flag
 
-`TREG_CLAUDE_CONNECTOR_ENABLED` defaults to `false`. When false, V2 is not mounted, its lifespan does
+`STRAY_CLAUDE_CONNECTOR_ENABLED` defaults to `false`. When false, V2 is not mounted, its lifespan does
 not start, V2 resource metadata and new V2 grants are refused, and the catalog-only call route returns
 404. The team `/mcp/` surface does not depend on this flag.
 
@@ -152,8 +152,8 @@ same-named team tool. A change is incomplete if only one relevant MCP test file 
 | `hub_mine` | the caller's team's hub tools, with status, price, and check verdict |
 
 The three `hub_*` tools exist only on `/mcp/`, registered on the same server object as the rest of
-this table; `_HubToolsGate` (a `tools/list` middleware) hides them unless `TREG_HUB_ENABLED` is set
-and, when `TREG_HUB_TEAMS`/`TREG_HUB_USERS` also limit it, the caller resolves to a listed team or
+this table; `_HubToolsGate` (a `tools/list` middleware) hides them unless `STRAY_HUB_ENABLED` is set
+and, when `STRAY_HUB_TEAMS`/`STRAY_HUB_USERS` also limit it, the caller resolves to a listed team or
 email (`_hub_reader`, cached a minute). `catalog_search` also merges in the caller's visible listed
 hub tools by score, tagged `kind: "hub"`, and `call` accepts a hub tool id (`<team-slug>.<name>[@N]`)
 that isn't a catalog id or `<tool>/<path>`, POSTing the inputs as its JSON body. `/mcp/v2/` never
@@ -167,7 +167,7 @@ plus `call` covers all of it and stays the same size.
 ## Fixed surface — no change subscriptions
 
 The MCP surface is static at runtime. Weekly catalog refreshes change the DATA returned by
-`catalog_search` and `catalog_get`; they do not change `tools/list`. treg also publishes no tool,
+`catalog_search` and `catalog_get`; they do not change `tools/list`. stray also publishes no tool,
 prompt or resource change events. `server/discover` therefore advertises
 `tools.listChanged=false`, `prompts.listChanged=false`, `resources.listChanged=false`, and
 `resources.subscribe=false`, and `subscriptions/listen` is refused with `METHOD_NOT_FOUND`.
@@ -179,11 +179,11 @@ It deliberately does not mutate the SDK's private handler registry. This keeps c
 idle SSE streams which can never deliver useful work.
 
 `call` is annotated **destructive + open-world + non-idempotent**, which reads as pessimistic until
-you notice treg does not model the upstream: it relays to somebody else's API and cannot know whether
+you notice stray does not model the upstream: it relays to somebody else's API and cannot know whether
 that endpoint charges, writes or deletes. Claiming otherwise would be a guess presented as a fact.
-`feedback`, `review` and `catalog_request` are the other non-reads. They are harmless writes (a row on treg itself,
+`feedback`, `review` and `catalog_request` are the other non-reads. They are harmless writes (a row on stray itself,
 nothing upstream, nothing spent), so they are non-destructive; on the team MCP they are open-world,
-because their text leaves the caller's account for the treg team (a review's reason may be quoted on a
+because their text leaves the caller's account for the stray team (a review's reason may be quoted on a
 public catalog page), which is how the Codex plugin review reads that hint. OpenAI's clients (`openai-mcp/` for ChatGPT and its plugin reviewer, `codex-mcp-client/`
 for Codex, by User-Agent) are not offered `review` at all: `_OpenAIClientGate` drops it from
 `tools/list` and the review sentence from the instructions, and call results carry no review or
@@ -203,12 +203,12 @@ of it.
 
 ## In-process, not over the network
 
-Tools reach the rest of treg through `httpx.ASGITransport` against our own app — a real request
+Tools reach the rest of stray through `httpx.ASGITransport` against our own app — a real request
 through the real routes, without a socket. That matters because the enforcement rules (deny rules,
 capability pins, per-member tool access, the credential ladder, metering) live in those routes. A
 second path that "just read the database" would be a second implementation of every one of them,
-drifting quietly. The in-process client stamps `X-Treg-Client: mcp` for the team MCP and
-`X-Treg-Client: claude-connector` for V2 (attribution, never a gate), so each MCP surface is
+drifting quietly. The in-process client stamps `X-Stray-Client: mcp` for the team MCP and
+`X-Stray-Client: claude-connector` for V2 (attribution, never a gate), so each MCP surface is
 distinguishable from unreported CLI traffic and from the other MCP surface.
 
 The catalog is the one exception: read straight from `catalog_store`, which is already parsed in
@@ -217,7 +217,7 @@ memory, so a search answers in about a millisecond. That is a **speed** choice, 
 ## `call` speaks every request shape the CLI does
 
 `params` keeps its original method-based role (query string on GET, JSON body on POST). The
-explicit slots exist for the shapes that role can't express, mirroring `treg call`'s flags —
+explicit slots exist for the shapes that role can't express, mirroring `stray call`'s flags —
 each of which was added because a real endpoint needed it:
 
 - `query` — ALWAYS the query string. A team-tool list keeps the repeated-key default
@@ -228,7 +228,7 @@ each of which was added because a real endpoint needed it:
   (`?dataset_id=…` + array body) was uncallable over MCP without it.
 - `body` — ALWAYS the body. Object/array → JSON; a STRING is sent raw with `content_type` naming
   it (sniffed as `application/json` when it parses as JSON — the CLI's rule). A body implies POST.
-- `headers` — extra upstream headers (`login-customer-id` is the canonical need). treg's own
+- `headers` — extra upstream headers (`login-customer-id` is the canonical need). stray's own
   auth/routing headers are filtered from the relay; injected credentials always win server-side.
 - An inline `?a=b` inside a passthrough URL is pulled out and merged — httpx silently DROPS a
   URL's query string whenever `params=` is passed, the same gotcha `cmd_call` guards.
@@ -240,21 +240,21 @@ each of which was added because a real endpoint needed it:
   entirely, because that is what "no value" means over HTTP. It bit hardest where it cost money:
   `simplified=true` is thecompaniesapi's FREE preview mode, so the mangled flag silently pushed
   callers onto the paid path.
-- Multipart file upload stays CLI-only (`treg call --upload`) — MCP callers hold no files.
+- Multipart file upload stays CLI-only (`stray call --upload`) — MCP callers hold no files.
 - `call` resolves the TEAM the way `balance` does (`_resolve_org`, before anything is spent): a
-  multi-team identity token used to bounce off /call's raw `choose an org (send X-Treg-Org)`
+  multi-team identity token used to bounce off /call's raw `choose an org (send X-Stray-Org)`
   400 — a header hint an MCP caller can't act on; now it gets the pinned/active team, or the
   friendly error that NAMES the teams.
 
 ## `call` takes an `idempotency_key`
 
 Optional, and it is the caller's. Pass the same key when repeating a call whose answer never arrived:
-treg replays the stored response, does not reach the provider, and charges nothing, with
+stray replays the stored response, does not reach the provider, and charges nothing, with
 `replayed: true` on the result.
 
 ## `call` says when the overflow relay served it
 
-`/call/` discloses a relayed answer in `X-Treg-Served-Via`; an MCP client never sees headers, so
+`/call/` discloses a relayed answer in `X-Stray-Served-Via`; an MCP client never sees headers, so
 `_call_impl` lifts it into `served_via` on the result with a one-line `hint` naming the relay and
 the exhausted provider (`cost_usd` is then the relay's real price, not the catalog's direct one).
 Both surfaces share the impl, so `/mcp/` and `/mcp/v2/` say it identically. `catalog_get` carries
@@ -266,7 +266,7 @@ It exists because the feature was built for agents and MCP is the agent path. Wi
 thing was unreachable from the surface it was for.
 
 Deliberately NOT derived server-side from the endpoint and parameters, which was proposed and
-rejected: two identical searches an hour apart are new work, treg cannot tell that from a retry, and
+rejected: two identical searches an hour apart are new work, stray cannot tell that from a retry, and
 a server-invented key would quietly serve stale data. The tool description therefore spends its words
 on WHEN to use it, because that is where a mistake costs something. Reuse for a different request is
 refused rather than answered, so the failure is loud.
@@ -324,7 +324,7 @@ friendly error inside a 200 tells a human what happened and tells a program noth
 lives in front of the transport because a tool function can set neither a status code nor a header.
 
 **Eager, not lazy — a deliberate reversal.** The first version left `initialize` and `tools/list`
-open so a client could browse before authenticating. But every treg tool needs auth, so there is
+open so a client could browse before authenticating. But every stray tool needs auth, so there is
 nothing to browse anonymously, and the open handshake had a real cost: a client (Claude Code, Cursor)
 `initialize`d, got a 200, showed **"✓ Connected"**, and never prompted — connected-but-unusable, the
 "sign in" surfacing only later as prose inside a tool result. The MCP spec's canonical flow instead
@@ -354,14 +354,14 @@ not mask the transport guard.
 `RequireAuthForProtectedTools` buffers the POST body only long enough to classify that request. It
 then replays the consumed request messages and delegates every later `receive()` call to the
 original ASGI channel; it never manufactures `http.disconnect`. That distinction is load-bearing
-for MCP 2026-07-28 `subscriptions/listen`, which exposed the bug before treg stopped advertising
+for MCP 2026-07-28 `subscriptions/listen`, which exposed the bug before stray stopped advertising
 that unused method, and for any other long response: a synthetic disconnect cancels live downstream
 work. If the client genuinely disconnects while the middleware is reading the body, every observed
 partial-body message and the real disconnect are replayed unchanged without inventing completion.
 
-# treg as an authorization server
+# stray as an authorization server
 
-Elsewhere treg speaks OAuth as a **client** (`oauth.py` signs in with GitHub, connects a provider
+Elsewhere stray speaks OAuth as a **client** (`oauth.py` signs in with GitHub, connects a provider
 account). Here it is the thing that **issues** tokens. Different direction, different module.
 
 `routers.auth` owns OAuth HTTP translation and consent rendering. `application.auth` sequences client
@@ -375,7 +375,7 @@ credential-network safety module so both paths retain one module object and monk
 
 The spec has a client send `resource=<the mcp url>` on the authorize and token requests, and the
 server copy it into the token's audience. Without checking it, a token a user granted to *another*
-MCP server would work here — they consented to that server, not to treg, and we would spend their
+MCP server would work here — they consented to that server, not to stray, and we would spend their
 balance on it.
 
 `read_access_token` therefore takes `expected_audience` as a **required argument with no default**.
@@ -385,7 +385,7 @@ A test asserts that calling without it raises rather than defaulting to permissi
 that is valid, well-formed and silently useless — the failure then surfaces at the first tool call as
 "not signed in", pointing the reader at authentication when the problem was the audience.
 
-V2 advertises `treg:directory` as a fallback resource marker. Hosted Claude can preserve the V2
+V2 advertises `stray:directory` as a fallback resource marker. Hosted Claude can preserve the V2
 challenge scopes while omitting the RFC 8707 `resource` parameter. In that case,
 `_effective_mcp_resource` selects the V2 audience. An explicit resource always wins, and all other
 requests keep the V1 default.
@@ -442,10 +442,10 @@ plausible slug from the intended team. Two halves to the fix:
   and `identity` — the account the grant belongs to, which is usually the half that differs. If the
   grant names a team that identity's own `/orgs` does not list, the answer says so outright. The
   *how to move it* half of the hint is added only for an actual OAuth caller: a header token carries
-  its own team, and `treg mcp grants` would list nothing for it.
+  its own team, and `stray mcp grants` would list nothing for it.
 - **The team can be moved without re-consenting.** It lives on the refresh family's `OAuthGrant`
   authority row (`current_org_id`), not only inside the issued access token, so `GET /oauth/grants` +
-  `POST /oauth/grants/{family}/team` (`treg mcp grants`, `treg mcp use-team`) is a row update the
+  `POST /oauth/grants/{family}/team` (`stray mcp grants`, `stray mcp use-team`) is a row update the
   next refresh picks up, within the access token's hour. Guarded on both sides: only the grant's own
   user may move it, and only to a team they belong to — a grant must never reach further than the
   consent screen would have offered. A *refresh* still cannot change teams; that is not a second
@@ -476,7 +476,7 @@ plausible slug from the intended team. Two halves to the fix:
     `OAuthRefresh.org_id`. Otherwise deleting a former team erases the retired row that recognises a
     replay while leaving a live token under the destination team.
   - **"Not your team" and "no such team" answer identically** (404). Told apart, the route reports
-    whether an arbitrary slug exists on treg, to any signed-in account.
+    whether an arbitrary slug exists on stray, to any signed-in account.
 
 Approval is a POST (a GET that granted access could be triggered by any page that can navigate),
 same-origin, and the page inherits `X-Frame-Options: DENY`.
@@ -529,8 +529,8 @@ general "send me anywhere after login" primitive.
 ## `/connect-demo`
 
 A page that pretends to be someone else's app and runs the whole flow — register, consent popup,
-token exchange, tool calls. It uses only public endpoints; being served from treg's domain gives it
-nothing. `TREG_CONNECT_DEMO_ENABLED` gates both the page and its callback and defaults to `false`, so
+token exchange, tool calls. It uses only public endpoints; being served from stray's domain gives it
+nothing. `STRAY_CONNECT_DEMO_ENABLED` gates both the page and its callback and defaults to `false`, so
 production should return 404. The local development script enables it; staging can enable it
 explicitly for tests. The browser holds working tokens in tab-local session storage for the demo,
 but the visible log shows only `[received]` and never displays a token prefix. Disconnect revokes the
@@ -541,32 +541,32 @@ not a wildcard in the SDK's origin check) and that consent failed intermittently
 ## What is deliberately NOT here
 
 - **No per-provider MCP tools.** See above.
-- **No routing or failover.** treg publishes facts and calls what it is told; the agent chooses.
+- **No routing or failover.** stray publishes facts and calls what it is told; the agent chooses.
 - **No second copy of the enforcement rules.** Everything goes through the API's own routes.
 
 ## Two ways to authenticate the MCP server: OAuth, or a header
 
 OAuth (above) is the click-to-connect path. There is also a **headless** path, and it is the default
-the installer uses: a **team-pinned token as an `Authorization: Bearer` header**. `treg mcp install`
-(`mcp_install.py`, sibling of `treg skill bootstrap`) registers the server into every supported agent
+the installer uses: a **team-pinned token as an `Authorization: Bearer` header**. `stray mcp install`
+(`mcp_install.py`, sibling of `stray skill bootstrap`) registers the server into every supported agent
 with that header — Claude Code via its own `claude mcp add --scope user` (user-global, not the
 default project scope; it owns its format and redacts the token), Cursor and opencode via their
 documented JSON (`~/.cursor/mcp.json`, `~/.config/opencode/opencode.json`), Codex as one
-`[mcp_servers.treg]` table in `~/.codex/config.toml` with an inline `http_headers` map. Stdlib has no
-TOML writer, so `_write_toml_agent` cuts out any previous `[mcp_servers.treg]` table as text, appends
+`[mcp_servers.stray]` table in `~/.codex/config.toml` with an inline `http_headers` map. Stdlib has no
+TOML writer, so `_write_toml_agent` cuts out any previous `[mcp_servers.stray]` table as text, appends
 a fresh one, and only lands the file when `tomllib` parses it back to exactly our entry. Hermes
 (yaml) and OpenClaw are **reported, not written** — their formats aren't safely expressible from the
 light CLI (yaml is a server-only dep), so we print the exact manual step instead.
 
 **Codex must get the token inline, never by `bearer_token_env_var`.** The old manual step said
-"set TREG_TOKEN in its environment"; a user's agent did exactly that, the Codex app restarted
-without the variable, treg answered 401 and Codex dropped every treg tool silently. The agent then
+"set STRAY_TOKEN in its environment"; a user's agent did exactly that, the Codex app restarted
+without the variable, stray answered 401 and Codex dropped every stray tool silently. The agent then
 drove the dashboard through Codex's own browser and spent the user's daily Codex allowance on a
 $0.13 job. Live-verified on codex-cli 0.144: `http_headers = { "Authorization" = "Bearer …" }` loads
-the tools; an `X-Treg-Token` header does NOT (the MCP surface answers 401 and starts OAuth).
+the tools; an `X-Stray-Token` header does NOT (the MCP surface answers 401 and starts OAuth).
 
 The command **verifies the token against `/auth/me` before writing anything** — the same check
-`treg login --token` runs. Learned the hard way: without it, a garbage token fans out silently into
+`stray login --token` runs. Learned the hard way: without it, a garbage token fans out silently into
 every agent on the machine and surfaces days later as per-provider "invalid token" errors inside
 whichever agent tries a call — catalog reads still work (they don't validate the token downstream),
 which makes it look like a provider outage rather than a setup problem. The garbage in question was
@@ -580,18 +580,18 @@ clear setup error instead of installing a credential that cannot identify a bill
 access/refresh flows are unchanged; their internal 120-second bridge identity remains a separate
 typed path.
 
-Why a header works even though treg advertises OAuth: a client only falls back to OAuth discovery on
-a **401**, and treg returns **200** for a valid header — verified against Claude Code, which
+Why a header works even though stray advertises OAuth: a client only falls back to OAuth discovery on
+a **401**, and stray returns **200** for a valid header — verified against Claude Code, which
 otherwise prefers OAuth (issue #59467). The determinant is "does the server 200 a valid header," not
 "does it advertise OAuth"; AgentKey behaves the same way. The token is the dashboard's org-baked
 "API key" (see [dashboard](../interface/dashboard.md)), so it carries the team and needs no second
 header. `curl {BASE}/install.sh | sh -s -- --token <key>` runs the whole thing — install, sign in,
-`treg mcp install` — in one paste.
+`stray mcp install` — in one paste.
 
 ## Caller tags over MCP
 
 Catalog-call tools also expose an optional `authorization_method`. MCP maps that explicit argument
-to treg's internal `X-Treg-Authorization-Method` routing header; caller-supplied headers cannot
+to stray's internal `X-Stray-Authorization-Method` routing header; caller-supplied headers cannot
 override it, and the header is not relayed to the provider.
 
 The generic `call` surfaces accept optional `form` scalar fields and base64 `uploads`, capped at 30
@@ -599,10 +599,10 @@ MiB before the internal request, so multipart voice creation does not change the
 contract. `/mcp/v2/` names the audio tool `catalog_call_media`; both surfaces independently register
 and test `resources_list`. Native audio never passes through JSON/text decoding.
 
-`X-Treg-Meta` (see [money](money.md)) is read off the MCP **transport** in `mcp.call()` and forwarded
+`X-Stray-Meta` (see [money](money.md)) is read off the MCP **transport** in `mcp.call()` and forwarded
 on the internal request, the same way `catalog_request` forwards `X-Forwarded-For`. It is deliberately
 **not** a tool argument: a model asked to pass a customer id will omit it somewhere in a chain, and a
-billing figure you cannot reconcile is worse than no figure. `x-treg-meta` is therefore also in the
+billing figure you cannot reconcile is worse than no figure. `x-stray-meta` is therefore also in the
 `call` tool's extra-header filter, so a model-supplied value can never contradict the transport one.
 
 A builder proxying MCP sets the header once per session on their own HTTP client; the model never sees

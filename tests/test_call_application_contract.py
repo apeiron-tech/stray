@@ -1,6 +1,6 @@
 """Executable contract for the Stage 4 call application boundary."""
 
-from treg.application.call import authorize
+from stray.application.call import authorize
 
 
 async def test_authorization_gate_order_is_frozen(monkeypatch) -> None:

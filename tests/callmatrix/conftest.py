@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from treg.api import app
+from stray.api import app
 
 from test_marketplace_call import platform_on  # noqa: F401 — fixture reuse, one roster for both
 

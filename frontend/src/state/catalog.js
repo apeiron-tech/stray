@@ -101,7 +101,7 @@ async loadProviderTools(service){
       finally{ slot.loading=false; } },
 openComparison(key){ this.openPlatform(this.platSlug, false, key); },
 closeComparison(){ this.openPlatform(this.platSlug, false, null); },
-// What the calls treg served say about a comparison's providers, and which inputs each accepts: one
+// What the calls stray served say about a comparison's providers, and which inputs each accepts: one
     // `/catalog/endpoints/<id>` read returns the endpoint and every sibling of its capability with
     // `observed`, plus the routing plan's `accepts` when the capability has a routed tool. Cached per id.
     // The server's observation cache never waits on the database: an id it has not read yet comes
@@ -233,7 +233,7 @@ costNative(c){ return c && c.display_unit ? '' : this.nativeAmount(c); },
     // alone, as early reviews.
     verdictPct(r, v){ return Math.round(r.share[v]*100)+'% '+this.verdictLabel(v).toLowerCase(); },
 verdictLabel(v){ return ({useful:'Useful', partly:'Partly useful', not_useful:'Not useful'})[v]||v; },
-verdictClient(c){ return ({'claude-code':'Claude Code', codex:'Codex', cursor:'Cursor', 'claude-connector':'Claude', cli:'treg CLI', pi:'Pi'})[c]||''; },
+verdictClient(c){ return ({'claude-code':'Claude Code', codex:'Codex', cursor:'Cursor', 'claude-connector':'Claude', cli:'stray CLI', pi:'Pi'})[c]||''; },
 verdictDate(d){ try{ const m=String(d).length===7;   // a review carries only its month
       return new Date(d+(m?'-01':'')+'T00:00:00Z').toLocaleDateString('en-US', m ? {month:'short', year:'numeric', timeZone:'UTC'} : {month:'short', day:'numeric', timeZone:'UTC'}); }catch(err){ return d; } },
 // How a provider authorizes: the member's connection registry when signed in, else the open
@@ -268,9 +268,9 @@ endpointConnectLabel(e){
     },
 // Whether a REGISTRY connection to this provider is still metered. Connecting usually ends the
     // billing question — the account you connect is the licence — but a `metered` provider bills
-    // treg's own app per use (X since Feb 2026), so those calls are debited from the team balance
+    // stray's own app per use (X since Feb 2026), so those calls are debited from the team balance
     // no matter whose account made them. `/providers` carries the flag, and the deployment's
-    // TREG_OAUTH_BILLED_PROVIDERS decides whether it is set, so the price a browser shows follows
+    // STRAY_OAUTH_BILLED_PROVIDERS decides whether it is set, so the price a browser shows follows
     // the kill switch instead of hard-coding today's answer.
     catMetered(service){
       const p=this.providers.find(x=>x.service===service); return !!(p && p.metered); },
@@ -279,10 +279,10 @@ endpointConnectLabel(e){
     // The platform's providers the team holds its own credential for.
     platOwn(pl){ return ((pl&&pl.providers)||[]).filter(s=>this.catConnected(s)); },
 // What a platform's personal mark means when the team holds a credential for one of its providers:
-    // not that the platform works (every platform works, on treg's key) but that calls there use yours.
+    // not that the platform works (every platform works, on stray's key) but that calls there use yours.
     platConnTitle(pl){ const own=this.platOwn(pl);
       const what=own.some(s=>!this.pastedCredential(this.providerIndex.get(s))) ? 'your account' : 'your key';
-      return 'Calls to '+own.map(s=>this.provName(s)).join(', ')+' use '+what+', unmetered. The rest run on treg\'s key.'; },
+      return 'Calls to '+own.map(s=>this.provName(s)).join(', ')+' use '+what+', unmetered. The rest run on stray\'s key.'; },
 // The endpoint's inputs, grouped by where they go. Query first, then path, then body: the order
     // you fill them in for the common GET, and the order the provider's own docs tend to use.
     paramSections(e){
@@ -347,7 +347,7 @@ capCheapest(eps){
 // Calls an endpoint served in the last 30 days (`observed.samples` on the platform response).
     callsOf(e){ return (e && e.observed && e.observed.samples) || 0; },
 // 141059 → "141k": a count beside a percentage is its denominator, not a figure to read digit by digit.
-    // Volumes are shown by band, never exact: how much traffic one provider gets through treg, or how
+    // Volumes are shown by band, never exact: how much traffic one provider gets through stray, or how
     // many teams rated it, is not something a comparison needs to the unit.
     approxCalls(n){ return (n>=1e5 ? '100k+' : n>=1e4 ? '10k+' : n>=1e3 ? '1k+' : n>=100 ? '100+' : n>=50 ? '50+' : '20+')+' calls'; },
 approxTeams(n){ return (n>=50 ? '50+' : n>=25 ? '25+' : n>=10 ? '10+' : n>=5 ? '5+' : 'under 5')+' teams'; },
@@ -362,7 +362,7 @@ usefulTitle(r){ const s=r.useful, v=s && r.e.reviews;
     // `share`: early reviews, never a score.
     worksOf(o){ return o && o.decided>=20 && o.ok_rate!=null ? {pct:Math.round(o.ok_rate*100), n:o.decided} : null; },
 usefulOf(e){ return e.reviews && e.reviews.share ? reviewSummary(e.reviews) : null; },
-// A tool's price on a card or a row: a tool only your own key or account can call has no treg price.
+// A tool's price on a card or a row: a tool only your own key or account can call has no stray price.
     toolPrice(e){ return e.platform_eligible!==false ? this.costShort(e.cost)
       : this.provAuthKind(e.provider)==='oauth' ? 'your account' : 'your key only'; },
 // A price small enough for a collapsed line: "$0.024/call", "2 rows", "free", "credit-priced".
@@ -375,7 +375,7 @@ usefulOf(e){ return e.reviews && e.reviews.share ? reviewSummary(e.reviews) : nu
       // rate); only a truly unpublished number is "credit-priced".
       if(c.value==null && !(c.table && typeof c.usd==='number')) return 'credit-priced';
       return this.costLabel(c); },
-// `providers` needs a session. Publicly, "is this a provider treg knows" is answered by the
+// `providers` needs a session. Publicly, "is this a provider stray knows" is answered by the
     // open catalog response instead — otherwise the whole action chain collapses and a signed-out
     // reader sees no way to bring their own key. `mkOauth` stays false without the registry, so the
     // public branch offers BYOK (which is true for every provider) rather than guessing Connect.

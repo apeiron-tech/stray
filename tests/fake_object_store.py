@@ -2,7 +2,7 @@
 import asyncio
 import hashlib
 
-from treg.infra.object_store import ObjectInfo, ObjectStoreError
+from stray.infra.object_store import ObjectInfo, ObjectStoreError
 
 
 class MemoryObjectStore:

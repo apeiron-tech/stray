@@ -30,7 +30,7 @@ facts_used: [F-01, F-02, F-03, F-04, F-05, F-06, F-07, F-08, F-09, F-10, F-11, F
 ### Ad Library API: Meta, Google, TikTok, LinkedIn Ads
 
 ```text
-Using treg, show me every ad Notion is running on Meta right now. Group them by
+Using stray, show me every ad Notion is running on Meta right now. Group them by
 offer, hook and format. Then check what they are bidding on in Google Ads.
 ```
 
@@ -44,10 +44,10 @@ offer, hook and format. Then check what they are bidding on in Google Ads.
 
 ## The old way vs. the treg.to way
 
-| | The old way | With treg |
+| | The old way | With stray |
 |---|---|---|
 | **What you pay for** | An ad-spy subscription, or a media-buying suite at $99 to $249/mo, for research you do before each launch | One prepaid balance. A Meta ad library search is $0.00188 |
-| **Keys** | Meta's Ad Library API needs identity verification; the rest have no official access at all | One treg token. Every tool in the catalog answers to it |
+| **Keys** | Meta's Ad Library API needs identity verification; the rest have no official access at all | One stray token. Every tool in the catalog answers to it |
 | **Picking a provider** | Whichever spy tool you subscribed to, whatever it happens to cover | `catalog get` lists every provider for that library with price, measured success rate and median speed |
 | **Commitment** | A monthly tool for research that happens in bursts around launches | No subscription. Research a launch, stop paying until the next one |
 | **The workflow** | Scroll four ad libraries by hand, screenshot into a slide deck, lose it before the next launch | One agent run across four platforms, grouped by offer and hook |
@@ -276,4 +276,4 @@ search by advertiser domain and get back creatives, spend estimates and targetin
 
 # Ad and creator kit
 
-Campaign material is maintained in treg-internal.
+Campaign material is maintained in stray-internal.

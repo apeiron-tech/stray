@@ -11,19 +11,19 @@ from datetime import timedelta
 from httpx import AsyncClient
 from sqlmodel import select
 
-from treg import archive, audit, ratestore
-from treg.config import get_settings
-from treg.application.call import service as call_service
-from treg.application.call import settle as call_settle
-from treg.application.call.types import UpstreamResponse
-from treg.infra.db import session_maker
-from treg.domain.capacity import marks as capacity_marks
-from treg.domain.capacity.marks import DEFAULT_LOCK, LOCK_NS, MAX_LOCK, Lock
-from treg.domain.capacity.policy import LatestState
-from treg.domain.capacity.sweep import STATE_NS
-from treg.domain.capacity.view import view as capacity_view
-from treg.models import Hold, LedgerEntry
-from treg.timeutil import utcnow_naive
+from stray import archive, audit, ratestore
+from stray.config import get_settings
+from stray.application.call import service as call_service
+from stray.application.call import settle as call_settle
+from stray.application.call.types import UpstreamResponse
+from stray.infra.db import session_maker
+from stray.domain.capacity import marks as capacity_marks
+from stray.domain.capacity.marks import DEFAULT_LOCK, LOCK_NS, MAX_LOCK, Lock
+from stray.domain.capacity.policy import LatestState
+from stray.domain.capacity.sweep import STATE_NS
+from stray.domain.capacity.view import view as capacity_view
+from stray.models import Hold, LedgerEntry
+from stray.timeutil import utcnow_naive
 
 from test_marketplace_call import (  # noqa: F401
     EP, EP_MICRO, PLATFORM_KEYS, _balance, _fake_relay, platform_on,
@@ -81,8 +81,8 @@ async def test_exhausted_platform_account_is_refused_before_any_hold(clients: As
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 503, r.text
-    assert r.headers["X-Treg-Error"] == "1"
-    assert "X-Treg-Call-Id" in r.headers
+    assert r.headers["X-Stray-Error"] == "1"
+    assert "X-Stray-Call-Id" in r.headers
     body = r.json()["detail"]
     assert body["error"] == "provider_capacity_unavailable" and body["provider"] == "tikhub"
     assert body["endpoint_id"] == EP and body["resets_at"] and "own key" in body["message"]
@@ -121,8 +121,8 @@ async def test_one_signature_is_a_strike_that_a_2xx_erases(clients: AsyncClient,
     before = await _balance(clients)
     r = await clients.get(f"/call/{EP}?aweme_id=7")
     assert r.status_code == 402, "the vendor's answer relays unchanged"
-    assert "X-Treg-Error" not in r.headers
-    assert r.headers["X-Treg-Cost-Micro"] == "0" and await _balance(clients) == before
+    assert "X-Stray-Error" not in r.headers
+    assert r.headers["X-Stray-Cost-Micro"] == "0" and await _balance(clients) == before
     lock = await _lock("tikhub")
     assert lock.strikes == 1 and not lock.is_active()
     monkeypatch.setattr(call_service, "relay", _fake_relay(200, b'{"ok":true}'))
@@ -302,4 +302,4 @@ async def test_a_failed_strike_never_fails_the_call(clients: AsyncClient, platfo
     monkeypatch.setattr(call_settle.capacity_marks, "strike", boom)
     # strike itself swallows; simulate the seam above it raising to prove the guard
     r = await clients.get(f"/call/{EP}?aweme_id=7")
-    assert r.status_code == 402 and r.headers["X-Treg-Cost-Micro"] == "0"
+    assert r.status_code == 402 and r.headers["X-Stray-Cost-Micro"] == "0"

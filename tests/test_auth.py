@@ -1,4 +1,4 @@
-"""Phase 1.5 — GitHub OAuth + cookie sessions, and the dual-auth path (session OR X-Treg-Token).
+"""Phase 1.5 — GitHub OAuth + cookie sessions, and the dual-auth path (session OR X-Stray-Token).
 
 The GitHub endpoints are faked with an in-process ASGI app mounted as the registry's outbound http
 client (ASGITransport routes every absolute URL to it), so the callback exchange runs for real.
@@ -18,12 +18,12 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlmodel import select
 
-from treg import crypto
-from treg.domain.identity import session as sess
-from treg.api import app
-from treg.config import get_settings
-from treg.infra.db import reset_db, session_maker
-from treg.models import Membership, Org, User
+from stray import crypto
+from stray.domain.identity import session as sess
+from stray.api import app
+from stray.config import get_settings
+from stray.infra.db import reset_db, session_maker
+from stray.models import Membership, Org, User
 
 
 def _github_app() -> FastAPI:
@@ -112,16 +112,16 @@ def test_typed_identity_scopes_round_trip_and_bootstrap_expires():
 
 _OAUTH_ENV = {
     "github": {
-        "TREG_GITHUB_CLIENT_ID": "cid",
-        "TREG_GITHUB_CLIENT_SECRET": "csec",
-        "TREG_GITHUB_TOKEN_URL": "http://gh/login/oauth/access_token",
-        "TREG_GITHUB_API_URL": "http://gh",
+        "STRAY_GITHUB_CLIENT_ID": "cid",
+        "STRAY_GITHUB_CLIENT_SECRET": "csec",
+        "STRAY_GITHUB_TOKEN_URL": "http://gh/login/oauth/access_token",
+        "STRAY_GITHUB_API_URL": "http://gh",
     },
     "google": {
-        "TREG_GOOGLE_CLIENT_ID": "gid",
-        "TREG_GOOGLE_CLIENT_SECRET": "gsec",
-        "TREG_GOOGLE_TOKEN_URL": "http://gg/token",
-        "TREG_GOOGLE_USERINFO_URL": "http://gg/userinfo",
+        "STRAY_GOOGLE_CLIENT_ID": "gid",
+        "STRAY_GOOGLE_CLIENT_SECRET": "gsec",
+        "STRAY_GOOGLE_TOKEN_URL": "http://gg/token",
+        "STRAY_GOOGLE_USERINFO_URL": "http://gg/userinfo",
     },
 }
 
@@ -130,7 +130,7 @@ _OAUTH_ENV = {
 async def _oauth_client(monkeypatch, provider: str):
     for key, value in _OAUTH_ENV[provider].items():
         monkeypatch.setenv(key, value)
-    monkeypatch.setenv("TREG_SESSION_SECRET", "test-session-secret")
+    monkeypatch.setenv("STRAY_SESSION_SECRET", "test-session-secret")
     get_settings.cache_clear()
     await reset_db()
     upstream, base_url = (_github_app(), "http://gh") if provider == "github" else (_google_app(), "http://gg")
@@ -160,11 +160,11 @@ async def test_login_creates_user_session_but_no_auto_org(login):
     assert r.status_code == 302
     authorize_host = {"github": "github.com", "google": "accounts.google.com"}[provider]
     assert urlsplit(r.headers["location"]).hostname == authorize_host
-    state = c.cookies.get("treg_oauth_state")
+    state = c.cookies.get("stray_oauth_state")
     assert state
     cb = await c.get(f"/auth/{provider}/callback?code=abc&state={state}", follow_redirects=False)
     assert cb.status_code == 302 and cb.headers["location"] == "/app"
-    assert c.cookies.get("treg_session")  # session cookie set (secure omitted over http)
+    assert c.cookies.get("stray_session")  # session cookie set (secure omitted over http)
     me = await c.get("/auth/me")
     assert me.status_code == 200 and me.json()["email"] == email
     # first login creates the USER ONLY - no throwaway personal org; the user names their first team next
@@ -188,7 +188,7 @@ async def test_no_session_no_token_is_401(gc):
     assert (await gc.get("/tools")).status_code == 401
 
 
-# ---- dual auth: a session acts in an org via X-Treg-Org -----------------------------------
+# ---- dual auth: a session acts in an org via X-Stray-Org -----------------------------------
 async def _seed(email="dev@x.dev", role="owner", superadmin=False):
     slug = email.split("@")[0] + "-team"  # unique per user
     async with session_maker() as s:
@@ -203,15 +203,15 @@ async def _seed(email="dev@x.dev", role="owner", superadmin=False):
         return u.id, o.id, slug
 
 
-async def test_session_scopes_by_x_treg_org(gc):
+async def test_session_scopes_by_x_stray_org(gc):
     uid, oid, slug = await _seed()
-    gc.cookies.set("treg_session", sess.make_session(uid))
+    gc.cookies.set("stray_session", sess.make_session(uid))
     # no org header → 400 (must choose)
     assert (await gc.get("/tools")).status_code == 400
     # with the org header → 200, scoped to that org
-    assert (await gc.get("/tools", headers={"X-Treg-Org": slug})).status_code == 200
+    assert (await gc.get("/tools", headers={"X-Stray-Org": slug})).status_code == 200
     # a member endpoint works by org id too
-    assert (await gc.get("/tools", headers={"X-Treg-Org": str(oid)})).status_code == 200
+    assert (await gc.get("/tools", headers={"X-Stray-Org": str(oid)})).status_code == 200
     # /orgs lists the session user's memberships (no org needed)
     orgs = await gc.get("/orgs")
     assert orgs.status_code == 200 and orgs.json()[0]["slug"] == slug
@@ -219,22 +219,22 @@ async def test_session_scopes_by_x_treg_org(gc):
 
 async def test_browser_session_securely_exchanges_for_the_selected_default(gc):
     uid, _, slug = await _seed(email="exchange@x.dev")
-    gc.cookies.set("treg_session", sess.make_session(uid))
-    minted = await gc.get("/auth/cli-token", headers={"X-Treg-Org": slug})
+    gc.cookies.set("stray_session", sess.make_session(uid))
+    minted = await gc.get("/auth/cli-token", headers={"X-Stray-Org": slug})
     assert minted.status_code == 200, minted.text
     token = minted.json()["token"]
     claims = sess.read_identity_claims(token)
     assert claims["scope"] == sess.TEAM_SCOPE and claims["org"] == slug
-    assert (await gc.get("/tools", headers={"X-Treg-Token": token})).status_code == 200
+    assert (await gc.get("/tools", headers={"X-Stray-Token": token})).status_code == 200
 
 
 async def test_session_superadmin_reaches_admin(gc):
     uid, _, _ = await _seed(email="root@x.dev", superadmin=True)
-    gc.cookies.set("treg_session", sess.make_session(uid))
+    gc.cookies.set("stray_session", sess.make_session(uid))
     assert (await gc.get("/admin/stats")).status_code == 200
     # a non-superadmin session is refused
     uid2, _, _ = await _seed(email="plain@x.dev", superadmin=False)
-    gc.cookies.set("treg_session", sess.make_session(uid2))
+    gc.cookies.set("stray_session", sess.make_session(uid2))
     assert (await gc.get("/admin/stats")).status_code == 403
 
 
@@ -248,46 +248,46 @@ async def test_cli_token_without_a_team_mints_a_restricted_bootstrap(clients):
     assert claims["exp"] > int(time.time())
     slug = (await clients.get("/orgs")).json()[0]["slug"]
     # Supplying a team header cannot turn this onboarding token into a team credential.
-    ok = await clients.get("/tools", headers={"X-Treg-Token": tok, "X-Treg-Org": slug})
+    ok = await clients.get("/tools", headers={"X-Stray-Token": tok, "X-Stray-Org": slug})
     assert ok.status_code == 403 and "temporary login token" in ok.json()["detail"]
     exchange = await clients.get(
-        "/auth/cli-token", headers={"X-Treg-Token": tok, "X-Treg-Org": slug},
+        "/auth/cli-token", headers={"X-Stray-Token": tok, "X-Stray-Org": slug},
     )
     assert exchange.status_code == 403
 
 
 async def test_cli_token_requires_auth(clients):
-    r = await clients.get("/auth/cli-token", headers={"X-Treg-Token": "nope"})
+    r = await clients.get("/auth/cli-token", headers={"X-Stray-Token": "nope"})
     assert r.status_code == 401
 
 
 async def test_cli_token_bakes_the_active_org_and_works_as_a_BARE_bearer(clients):
     """The point of this whole change: when the dashboard asks for its API key WITH the active team
-    (X-Treg-Org), the returned token pins that team — so it authenticates a call as a BARE bearer,
-    no X-Treg-Org header. That is what lets it be pasted into an MCP server's Authorization, where no
+    (X-Stray-Org), the returned token pins that team — so it authenticates a call as a BARE bearer,
+    no X-Stray-Org header. That is what lets it be pasted into an MCP server's Authorization, where no
     second header can travel, and still resolve to the right team."""
     slug = (await clients.get("/orgs")).json()[0]["slug"]
-    r = await clients.get("/auth/cli-token", headers={"X-Treg-Org": slug})
+    r = await clients.get("/auth/cli-token", headers={"X-Stray-Org": slug})
     assert r.status_code == 200 and r.json().get("org") == slug, r.text
     baked = r.json()["token"]
     claims = sess.read_identity_claims(baked)
     assert claims["scope"] == sess.TEAM_SCOPE and "exp" not in claims
-    # the baked token works with NO X-Treg-Org — the org rides on the token
-    ok = await clients.get("/tools", headers={"X-Treg-Token": baked, "X-Treg-Org": ""})
+    # the baked token works with NO X-Stray-Org — the org rides on the token
+    ok = await clients.get("/tools", headers={"X-Stray-Token": baked, "X-Stray-Org": ""})
     assert ok.status_code == 200, ok.text
     mismatch = await clients.get(
-        "/tools", headers={"X-Treg-Token": baked, "X-Treg-Org": "another-team"},
+        "/tools", headers={"X-Stray-Token": baked, "X-Stray-Org": "another-team"},
     )
     assert mismatch.status_code == 403
     assert mismatch.json()["detail"] == (
         "this key belongs to another team — use this team's Default key; "
-        "if you use the treg CLI, run `treg update`, then `treg login`"
+        "if you use the stray CLI, run `stray update`, then `stray login`"
     )
 
 
 async def test_orgs_marks_the_team_pinned_tokens_org_active(gc):
     """GET /orgs must mark active the org baked into a team-pinned identity token — that flag is how
-    `treg login --token` lands on the right team. Before this, no org was marked active for such a
+    `stray login --token` lands on the right team. Before this, no org was marked active for such a
     token and the CLI guessed the FIRST membership: for a multi-team user, an arbitrary other team."""
     async with session_maker() as s:
         u = User(email="two-teams@x.dev")
@@ -303,23 +303,23 @@ async def test_orgs_marks_the_team_pinned_tokens_org_active(gc):
         await s.commit()
         uid = u.id
     pinned = sess.make_identity(uid, org="second-team")
-    r = await gc.get("/orgs", headers={"X-Treg-Token": pinned})
+    r = await gc.get("/orgs", headers={"X-Stray-Token": pinned})
     assert r.status_code == 200, r.text
     assert [o["slug"] for o in r.json() if o["active"]] == ["second-team"], r.json()
-    # X-Treg-Org still wins over the claim — the same precedence require_member applies
-    r = await gc.get("/orgs", headers={"X-Treg-Token": pinned, "X-Treg-Org": "first-team"})
+    # X-Stray-Org still wins over the claim — the same precedence require_member applies
+    r = await gc.get("/orgs", headers={"X-Stray-Token": pinned, "X-Stray-Org": "first-team"})
     assert [o["slug"] for o in r.json() if o["active"]] == ["first-team"], r.json()
 
 
 async def test_cli_token_refuses_to_pin_a_team_you_are_not_in(clients):
     """The org claim is only baked when the caller is actually a member — a header naming someone
     else's team yields a plain (unpinned) token, never one that pins a team you cannot reach."""
-    r = await clients.get("/auth/cli-token", headers={"X-Treg-Org": "some-other-teams-slug"})
+    r = await clients.get("/auth/cli-token", headers={"X-Stray-Org": "some-other-teams-slug"})
     assert r.status_code == 200 and r.json().get("org") is None, r.text
     # and the short-lived bootstrap cannot access team resources
     plain = r.json()["token"]
     assert sess.read_identity_claims(plain)["scope"] == sess.BOOTSTRAP_SCOPE
-    assert (await clients.get("/tools", headers={"X-Treg-Token": plain})).status_code == 403
+    assert (await clients.get("/tools", headers={"X-Stray-Token": plain})).status_code == 403
 
 
 # ---- Google OAuth (a parallel login door) -------------------------------------------------
@@ -338,13 +338,13 @@ def _google_app():
 
 
 async def test_oauth_callback_carries_arena_acquisition_and_counts_signup_once(gc, monkeypatch):
-    from treg import analytics
+    from stray import analytics
     events = []
     monkeypatch.setattr(analytics, "capture", lambda *a, **k: events.append(a))
-    gc.cookies.set("treg_entry_surface", "arena")
+    gc.cookies.set("stray_entry_surface", "arena")
     for _ in range(2):
         await gc.get("/auth/github", params={"return_to": "/enrich-arena"})
-        state = gc.cookies.get("treg_oauth_state")
+        state = gc.cookies.get("stray_oauth_state")
         r = await gc.get("/auth/github/callback", params={"code": "test", "state": state})
         assert r.status_code == 302 and r.headers["location"] == "/enrich-arena"
     signups = [a for a in events if a[1] == "signup_completed"]
@@ -359,16 +359,16 @@ async def test_oauth_arena_return_cookie_encrypts_and_restores_query(gc):
         "run": "saved-run", "team": "sales; Secure\r\nSet-Cookie: injected=1",
     })
     started = await gc.get("/auth/github", params={"return_to": target})
-    cookie = gc.cookies.get("treg_arena_return")
+    cookie = gc.cookies.get("stray_arena_return")
     assert cookie != target
     assert crypto.decrypt(cookie) == target
-    assert set(gc.cookies.keys()) == {"treg_oauth_state", "treg_arena_return"}
+    assert set(gc.cookies.keys()) == {"stray_oauth_state", "stray_arena_return"}
     return_header = next(h for h in started.headers.get_list("set-cookie")
-                         if h.startswith("treg_arena_return="))
+                         if h.startswith("stray_arena_return="))
     assert "HttpOnly" in return_header and "SameSite=lax" in return_header
 
-    state = gc.cookies.get("treg_oauth_state")
+    state = gc.cookies.get("stray_oauth_state")
     response = await gc.get("/auth/github/callback", params={"code": "test", "state": state})
     assert response.status_code == 302
     assert response.headers["location"] == target
-    assert gc.cookies.get("treg_arena_return") is None
+    assert gc.cookies.get("stray_arena_return") is None
