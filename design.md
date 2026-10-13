@@ -16,10 +16,10 @@ The following sources were checked on 2026-09-07:
 | Source | Purpose |
 | --- | --- |
 | [Vercel design.md](https://vercel.com/design.md) | Reference for organizing task priorities, design rules, visual systems, interactions, and validation. Do not inherit Vercel branding, CSS, or its report-specific layouts |
-| [Live redesign prototype](https://stray-design.vercel.app/#start) | Inspect deployed HTML, CSS, and interaction source |
-| [Design repository](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | Pinned reference revision; its `styles.css` was byte-identical to the live CSS retrieved for this review |
-| [Complete redesigned Figma page, 12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=12-596) | Design context and screenshot inspected; primary visual reference for Getting started |
-| [Figma workspace, 1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=1-3) | Contains multiple versions; the sidebar layout in `12:33` is not the default shell for the redesign |
+| [Live redesign prototype](https://treg-design.vercel.app/#start) | Inspect deployed HTML, CSS, and interaction source |
+| [Design repository](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | Pinned reference revision; its `styles.css` was byte-identical to the live CSS retrieved for this review |
+| [Complete redesigned Figma page, 12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=12-596) | Design context and screenshot inspected; primary visual reference for Getting started |
+| [Figma workspace, 1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=1-3) | Contains multiple versions; the sidebar layout in `12:33` is not the default shell for the redesign |
 
 Visual review used the Figma screenshot; deployed styles and behavior were checked through source code. Live browser rendering and interaction acceptance checks have not been completed.
 
@@ -50,7 +50,9 @@ Use sentence case for page titles and buttons. Keep body copy short and direct. 
 
 **Put the task first; express the brand through details.** The first viewport establishes context and an available action. Setup instructions are the focus of Getting started. Search and discovery are the focus of Catalog. Keep marketing heroes and long introductory copy from displacing those tasks.
 
-**Build a monochrome structure with selective color.** Use a pale gray canvas, white panels, charcoal text, and inverse controls to establish structure. Color primarily comes from agent brands, task imagery, and states. Do not assign a decorative color to every module.
+**Build a monochrome structure on glass.** Charcoal text and inverse controls establish structure. The only decorative color is the wallpaper behind the panes, seen in the gutters and through the glass; it never colors a control, a title, or a module. Color otherwise comes from agent brands, task imagery, and states. Do not assign a decorative color to every module.
+
+**Layer glass by depth.** One pane under the page, cards resting on it as plain fill, and only what floats above (menus, drawers, modals) gets the heavy shadow and the denser fill. Glass is a surface treatment, not a reason to make text harder to read: contrast is measured on the rendered pixels, not on the token (section 7).
 
 **Use soft containers with clear hierarchy.** Large radii identify task modules, smaller radii define inner code surfaces, and pills support selection and identity. Avoid turning every row into a card, while preserving panel groups that carry a meaningful task relationship in the design.
 
@@ -124,6 +126,8 @@ The table uses existing prototype variable names and values after the final CSS 
 
 Additional surface references: inner code surfaces are white in light mode and `#171816` in dark mode. Task-card text overlays use `rgba(255,255,255,.80)` in light mode and `rgba(24,25,23,.84)` in dark mode.
 
+The table is the opaque system. The glass layer (section 7) remaps `--surface`, `--panel` and `--panel-2` to translucent fills, darkens `--muted` and `--muted-2` in light mode (`#4d525e`, `#596070`) so small supporting text holds 4.5:1 over the wallpaper, and darkens light-mode `--amber` to `#9a5502`. Use the tokens, not the hex values above. Never give a sticky or floating element a translucent token as its only background: scrolling content shows through it.
+
 Implementation requirement: calling small text “muted” does not exempt it from contrast requirements. Body and essential supporting text require at least 4.5:1; large text at least 3:1; necessary visual boundaries for controls and focus at least 3:1. Recheck the prototype's `#7c7c7c`, `#989898`, and low-opacity copy against their actual backgrounds. Darken where necessary rather than reproducing readability defects.
 
 Default to light mode. Provide Light / Dark in the account menu and remember an explicit selection. Preserve the same hierarchy in dark mode by setting surfaces, image overlays, and control colors independently; do not invert the entire page. The prototype's dark-mode provider pills retain a light background to support brand icons.
@@ -143,12 +147,34 @@ Default to light mode. Provide Light / Dark in the account menu and remember an 
 
 Panel borders should be light and continuous. The design's 0.5px borders create a hairline on high-density screens; use a stable, low-contrast 1px border if they disappear on target devices. Shadows establish layers for popovers and interactive cards. Avoid making every static module appear to float.
 
+### Glass
+
+The signed-in dashboard is built from translucent panes over an ambient wallpaper: backdrop blur with boosted saturation, a bright specular top edge, and large radii. The recipe comes from Cortex One's glass sheet. It lives in `frontend/src/styles/glass.css`, the last stylesheet `main.ts` imports, scoped to `.redesign`, so the sign-in page, the onboarding flow and the public catalog keep their own shell. Deleting the import restores the opaque system.
+
+| Layer | What it is | Blur |
+| --- | --- | --- |
+| Wallpaper | Fixed gradient mesh behind everything; pale in light, deep navy in dark | none |
+| Top bar | Floating capsule (20px radius) painted inside the unchanged 57px bar | 28px |
+| Pane | One sheet under the page, as wide as `main` (max 1432px), 28px radius, 10px gutters; edge to edge at or below 820px | 28px |
+| Card | Plain fill and edge on the pane: `--surface`, `--panel` | none |
+| Chip, well | Secondary buttons and inputs; recessed tracks and inner panels (`--panel-2`) | none |
+| Float | Menus, toasts, drawers, modals; the densest fill and the heaviest shadow | 36px; a modal does not blur itself, its scrim blurs the page 10px |
+
+Rules that keep it working:
+
+- **Blur sits on frame layers and leaf floats, never on a card.** An element with `backdrop-filter` is a backdrop root for its descendants, so a blurred element inside another blurs nothing. The pane and the top bar paint their glass on a `::before` so the menus inside them still blur. Do not add a blur to a card or a row.
+- **Remap tokens, then handle exceptions.** Surfaces that read `--surface`, `--panel-2` or `--shadow-sm/md/lg` are glass without a rule. Sticky bars, floating menus and modals need a deliberate fill from `--glass-fill-sticky` or `--glass-fill-float`.
+- **Code stays dense.** The syntax ramp is checked against a near-white (or near-black) block, so code surfaces use `--code-bg`, not the card fill.
+- **Inverse controls stay solid.** Primary actions, the current page and a selected segment are black on light and white on dark. Glass gives them a lit top edge and a contact shadow, not a gradient.
+- **Verify on pixels.** Text contrast over translucent glass depends on the wallpaper under it. Check small supporting text on the rendered page at desktop and phone width, in both themes; a token that passes on white can fail on the pane.
+- **Fallbacks are opaque.** `prefers-reduced-transparency` and `prefers-contrast: more` drop the blur and use solid fills; a browser without `backdrop-filter` gets dense fills; forced colors drops the wallpaper and the fills.
+
 Allow these brand effects within the following limits:
 
-- **ASCII / pixel background**: a low-contrast background near the top of the page only. It does not affect layout, intercept pointers, or carry information. Use supplied design assets instead of inventing another grid texture.
+- **ASCII / pixel background**: a low-contrast background near the top of the page only, blended into the wallpaper (multiply in light, screen in dark). It does not affect layout, intercept pointers, or carry information. Use supplied design assets instead of inventing another grid texture.
 - **Task imagery**: helps distinguish Getting started examples. Images illustrate scenarios and must not masquerade as real call results.
-- **Localized blur**: reference blur is 14px for the top bar and 32px for task-card text overlays. Provide a sufficiently opaque, readable background when filters are unsupported.
-- **Localized gradients**: retain image overlays that aid readability, the balance pill's very subtle gradient, and the designed referral entry treatment. Do not expand these into site-wide gradient buttons, glowing borders, or gradient text.
+- **Blur**: only where the Glass table above puts it. Provide a sufficiently opaque, readable background when filters are unsupported or transparency is reduced.
+- **Gradients**: the wallpaper is the one site-wide gradient, and it stays behind the glass. Retain image overlays that aid readability and the designed referral entry treatment. Do not expand these into gradient buttons, glowing borders, or gradient text.
 
 Do not directly apply Vercel's blanket restrictions on textures, images, or blur to stray. Equally, do not turn these limited exceptions into decoration required on every page.
 
@@ -189,7 +215,7 @@ Task cards may rise subtly by 1-2px. Movement must not interfere with clicking o
 
 Background video and agent previews are optional brand media. A static poster must provide a complete experience. Video must not block the page, carry status information, or autoplay sound. Respect reduced motion by stopping both types of autoplay video and nonessential movement while retaining static images. Long-running autoplay also needs an accessible pause mechanism. Pausing only the ASCII background while continuing the agent preview is incomplete support.
 
-Obtain assets from the design repository's [`assets/figma/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) and [`assets/icons/stray/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/stray). Reuse the real stray mark, provider logos, and icons instead of emoji or hand-drawn approximations. Set explicit image dimensions to prevent layout shifts. Ship project-hosted assets rather than depending on temporary Figma export URLs.
+Obtain assets from the design repository's [`assets/figma/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) and [`assets/icons/treg/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/treg). Reuse the real stray mark, provider logos, and icons instead of emoji or hand-drawn approximations. Set explicit image dimensions to prevent layout shifts. Ship project-hosted assets rather than depending on temporary Figma export URLs.
 
 ## 10. Responsive behavior and accessibility
 
@@ -218,7 +244,7 @@ Critical scripts must follow the project's same-origin asset convention. The pag
 
 1. The first viewport communicates the current task, next action, and stray identity. Brand decoration has not delayed the primary operation.
 2. Typography, image crops, radii, and alignment match the specified Figma version without importing the old sidebar design.
-3. Both themes are readable. There is no missing focus, essential low-contrast copy, overflow, or necessary entry point lost on narrow screens.
+3. Both themes are readable. There is no missing focus, essential low-contrast copy, overflow, or necessary entry point lost on narrow screens. Over glass, small supporting text is measured against the rendered pixels (including the phone-width edge-to-edge pane), not assumed from its token.
 4. Agent selection, copying, token reveal, search, filters, menus, and theme switching work. Success, failure, empty, and loading states are clear.
 5. Copy follows stray vocabulary. Balances and states come from real data. There are no demo tokens, simulated successes, or invented capabilities.
 6. Reduced motion, font failures, and media failures all have complete fallbacks.

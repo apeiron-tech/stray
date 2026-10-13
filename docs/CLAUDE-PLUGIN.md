@@ -128,7 +128,7 @@ that completes publication. Watch the moderation record flip:
 
 ```bash
 curl -s -H "Authorization: Bearer $(clawhub token)" \
-  https://clawhub.ai/api/v1/skills/stray/moderation
+  https://clawhub.ai/api/v1/skills/treg/moderation
 ```
 
 | | before `scan --update` | after |

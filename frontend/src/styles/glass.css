@@ -1,0 +1,255 @@
+/* Glass: the signed-in dashboard's surface system.
+
+   Layered, translucent panes over an ambient wallpaper: backdrop blur with boosted saturation, a
+   specular top edge, large concentric radii. The recipe is Cortex One's glass sheet, keyed to stray's
+   data-theme switch and mapped onto the tokens the dashboard already reads. A surface that asks for
+   --surface, --panel2 or --shadow-md becomes glass without a rule of its own; only what cannot be
+   translucent (sticky bars, menus, modals) is handled below.
+
+   Last stylesheet in main.ts on purpose, like the restyle blocks in base.css: delete the import and
+   the dashboard is as it was. Scoped to .redesign, so the sign-in page and the public catalog keep
+   their own shell.
+
+   Where the blur lives. An element with backdrop-filter is a backdrop root for its descendants, so a
+   blurred element inside another blurred element blurs nothing. Blur is carried by a few frame layers
+   that hold no popovers (the pane and the top bar paint it on a ::before), by the modal scrim, and by
+   leaf menus. Cards are fill and edge only: the pane behind them is already blurred. Declare only the
+   standard backdrop-filter: the minifier adds the -webkit- form and drops the standard one when a
+   rule declares both (dashboard.css). */
+
+.redesign {
+  /* The wallpaper the glass sits on. Pale and cool, so the panes over it stay light enough to hold
+     the dashboard's text colours at their contrast. */
+  --wallpaper:
+    radial-gradient(1500px 900px at 2% -8%, rgb(96 150 255 / .7), transparent 62%),
+    radial-gradient(1200px 800px at 104% 0%, rgb(176 132 255 / .6), transparent 64%),
+    radial-gradient(1300px 900px at 98% 108%, rgb(255 140 196 / .5), transparent 64%),
+    radial-gradient(1200px 900px at -6% 106%, rgb(70 214 238 / .6), transparent 62%),
+    linear-gradient(160deg, #dde8ff 0%, #f0e8ff 52%, #dff3ff 100%);
+
+  --glass-blur: 28px;
+  --glass-saturate: 1.7;
+  --glass-gutter: 10px;
+  --glass-radius: 28px;
+
+  --glass-fill-pane: rgb(255 255 255 / .64);
+  --glass-fill-bar: rgb(255 255 255 / .62);
+  --glass-fill-float: rgb(255 255 255 / .84);
+  --glass-fill-sticky: rgb(248 250 255 / .97);
+  --glass-fill-card: rgb(255 255 255 / .76);
+  --glass-fill-well: rgb(70 82 140 / .08);
+  --glass-fill-chip: rgb(255 255 255 / .66);
+  --glass-fill-chip-hover: rgb(255 255 255 / .9);
+  --glass-scrim: rgb(214 224 250 / .5);
+  --glass-code: rgb(255 255 255 / .74);
+  --glass-sheen: linear-gradient(135deg, rgb(255 255 255 / .34) 0%, rgb(255 255 255 / 0) 42%);
+
+  /* An outer hairline, a bright top edge, then an even inner rim. */
+  --glass-edge:
+    0 0 0 1px rgb(20 30 70 / .08), inset 0 1px 0 rgb(255 255 255 / .95),
+    inset 0 0 0 1px rgb(255 255 255 / .4);
+  --glass-drop: 0 10px 40px rgb(30 50 120 / .1), 0 2px 8px rgb(30 50 120 / .05);
+  --glass-drop-float: 0 24px 64px rgb(30 50 120 / .22), 0 4px 16px rgb(30 50 120 / .1);
+  --glass-drop-chip: 0 1px 2px rgb(30 50 120 / .08);
+  --glass-press: 0 1px 2px rgb(20 24 40 / .3), 0 6px 14px -4px rgb(20 24 40 / .3);
+
+  /* The dashboard's own tokens, remapped. */
+  --surface: var(--glass-fill-card);
+  --panel: var(--glass-fill-card);
+  --panel2: var(--glass-fill-well);
+  --line: rgb(20 30 70 / .1);
+  --line2: rgb(20 30 70 / .22);
+  /* Text on translucent glass needs more weight than on white: the pane can sit over a saturated
+     part of the wallpaper. These hold 4.5:1 there (design.md, section 6). */
+  --muted: #4d525e;
+  --muted2: #596070;
+  /* The role marker is 9px amber on a tinted chip; the stock amber was already under 4.5 there. */
+  --amber: #9a5502;
+  --shadow-sm: var(--glass-edge), var(--glass-drop-chip);
+  --shadow-md: var(--glass-edge), 0 8px 24px -10px rgb(30 50 120 / .22);
+  --shadow-lg: var(--glass-edge), var(--glass-drop-float);
+  /* Code stays dense: the syntax ramp is checked against a near-white block. */
+  --code-bg: var(--glass-code);
+}
+
+html[data-theme="dark"] .redesign {
+  --wallpaper:
+    radial-gradient(1500px 900px at 2% -8%, rgb(40 100 245 / .7), transparent 62%),
+    radial-gradient(1200px 800px at 104% 0%, rgb(128 68 240 / .62), transparent 64%),
+    radial-gradient(1300px 900px at 98% 108%, rgb(26 150 200 / .5), transparent 64%),
+    radial-gradient(1200px 900px at -6% 106%, rgb(92 48 184 / .58), transparent 62%),
+    linear-gradient(160deg, #05070f 0%, #0a0820 52%, #050f18 100%);
+
+  --glass-fill-pane: rgb(12 16 32 / .46);
+  --glass-fill-bar: rgb(14 18 36 / .52);
+  --glass-fill-float: rgb(26 31 56 / .84);
+  --glass-fill-sticky: rgb(17 21 38 / .97);
+  --glass-fill-card: rgb(255 255 255 / .06);
+  --glass-fill-well: rgb(255 255 255 / .07);
+  --glass-fill-chip: rgb(255 255 255 / .07);
+  --glass-fill-chip-hover: rgb(255 255 255 / .13);
+  --glass-scrim: rgb(2 4 12 / .56);
+  --glass-code: rgb(4 6 14 / .62);
+  --glass-sheen: linear-gradient(135deg, rgb(255 255 255 / .09) 0%, rgb(255 255 255 / 0) 42%);
+
+  --glass-edge:
+    0 0 0 1px rgb(255 255 255 / .09), inset 0 1px 0 rgb(255 255 255 / .18),
+    inset 0 0 0 1px rgb(255 255 255 / .04);
+  --glass-drop: 0 10px 40px rgb(0 0 0 / .35), 0 2px 8px rgb(0 0 0 / .2);
+  --glass-drop-float: 0 24px 64px rgb(0 0 0 / .5), 0 4px 16px rgb(0 0 0 / .3);
+  --glass-drop-chip: 0 1px 2px rgb(0 0 0 / .3);
+  --glass-press: 0 1px 2px rgb(0 0 0 / .4), 0 6px 14px -4px rgb(0 0 0 / .5);
+
+  --surface: var(--glass-fill-card);
+  --panel: var(--glass-fill-card);
+  --panel2: var(--glass-fill-well);
+  --line: rgb(255 255 255 / .1);
+  --line2: rgb(255 255 255 / .2);
+  --muted: #b3b6c2;
+  --muted2: #a3a7b6;
+  --amber: #f0c249;
+  --shadow-md: var(--glass-edge), 0 8px 24px -10px rgb(0 0 0 / .5);
+  --code-bg: var(--glass-code);
+}
+
+/* ---- the frame: wallpaper, a floating top bar, one large pane ---- */
+
+/* The wallpaper is a fixed layer behind everything. isolation makes .redesign the stacking context
+   its z-index:-1 layers paint in, above its own (now empty) background, below the app. */
+.redesign { background: transparent; isolation: isolate; }
+.redesign::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--wallpaper); }
+
+/* The bar keeps its box, so its grid and breakpoints (and the nav that never overlaps) are exactly
+   as they were; the glass is a capsule painted inside it. */
+html .redesign .rd-top { background: transparent; backdrop-filter: none; }
+.redesign .rd-top::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; inset: 6px var(--glass-gutter); border-radius: 20px;
+  background: var(--glass-sheen), var(--glass-fill-bar);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-edge), var(--glass-drop);
+}
+
+/* One pane under the page, as wide as main. Cards sit on it as plain fill. */
+.redesign .layout::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: 0; bottom: var(--glass-gutter); left: var(--glass-gutter); right: var(--glass-gutter);
+  max-width: 1432px; margin-inline: auto; border-radius: var(--glass-radius);
+  background: var(--glass-sheen), var(--glass-fill-pane);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-edge), var(--glass-drop);
+}
+/* A flush main (the /search canvas) paints its own full-bleed surface. /search is a public-catalog
+   route today and never carries .redesign; this keeps it that way if that changes. */
+.redesign .layout:has(> main.flush)::before { display: none; }
+@media (max-width: 820px) {
+  .redesign .layout::before { left: 0; right: 0; bottom: 0; border-radius: 0; max-width: none; }
+  .redesign .rd-top::before { inset: 4px 6px; border-radius: 16px; }
+  /* Edge to edge there is no gutter to show the wallpaper in; the pane is a reading surface, and
+     small muted text on it would otherwise sit over the saturated corner. */
+  .redesign { --glass-fill-pane: rgb(255 255 255 / .74); }
+  html[data-theme="dark"] .redesign { --glass-fill-pane: rgb(10 13 26 / .76); }
+}
+
+/* The Getting started texture is drawn on an opaque light sheet; blend it into the wallpaper
+   instead of laying a gray slab across the glass. */
+.redesign .rd-background { mix-blend-mode: multiply; opacity: .5; }
+html[data-theme="dark"] .redesign .rd-background { mix-blend-mode: screen; opacity: .42; }
+
+/* ---- floating surfaces: menus, drawers, toasts, and the modal scrim ---- */
+
+.redesign :is(.dropdown, .agent-menu, .key-actions-menu, .md-menu, .own-add-menu, .rd-account-panel, .app-toast, .rd-copy-error) {
+  background: var(--glass-sheen), var(--glass-fill-float);
+  backdrop-filter: blur(calc(var(--glass-blur) + 8px)) saturate(var(--glass-saturate));
+  border-color: transparent;
+  box-shadow: var(--glass-edge), var(--glass-drop-float);
+}
+/* A drawer is a sheet at the window's edge: the same float glass. */
+.redesign :is(.td, .drawer) {
+  background: var(--glass-sheen), var(--glass-fill-float);
+  backdrop-filter: blur(calc(var(--glass-blur) + 8px)) saturate(var(--glass-saturate));
+  border-color: transparent;
+}
+.redesign .drawer { box-shadow: -1px 0 0 var(--line), var(--glass-drop-float); }
+/* The scrim blurs the page, so the modal over it needs no blur of its own (and, being inside the
+   scrim, could not: see the note at the top). */
+.redesign :is(.scrim, .lc-scrim) { background: var(--glass-scrim); backdrop-filter: blur(10px) saturate(1.3); }
+.redesign .modal {
+  border-radius: 22px; border-color: transparent;
+  background: var(--glass-sheen), var(--glass-fill-float);
+  box-shadow: var(--glass-edge), var(--glass-drop-float);
+}
+.redesign .modal .hd { border-bottom-color: var(--line); }
+
+/* Sticky bars sit over scrolling rows: they take a near-opaque fill, not the card's. */
+.redesign .lbar { background: var(--glass-fill-sticky); backdrop-filter: blur(var(--glass-blur)); }
+.redesign .lsec td { background: var(--glass-fill-sticky); }
+
+/* ---- controls ---- */
+
+/* A secondary button is a glass chip. Danger keeps its own hover tint. */
+.redesign :is(.btn, .iconbtn):not(.primary, .danger) {
+  background: var(--glass-fill-chip);
+  box-shadow: var(--glass-edge), var(--glass-drop-chip);
+}
+.redesign :is(.btn, .iconbtn):not(.primary, .danger):hover:not(:disabled) { background: var(--glass-fill-chip-hover); }
+.redesign .btn.ico.on { background: var(--glass-fill-chip-hover); }
+
+/* The inverse controls stay black on light, white on dark: that is stray's mark. Glass gives them a
+   lit top edge and a soft contact shadow, not a gradient. */
+.redesign :is(.btn.primary, .rd-nav.active, .seg button.on, .mk-chip.on, .pl-btn:not(.ghost), .rd-referral[aria-current="page"]) {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .24), var(--glass-press);
+}
+.redesign .btn.primary:disabled { box-shadow: none; }
+
+/* The count inside a selected inverse control: 55% ink left it under 4:1 on the light pill. */
+.redesign :is(.seg button.on, .mk-chip.on) span { color: color-mix(in srgb, var(--inverse-ink) 78%, transparent); }
+
+/* The segmented track is recessed; its selected thumb stands proud. */
+.redesign .seg { box-shadow: inset 0 1px 2px rgb(20 30 70 / .08); }
+.redesign .seg.cn-kinds, .redesign .seg.pl-seg { box-shadow: var(--shadow-sm); }
+
+/* Top-bar chips were drawn with fixed paper colours. */
+.redesign .rd-balance { background: var(--glass-fill-chip); box-shadow: var(--glass-edge), var(--glass-drop-chip); }
+.redesign .rd-referral { background: var(--glass-fill-chip); box-shadow: var(--glass-edge), var(--glass-drop-chip); }
+.redesign .rd-referral:hover { background: var(--glass-fill-chip-hover); }
+.redesign .rd-referral[aria-current="page"] { background: var(--inverse); }
+.redesign .rd-top .orgblock { box-shadow: var(--glass-edge), var(--glass-drop-chip); }
+
+/* ---- containers that carried only a border ---- */
+
+.redesign :is(.start-card, .rd-build, .ttable-wrap, .try-card) { box-shadow: var(--shadow-sm); }
+.redesign .try-card:hover { background: var(--glass-fill-chip-hover); }
+/* The banner arm paints its own backdrop under a text panel; a translucent token there would let
+   the picture through the copy. */
+html[data-theme="dark"] .redesign .rd-start .try-card.rd-try-art { --try-bg: #1b1f33; }
+
+/* ---- fallbacks ---- */
+
+/* No backdrop blur: lean on opacity so text stays readable over the wallpaper. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .redesign { --glass-fill-pane: rgb(250 251 255 / .9); --glass-fill-bar: rgb(250 251 255 / .94); --glass-fill-float: rgb(252 253 255 / .98); }
+  html[data-theme="dark"] .redesign { --glass-fill-pane: rgb(12 16 32 / .94); --glass-fill-bar: rgb(14 18 36 / .95); --glass-fill-float: rgb(26 31 56 / .98); }
+}
+
+/* The OS asked for less transparency (or more contrast): opaque surfaces, no blur, quiet wallpaper. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .redesign {
+    --glass-fill-pane: #f6f8fd; --glass-fill-bar: #f6f8fd; --glass-fill-float: #fff; --glass-fill-card: #fff;
+    --glass-fill-well: #eef1f8; --glass-fill-chip: #fff; --glass-fill-chip-hover: #fff; --glass-scrim: rgb(214 224 250 / .8);
+    --glass-code: #f4f4f1; --muted: #444955; --muted2: #4d5260; --line2: rgb(20 30 70 / .4);
+  }
+  html[data-theme="dark"] .redesign {
+    --glass-fill-pane: #0c1020; --glass-fill-bar: #0e1224; --glass-fill-float: #1a1f38; --glass-fill-card: #151a2e;
+    --glass-fill-well: #1c2138; --glass-fill-chip: #1c2138; --glass-fill-chip-hover: #262c48; --glass-scrim: rgb(2 4 12 / .8);
+    --glass-code: #04060e; --line2: rgb(255 255 255 / .34);
+  }
+  .redesign .layout::before, .redesign .rd-top::before,
+  .redesign :is(.dropdown, .agent-menu, .key-actions-menu, .md-menu, .own-add-menu, .rd-account-panel, .app-toast, .rd-copy-error, .td, .drawer, .lbar),
+  .redesign :is(.scrim, .lc-scrim) { backdrop-filter: none; }
+}
+
+/* Forced colours: the system palette, no wallpaper or fills. */
+@media (forced-colors: active) {
+  .redesign::before { display: none; }
+  .redesign .layout::before, .redesign .rd-top::before { background: Canvas; box-shadow: none; border: 1px solid CanvasText; backdrop-filter: none; }
+}

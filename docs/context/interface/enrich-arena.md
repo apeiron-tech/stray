@@ -65,7 +65,7 @@ on team switches or saved-run restoration, and follows `/app` identity verificat
 company are sent only with `intercom_user_hash`; without the hash, chat remains anonymous.
 Logout, an expired session, or an account change shuts down the previous Intercom session.
 Guests and deployments without an Intercom app ID load no widget; widget failures do not block Arena.
-Its visual system follows the stray redesign reference (`https://stray-design.vercel.app/#start`):
+Its visual system follows the stray redesign reference (`https://treg-design.vercel.app/#start`):
 Geist Pixel headings, Google Sans Flex body text, DM Mono for technical values, a cool gray canvas,
 white rounded cards with fine borders, black actions and restrained teal status accents. A static
 pixel texture echoes the reference background, while the standalone account header stays compact.

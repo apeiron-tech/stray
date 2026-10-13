@@ -16,10 +16,10 @@ description: 为 stray 设计和实现产品界面。以新版 Getting started �
 | 来源 | 用途 |
 | --- | --- |
 | [Vercel design.md](https://vercel.com/design.md) | 借鉴其任务优先、规则优先级、视觉系统、交互与验收的组织方法，不继承 Vercel 品牌、CSS 或专属报告布局 |
-| [新版线上原型](https://stray-design.vercel.app/#start) | 核对部署中的 HTML、CSS 与交互源码 |
-| [设计仓库](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | 固定参考版本；该版本 `styles.css` 与本次获取的线上 CSS 字节一致 |
-| [Figma 新版完整页面，12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=12-596) | 已读取设计上下文和截图；作为 Getting started 的主要视觉依据 |
-| [Figma 工作区，1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/stray?node-id=1-3) | 包含多个版本；`12:33` 的侧栏布局不作为新版默认外壳 |
+| [新版线上原型](https://treg-design.vercel.app/#start) | 核对部署中的 HTML、CSS 与交互源码 |
+| [设计仓库](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b) | 固定参考版本；该版本 `styles.css` 与本次获取的线上 CSS 字节一致 |
+| [Figma 新版完整页面，12:596](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=12-596) | 已读取设计上下文和截图；作为 Getting started 的主要视觉依据 |
+| [Figma 工作区，1:3](https://www.figma.com/design/2sVfS55co2x6u9phGqtM0i/treg?node-id=1-3) | 包含多个版本；`12:33` 的侧栏布局不作为新版默认外壳 |
 
 本次视觉核对使用 Figma 截图，线上样式与行为核对使用源码；未完成线上浏览器渲染与交互验收。
 
@@ -189,7 +189,7 @@ Logo 字标以 Figma 的 Google Sans Flex 15px / 500 为目标；当前原型 `.
 
 背景视频和 agent 预览属于可选品牌媒体。静态 poster 必须构成完整体验；视频不能阻塞页面、承担状态提示或自动发声。尊重 reduced motion：停用两类自动视频与非必要位移，保留静态图；长时间自动播放还须有可访问的暂停方式。只暂停 ASCII 背景而继续播放 agent 预览不算完整支持。
 
-资产从设计仓库的 [`assets/figma/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) 和 [`assets/icons/stray/`](https://github.com/l527497426-cyber/stray-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/stray) 获取。复用真实 stray mark、provider 标志和图标，不用 emoji 或手画近似图替代。固定图像尺寸避免布局跳动；正式交付使用项目托管资产，不依赖临时 Figma 导出 URL。
+资产从设计仓库的 [`assets/figma/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/figma) 和 [`assets/icons/treg/`](https://github.com/l527497426-cyber/treg-design/tree/26d01dfff78c8f17bef83de41d25ff0f6bb46e4b/assets/icons/treg) 获取。复用真实 stray mark、provider 标志和图标，不用 emoji 或手画近似图替代。固定图像尺寸避免布局跳动；正式交付使用项目托管资产，不依赖临时 Figma 导出 URL。
 
 ## 10. 响应式与可访问性
 

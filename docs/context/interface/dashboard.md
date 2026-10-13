@@ -7,6 +7,7 @@ sources:
   - frontend/src/state/controller.js
   - frontend/src/state/catalog.js
   - frontend/src/styles/base.css
+  - frontend/src/styles/glass.css
   - frontend/e2e/layout.spec.ts
   - src/stray/web/media/redesign/dashboard.css
   - src/stray/routers/web.py
@@ -66,6 +67,15 @@ this page keeps what no single file shows. The look follows the root `design.md`
 - **New tables use `components/ui/table`**; the sheet's old table rules are `:where()`-scoped.
 - **`e2e/layout.spec.ts`** fails on text painted over text or past its row, a page scrolling
   sideways, or overlapping top-bar items, at desktop and phone width.
+- **Glass is one stylesheet, scoped to `.redesign`** (`styles/glass.css`, last import in `main.ts`).
+  It remaps the tokens a surface already reads (`--surface`, `--panel2`, `--shadow-*`) instead of
+  restyling components, so the base tokens stay opaque for anything outside it. Three things no
+  rule list shows: blur goes on frame layers and leaf floats only, because an element with
+  `backdrop-filter` is a backdrop root and a blurred child inside one blurs nothing (the pane and
+  the top bar paint theirs on a `::before` so their menus still blur); a sticky bar or a menu takes
+  `--glass-fill-sticky` or `--glass-fill-float`, never a translucent token alone; and contrast is
+  checked on rendered pixels, since the same token passes on white and fails on the pane. The
+  sign-in page, onboarding and the public catalog (`publicCatalog` has no `.redesign`) are outside it.
 
 ## Catalog, Connections, a provider
 

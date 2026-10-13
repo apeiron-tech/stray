@@ -1,7 +1,7 @@
 # Landing design assets
 
 The landing layout, styles, motion modules and agent marks come from
-[stray-design/landing](https://github.com/l527497426-cyber/stray-design/tree/484066dd9d37a85eba24257ac9edb401b7710357/landing),
+[stray-design/landing](https://github.com/l527497426-cyber/treg-design/tree/484066dd9d37a85eba24257ac9edb401b7710357/landing),
 revision `484066dd9d37a85eba24257ac9edb401b7710357`, supplied as the implementation reference.
 
 `../../landing.html` is server-rendered; assets ship via `/media` without a separate build.

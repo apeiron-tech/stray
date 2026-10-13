@@ -10,6 +10,8 @@ import '@fontsource/dm-mono/latin-500.css'
 import '@fontsource/dm-mono/latin-400-italic.css'
 import './styles/base.css'
 import '../../src/stray/web/media/redesign/dashboard.css'
+// Last on purpose: the glass layer overrides the two sheets above by source order alone.
+import './styles/glass.css'
 
 preloadInitialView()
 prefetchAfterBoot(createApp(App).directive('dialog', vDialog).mount('#app'))
